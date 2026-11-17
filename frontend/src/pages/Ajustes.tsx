@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { CodexSession } from "../components/CodexSession";
 import { ForgetTaste } from "../components/ForgetTaste";
-import { Segmented, inputClass } from "../components/Controls";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { Segmented, Switch, inputClass } from "../components/Controls";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
@@ -42,18 +43,26 @@ export default function Ajustes() {
   const [laundry, setLaundry] = useState<Garment[]>([]);
   const [ai, setAi] = useState<AIStatus | null>(null);
   const [claudeKey, setClaudeKey] = useState("");
+  const [keyError, setKeyError] = useState(false);
+  // Ajuste cuyo último cambio no llegó al servidor (se muestra el aviso en su sección).
+  const [failedKeys, setFailedKeys] = useState<(keyof Settings)[]>([]);
+  const [confirmingLaundry, setConfirmingLaundry] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [laundryError, setLaundryError] = useState<string | null>(null);
 
   const loadAi = useCallback(() => {
     api.aiStatus().then(setAi).catch(() => undefined);
   }, []);
-  const saveKey = (key: string) =>
+  const saveKey = (key: string) => {
+    setKeyError(false);
     api
       .saveClaudeKey(key)
       .then(() => {
         setClaudeKey("");
         loadAi();
       })
-      .catch(() => undefined);
+      .catch(() => setKeyError(true));
+  };
 
   useEffect(() => {
     api
@@ -72,18 +81,52 @@ export default function Ajustes() {
       .catch(() => undefined);
   }, []);
 
+  /**
+   * Se pinta ya y se confirma con el servidor. De la respuesta solo se toman las claves enviadas, para
+   * que la respuesta de un cambio no pise otro hecho justo después. Si falla, se deshace y se avisa.
+   */
   const change = (changes: Partial<Settings>) => {
+    const keys = Object.keys(changes) as (keyof Settings)[];
+    const pick = (s: Settings) => Object.fromEntries(keys.map((k) => [k, s[k]])) as Partial<Settings>;
+    const previous = settings ? pick(settings) : null;
+    const previousTheme = theme;
     if (changes.theme) {
       setTheme(changes.theme);
       applyTheme(changes.theme); // inmediato, aunque el servidor tarde
     }
+    setFailedKeys((list) => list.filter((k) => !keys.includes(k)));
     setSettings((s) => (s ? { ...s, ...changes } : s));
-    api.updateSettings(changes).then(setSettings).catch(() => undefined);
+    api
+      .updateSettings(changes)
+      .then((saved) => setSettings((s) => (s ? { ...s, ...pick(saved) } : saved)))
+      .catch(() => {
+        if (previous) setSettings((s) => (s ? { ...s, ...previous } : s));
+        if (changes.theme) {
+          setTheme(previousTheme);
+          applyTheme(previousTheme);
+        }
+        if (changes.city !== undefined && previous?.city !== undefined) setCity(previous.city);
+        setFailedKeys((list) => [...list, ...keys]);
+      });
   };
+  const changeFailed = (...keys: (keyof Settings)[]) =>
+    keys.some((k) => failedKeys.includes(k)) && (
+      <p role="alert" className="px-0.5 text-[11px] text-danger">
+        {t.comun.errorRed}
+      </p>
+    );
 
   const clearLaundry = () => {
-    setLaundry([]);
-    api.clearLaundry().catch(() => undefined);
+    setClearing(true);
+    setLaundryError(null);
+    api
+      .clearLaundry()
+      .then(() => {
+        setLaundry([]);
+        setConfirmingLaundry(false);
+      })
+      .catch(() => setLaundryError(t.comun.errorRed))
+      .finally(() => setClearing(false));
   };
 
   const notify = settings?.notify_enabled ?? true;
@@ -101,6 +144,7 @@ export default function Ajustes() {
               options={["claro", "oscuro", "sistema"].map((value) => ({ value, label: t.temas[value] }))}
             />
             <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.temaTexto}</p>
+            {changeFailed("theme")}
           </Section>
 
           <Section label={t.ajustes.ia}>
@@ -111,6 +155,7 @@ export default function Ajustes() {
               options={["codex", "claude"].map((value) => ({ value, label: t.proveedores[value] }))}
             />
             <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.iaTexto}</p>
+            {changeFailed("ai_provider")}
 
             {ai && (
               <div className="flex flex-col gap-1.5 border-t border-control pt-3">
@@ -149,9 +194,12 @@ export default function Ajustes() {
                 if (claudeKey.trim()) saveKey(claudeKey.trim());
               }}
             >
-              <span className="label-caps text-text-2">{t.ajustes.claveEtiqueta}</span>
+              <label htmlFor="clave-claude" className="label-caps text-text-2">
+                {t.ajustes.claveEtiqueta}
+              </label>
               <div className="flex gap-2">
                 <input
+                  id="clave-claude"
                   type="password"
                   autoComplete="off"
                   className={inputClass}
@@ -168,8 +216,17 @@ export default function Ajustes() {
                 </button>
               </div>
               <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.claveAyuda}</p>
+              {keyError && (
+                <p role="alert" className="px-0.5 text-[11px] text-danger">
+                  {t.comun.errorRed}
+                </p>
+              )}
               {ai?.claude_configured && (
-                <button type="button" onClick={() => saveKey("")} className="self-start text-[11px] text-danger">
+                <button
+                  type="button"
+                  onClick={() => saveKey("")}
+                  className="-ml-2 inline-flex min-h-11 items-center self-start px-2 text-[11px] text-danger"
+                >
                   {t.ajustes.claveBorrar}
                 </button>
               )}
@@ -210,7 +267,10 @@ export default function Ajustes() {
                 </div>
                 <button
                   type="button"
-                  onClick={clearLaundry}
+                  onClick={() => {
+                    setLaundryError(null);
+                    setConfirmingLaundry(true);
+                  }}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-chip px-4 py-2.5 font-display text-xs font-semibold text-on-chip active:scale-[0.99]"
                 >
                   <Icon name="done_all" size={17} />
@@ -226,18 +286,11 @@ export default function Ajustes() {
               title={t.ajustes.avisoTitulo}
               text={t.ajustes.avisoTexto}
               right={
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={notify}
-                  aria-label={t.ajustes.avisoTitulo}
-                  onClick={() => change({ notify_enabled: !notify })}
-                  className={`flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors ${
-                    notify ? "justify-end bg-primary" : "justify-start bg-control"
-                  }`}
-                >
-                  <span className="h-6 w-6 rounded-full bg-white shadow" />
-                </button>
+                <Switch
+                  checked={notify}
+                  label={t.ajustes.avisoTitulo}
+                  onChange={() => change({ notify_enabled: !notify })}
+                />
               }
             />
             <label className="flex items-center justify-between gap-3 border-t border-control pt-3">
@@ -246,9 +299,12 @@ export default function Ajustes() {
                 type="time"
                 value={settings?.notify_time ?? "07:30"}
                 onChange={(e) => e.target.value && change({ notify_time: e.target.value })}
-                className="rounded-full border border-line bg-card-2 px-3 py-1 font-display text-xs font-semibold text-primary outline-none"
+                className="min-h-10 rounded-full border border-line bg-card-2 px-3 py-1 font-display text-base font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               />
             </label>
+            {/* El aviso todavía no se envía (llega con la app de iPhone): que no parezca que ya funciona. */}
+            <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.avisoAyuda}</p>
+            {changeFailed("notify_enabled", "notify_time")}
           </Section>
 
           <Section label={t.ajustes.tiempo}>
@@ -257,6 +313,7 @@ export default function Ajustes() {
               <Icon name="location" size={18} className="shrink-0 text-primary" />
               <input
                 className={inputClass}
+                aria-label={t.ajustes.ciudad}
                 value={city}
                 maxLength={80}
                 onChange={(e) => setCity(e.target.value)}
@@ -264,6 +321,7 @@ export default function Ajustes() {
               />
             </div>
             <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.ciudadAyuda}</p>
+            {changeFailed("city")}
           </Section>
 
           <p className="text-center text-[11px] tracking-wider text-text-3">{t.ajustes.version}</p>
@@ -271,6 +329,17 @@ export default function Ajustes() {
         </div>
       </Screen>
       <BottomNav />
+      <ConfirmDialog
+        open={confirmingLaundry}
+        title={t.ajustes.limpiarTitulo}
+        text={t.ajustes.limpiarTexto(laundry.length)}
+        confirmLabel={t.ajustes.limpiarBoton}
+        destructive={false}
+        busy={clearing}
+        error={laundryError}
+        onConfirm={clearLaundry}
+        onCancel={() => setConfirmingLaundry(false)}
+      />
     </>
   );
 }

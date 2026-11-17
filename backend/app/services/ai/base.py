@@ -38,7 +38,8 @@ _COLOR_SCHEMA = {
 }
 
 # Esquema estricto: todas las propiedades son obligatorias y no se admiten extra,
-# que es lo que exigen las salidas estructuradas de ambos proveedores.
+# que es lo que exigen las salidas estructuradas de ambos proveedores. Los límites de longitud
+# y de número de colores no van aquí (no todos los proveedores los admiten): parse_draft los aplica.
 OUTPUT_SCHEMA = {
     "type": "object",
     "properties": {
@@ -50,7 +51,7 @@ OUTPUT_SCHEMA = {
             "enum": [*catalog.COLORS, None],
             "description": "El otro color candidato si dudas entre dos para el principal; si no dudas, null",
         },
-        "colors_secondary": {"type": "array", "items": _COLOR_SCHEMA},
+        "colors_secondary": {"type": "array", "items": _COLOR_SCHEMA, "description": "Como mucho 4"},
         "pattern": {"type": "string", "enum": catalog.PATTERNS},
         "style": {"type": "string", "enum": catalog.STYLES},
         "closure": {"type": ["string", "null"], "enum": [*catalog.CLOSURES, None]},
@@ -157,6 +158,44 @@ def build_prompt(has_back: bool, has_label: bool, has_extra: bool = False, kind:
     )
 
 
+# Máximos de los textos de GarmentDraft: lo que se pase se recorta en vez de dar el análisis por fallido.
+_MAX_LENGTHS = {"name": 120, "details": 300, "notes": 500, "brand": 80, "size": 20}
+_MAX_SECONDARY = 4
+
+
+def _normalize_hex(value):
+    """'#abc' -> '#aabbcc'; sin almohadilla, se le pone."""
+    if not isinstance(value, str):
+        return value
+    v = value.strip()
+    if not v.startswith("#"):
+        v = "#" + v
+    if len(v) == 4:
+        v = "#" + "".join(ch * 2 for ch in v[1:])
+    return v
+
+
+def _normalize_color(color):
+    if isinstance(color, dict) and "hex" in color:
+        return {**color, "hex": _normalize_hex(color["hex"])}
+    return color
+
+
+def _normalize(data: dict) -> dict:
+    """Arregla lo que la IA suele saltarse sin que cambie el sentido: longitudes, número de colores, hex corto."""
+    data = dict(data)
+    for field, limit in _MAX_LENGTHS.items():
+        value = data.get(field)
+        if isinstance(value, str) and len(value) > limit:
+            data[field] = value[:limit].rstrip()
+    if "color_primary" in data:
+        data["color_primary"] = _normalize_color(data["color_primary"])
+    secondary = data.get("colors_secondary")
+    if isinstance(secondary, list):
+        data["colors_secondary"] = [_normalize_color(c) for c in secondary[:_MAX_SECONDARY]]
+    return data
+
+
 def parse_draft(raw: str) -> GarmentDraft:
     """Valida la respuesta de un proveedor. Una lista cerrada incumplida cuenta como fallo."""
     text = raw.strip()
@@ -167,6 +206,8 @@ def parse_draft(raw: str) -> GarmentDraft:
         data = json.loads(text)
     except json.JSONDecodeError as exc:
         raise AnalysisError("La IA no devolvió un JSON válido") from exc
+    if isinstance(data, dict):
+        data = _normalize(data)
     try:
         return GarmentDraft.model_validate(data)
     except ValidationError as exc:

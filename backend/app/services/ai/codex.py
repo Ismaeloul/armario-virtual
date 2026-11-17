@@ -13,6 +13,7 @@ from pathlib import Path
 
 from ... import config
 from .base import OUTPUT_SCHEMA, AnalysisError
+from .process import NEW_SESSION, kill_tree
 
 
 class CodexAnalyzer:
@@ -56,29 +57,39 @@ class CodexAnalyzer:
             cmd.append("-")  # el prompt entra por stdin: sin problemas de comillas
 
             try:
-                proc = subprocess.run(
+                proc = subprocess.Popen(
                     cmd,
-                    input=prompt,
-                    capture_output=True,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                     text=True,
                     encoding="utf-8",
                     errors="replace",
-                    timeout=config.AI_TIMEOUT_SECONDS,
+                    start_new_session=NEW_SESSION,
                 )
-            except subprocess.TimeoutExpired as exc:
-                raise AnalysisError("Codex tardó demasiado en responder") from exc
             except OSError as exc:
                 raise AnalysisError("No se pudo ejecutar Codex") from exc
+            try:
+                stdout, stderr = proc.communicate(prompt, timeout=config.AI_TIMEOUT_SECONDS)
+            except subprocess.TimeoutExpired as exc:
+                # Matar el árbol entero antes de recoger las tuberías: si no, el hijo nativo
+                # sigue vivo y communicate() puede quedarse esperando.
+                kill_tree(proc)
+                try:
+                    proc.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
+                    pass
+                raise AnalysisError("Codex tardó demasiado en responder") from exc
 
             if proc.returncode != 0:
-                detalle = (proc.stderr or proc.stdout or "").strip().splitlines()[-1:] or [""]
+                detalle = (stderr or stdout or "").strip().splitlines()[-1:] or [""]
                 texto = detalle[0][:200]
                 if "login" in texto.lower() or "auth" in texto.lower():
                     raise AnalysisError("Codex no tiene sesión iniciada")
                 raise AnalysisError(f"Codex terminó con error: {texto}" if texto else "Codex terminó con error")
 
             if result_file.is_file():
-                return result_file.read_text(encoding="utf-8")
-            if proc.stdout.strip():
-                return proc.stdout
+                return result_file.read_text(encoding="utf-8", errors="replace")
+            if stdout.strip():
+                return stdout
             raise AnalysisError("Codex no devolvió contenido")

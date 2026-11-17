@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { PrimaryButton, RotateButton } from "../components/Controls";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { PrimaryButton, RotateButton, Switch } from "../components/Controls";
 import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
-import { api, mediaUrl, type Catalog, type Garment } from "../lib/api";
+import { ApiError, api, mediaUrl, type Catalog, type Garment } from "../lib/api";
 
 function Row({ icon, label, children }: { icon: IconName; label: string; children: ReactNode }) {
   return (
@@ -40,20 +41,60 @@ export default function FichaPrenda() {
   const navigate = useNavigate();
   const [garment, setGarment] = useState<Garment | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [missing, setMissing] = useState(false);
+  // "missing": la prenda no existe (404); "red": no se pudo cargar (servidor caído, etc.).
+  const [loadError, setLoadError] = useState<"missing" | "red" | null>(null);
   const [view, setView] = useState<"photo_front" | "photo_back" | "photo_extra" | "photo_label">("photo_front");
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [rotating, setRotating] = useState(false);
+  const [photoError, setPhotoError] = useState(false);
+  const [patchError, setPatchError] = useState(false);
+  const [wearing, setWearing] = useState(false);
+  const [worn, setWorn] = useState(false);
+  const [wearError, setWearError] = useState(false);
 
+  const load = () => {
+    setLoadError(null);
+    api
+      .garment(Number(id))
+      .then(setGarment)
+      .catch((e) => setLoadError(e instanceof ApiError && e.status === 404 ? "missing" : "red"));
+    api
+      .catalog()
+      .then(setCatalog)
+      .catch(() => setLoadError((current) => current ?? "red"));
+  };
+  useEffect(load, [id]);
+
+  // Tras apuntar un uso, el botón lo confirma unos segundos y no deja repetirlo sin querer.
   useEffect(() => {
-    api.garment(Number(id)).then(setGarment).catch(() => setMissing(true));
-    api.catalog().then(setCatalog).catch(() => undefined);
-  }, [id]);
+    if (!worn) return;
+    const timer = setTimeout(() => setWorn(false), 2500);
+    return () => clearTimeout(timer);
+  }, [worn]);
 
-  if (missing) {
+  if (loadError) {
     return (
       <>
         <BackHeader title={t.ficha.cabecera} />
         <Screen withNav={false}>
-          <p className="mt-10 text-center text-sm text-text-2">{t.ficha.noExiste}</p>
+          <div className="mt-10 flex flex-col items-center gap-2 text-center">
+            <p className="text-sm text-text-2">{loadError === "missing" ? t.ficha.noExiste : t.comun.errorRed}</p>
+            {loadError === "missing" ? (
+              <Link
+                to="/armario"
+                replace
+                className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-primary"
+              >
+                {t.ficha.irArmario}
+              </Link>
+            ) : (
+              <button type="button" onClick={load} className="min-h-11 px-3 text-sm font-semibold text-primary">
+                {t.comun.reintentar}
+              </button>
+            )}
+          </div>
         </Screen>
       </>
     );
@@ -70,15 +111,44 @@ export default function FichaPrenda() {
   }
 
   // Cambios inmediatos (favorita, lavadora, uso): se pinta ya y se confirma con el servidor.
+  // Si falla, se deshacen solo las claves cambiadas, sin pisar otros cambios hechos mientras tanto.
   const patch = (changes: { favorite?: boolean; in_laundry?: boolean }) => {
-    setGarment({ ...garment, ...changes });
-    api.updateGarment(garment.id, changes).then(setGarment).catch(() => setGarment(garment));
+    const previous: typeof changes = {};
+    for (const key of Object.keys(changes) as (keyof typeof changes)[]) previous[key] = garment[key];
+    setPatchError(false);
+    setGarment((g) => (g ? { ...g, ...changes } : g));
+    api
+      .updateGarment(garment.id, changes)
+      .then(setGarment)
+      .catch(() => {
+        setGarment((g) => (g ? { ...g, ...previous } : g));
+        setPatchError(true);
+      });
   };
 
   const remove = async () => {
-    if (!window.confirm(t.ficha.confirmarEliminar)) return;
-    await api.deleteGarment(garment.id);
-    navigate("/armario", { replace: true });
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteGarment(garment.id);
+      navigate("/armario", { replace: true });
+    } catch {
+      setDeleteError(t.ficha.errorEliminar);
+      setDeleting(false);
+    }
+  };
+
+  const wear = () => {
+    setWearing(true);
+    setWearError(false);
+    api
+      .wearGarment(garment.id)
+      .then((g) => {
+        setGarment(g);
+        setWorn(true);
+      })
+      .catch(() => setWearError(true))
+      .finally(() => setWearing(false));
   };
 
   const views = (
@@ -102,13 +172,17 @@ export default function FichaPrenda() {
             <img src={mediaUrl(photo.url)} alt={garment.name} className="aspect-[3/4] w-full object-cover" />
             <RotateButton
               className="absolute right-3 top-3"
-              onClick={() =>
+              disabled={rotating}
+              onClick={() => {
+                setRotating(true);
+                setPhotoError(false);
                 api
                   .rotatePhoto(photo.id)
                   .then(() => api.garment(garment.id))
                   .then(setGarment)
-                  .catch(() => undefined)
-              }
+                  .catch(() => setPhotoError(true))
+                  .finally(() => setRotating(false));
+              }}
             />
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-line bg-card/90 px-2.5 py-1 backdrop-blur-md">
               {garment.in_laundry ? (
@@ -127,7 +201,7 @@ export default function FichaPrenda() {
                       type="button"
                       aria-pressed={view === key}
                       onClick={() => setView(key)}
-                      className={`rounded-full px-3 py-1 text-[11px] font-medium ${
+                      className={`rounded-full px-3 py-2 text-[11px] font-medium ${
                         view === key ? "bg-bg text-text" : "text-bg"
                       }`}
                     >
@@ -138,6 +212,7 @@ export default function FichaPrenda() {
               </div>
             )}
           </div>
+          {photoError && <p className="-mt-2 text-center text-xs text-danger">{t.comun.errorRed}</p>}
 
           {/* Título */}
           <div>
@@ -151,7 +226,7 @@ export default function FichaPrenda() {
                 aria-label={t.ficha.favorito}
                 aria-pressed={garment.favorite}
                 onClick={() => patch({ favorite: !garment.favorite })}
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card-2 active:scale-90 ${
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-card-2 active:scale-90 ${
                   garment.favorite ? "text-danger" : "text-text-2"
                 }`}
               >
@@ -178,19 +253,13 @@ export default function FichaPrenda() {
                 <p className="mt-0.5 text-xs text-text-2">{t.ficha.lavadoraTexto}</p>
               </div>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={garment.in_laundry}
-              aria-label={t.ficha.lavadora}
-              onClick={() => patch({ in_laundry: !garment.in_laundry })}
-              className={`flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors ${
-                garment.in_laundry ? "justify-end bg-primary" : "justify-start bg-control"
-              }`}
-            >
-              <span className="h-6 w-6 rounded-full bg-white shadow" />
-            </button>
+            <Switch
+              checked={garment.in_laundry}
+              label={t.ficha.lavadora}
+              onChange={() => patch({ in_laundry: !garment.in_laundry })}
+            />
           </div>
+          {patchError && <p className="-mt-2 text-center text-xs text-danger">{t.comun.errorRed}</p>}
 
           {/* Ficha técnica */}
           <div className="flex flex-col gap-2">
@@ -252,12 +321,16 @@ export default function FichaPrenda() {
             </div>
             <button
               type="button"
-              onClick={() => api.wearGarment(garment.id).then(setGarment)}
-              className="flex h-11 items-center justify-center gap-1.5 rounded-xl border border-line bg-control text-xs font-medium active:scale-[0.98]"
+              disabled={wearing || worn}
+              onClick={wear}
+              className={`flex h-11 items-center justify-center gap-1.5 rounded-xl border border-line text-xs font-medium active:scale-[0.98] ${
+                worn ? "bg-chip text-on-chip" : "bg-control disabled:opacity-40"
+              }`}
             >
               <Icon name="check_circle" size={18} />
-              {t.ficha.ponerHoy}
+              {worn ? t.ficha.registrado : t.ficha.ponerHoy}
             </button>
+            {wearError && <p className="text-center text-xs text-danger">{t.comun.errorRed}</p>}
           </div>
 
           {/* Acciones */}
@@ -281,7 +354,10 @@ export default function FichaPrenda() {
             </Link>
             <button
               type="button"
-              onClick={remove}
+              onClick={() => {
+                setDeleteError(null);
+                setConfirming(true);
+              }}
               className="flex h-11 items-center justify-center gap-1.5 text-xs font-medium text-danger active:opacity-60"
             >
               <Icon name="delete_icon" size={18} />
@@ -290,6 +366,17 @@ export default function FichaPrenda() {
           </div>
         </div>
       </Screen>
+      <ConfirmDialog
+        open={confirming}
+        title={t.ficha.confirmarTitulo}
+        text={t.ficha.confirmarEliminar}
+        confirmLabel={t.ficha.eliminarBoton}
+        busyLabel={t.ficha.eliminando}
+        busy={deleting}
+        error={deleteError}
+        onConfirm={remove}
+        onCancel={() => setConfirming(false)}
+      />
     </>
   );
 }

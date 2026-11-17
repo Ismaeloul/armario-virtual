@@ -152,7 +152,7 @@ export default function Armario() {
                         {g.name}
                       </h3>
                       <p className="mt-0.5 truncate text-[13px] text-text-2">
-                        {[g.brand, g.size && `Talla ${g.size}`].filter(Boolean).join(" · ") ||
+                        {[g.brand, g.size && t.armario.talla(g.size)].filter(Boolean).join(" · ") ||
                           catalog.seasons[g.season]}
                       </p>
                     </div>

@@ -18,7 +18,7 @@ from ..schemas import (
     Summary,
     WearIn,
 )
-from ..services import ai, storage
+from ..services import ai, outfits, storage
 from ..services.ai.base import build_prompt
 from .settings import read_settings
 
@@ -153,11 +153,26 @@ def analyze_garment(
     )
 
 
+def _photo_in_use(db: Session, photo_id: str) -> bool:
+    return db.scalar(
+        select(func.count()).select_from(Garment).where(
+            or_(
+                Garment.photo_front == photo_id,
+                Garment.photo_back == photo_id,
+                Garment.photo_extra == photo_id,
+                Garment.photo_label == photo_id,
+            )
+        )
+    ) > 0
+
+
 @router.post("/garments", response_model=GarmentOut, status_code=201)
 def create_garment(body: GarmentCreate, db: Session = Depends(get_db)):
     for photo_id in (body.photo_front, body.photo_back, body.photo_extra, body.photo_label):
         if photo_id and not storage.exists(photo_id):
             raise HTTPException(422, "La foto no existe; vuelve a subirla")
+        if photo_id and _photo_in_use(db, photo_id):  # doble toque o reintento: no duplicar la prenda
+            raise HTTPException(409, "Esta prenda ya está guardada")
 
     garment = Garment(
         name=body.name.strip(),
@@ -290,7 +305,7 @@ def update_garment(garment_id: int, body: GarmentUpdate, db: Session = Depends(g
     if "in_laundry" in changes and body.in_laundry is not None:
         garment.laundry_since = now_utc() if body.in_laundry else None
 
-    not_nullable = {"name", "type", "pattern", "style", "season", "details", "notes",
+    not_nullable = {"name", "type", "color_primary", "pattern", "style", "season", "details", "notes",
                     "colors_secondary", "favorite", "in_laundry", "hood"}
     for key, value in changes.items():
         if value is None and key in not_nullable:
@@ -308,14 +323,15 @@ def delete_garment(garment_id: int, db: Session = Depends(get_db)):
     db.delete(garment)
     db.commit()
     for photo_id in photos:
-        storage.delete(photo_id)
+        if photo_id and not _photo_in_use(db, photo_id):  # nunca borrar fotos que use otra prenda
+            storage.delete(photo_id)
 
 
 @router.post("/garments/{garment_id}/wear", response_model=GarmentOut)
 def wear_garment(garment_id: int, body: WearIn | None = None, db: Session = Depends(get_db)):
     """Registra un uso (lo usará la Fase 2 para no repetir outfits)."""
     garment = _get_or_404(db, garment_id)
-    db.add(WearLog(garment_id=garment.id, worn_on=(body.worn_on if body and body.worn_on else date.today())))
+    db.add(WearLog(garment_id=garment.id, worn_on=(body.worn_on if body and body.worn_on else outfits.local_today())))
     db.commit()
     return _to_out(garment, _wear_stats(db, [garment.id]))
 

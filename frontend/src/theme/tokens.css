@@ -12,13 +12,14 @@
   --on-primary: #ffffff;
   --text: #1b1b1e;
   --text-2: #5b5f5c;
-  --text-3: #747874;
+  --text-3: #6a6e6a;
   --chip: #dde0dc;
   --on-chip: #444844;
   --line: transparent; /* en claro las tarjetas no llevan borde */
   --danger: #ba1a1a;
   --shadow-card: 0 2px 12px rgba(27, 27, 30, 0.04);
   --shadow-float: 0 6px 20px rgba(70, 77, 72, 0.35);
+  --scrim: rgba(27, 27, 30, 0.4); /* velo detrás de los diálogos */
   color-scheme: light;
 }
 
@@ -38,6 +39,7 @@
   --danger: #ffb4ab;
   --shadow-card: none;
   --shadow-float: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --scrim: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
 
@@ -55,6 +57,7 @@
   --color-on-chip: var(--on-chip);
   --color-line: var(--line);
   --color-danger: var(--danger);
+  --color-scrim: var(--scrim);
 
   --font-display: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, sans-serif;
   --font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
@@ -104,10 +107,10 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Sin fill aquí: los iconos de línea llevan fill="none" y los rellenos, fill="currentColor". */
 .icon svg {
   width: 1em;
   height: 1em;
-  fill: currentColor;
   display: block;
 }
 

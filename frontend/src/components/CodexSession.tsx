@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { t } from "../i18n/es";
 import { api, type AIStatus, type CodexLogin, type CodexUsage, type UsageWindow } from "../lib/api";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { Icon } from "./Icon";
 
 function resetText(resetsAt: number | null): string {
@@ -9,8 +10,8 @@ function resetText(resetsAt: number | null): string {
   const sameDay = date.toDateString() === new Date().toDateString();
   const time = date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
   return sameDay
-    ? `hoy a las ${time}`
-    : `el ${date.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })} a las ${time}`;
+    ? t.codex.hoyA(time)
+    : t.codex.elDiaA(date.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }), time);
 }
 
 function UsageBar({ label, window }: { label: string; window: UsageWindow }) {
@@ -56,7 +57,12 @@ function Usage() {
           {t.codex.uso}
           {usage?.plan && <span className="ml-2 font-normal capitalize text-text-2">{t.codex.plan(usage.plan)}</span>}
         </span>
-        <button type="button" onClick={load} disabled={loading} className="text-[11px] text-text-2 underline disabled:opacity-40">
+        <button
+          type="button"
+          onClick={load}
+          disabled={loading}
+          className="-my-2 -mr-2 inline-flex min-h-11 items-center px-2 text-[11px] text-text-2 underline disabled:opacity-40"
+        >
           {loading ? t.comun.cargando : t.codex.actualizar}
         </button>
       </div>
@@ -74,6 +80,7 @@ export function CodexSession({ ai, onChange }: { ai: AIStatus; onChange: () => v
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   // Por si ya había un inicio de sesión en curso al abrir Ajustes.
   useEffect(() => {
@@ -115,11 +122,14 @@ export function CodexSession({ ai, onChange }: { ai: AIStatus; onChange: () => v
   };
 
   const logout = () => {
-    if (!window.confirm(t.codex.confirmarCerrar)) return;
     setBusy(true);
+    setError(null);
     api
       .codexLogout()
-      .then(onChange)
+      .then(() => {
+        setConfirming(false);
+        onChange();
+      })
       .catch((e: Error) => setError(e.message || t.codex.fallo))
       .finally(() => setBusy(false));
   };
@@ -187,8 +197,12 @@ export function CodexSession({ ai, onChange }: { ai: AIStatus; onChange: () => v
           </span>
           {t.codex.esperando}
         </p>
-        <button type="button" onClick={cancel} className="self-start text-[11px] text-text-2 underline">
-          {t.codex.cancelar}
+        <button
+          type="button"
+          onClick={cancel}
+          className="-ml-2 inline-flex min-h-11 items-center self-start px-2 text-[11px] text-text-2 underline"
+        >
+          {t.comun.cancelar}
         </button>
       </div>
     );
@@ -201,8 +215,11 @@ export function CodexSession({ ai, onChange }: { ai: AIStatus; onChange: () => v
         <button
           type="button"
           disabled={busy}
-          onClick={logout}
-          className="flex h-10 items-center justify-center rounded-lg border border-line bg-control text-xs font-medium disabled:opacity-40"
+          onClick={() => {
+            setError(null);
+            setConfirming(true);
+          }}
+          className="flex h-11 items-center justify-center rounded-lg border border-line bg-control text-xs font-medium disabled:opacity-40"
         >
           {t.codex.cerrar}
         </button>
@@ -216,7 +233,17 @@ export function CodexSession({ ai, onChange }: { ai: AIStatus; onChange: () => v
           {busy ? t.codex.pidiendo : t.codex.iniciar}
         </button>
       )}
-      {error && <p className="text-[11px] text-danger">{error}</p>}
+      {error && !confirming && <p className="text-[11px] text-danger">{error}</p>}
+      <ConfirmDialog
+        open={confirming}
+        title={t.codex.confirmarTitulo}
+        text={t.codex.confirmarCerrar}
+        confirmLabel={t.codex.cerrarBoton}
+        busy={busy}
+        error={error}
+        onConfirm={logout}
+        onCancel={() => setConfirming(false)}
+      />
     </div>
   );
 }

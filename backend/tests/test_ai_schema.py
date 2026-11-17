@@ -131,3 +131,82 @@ def test_la_ia_puede_decir_entre_que_colores_dudaba():
     with pytest.raises(AnalysisError):
         parse_draft(json.dumps({**VALID_DRAFT, "color_primary_alt": "antracita"}))
     assert None in OUTPUT_SCHEMA["properties"]["color_primary_alt"]["enum"]
+
+
+def test_lo_que_se_pasa_de_largo_se_recorta_en_vez_de_fallar():
+    raw = {
+        **VALID_DRAFT,
+        "notes": "x" * 700,
+        "name": "n" * 200,
+        "color_primary": {"name": "negro", "hex": "#000"},
+        "colors_secondary": [{"name": c, "hex": "#fff"} for c in ["blanco", "gris", "rojo", "azul", "verde"]],
+    }
+    draft = parse_draft(json.dumps(raw))
+    assert len(draft.notes) == 500 and len(draft.name) == 120
+    assert draft.color_primary.hex == "#000000"
+    assert [c.name for c in draft.colors_secondary] == ["blanco", "gris", "rojo", "azul"]
+    assert draft.colors_secondary[0].hex == "#ffffff"
+
+
+def test_un_error_inesperado_de_un_proveedor_pasa_al_otro(analyzers):
+    analyzers(FakeAnalyzer("codex", error=TypeError("SDK raro")), FakeAnalyzer("claude", json.dumps(VALID_DRAFT)))
+    result = selector.analyze([], preferred="codex", prompt="x")
+    assert (result.provider, result.fallback_used) == ("claude", True)
+
+
+def test_el_tiempo_con_nulos_se_queda_sin_tiempo(monkeypatch):
+    from app.services import weather
+
+    monkeypatch.setattr(weather, "_locate", lambda city, client: (49.0, 2.2, "Argenteuil"))
+
+    class _Resp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "current": {"temperature_2m": None, "weather_code": 0},
+                "daily": {"temperature_2m_max": [None], "temperature_2m_min": [None],
+                          "precipitation_probability_max": [None], "weather_code": [0]},
+            }
+
+    class _Client:
+        def __init__(self, *a, **k):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def get(self, *a, **k):
+            return _Resp()
+
+    monkeypatch.setattr(weather.httpx, "Client", _Client)
+    weather._forecasts.clear()
+    assert weather.today("Ciudad con nulos") is None
+
+
+def test_el_lector_de_limites_no_espera_si_codex_se_cierra_sin_responder(monkeypatch):
+    import subprocess
+    import sys
+    import time
+
+    from app.services.ai import codex_usage
+
+    codex_usage.forget()
+    monkeypatch.setattr(codex_usage.shutil, "which", lambda _: sys.executable)
+    real_popen = subprocess.Popen
+
+    def fake_popen(cmd, **kwargs):  # un "codex" que termina enseguida sin decir nada
+        return real_popen([sys.executable, "-c", "pass"], **kwargs)
+
+    monkeypatch.setattr(codex_usage.subprocess, "Popen", fake_popen)
+    start = time.time()
+    with pytest.raises(RuntimeError):
+        codex_usage.read(timeout=10)
+    assert time.time() - start < 5
+    with pytest.raises(RuntimeError):  # el fallo se recuerda un rato
+        codex_usage.read(timeout=10)
+    codex_usage.forget()

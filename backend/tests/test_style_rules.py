@@ -52,6 +52,61 @@ def test_las_palabras_clave_mandan_sobre_el_texto():
     assert style_rules.prior([cazadora, entera, vaquero]) < style_rules.prior([cazadora, media, vaquero]) - 3
 
 
+def test_la_nota_es_una_media_por_pareja_y_no_crece_con_mas_prendas():
+    assert style_rules.blend([1.5]) == style_rules.blend([1.5] * 6) == 1.5
+    # Una pareja que choca tira del conjunto más que la simple media.
+    assert style_rules.blend([1, 1, -2]) < 0 == sum([1, 1, -2]) / 3
+    negras = [p(1, "chaqueta", "capa_exterior"), p(2, "jersey", "parte_superior"),
+              p(3, "chino", "parte_inferior"), p(4, "botas", "calzado")]
+    notas = [style_rules.prior(negras[1:3]), style_rules.prior(negras[1:]), style_rules.prior(negras)]
+    assert max(notas) - min(notas) < 0.5, notas  # antes cuatro prendas sumaban seis parejas y dos, una
+
+
+def test_el_vaquero_azul_va_con_todo():
+    naranja = p(1, "camiseta", "parte_superior", "naranja")
+    vaquero, chino = p(2, "vaquero", "parte_inferior", "azul"), p(2, "chino", "parte_inferior", "morado")
+    assert style_rules.is_neutral(vaquero) and style_rules.tone(vaquero) == "vaquero"
+    assert style_rules.pair_rule(naranja, vaquero) > style_rules.pair_rule(naranja, chino)
+
+
+def test_varios_colores_fuertes_restan_y_uno_solo_no():
+    rojo, verde = p(1, "camiseta", "parte_superior", "rojo"), p(2, "chino", "parte_inferior", "verde")
+    negro = p(3, "zapatillas", "calzado", "negro")
+    assert style_rules.palette([rojo, negro]) == 0 > style_rules.palette([rojo, verde, negro])
+
+
+def test_mezclar_deportivo_con_formal_resta_y_coincidir_de_estilo_no_suma():
+    casual = [p(1, "camiseta", "parte_superior"), p(2, "chino", "parte_inferior", style="casual")]
+    deportivo = [p(1, "camiseta", "parte_superior", style="deportivo"), p(2, "chino", "parte_inferior", style="deportivo")]
+    mezcla = [p(1, "camiseta", "parte_superior", style="deportivo"), p(2, "chino", "parte_inferior", style="formal")]
+    assert style_rules.prior(casual) == style_rules.prior(deportivo) > style_rules.prior(mezcla)
+
+
+def test_una_regla_pierde_fuerza_cuando_el_usuario_ya_ha_valorado_eso():
+    clasico = [p(1, "camiseta", "parte_superior", "azul marino"), p(2, "chino", "parte_inferior", "beige")]
+    sin_votos = style_rules.prior(clasico)
+    con_votos = style_rules.prior(clasico, seen=lambda tabla, clave: 9.0 if tabla == "colors" else 0.0)
+    assert 0 < con_votos < sin_votos
+
+
+def test_dos_capuchas_una_encima_de_otra_puntuan_peor():
+    vaquero = p(3, "vaquero", "parte_inferior", "azul")
+    cazadora, sudadera = p(1, "chaqueta", "capa_exterior"), p(2, "sudadera", "parte_superior")
+    sin_capuchas = style_rules.prior([cazadora, sudadera, vaquero])
+    cazadora.hood = sudadera.hood = True
+    assert style_rules.prior([cazadora, sudadera, vaquero]) < sin_capuchas
+
+
+def test_las_palabras_clave_dan_los_rasgos_de_los_que_aprende_gustos():
+    cazadora, vaquero = p(1, "chaqueta", "capa_exterior"), p(3, "vaquero", "parte_inferior", "azul")
+    sudadera = p(2, "sudadera", "parte_superior")
+    sudadera.hood, sudadera.thickness, sudadera.fit, vaquero.fit = True, "grueso", "ancho", "ajustado"
+    assert style_rules.traits([cazadora, sudadera, vaquero]) == [
+        ("corte", "ancho", "ajustado"), ("capa", "chaqueta", "capucha"), ("capa", "chaqueta", "grueso"),
+    ]
+    assert style_rules.traits([p(4, "camiseta", "parte_superior"), vaquero]) == []
+
+
 def test_algo_grueso_bajo_una_cazadora_puntua_peor():
     cazadora = p(1, "chaqueta", "capa_exterior")
     vaquero = p(3, "vaquero", "parte_inferior", "azul")

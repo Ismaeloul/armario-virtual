@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
@@ -26,26 +26,48 @@ export default function Hoy() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState(false);
+  const loadedAt = useRef(0);
 
+  const show = (data: Today) => {
+    setToday(data);
+    loadedAt.current = Date.now();
+  };
   const load = () => {
     setFailed(false);
-    api.today().then(setToday).catch(() => setFailed(true));
+    api.today().then(show).catch(() => setFailed(true));
   };
   useEffect(() => {
     load();
     api.catalog().then(setCatalog).catch(() => undefined);
+    // Una PWA puede seguir abierta de un día para otro: al volver a ella se refresca el outfit y el
+    // tiempo si cambió el día o pasaron unos minutos. Si falla, se queda lo que había.
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      const sameDay = new Date(loadedAt.current).toDateString() === new Date().toDateString();
+      if (sameDay && Date.now() - loadedAt.current < 10 * 60 * 1000) return;
+      api.today().then(show).catch(() => undefined);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
   /** Lanza una acción sobre el outfit y pinta el resultado. */
-  const act = (request: Promise<Today>) => {
+  const act = (request: () => Promise<Today>) => {
     setBusy(true);
-    request
-      .then(setToday)
-      .catch(() => undefined)
+    setActionError(false);
+    request()
+      .then(show)
+      .catch(() => setActionError(true))
       .finally(() => setBusy(false));
   };
 
-  const date = new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+  // La fecha es la del outfit que se muestra (la del servidor), no la del reloj en este momento.
+  const date = (today ? new Date(today.date + "T00:00:00") : new Date()).toLocaleDateString("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
   const outfit = today?.outfit;
   const chosen = outfit?.status === "elegido";
 
@@ -107,7 +129,7 @@ export default function Hoy() {
               <h3 className="font-display text-xl font-semibold tracking-tight">{t.hoy.faltaTitulo}</h3>
               <p className="text-sm text-text-2">
                 {today.missing.length > 0
-                  ? t.hoy.faltaTexto(today.missing.map((m) => m.toLowerCase()).join(" y "))
+                  ? t.hoy.faltaTexto(today.missing.map((m) => m.toLowerCase()))
                   : t.hoy.faltaGenerico}
               </p>
               {today.in_laundry > 0 && <p className="text-xs text-text-3">{t.hoy.enLavadora(today.in_laundry)}</p>}
@@ -174,10 +196,17 @@ export default function Hoy() {
                   <div className="mt-4 flex flex-col gap-1 border-t border-control pt-3 text-xs text-text-2">
                     {today.notes.includes("sin_calzado") && <p>{t.hoy.sinCalzado}</p>}
                     {today.notes.includes("sin_capa") && <p>{t.hoy.sinCapa}</p>}
+                    {today.notes.includes("sin_mas_combinaciones") && <p>{t.hoy.sinMasCombinaciones}</p>}
                     {today.in_laundry > 0 && <p>{t.hoy.enLavadora(today.in_laundry)}</p>}
                   </div>
                 )}
               </section>
+
+              {actionError && (
+                <p role="alert" className="-mt-2 text-center text-sm text-danger">
+                  {t.comun.errorRed}
+                </p>
+              )}
 
               {chosen ? (
                 <section className="flex flex-col gap-2">
@@ -188,7 +217,7 @@ export default function Hoy() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => act(api.todayUnchoose())}
+                    onClick={() => act(api.todayUnchoose)}
                     className="h-11 text-xs font-medium text-text-2 underline disabled:opacity-40"
                   >
                     {t.hoy.cambiarIdea}
@@ -200,7 +229,7 @@ export default function Hoy() {
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => act(api.todayNext("pasar"))}
+                      onClick={() => act(() => api.todayNext("pasar"))}
                       className="flex h-12 items-center justify-center gap-2 rounded-xl border border-line bg-control font-display text-[15px] font-semibold active:scale-[0.98] disabled:opacity-40"
                     >
                       <Icon name="close" size={20} className="text-text-2" />
@@ -209,7 +238,7 @@ export default function Hoy() {
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => act(api.todayChoose())}
+                      onClick={() => act(api.todayChoose)}
                       className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-display text-[15px] font-semibold text-on-primary active:scale-[0.98] disabled:opacity-40"
                     >
                       <Icon name="favorite_fill" size={20} />
@@ -219,7 +248,7 @@ export default function Hoy() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => act(api.todayNext("otra"))}
+                    onClick={() => act(() => api.todayNext("otra"))}
                     className="card flex h-12 w-full items-center justify-center gap-2 font-display text-[15px] font-semibold active:scale-[0.99] disabled:opacity-40"
                   >
                     <Icon name="auto_awesome" size={20} className="text-primary" />

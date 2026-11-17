@@ -1,13 +1,14 @@
 // Todos los textos de la interfaz viven aquí, para poder traducir algún día.
 export const t = {
   app: "Armario",
-  nav: { hoy: "Hoy", armario: "Armario", anadir: "Añadir", gustos: "Gustos", ajustes: "Ajustes" },
+  nav: { hoy: "Hoy", armario: "Armario", gustos: "Gustos", ajustes: "Ajustes" },
   gustos: {
     titulo: "Gustos",
     etiqueta: "Enseña al algoritmo",
     intro: "Dime si cada combinación pega o no. Con lo que respondas, las propuestas de Hoy irán acertando más.",
     progreso: (n: number, gustan: number, quedan: number) =>
-      `${n} valoradas · ${gustan} te gustan · ${quedan} por valorar`,
+      `${n === 1 ? "1 valorada" : `${n} valoradas`} · ${gustan === 1 ? "te gusta 1" : `te gustan ${gustan}`} · ${quedan} por valorar`,
+    pareja: (a: string, b: string) => `${a} con ${b}`,
     pregunta: "¿Pega?",
     porQue: "¿Qué falla?",
     si: "Me gusta",
@@ -37,6 +38,7 @@ export const t = {
     reintentar: "Reintentar",
     cargando: "Cargando…",
     errorRed: "No se pudo conectar con el servidor.",
+    cancelar: "Cancelar",
   },
   hoy: {
     dias: "Buenos días",
@@ -56,10 +58,11 @@ export const t = {
     cambiarIdea: "He cambiado de idea",
     sinCalzado: "Añade calzado al armario para completar el outfit.",
     sinCapa: "Hace fresco, pero no tienes ninguna capa exterior disponible.",
+    sinMasCombinaciones: "Ya han salido todas las combinaciones posibles: esta se repite.",
     enLavadora: (n: number) =>
       n === 1 ? "1 prenda en la lavadora: no se propone." : `${n} prendas en la lavadora: no se proponen.`,
     faltaTitulo: "Aún no puedo proponerte un outfit",
-    faltaTexto: (que: string) => `Necesito al menos una prenda de ${que} disponible.`,
+    faltaTexto: (que: string[]) => `Necesito al menos una prenda de ${que.join(" y ")} disponible.`,
     faltaGenerico: "Añade más prendas al armario.",
   },
   armario: {
@@ -72,6 +75,7 @@ export const t = {
     enLavado: (n: number) => (n === 1 ? "1 prenda en la lavadora" : `${n} prendas en la lavadora`),
     enLavadoTexto: "No se propondrán hasta que estén limpias",
     anadir: "Añadir prenda",
+    talla: (s: string) => `Talla ${s}`,
     sinResultados: "No hay prendas con estos filtros.",
     vacio: {
       titulo: "Tu armario está vacío",
@@ -114,7 +118,6 @@ export const t = {
     },
     atributos: "Atributos de la prenda",
     dudaColor: (a: string, b: string) => `La IA dudaba entre ${a} y ${b}. Comprueba el color.`,
-    usarColor: (c: string) => `Usar ${c}`,
     campos: {
       nombre: "Nombre",
       tipo: "Tipo de prenda",
@@ -167,12 +170,18 @@ export const t = {
     ultima: "Última vez",
     nunca: "Todavía no",
     ponerHoy: "Me la pongo hoy",
+    registrado: "Apuntada para hoy",
     crearLook: "Crear look con esta prenda",
     pronto: "Pronto",
     editar: "Editar detalles",
     eliminar: "Eliminar prenda",
-    confirmarEliminar: "¿Eliminar esta prenda y sus fotos? No se puede deshacer.",
+    confirmarTitulo: "¿Seguro que quieres eliminar esta prenda?",
+    confirmarEliminar: "Se borrarán la prenda, sus fotos y su historial de uso. No se puede deshacer.",
+    eliminarBoton: "Eliminar",
+    eliminando: "Eliminando…",
+    errorEliminar: "No se pudo eliminar la prenda. Inténtalo de nuevo.",
     noExiste: "Esta prenda ya no existe.",
+    irArmario: "Ir al armario",
     favorito: "Favorita",
   },
   editar: {
@@ -193,6 +202,12 @@ export const t = {
     lavadoraTitulo: "Prendas en la lavadora",
     lavadoraVacia: "No hay prendas en la lavadora.",
     limpiar: "Marcar todas como limpias",
+    limpiarTitulo: "¿Marcar todas como limpias?",
+    limpiarTexto: (n: number) =>
+      n === 1
+        ? "La prenda saldrá de la lavadora y volverá a proponerse en los outfits."
+        : `Las ${n} prendas saldrán de la lavadora y volverán a proponerse en los outfits.`,
+    limpiarBoton: "Marcar como limpias",
     nPrendas: (n: number) => (n === 1 ? "1 prenda" : `${n} prendas`),
     apariencia: "Apariencia",
     tema: "Tema",
@@ -217,13 +232,15 @@ export const t = {
     olvidar: "Borrar lo aprendido",
     olvidarConfirmar: "Toca otra vez para confirmar",
     olvidado: "Hecho. El algoritmo empieza de cero.",
-    version: "Armario · v0.3.1",
+    version: "Armario · v0.3.2",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",
     pidiendo: "Pidiendo el código…",
     cerrar: "Cerrar sesión de Codex",
-    confirmarCerrar: "¿Cerrar la sesión de Codex? Podrás iniciar sesión con otra cuenta.",
+    confirmarTitulo: "¿Cerrar la sesión de Codex?",
+    confirmarCerrar: "Codex dejará de analizar prendas hasta que vuelvas a iniciarla, con esta u otra cuenta de ChatGPT.",
+    cerrarBoton: "Cerrar sesión",
     pasos: "Inicia sesión con tu cuenta de ChatGPT",
     paso1: "1. Abre esta página e inicia sesión:",
     abrir: "Abrir la página de OpenAI",
@@ -231,7 +248,6 @@ export const t = {
     tocaCopiar: "Toca el código para copiarlo",
     copiado: "Copiado",
     esperando: "Esperando a que introduzcas el código…",
-    cancelar: "Cancelar",
     fallo: "No se pudo completar. Inténtalo de nuevo.",
     uso: "Límite de Codex",
     plan: (p: string) => `Plan ${p}`,
@@ -239,6 +255,8 @@ export const t = {
     ventanaSemana: "Esta semana",
     usado: (n: number) => `${n}% usado`,
     seRenueva: (cuando: string) => `Se renueva ${cuando}`,
+    hoyA: (hora: string) => `hoy a las ${hora}`,
+    elDiaA: (fecha: string, hora: string) => `el ${fecha} a las ${hora}`,
     agotado: "Has llegado al límite. Mientras tanto se usará Claude.",
     usoError: "No se pudo leer el límite.",
     actualizar: "Actualizar",

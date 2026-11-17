@@ -40,6 +40,10 @@ def analyze(images: list[Path], preferred: str, prompt: str) -> AnalysisResult:
             log.warning("Análisis con %s fallido: %s", name, exc)
             errors.append(f"{name}: {exc}")
             continue
+        except Exception:  # un fallo inesperado de un proveedor no debe impedir probar el otro
+            log.exception("Error inesperado al analizar con %s", name)
+            errors.append(f"{name}: error inesperado")
+            continue
         return AnalysisResult(draft=draft, provider=name, fallback_used=name != preferred, error=None)
 
     return AnalysisResult(draft=None, provider=None, fallback_used=False, error="; ".join(errors))

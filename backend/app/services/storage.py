@@ -72,8 +72,10 @@ def save_upload(data: bytes, filename: str | None) -> str:
         img = Image.open(io.BytesIO(data))
         img = ImageOps.exif_transpose(img)  # respeta la orientación del móvil
         img = img.convert("RGB")
-    except (UnidentifiedImageError, OSError) as exc:
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
         raise InvalidPhoto("El archivo no es una imagen válida") from exc
+    except Image.DecompressionBombError as exc:
+        raise InvalidPhoto("La foto tiene demasiados píxeles") from exc
 
     config.ensure_dirs()
     photo_id = uuid.uuid4().hex

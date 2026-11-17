@@ -5,30 +5,19 @@ que habla JSON por la entrada/salida estándar y sabe leerlo (`account/rateLimit
 Aquí se arranca ese servidor, se le pregunta y se cierra.
 """
 import json
-import os
 import shutil
-import signal
 import subprocess
-import sys
 import threading
 import time
 
 from ... import config
+from .process import NEW_SESSION, kill_tree
 
 _CACHE_SECONDS = 60
+_FAILURE_CACHE_SECONDS = 20  # un fallo también se recuerda un rato, para no repetir la espera
 _cache: tuple[float, dict] | None = None
+_failure: tuple[float, str] | None = None
 _lock = threading.Lock()
-
-
-def _kill(process: subprocess.Popen) -> None:
-    """El CLI es un lanzador que arranca otro proceso: hay que cerrar los dos."""
-    try:
-        if sys.platform == "win32":
-            subprocess.run(["taskkill", "/F", "/T", "/PID", str(process.pid)], capture_output=True)
-        else:
-            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-    except (OSError, ProcessLookupError):
-        pass
 
 
 def _window(raw: dict | None) -> dict | None:
@@ -54,30 +43,45 @@ def parse_rate_limits(result: dict) -> dict:
 
 def read(timeout: float = 15) -> dict:
     """Devuelve los límites. Lanza RuntimeError si no se pueden leer."""
-    global _cache
     with _lock:
         if _cache and time.time() - _cache[0] < _CACHE_SECONDS:
             return _cache[1]
+        if _failure and time.time() - _failure[0] < _FAILURE_CACHE_SECONDS:
+            raise RuntimeError(_failure[1])
+        try:
+            return _read(timeout)
+        except RuntimeError as exc:
+            _remember_failure(str(exc))
+            raise
 
-        binary = shutil.which(config.CODEX_BIN)
-        if not binary:
-            raise RuntimeError("Codex no está instalado en el servidor")
 
-        process = subprocess.Popen(
-            [binary, "app-server"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            start_new_session=sys.platform != "win32",
-        )
-        answer: dict = {}
-        done = threading.Event()
+def _remember_failure(message: str) -> None:
+    global _failure
+    _failure = (time.time(), message)
 
-        def reader() -> None:
-            assert process.stdout is not None
+
+def _read(timeout: float) -> dict:
+    global _cache
+    binary = shutil.which(config.CODEX_BIN)
+    if not binary:
+        raise RuntimeError("Codex no está instalado en el servidor")
+
+    process = subprocess.Popen(
+        [binary, "app-server"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        start_new_session=NEW_SESSION,
+    )
+    answer: dict = {}
+    done = threading.Event()
+
+    def reader() -> None:
+        assert process.stdout is not None
+        try:
             for line in process.stdout:
                 try:
                     message = json.loads(line)
@@ -85,37 +89,41 @@ def read(timeout: float = 15) -> dict:
                     continue
                 if message.get("id") == 2:
                     answer.update(message)
-                    done.set()
                     return
-
-        threading.Thread(target=reader, daemon=True).start()
-
-        def send(message: dict) -> None:
-            assert process.stdin is not None
-            process.stdin.write(json.dumps(message) + "\n")
-            process.stdin.flush()
-
-        try:
-            send({"id": 1, "method": "initialize",
-                  "params": {"clientInfo": {"name": "armario", "title": "Armario", "version": "1"}}})
-            send({"method": "initialized"})
-            send({"id": 2, "method": "account/rateLimits/read"})
-            done.wait(timeout)
-        except OSError as exc:
-            raise RuntimeError("No se pudo hablar con Codex") from exc
+        except (OSError, ValueError):
+            pass
         finally:
-            _kill(process)
+            done.set()  # también si el proceso cierra la salida sin responder
 
-        if "result" not in answer:
-            detail = (answer.get("error") or {}).get("message") if answer else None
-            raise RuntimeError(detail or "Codex no devolvió los límites (¿sesión iniciada?)")
+    threading.Thread(target=reader, daemon=True).start()
 
-        data = parse_rate_limits(answer["result"])
-        _cache = (time.time(), data)
-        return data
+    def send(message: dict) -> None:
+        assert process.stdin is not None
+        process.stdin.write(json.dumps(message) + "\n")
+        process.stdin.flush()
+
+    try:
+        send({"id": 1, "method": "initialize",
+              "params": {"clientInfo": {"name": "armario", "title": "Armario", "version": "1"}}})
+        send({"method": "initialized"})
+        send({"id": 2, "method": "account/rateLimits/read"})
+        done.wait(timeout)
+    except OSError as exc:
+        raise RuntimeError("No se pudo hablar con Codex") from exc
+    finally:
+        kill_tree(process)
+
+    if "result" not in answer:
+        detail = (answer.get("error") or {}).get("message") if answer else None
+        raise RuntimeError(detail or "Codex no devolvió los límites (¿sesión iniciada?)")
+
+    data = parse_rate_limits(answer["result"])
+    _cache = (time.time(), data)
+    return data
 
 
 def forget() -> None:
     """Tras iniciar o cerrar sesión, lo guardado ya no vale."""
-    global _cache
+    global _cache, _failure
     _cache = None
+    _failure = None

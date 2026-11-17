@@ -118,7 +118,7 @@ def today(city: str) -> Weather | None:
             )
             response.raise_for_status()
             weather = parse_forecast(name, response.json())
-    except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
+    except (httpx.HTTPError, KeyError, IndexError, ValueError, TypeError) as exc:
         log.warning("No se pudo leer el tiempo de %s: %s", city, exc)
         return None
     _forecasts[key] = (time.time(), weather)

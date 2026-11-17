@@ -20,6 +20,9 @@ router = APIRouter(prefix="/api", tags=["hoy"])
 
 PROPOSED, CHOSEN, DISCARDED, REPLACED = "propuesto", "elegido", "descartado", "sustituido"
 
+# Cuántos días atrás no se repite una combinación: la que se eligió («Me gusta») y la que solo se propuso.
+CHOSEN_MEMORY_DAYS, PROPOSED_MEMORY_DAYS = 7, 2
+
 
 class WeatherOut(BaseModel):
     city: str
@@ -45,7 +48,7 @@ class TodayOut(BaseModel):
     weather: WeatherOut | None
     outfit: OutfitOut | None
     missing: list[str]  # categorías imprescindibles sin prendas disponibles
-    notes: list[str]  # avisos: "sin_capa", "sin_calzado"
+    notes: list[str]  # avisos: "sin_capa", "sin_calzado", "sin_mas_combinaciones"
     in_laundry: int
     total: int
 
@@ -70,6 +73,7 @@ def _items(db: Session, garments: list[Garment], today: date) -> list[outfits.It
             closure=g.closure,
             fit=g.fit,
             thickness=g.thickness,
+            hood=g.hood,
             days_since_worn=(today - stats[g.id][1]).days if g.id in stats and stats[g.id][1] else None,
         )
         for g in garments
@@ -93,26 +97,24 @@ def _still_valid(db: Session, outfit: Outfit) -> bool:
     return len(garments) == len(outfit.garment_ids) and not any(g.in_laundry for g in garments)
 
 
-def _generate(db: Session, today: date, forecast: weather.Weather | None) -> tuple[Outfit | None, list[str], list[str]]:
+def _generate(
+    db: Session, today: date, forecast: weather.Weather | None, replaced: Outfit | None = None
+) -> tuple[Outfit | None, list[str], list[str]]:
+    """Propone y guarda un outfit. `replaced` es la propuesta que el usuario acaba de pedir cambiar."""
     available = list(db.scalars(select(Garment).where(Garment.in_laundry.is_(False))))
     categories = {g.category for g in available}
     missing = [c for c in ("parte_superior", "parte_inferior") if c not in categories]
     if missing:
         return None, [catalog.CATEGORIES[c] for c in missing], []
 
-    since = today - timedelta(days=7)
-    recent = list(db.scalars(select(Outfit).where(Outfit.day >= since)))
-    # No repetir lo ya propuesto hoy ni lo que se eligió estos días.
-    avoid = [set(o.garment_ids) for o in recent if o.day == today or o.status == CHOSEN]
-    disliked = set()
-    for o in db.scalars(select(Outfit).where(Outfit.status == DISCARDED)):
-        tops_bottoms = [
-            g.id
-            for g in db.scalars(select(Garment).where(Garment.id.in_(o.garment_ids)))
-            if g.category in ("parte_superior", "parte_inferior")
-        ]
-        if len(tops_bottoms) == 2:
-            disliked.add(frozenset(tops_bottoms))
+    recent = db.scalars(
+        select(Outfit).where(Outfit.day >= today - timedelta(days=CHOSEN_MEMORY_DAYS)).order_by(Outfit.id)
+    )
+    # No repetir lo que se eligió estos días ni lo que ya se propuso hoy o hace nada, se eligiera o no:
+    # así la primera propuesta de cada día cambia. Un «Pasar» no necesita más castigo aquí: ya queda
+    # apuntado como valoración y lo tiene en cuenta lo aprendido (load_taste).
+    shown_since = today - timedelta(days=PROPOSED_MEMORY_DAYS)
+    avoid = [set(o.garment_ids) for o in recent if o.day >= shown_since or o.status == CHOSEN]
 
     proposal = outfits.propose(
         _items(db, available, today),
@@ -120,11 +122,18 @@ def _generate(db: Session, today: date, forecast: weather.Weather | None) -> tup
         rain_probability=forecast.rain_probability if forecast else 0,
         today=today,
         avoid=avoid,
-        disliked_pairs=disliked,
         taste=load_taste(db),
     )
     if proposal is None:
         return None, [], []
+    # Que no queden más combinaciones solo se avisa a quien acaba de pedir otra.
+    notes = proposal.notes if replaced is not None else []
+    if replaced is not None and set(proposal.ids) == set(replaced.garment_ids):
+        # No hay nada distinto que ofrecer: se queda la misma propuesta en vez de guardar una copia.
+        replaced.status = PROPOSED
+        replaced.affinity = proposal.affinity
+        db.commit()
+        return replaced, [], notes
     outfit = Outfit(
         day=today,
         garment_ids=proposal.ids,
@@ -135,7 +144,7 @@ def _generate(db: Session, today: date, forecast: weather.Weather | None) -> tup
     )
     db.add(outfit)
     db.commit()
-    return outfit, [], proposal.notes
+    return outfit, [], notes
 
 
 def _response(db: Session, today: date, forecast, city: str, outfit: Outfit | None, missing, notes) -> TodayOut:
@@ -145,9 +154,10 @@ def _response(db: Session, today: date, forecast, city: str, outfit: Outfit | No
         stats = _wear_stats(db, list(garments))
         # Mismo orden en que se pensó: capa, arriba, abajo, calzado.
         garments_out = [_to_out(garments[i], stats) for i in outfit.garment_ids if i in garments]
-        # Los avisos se calculan siempre, también al recargar una propuesta ya guardada.
+        # Los avisos se calculan siempre, también al recargar una propuesta ya guardada. El de que no
+        # quedan más combinaciones solo tiene sentido justo después de pedir otra.
         categories = {g.category for g in garments.values()}
-        notes = []
+        notes = [n for n in notes if n == "sin_mas_combinaciones"]
         if "calzado" not in categories:
             notes.append("sin_calzado")
         has_layer = db.scalar(
@@ -175,8 +185,8 @@ def _response(db: Session, today: date, forecast, city: str, outfit: Outfit | No
     )
 
 
-def _today_state(db: Session, regenerate: bool = False) -> TodayOut:
-    today = date.today()
+def _today_state(db: Session, regenerate: bool = False, replaced: Outfit | None = None) -> TodayOut:
+    today = outfits.local_today()
     city = read_settings(db).city
     forecast = weather.today(city)
     outfit = _current(db, today)
@@ -187,7 +197,7 @@ def _today_state(db: Session, regenerate: bool = False) -> TodayOut:
         db.commit()
         outfit = None
     if outfit is None or regenerate:
-        outfit, missing, notes = _generate(db, today, forecast)
+        outfit, missing, notes = _generate(db, today, forecast, replaced)
     return _response(db, today, forecast, city, outfit, missing, notes)
 
 
@@ -199,23 +209,24 @@ def get_today(db: Session = Depends(get_db)):
 
 @router.post("/today/next", response_model=TodayOut)
 def next_outfit(body: NextIn, db: Session = Depends(get_db)):
-    """«Generar otra propuesta» (sin opinar) o «Pasar» (no me gusta: se recuerda para no repetir la pareja)."""
-    current = _current(db, date.today())
+    """«Generar otra propuesta» (sin opinar) o «Pasar» (no me gusta: cuenta como valoración)."""
+    current = _current(db, outfits.local_today())
     if current and current.status == CHOSEN:
         raise HTTPException(409, "Ya has elegido el outfit de hoy")
     if current:
         current.status = DISCARDED if body.action == "pasar" else REPLACED
-        if body.action == "pasar":  # también enseña, pero menos: no sabemos el motivo
+        already = db.scalar(select(Rating.id).where(Rating.outfit_id == current.id, Rating.liked.is_(False)))
+        if body.action == "pasar" and not already:  # también enseña, pero menos: no sabemos el motivo
             db.add(Rating(garment_ids=current.garment_ids, liked=False, weight=0.5, reasons=[],
                           source="hoy", outfit_id=current.id))
         db.commit()
-    return _today_state(db, regenerate=True)
+    return _today_state(db, regenerate=True, replaced=current)
 
 
 @router.post("/today/choose", response_model=TodayOut)
 def choose_outfit(db: Session = Depends(get_db)):
     """«Me gusta»: es el outfit de hoy. Se apunta un uso de cada prenda."""
-    today = date.today()
+    today = outfits.local_today()
     current = _current(db, today)
     if not current:  # aún no se había pedido la propuesta de hoy
         _today_state(db)
@@ -235,7 +246,7 @@ def choose_outfit(db: Session = Depends(get_db)):
 @router.post("/today/unchoose", response_model=TodayOut)
 def unchoose_outfit(db: Session = Depends(get_db)):
     """Deshace el «Me gusta»: vuelve a ser una propuesta y se quitan los usos que apuntó."""
-    current = _current(db, date.today())
+    current = _current(db, outfits.local_today())
     if current and current.status == CHOSEN:
         current.status = PROPOSED
         db.query(WearLog).filter(WearLog.outfit_id == current.id).delete()

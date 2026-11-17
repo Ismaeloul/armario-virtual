@@ -24,7 +24,9 @@ export function BackHeader({ title }: { title: string }) {
         <button
           type="button"
           aria-label={t.comun.volver}
-          onClick={() => navigate(-1)}
+          // Si la pantalla se abrió directamente (sin historial dentro de la app), volver al Armario
+          // en lugar de salir de la app.
+          onClick={() => (window.history.state?.idx > 0 ? navigate(-1) : navigate("/armario", { replace: true }))}
           className="flex h-11 w-11 items-center justify-center active:opacity-60"
         >
           <Icon name="arrow_back" size={22} />
@@ -35,11 +37,12 @@ export function BackHeader({ title }: { title: string }) {
   );
 }
 
-const TABS: { to: string; label: string; icon: IconName }[] = [
-  { to: "/", label: t.nav.hoy, icon: "sunny" },
-  { to: "/armario", label: t.nav.armario, icon: "styler" },
-  { to: "/gustos", label: t.nav.gustos, icon: "favorite" },
-  { to: "/ajustes", label: t.nav.ajustes, icon: "tune" },
+// La pestaña en la que estás lleva el icono relleno.
+const TABS: { to: string; label: string; icon: IconName; active: IconName }[] = [
+  { to: "/", label: t.nav.hoy, icon: "sunny", active: "sunny_fill" },
+  { to: "/armario", label: t.nav.armario, icon: "checkroom", active: "checkroom_fill" },
+  { to: "/gustos", label: t.nav.gustos, icon: "favorite", active: "favorite_fill" },
+  { to: "/ajustes", label: t.nav.ajustes, icon: "tune", active: "tune_fill" },
 ];
 
 /** Barra inferior con cuatro pestañas: Hoy, Armario, Gustos y Ajustes. */
@@ -58,8 +61,12 @@ export function BottomNav() {
               }`
             }
           >
-            <Icon name={tab.icon} />
-            <span className="text-[10px] tracking-wide">{tab.label}</span>
+            {({ isActive }) => (
+              <>
+                <Icon name={isActive ? tab.active : tab.icon} />
+                <span className="text-[10px] tracking-wide">{tab.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </div>

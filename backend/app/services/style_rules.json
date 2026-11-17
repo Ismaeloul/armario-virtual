@@ -1428,8 +1428,8 @@
     {
       "a": "deportivo",
       "b": "deportivo",
-      "score": 1,
-      "nota": "Coherencia deportiva.",
+      "score": 2,
+      "nota": "Mismo registro: coherente (igual que el resto de parejas de un mismo estilo).",
       "fuentes": 1
     },
     {
@@ -1448,6 +1448,13 @@
     }
   ],
   "pattern_pairs": [
+    {
+      "a": "liso",
+      "b": "liso",
+      "score": 1,
+      "nota": "Todo liso: lo seguro. Sin esta fila, cualquier prenda estampada puntuaba siempre por encima de la lisa. Sin fuente directa (se deduce de la regla de base neutra).",
+      "fuentes": 0
+    },
     {
       "a": "liso",
       "b": "rayas",

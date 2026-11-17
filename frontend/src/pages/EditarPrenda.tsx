@@ -1,11 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { PrimaryButton } from "../components/Controls";
 import { GarmentForm } from "../components/GarmentForm";
 import { Icon } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
 import { t } from "../i18n/es";
-import { api, type Catalog, type GarmentFields } from "../lib/api";
+import { ApiError, api, type Catalog, type GarmentFields } from "../lib/api";
 
 export default function EditarPrenda() {
   const { id } = useParams();
@@ -15,8 +15,15 @@ export default function EditarPrenda() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    api.catalog().then(setCatalog).catch(() => undefined);
+  // Error al cargar: 404 = la prenda no existe; cualquier otro, fallo de red con «Reintentar».
+  const [loadError, setLoadError] = useState<"missing" | "red" | null>(null);
+
+  const load = () => {
+    setLoadError(null);
+    api
+      .catalog()
+      .then(setCatalog)
+      .catch(() => setLoadError((current) => current ?? "red"));
     api
       .garment(Number(id))
       .then((g) =>
@@ -38,8 +45,9 @@ export default function EditarPrenda() {
           notes: g.notes,
         }),
       )
-      .catch(() => setError(t.ficha.noExiste));
-  }, [id]);
+      .catch((e) => setLoadError(e instanceof ApiError && e.status === 404 ? "missing" : "red"));
+  };
+  useEffect(load, [id]);
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
@@ -72,8 +80,25 @@ export default function EditarPrenda() {
               {saving ? t.nueva.guardando : t.editar.guardar}
             </PrimaryButton>
           </form>
+        ) : loadError ? (
+          <div className="mt-10 flex flex-col items-center gap-2 text-center">
+            <p className="text-sm text-text-2">{loadError === "missing" ? t.ficha.noExiste : t.comun.errorRed}</p>
+            {loadError === "missing" ? (
+              <Link
+                to="/armario"
+                replace
+                className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-primary"
+              >
+                {t.ficha.irArmario}
+              </Link>
+            ) : (
+              <button type="button" onClick={load} className="min-h-11 px-3 text-sm font-semibold text-primary">
+                {t.comun.reintentar}
+              </button>
+            )}
+          </div>
         ) : (
-          <p className="mt-10 text-center text-sm text-text-3">{error ?? t.comun.cargando}</p>
+          <p className="mt-10 text-center text-sm text-text-3">{t.comun.cargando}</p>
         )}
       </Screen>
     </>

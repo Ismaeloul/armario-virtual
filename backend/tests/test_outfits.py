@@ -1,10 +1,11 @@
 import random
+from dataclasses import replace
 from datetime import date
 
 import pytest
 from conftest import VALID_DRAFT
 
-from app.services import outfits, weather
+from app.services import outfits, style_rules, taste, weather
 from app.services.outfits import Item, day_kind, propose
 
 HOY = date(2026, 11, 17)
@@ -69,6 +70,118 @@ def test_lo_usado_ayer_puntua_peor():
     fresco = [item(1, "parte_superior"), item(2, "parte_inferior")]
     repetido = [item(1, "parte_superior", days_since_worn=1), item(2, "parte_inferior")]
     assert outfits.score(fresco, "templado") > outfits.score(repetido, "templado")
+
+
+def test_repetir_camiseta_pesa_mas_que_repetir_zapatillas():
+    camiseta_de_ayer = [replace(BASICO[0], days_since_worn=1), *BASICO[1:]]
+    zapatillas_de_ayer = [*BASICO[:2], replace(BASICO[2], days_since_worn=1)]
+    assert outfits.score(camiseta_de_ayer, "templado") < outfits.score(zapatillas_de_ayer, "templado")
+    assert outfits.score(zapatillas_de_ayer, "templado") < outfits.score(BASICO, "templado")
+
+
+def test_el_verde_oliva_cuenta_como_neutro():
+    oliva = item(1, "parte_superior", color="verde oliva")
+    assert "verde oliva" in outfits.NEUTRALS and style_rules.is_neutral(oliva)
+    # Con un color fuerte al lado sigue siendo un solo color fuerte: ni va cargado ni resta.
+    con_rojo = [oliva, item(2, "parte_inferior", color="rojo", type_="chino")]
+    assert taste.loudness(con_rojo) == 1 and style_rules.palette(con_rojo) == 0
+
+
+def test_cazadora_sobre_sudadera_con_cremallera_no_se_propone_ni_siendo_la_unica_capa():
+    con_cremallera = item(1, "parte_superior", type_="sudadera", season="invierno", closure="cremallera")
+    prendas = [con_cremallera, *BASICO[1:], item(4, "capa_exterior", type_="chaqueta", season="invierno")]
+    for semilla in range(20):
+        outfit = propose(prendas, 5, 0, HOY, rng=random.Random(semilla))
+        assert outfit.ids == [1, 2, 3] and not outfit.with_layer  # hace frío, pero mejor sin capa que así
+    # Con otra parte de arriba la cazadora sí sale; con la sudadera de cremallera, nunca.
+    prendas.append(item(5, "parte_superior", type_="jersey", season="invierno"))
+    vistas = [propose(prendas, 5, 0, HOY, rng=random.Random(semilla)).ids for semilla in range(40)]
+    assert any(4 in ids for ids in vistas) and not any({1, 4} <= set(ids) for ids in vistas)
+
+
+def test_la_sudadera_con_cremallera_hace_de_capa_en_un_dia_templado():
+    prendas = BASICO[1:] + [
+        item(1, "parte_superior", type_="sudadera", closure="cremallera"),
+        item(5, "parte_superior", type_="jersey"),
+        item(4, "capa_exterior", type_="chaqueta"),
+    ]
+    vistas = [propose(prendas, 16, 0, HOY, rng=random.Random(semilla)) for semilla in range(40)]
+    sola = [p for p in vistas if 1 in p.ids]
+    assert sola and all(not p.with_layer for p in sola)  # sale, y siempre sin cazadora encima
+    assert any(p.ids == [4, 5, 2, 3] for p in vistas)  # el jersey sí lleva su chaqueta
+
+
+def test_sin_mas_combinaciones_avisa_y_no_repite_la_que_se_acaba_de_ver():
+    prendas = BASICO + [item(6, "parte_superior", color="blanco")]
+    una, otra = {1, 2, 3}, {6, 2, 3}  # no hay más
+    assert "sin_mas_combinaciones" not in propose(prendas, 18, 0, HOY, avoid=[una]).notes
+    agotado = propose(prendas, 18, 0, HOY, avoid=[una, otra])
+    assert set(agotado.ids) == una and "sin_mas_combinaciones" in agotado.notes  # la que hace más que salió
+    assert set(propose(prendas, 18, 0, HOY, avoid=[una, otra, una]).ids) == otra
+    unica = propose(BASICO, 18, 0, HOY, avoid=[{1, 2, 3}])
+    assert unica.ids == [1, 2, 3] and "sin_mas_combinaciones" in unica.notes
+
+
+def test_el_abrigo_es_para_el_frio_y_la_sobrecamisa_para_el_entretiempo():
+    prendas = BASICO[1:] + [
+        item(1, "parte_superior", type_="jersey", season="invierno"),
+        item(4, "capa_exterior", type_="abrigo", season="invierno"),
+        item(5, "capa_exterior", type_="sobrecamisa"),
+    ]
+    for semilla in range(20):
+        assert propose(prendas, 3, 0, HOY, rng=random.Random(semilla)).ids[0] == 4
+        assert propose(prendas, 16, 0, HOY, rng=random.Random(semilla)).ids[0] == 5
+
+
+def test_lo_grueso_puntua_peor_con_calor_y_mejor_con_frio():
+    fino = [replace(BASICO[0], thickness="fino"), *BASICO[1:]]
+    grueso = [replace(BASICO[0], thickness="grueso"), *BASICO[1:]]
+    assert outfits.score(grueso, "calor") < outfits.score(fino, "calor")
+    assert outfits.score(grueso, "frio") > outfits.score(fino, "frio")
+
+
+def test_la_afinidad_no_depende_de_cuantas_prendas_lleve_la_combinacion():
+    camiseta = item(1, "parte_superior", color="blanco")
+    vaquero, zapatillas = BASICO[1], BASICO[2]
+    chaqueta = item(4, "capa_exterior", type_="chaqueta")
+    afinidades = [
+        outfits.combo_affinity(combo)
+        for combo in ([camiseta, vaquero], [camiseta, vaquero, zapatillas], [chaqueta, camiseta, vaquero, zapatillas])
+    ]
+    assert max(afinidades) - min(afinidades) <= 6, afinidades
+    # Sin ningún voto, ni lo más clásico llega a lo alto: eso queda para lo que el usuario confirme.
+    assert all(55 <= afinidad <= 80 for afinidad in afinidades), afinidades
+
+
+def test_hoy_ensena_la_misma_afinidad_que_gustos_y_no_la_cambia_el_dia():
+    propuesta = propose(BASICO, 18, 0, HOY)
+    piezas = [taste.Piece(id=i.id, type=i.type, category=i.category, color=i.color, style=i.style, pattern=i.pattern)
+              for i in propuesta.items]
+    assert propuesta.affinity == outfits.combo_affinity(piezas)
+    otro_dia = [replace(i, days_since_worn=1, favorite=True) for i in BASICO]
+    assert propose(otro_dia, 30, 0, date(2026, 7, 10)).affinity == propuesta.affinity
+
+
+def test_con_un_armario_enorme_solo_completa_las_mejores_parejas_y_respeta_las_reglas(monkeypatch):
+    monkeypatch.setattr(outfits, "MAX_COMBOS", 10)
+    prendas = (
+        [item(i, "parte_superior", type_="jersey", season="invierno", color=c)
+         for i, c in enumerate(["negro", "gris", "rojo", "verde", "beige", "naranja"], 1)]
+        + [item(10 + i, "parte_inferior", type_="vaquero", color=c) for i, c in enumerate(["azul", "negro", "rosa"])]
+        + [item(20, "parte_superior", type_="camiseta"), item(21, "parte_inferior", type_="pantalón corto", season="verano")]
+        + [item(30, "calzado", color="blanco", type_="zapatillas"), item(31, "calzado", color="marrón", type_="botas")]
+        + [item(40, "capa_exterior", type_="chaqueta", season="invierno")]
+    )
+    for semilla in range(10):
+        outfit = propose(prendas, 8, 0, HOY, rng=random.Random(semilla))
+        assert [p.category for p in outfit.items] == ["capa_exterior", "parte_superior", "parte_inferior", "calzado"]
+        assert not {20, 21} & set(outfit.ids)  # la ropa de verano, en noviembre, no
+
+
+def test_la_fecha_de_hoy_es_la_de_casa_y_no_falla_sin_zonas_horarias(monkeypatch):
+    assert isinstance(outfits.local_today(), date)
+    monkeypatch.setenv("ARMARIO_TZ", "Marte/Olympus")
+    assert outfits.local_today() == date.today()
 
 
 def test_lee_la_prevision_de_open_meteo():
@@ -191,3 +304,50 @@ def test_fuera_de_los_meses_de_calor_no_propone_ropa_de_verano_aunque_suba_la_te
 def test_la_camiseta_de_manga_larga_no_cuenta_como_de_verano():
     larga = item(1, "parte_superior", details="Camiseta manga larga")
     assert outfits.summer_only(item(2, "parte_superior")) and not outfits.summer_only(larga)
+    assert not outfits.summer_only(item(3, "parte_superior", season="invierno"))  # ni la marcada de invierno
+    # Una camisa solo es de verano si el texto dice que es de manga corta, en singular o en plural.
+    camisa = item(4, "parte_superior", type_="camisa", details="Corte holgado, mangas cortas amplias")
+    assert outfits.summer_only(camisa) and not outfits.summer_only(item(5, "parte_superior", type_="camisa"))
+    assert not outfits.summer_only(item(6, "parte_superior", details="Hombros caídos y mangas largas"))
+
+
+def test_pasar_cuenta_como_una_valoracion_y_sin_mas_combinaciones_no_duplica_la_propuesta(
+    client, sin_tiempo, photo_bytes
+):
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from app.db import engine
+    from app.models import Outfit, Rating
+
+    _prenda(client, photo_bytes, name="Camisa", type="camisa", season="todo_el_ano")
+    _prenda(client, photo_bytes, name="Vaquero", type="vaquero", season="todo_el_ano",
+            color_primary={"name": "azul", "hex": "#2f5fa8"})
+    primera = client.get("/api/today").json()
+    assert primera["notes"] == ["sin_calzado"]
+
+    # Solo hay una combinación posible: al pasar vuelve la misma y lo avisa.
+    for _ in range(2):
+        hoy = client.post("/api/today/next", json={"action": "pasar"}).json()
+        assert hoy["outfit"]["id"] == primera["outfit"]["id"] and hoy["outfit"]["status"] == "propuesto"
+        assert "sin_mas_combinaciones" in hoy["notes"]
+    assert "sin_mas_combinaciones" not in client.get("/api/today").json()["notes"]  # solo al pedir otra
+
+    with Session(engine) as db:
+        assert len(list(db.scalars(select(Outfit)))) == 1
+        valoraciones = [(r.liked, r.weight, r.source) for r in db.scalars(select(Rating))]
+    assert valoraciones == [(False, 0.5, "hoy")]  # pasar dos veces la misma no la castiga dos veces
+
+
+def test_un_pasar_no_veta_la_pareja_para_siempre(client, sin_tiempo, photo_bytes):
+    _armario(client, photo_bytes)
+    pasada = [g["id"] for g in client.get("/api/today").json()["outfit"]["garments"]]
+    client.post("/api/today/next", json={"action": "pasar"})
+    for _ in range(3):  # después, en Gustos, dice que esa misma combinación sí le gusta
+        client.post("/api/taste/rate", json={"garment_ids": pasada, "liked": True})
+    # Antes un «Pasar» restaba para siempre a esa pareja; ahora los «me gusta» lo compensan de sobra.
+    afinidades = {}
+    for _ in range(4):
+        outfit = client.post("/api/today/next", json={"action": "otra"}).json()["outfit"]
+        afinidades[frozenset(g["id"] for g in outfit["garments"])] = outfit["affinity"]
+    assert afinidades[frozenset(pasada)] == max(afinidades.values()) >= 85

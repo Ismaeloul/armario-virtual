@@ -174,6 +174,11 @@ class SettingsUpdate(BaseModel):
     # Solo escritura: nunca se devuelve. Cadena vacía = borrar la clave guardada.
     anthropic_api_key: str | None = Field(default=None, max_length=300)
 
+    @field_validator("city", mode="before")
+    @classmethod
+    def _strip_city(cls, v):
+        return v.strip() if isinstance(v, str) else v
+
 
 class AIStatus(BaseModel):
     codex_installed: bool

@@ -45,6 +45,22 @@ export function GarmentForm({
         : [...form.colors_secondary, { name, hex: DEFAULT_HEX[name] }].slice(0, 4),
     );
 
+  // El color principal no puede estar también entre los secundarios.
+  const setPrimary = (name: string) =>
+    onChange({
+      ...form,
+      color_primary: { name, hex: DEFAULT_HEX[name] },
+      colors_secondary: form.colors_secondary.filter((c) => c.name !== name),
+    });
+
+  // El calzado no tiene cierre, corte, grosor ni capucha: se limpian al pasar a un tipo de calzado.
+  const setType = (type: string) =>
+    onChange(
+      catalog.types[type] === "calzado"
+        ? { ...form, type, closure: null, fit: null, thickness: null, hood: false }
+        : { ...form, type },
+    );
+
   return (
     <div className="card flex flex-col gap-4 p-4">
       <Field label={t.nueva.campos.nombre}>
@@ -52,7 +68,7 @@ export function GarmentForm({
       </Field>
 
       <Field label={t.nueva.campos.tipo}>
-        <select className={inputClass} value={form.type} onChange={(e) => set("type", e.target.value)}>
+        <select className={inputClass} value={form.type} onChange={(e) => setType(e.target.value)}>
           {Object.entries(catalog.categories).map(([cat, label]) => (
             <optgroup key={cat} label={label}>
               {Object.entries(catalog.types)
@@ -74,12 +90,12 @@ export function GarmentForm({
             aria-label={t.nueva.campos.colorPrincipal}
             value={form.color_primary.hex}
             onChange={(e) => set("color_primary", { ...form.color_primary, hex: e.target.value })}
-            className="h-10 w-10 shrink-0 cursor-pointer rounded-full border border-line bg-transparent p-0"
+            className="h-11 w-11 shrink-0 cursor-pointer rounded-full border border-line bg-transparent p-0"
           />
           <select
             className={inputClass}
             value={form.color_primary.name}
-            onChange={(e) => set("color_primary", { name: e.target.value, hex: DEFAULT_HEX[e.target.value] })}
+            onChange={(e) => setPrimary(e.target.value)}
           >
             {catalog.colors.map((c) => (
               <option key={c} value={c}>
@@ -103,8 +119,8 @@ export function GarmentForm({
                 key={c}
                 type="button"
                 aria-pressed={form.color_primary.name === c}
-                onClick={() => set("color_primary", { name: c, hex: DEFAULT_HEX[c] })}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium ${
+                onClick={() => setPrimary(c)}
+                className={`flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-full border px-2.5 py-2 text-xs font-medium ${
                   form.color_primary.name === c ? "border-primary bg-card text-text" : "border-line bg-card-2 text-text-2"
                 }`}
               >
@@ -129,7 +145,7 @@ export function GarmentForm({
                   type="button"
                   aria-pressed={!!active}
                   onClick={() => toggleSecondary(c)}
-                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${
+                  className={`flex min-h-10 items-center gap-1.5 rounded-full border px-3 py-2 text-xs ${
                     active ? "border-primary bg-chip text-on-chip" : "border-line bg-card-2 text-text-2"
                   }`}
                 >
@@ -167,7 +183,8 @@ export function GarmentForm({
 
       {catalog.types[form.type] !== "calzado" && (
         <>
-      <div className="grid grid-cols-3 gap-2">
+      {/* Dos columnas: en tres, «Sin indicar» y valores largos se cortaban en un móvil de 375 px. */}
+      <div className="grid grid-cols-2 gap-2">
         <Field label={t.nueva.campos.cierre}>
           <select className={inputClass} value={form.closure ?? ""} onChange={(e) => set("closure", e.target.value || null)}>
             <option value="">{t.nueva.campos.sinDato}</option>
@@ -199,8 +216,13 @@ export function GarmentForm({
           </select>
         </Field>
       </div>
-      <label className="flex items-center gap-2 text-sm text-text">
-        <input type="checkbox" checked={form.hood} onChange={(e) => set("hood", e.target.checked)} />
+      <label className="-mt-2 flex min-h-11 items-center gap-2.5 text-sm text-text">
+        <input
+          type="checkbox"
+          className="h-5 w-5 accent-primary"
+          checked={form.hood}
+          onChange={(e) => set("hood", e.target.checked)}
+        />
         {t.nueva.campos.capucha}
       </label>
         </>

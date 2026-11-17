@@ -17,9 +17,14 @@ export default function Gustos() {
   const [asking, setAsking] = useState(false);
   const [reasons, setReasons] = useState<string[]>([]);
   const [culprits, setCulprits] = useState<number[]>([]);
+  const [sendError, setSendError] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
+    setFailed(false);
     api.tasteNext().then(setState).catch(() => setFailed(true));
+  };
+  useEffect(() => {
+    load();
     api.catalog().then(setCatalog).catch(() => undefined);
   }, []);
 
@@ -28,6 +33,7 @@ export default function Gustos() {
   const send = (liked: boolean) => {
     if (!combo) return;
     setBusy(true);
+    setSendError(false);
     api
       .tasteRate({
         garment_ids: combo.garments.map((g) => g.id),
@@ -41,7 +47,7 @@ export default function Gustos() {
         setReasons([]);
         setCulprits([]);
       })
-      .catch(() => undefined)
+      .catch(() => setSendError(true))
       .finally(() => setBusy(false));
   };
 
@@ -63,7 +69,15 @@ export default function Gustos() {
             )}
           </header>
 
-          {failed && <p className="text-center text-sm text-danger">{t.comun.errorRed}</p>}
+          {failed && (
+            <div className="card flex flex-col items-center gap-3 p-6 text-center">
+              <Icon name="error" className="text-danger" size={28} />
+              <p className="text-sm text-text-2">{t.comun.errorRed}</p>
+              <button type="button" onClick={load} className="min-h-11 px-3 text-sm font-semibold text-primary">
+                {t.comun.reintentar}
+              </button>
+            </div>
+          )}
           {!failed && !state && <p className="mt-6 text-center text-sm text-text-3">{t.comun.cargando}</p>}
 
           {state && !combo && (
@@ -151,7 +165,7 @@ export default function Gustos() {
                           type="button"
                           aria-pressed={reasons.includes(r)}
                           onClick={() => toggleReason(r)}
-                          className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                          className={`min-h-10 rounded-full border px-3 py-2 text-xs font-medium ${
                             reasons.includes(r)
                               ? "border-primary bg-primary text-on-primary"
                               : "border-line bg-card-2 text-text-2"
@@ -165,6 +179,12 @@ export default function Gustos() {
                   </div>
                 )}
               </section>
+
+              {sendError && (
+                <p role="alert" className="-mt-2 text-center text-sm text-danger">
+                  {t.comun.errorRed}
+                </p>
+              )}
 
               {asking ? (
                 <section className="flex flex-col gap-2">
@@ -182,10 +202,11 @@ export default function Gustos() {
                       setAsking(false);
                       setReasons([]);
                       setCulprits([]);
+                      setSendError(false);
                     }}
-                    className="h-10 text-xs font-medium text-text-2 underline"
+                    className="h-11 text-xs font-medium text-text-2 underline"
                   >
-                    {t.codex.cancelar}
+                    {t.comun.cancelar}
                   </button>
                 </section>
               ) : (
@@ -220,13 +241,13 @@ export default function Gustos() {
               {state.learned.likes.length > 0 && (
                 <p className="text-xs">
                   <span className="font-semibold">{t.gustos.teGusta} </span>
-                  {state.learned.likes.map(([a, b]) => `${a} con ${b}`).join(" · ")}
+                  {state.learned.likes.map(([a, b]) => t.gustos.pareja(a, b)).join(" · ")}
                 </p>
               )}
               {state.learned.dislikes.length > 0 && (
                 <p className="text-xs">
                   <span className="font-semibold">{t.gustos.noTeGusta} </span>
-                  {state.learned.dislikes.map(([a, b]) => `${a} con ${b}`).join(" · ")}
+                  {state.learned.dislikes.map(([a, b]) => t.gustos.pareja(a, b)).join(" · ")}
                 </p>
               )}
             </section>

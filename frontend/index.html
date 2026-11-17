@@ -18,7 +18,11 @@
         try {
           var t = localStorage.getItem("armario.tema") || "sistema";
           var oscuro = t === "oscuro" || (t === "sistema" && matchMedia("(prefers-color-scheme: dark)").matches);
-          if (oscuro) document.documentElement.classList.add("dark");
+          if (oscuro) {
+            document.documentElement.classList.add("dark");
+            // Barra del navegador a juego desde el primer pintado (luego la mantiene lib/theme.ts).
+            document.querySelector('meta[name="theme-color"]').setAttribute("content", "#131315");
+          }
         } catch (e) {}
       })();
     </script>

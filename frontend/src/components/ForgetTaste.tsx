@@ -11,6 +11,8 @@ export function ForgetTaste() {
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState(false);
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   // Si no se confirma en unos segundos, el botón vuelve a su estado normal.
   useEffect(() => {
@@ -23,20 +25,28 @@ export function ForgetTaste() {
     if (!armed) {
       setArmed(true);
       setDone(false);
+      setFailed(false);
       return;
     }
+    setBusy(true);
     api
       .tasteForget()
-      .then(() => {
-        setDone(true);
+      .then(() => setDone(true))
+      .catch(() => setFailed(true))
+      .finally(() => {
         setArmed(false);
-      })
-      .catch(() => setArmed(false));
+        setBusy(false);
+      });
   };
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="text-[11px] text-text-3 underline">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex min-h-11 items-center px-2 text-[11px] text-text-3 underline"
+      >
         {t.ajustes.avanzadas}
       </button>
       {open && (
@@ -44,8 +54,9 @@ export function ForgetTaste() {
           <p className="text-xs text-text-2">{t.ajustes.olvidarTexto}</p>
           <button
             type="button"
+            disabled={busy}
             onClick={press}
-            className={`flex h-11 items-center justify-center gap-2 rounded-xl border text-xs font-semibold ${
+            className={`flex h-11 items-center justify-center gap-2 rounded-xl border text-xs font-semibold disabled:opacity-60 ${
               armed ? "border-danger bg-danger text-bg" : "border-line bg-control text-danger"
             }`}
           >
@@ -53,6 +64,7 @@ export function ForgetTaste() {
             {armed ? t.ajustes.olvidarConfirmar : t.ajustes.olvidar}
           </button>
           {done && <p className="text-center text-[11px] text-text-2">{t.ajustes.olvidado}</p>}
+          {failed && <p className="text-center text-[11px] text-danger">{t.comun.errorRed}</p>}
         </div>
       )}
     </div>

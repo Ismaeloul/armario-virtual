@@ -5,7 +5,7 @@ import { EMPTY_GARMENT, GarmentForm } from "../components/GarmentForm";
 import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
-import { api, mediaUrl, type Analysis, type Catalog, type GarmentFields } from "../lib/api";
+import { ApiError, api, mediaUrl, type Analysis, type Catalog, type GarmentFields } from "../lib/api";
 import { pickPhoto, rotateFile } from "../lib/camera";
 
 type Step = "fotos" | "analizando" | "error" | "formulario";
@@ -45,9 +45,12 @@ function PhotoSlot({
             {hint && <span className="mt-1 text-xs leading-tight text-text-2">{hint}</span>}
           </>
         )}
-        <span className="label-caps absolute left-2 top-2 rounded-full border border-line bg-card/90 px-2 py-0.5 backdrop-blur-md">
-          {label}
-        </span>
+        {/* Con la ranura vacía el nombre ya sale en el centro: el chip solo hace falta sobre la foto. */}
+        {preview && (
+          <span className="label-caps absolute left-2 top-2 rounded-full border border-line bg-card/90 px-2 py-0.5 backdrop-blur-md">
+            {label}
+          </span>
+        )}
       </div>
       <div className="flex items-center justify-between px-2.5 py-2 text-xs text-text-2">
         <span>{preview ? t.nueva.cambiarFoto : (hint ? t.nueva.opcional : t.nueva.tomarFoto)}</span>
@@ -95,9 +98,13 @@ function RowSlot({
         </span>
       </button>
       {file && (
-        <div className="flex shrink-0 flex-col items-center gap-1">
+        <div className="flex shrink-0 items-center">
           <RotateButton onClick={() => rotateFile(file).then(onChange)} />
-          <button type="button" onClick={() => onChange(null)} className="text-[11px] text-text-2 underline">
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="inline-flex min-h-11 items-center px-2 text-[11px] text-text-2 underline"
+          >
             {t.nueva.quitar}
           </button>
         </div>
@@ -187,6 +194,8 @@ export default function AnadirPrenda() {
         setForm(fields);
         setStep("formulario");
       } else if (skipAi) {
+        // Formulario limpio (sin restos de un intento anterior) y con un tipo acorde a lo elegido.
+        setForm({ ...EMPTY_GARMENT, type: kind === "calzado" ? "zapatillas" : "camiseta" });
         setStep("formulario");
       } else {
         setStep("error");
@@ -218,7 +227,12 @@ export default function AnadirPrenda() {
         ai_draft: analysis.draft, // la propuesta original, para ver después qué se corrigió
       });
       navigate("/armario", { replace: true });
-    } catch {
+    } catch (err) {
+      // 409: ya estaba guardada (un reintento tras perder la respuesta): no es un error para el usuario.
+      if (err instanceof ApiError && err.status === 409) {
+        navigate("/armario", { replace: true });
+        return;
+      }
       setFormError(t.nueva.errorGuardar);
       setSaving(false);
     }

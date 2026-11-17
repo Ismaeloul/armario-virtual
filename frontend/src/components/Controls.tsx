@@ -20,7 +20,7 @@ export function Segmented<T extends string>({
           type="button"
           aria-pressed={o.value === value}
           onClick={() => onChange(o.value)}
-          className={`flex-1 rounded-lg px-1 py-1.5 text-xs font-medium transition-colors ${
+          className={`flex min-h-10 flex-1 items-center justify-center rounded-lg px-1 py-1.5 text-xs font-medium transition-colors ${
             o.value === value ? "bg-card text-text shadow-sm" : "text-text-2"
           }`}
         >
@@ -40,8 +40,9 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
+// text-base (16 px): con menos, Safari de iPhone amplía la página al enfocar el campo.
 export const inputClass =
-  "w-full rounded-lg border border-line bg-card-2 px-3.5 py-2.5 text-sm text-text outline-none " +
+  "w-full rounded-lg border border-line bg-card-2 px-3.5 py-2.5 text-base text-text outline-none " +
   "placeholder:text-text-3 focus:ring-2 focus:ring-primary/40";
 
 export function PrimaryButton({
@@ -80,15 +81,46 @@ export function SecondaryButton({ children, onClick }: { children: ReactNode; on
 }
 
 /** Botón redondo para girar una foto 90°. Se coloca encima de la imagen. */
-export function RotateButton({ onClick, className = "" }: { onClick: () => void; className?: string }) {
+export function RotateButton({
+  onClick,
+  disabled,
+  className = "",
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  className?: string;
+}) {
   return (
     <button
       type="button"
       aria-label={t.comun.girar}
+      disabled={disabled}
       onClick={onClick}
-      className={`flex h-9 w-9 items-center justify-center rounded-full bg-text/80 text-bg backdrop-blur-md active:scale-90 ${className}`}
+      className={`flex h-11 w-11 items-center justify-center rounded-full bg-text/80 text-bg backdrop-blur-md active:scale-90 disabled:opacity-50 ${className}`}
     >
       <Icon name="rotate" size={18} />
+    </button>
+  );
+}
+
+/** Interruptor encendido/apagado. El área que se puede tocar mide 44 px de alto. */
+export function Switch({ checked, label, onChange }: { checked: boolean; label: string; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onChange}
+      className="-mr-1 flex h-11 shrink-0 items-center px-1"
+    >
+      <span
+        className={`flex h-7 w-12 items-center rounded-full p-0.5 transition-colors ${
+          checked ? "justify-end bg-primary" : "justify-start bg-control"
+        }`}
+      >
+        <span className={`h-6 w-6 rounded-full shadow ${checked ? "bg-on-primary" : "bg-text-3"}`} />
+      </span>
     </button>
   );
 }

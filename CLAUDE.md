@@ -6,7 +6,14 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 ## Estado
 
 - Diseño cerrado. Stitch queda solo como referencia visual; no se le mandan más cambios.
-- **Publicada en el Umbrel: 0.3.1** (17-11-2026; la 0.3.0 más el arreglo de copiar el código de Codex por http): incluye todo lo que abajo figura
+- **Barrido de pulido (18-11-2026, publicado en la 0.3.2):** 53 fallos e incoherencias corregidos por
+  agentes (confirmaciones con `ConfirmDialog` propio en vez de `window.confirm`, errores que se tragaban,
+  campos a 16 px para que iOS no haga zoom, timeouts de Codex, fotos compartidas, fecha de «hoy» en
+  hora de `ARMARIO_TZ`, por defecto Europe/Paris). El algoritmo se reescribió: reglas y gustos se
+  promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
+  es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
+  una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
+- **Publicada en el Umbrel: 0.3.2** (18-11-2026: barrido de pulido, ver abajo; antes 0.3.1, 17-11-2026; la 0.3.0 más el arreglo de copiar el código de Codex por http): incluye todo lo que abajo figura
   como «en `main`, sin publicar» (Fase 2, Gustos, calzado, reglas de estilo, palabras clave). A partir de
   ahora se publica una versión por fase. El usuario va a fotografiar su ropa real en el Umbrel y a
   entrenar ahí el algoritmo; lo de la copia local es todo ropa de prueba (Vinted y Zara), nada es suyo.
@@ -121,8 +128,10 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 - Barra inferior con 4 pestañas: Hoy, Armario, Gustos y Ajustes. Botón flotante "+" solo en Armario
   (abajo a la derecha, encima de la barra). El 17-11-2026 se probó el "+" en el centro de la barra y al
   usuario no le gustó: no volver a proponerlo.
-- Iconos: Phosphor (`@phosphor-icons/core`, peso regular) como SVG en línea. Sustituyen a Material
-  Symbols, que al usuario le chirriaban (sobre todo la cámara).
+- Iconos: Tabler (`@tabler/icons`, línea) como SVG en línea, elegidos por el usuario el 18-11-2026 entre
+  ocho propuestas; no volver a Phosphor ni a Material Symbols. Única excepción: el armario es el de
+  Iconoir (Tabler no tiene), con su versión rellena dibujada a mano en `Icon.tsx`. La pestaña activa de
+  la barra inferior lleva el icono relleno. Va en la pestaña Armario y en la cabecera.
 - Cabeceras: percha + "Armario" en Hoy y Armario; flecha atrás + nombre de pantalla en las secundarias
   ("Nueva prenda", "Detalle"); "Ajustes" a secas en Ajustes.
 - El modo oscuro se cambia solo en Ajustes: Claro / Oscuro / Sistema.

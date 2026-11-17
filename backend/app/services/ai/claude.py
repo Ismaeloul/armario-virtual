@@ -33,17 +33,20 @@ class ClaudeAnalyzer:
         if not key:
             raise AnalysisError("Claude no está configurado (falta la API key)")
 
-        content: list[dict] = [
-            {
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/webp",
-                    "data": base64.standard_b64encode(path.read_bytes()).decode("utf-8"),
-                },
-            }
-            for path in images
-        ]
+        try:
+            content: list[dict] = [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/webp",
+                        "data": base64.standard_b64encode(path.read_bytes()).decode("utf-8"),
+                    },
+                }
+                for path in images
+            ]
+        except OSError as exc:
+            raise AnalysisError("No se pudo leer la foto") from exc
         content.append({"type": "text", "text": prompt})
 
         client = anthropic.Anthropic(api_key=key, timeout=config.AI_TIMEOUT_SECONDS, max_retries=1)
@@ -65,6 +68,8 @@ class ClaudeAnalyzer:
             raise AnalysisError(f"Claude devolvió un error ({exc.status_code})") from exc
         except anthropic.APIConnectionError as exc:
             raise AnalysisError("No se pudo conectar con Claude") from exc
+        except anthropic.APIError as exc:
+            raise AnalysisError("Claude devolvió un error") from exc
 
         if response.stop_reason == "refusal":
             raise AnalysisError("Claude ha rechazado analizar la imagen")

@@ -224,3 +224,46 @@ def test_foto_de_etiqueta_para_marca_y_talla(client, analyzers, photo_bytes):
     # Al borrar la prenda se borra también la foto de la etiqueta.
     client.delete(f"/api/garments/{garment['id']}")
     assert client.get(garment["photo_label"]["url"]).status_code == 404
+
+
+def test_no_se_guardan_dos_prendas_con_las_mismas_fotos(client, photo_bytes):
+    first = _create(client, photo_bytes).json()
+    body = {k: v for k, v in VALID_DRAFT.items() if k != "confidence"}
+    again = client.post("/api/garments", json={**body, "photo_front": first["photo_front"]["id"]})
+    assert again.status_code == 409
+    assert len(client.get("/api/garments").json()) == 1
+
+
+def test_borrar_no_toca_las_fotos_que_usa_otra_prenda(client, photo_bytes):
+    from app.db import SessionLocal
+    from app.models import Garment
+    from app.services import storage
+
+    a = _create(client, photo_bytes).json()
+    b = _create(client, photo_bytes).json()
+    with SessionLocal() as db:  # datos antiguos: dos prendas que ya comparten foto
+        db.get(Garment, b["id"]).photo_back = a["photo_front"]["id"]
+        db.commit()
+    assert client.delete(f"/api/garments/{a['id']}").status_code == 204
+    assert storage.exists(a["photo_front"]["id"])
+
+
+def test_quitar_el_color_principal_no_rompe(client, photo_bytes):
+    gid = _create(client, photo_bytes).json()["id"]
+    patched = client.patch(f"/api/garments/{gid}", json={"color_primary": None})
+    assert patched.status_code == 200
+    assert patched.json()["color_primary"]["name"] == "negro"
+
+
+def test_la_ciudad_se_recorta_y_no_puede_quedar_vacia(client):
+    assert client.patch("/api/settings", json={"city": "   "}).status_code == 422
+    assert client.patch("/api/settings", json={"city": "  Paris "}).json()["city"] == "Paris"
+
+
+def test_imagen_con_demasiados_pixeles_da_422(client, monkeypatch, photo_bytes):
+    from PIL import Image
+
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 1000)  # la foto de prueba pasa a ser "enorme"
+    response = client.post("/api/garments/analyze", files={"front": ("f.jpg", photo_bytes, "image/jpeg")},
+                           data={"skip_ai": "true"})
+    assert response.status_code == 422
