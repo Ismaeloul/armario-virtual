@@ -1,6 +1,10 @@
 // Iconos Material Symbols como SVG en línea: solo se empaquetan los que se usan
 // y funcionan sin conexión (importante para la PWA y para Capacitor).
 import add from "@material-symbols/svg-400/outlined/add.svg?raw";
+import cloud from "@material-symbols/svg-400/outlined/cloud.svg?raw";
+import rain from "@material-symbols/svg-400/outlined/rainy.svg?raw";
+import snow from "@material-symbols/svg-400/outlined/weather_snowy.svg?raw";
+import close from "@material-symbols/svg-400/outlined/close.svg?raw";
 import calendar from "@material-symbols/svg-400/outlined/calendar_month.svg?raw";
 import delete_icon from "@material-symbols/svg-400/outlined/delete.svg?raw";
 import done_all from "@material-symbols/svg-400/outlined/done_all.svg?raw";
@@ -38,6 +42,10 @@ const auto_awesome =
   '<path d="M18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9z"/></svg>';
 
 const ICONS = {
+  cloud,
+  rain,
+  snow,
+  close,
   calendar,
   delete_icon,
   done_all,

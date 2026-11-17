@@ -61,8 +61,26 @@ class WearLog(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     garment_id: Mapped[int] = mapped_column(ForeignKey("garments.id", ondelete="CASCADE"), index=True)
     worn_on: Mapped[date] = mapped_column(Date, index=True)
+    # Si el uso lo apuntó un outfit del día (para poder deshacerlo).
+    outfit_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     garment: Mapped[Garment] = relationship(back_populates="wears")
+
+
+class Outfit(Base):
+    """Cada propuesta de outfit y qué se hizo con ella. De aquí aprenderá el algoritmo de la Fase 3."""
+
+    __tablename__ = "outfits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[date] = mapped_column(Date, index=True)
+    garment_ids: Mapped[list] = mapped_column(JSON)
+    # propuesto · elegido (Me gusta) · descartado (Pasar) · sustituido (Generar otra)
+    status: Mapped[str] = mapped_column(String(20), index=True)
+    affinity: Mapped[int] = mapped_column(Integer, default=0)
+    day_kind: Mapped[str] = mapped_column(String(20), default="templado")
+    weather: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # el tiempo que hacía
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
 
 
 class Setting(Base):

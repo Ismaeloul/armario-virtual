@@ -34,6 +34,7 @@ def init_db() -> None:
 # así que se añaden a mano para que actualizar la app no pierda datos.
 _NEW_COLUMNS = {
     "garments": {"ai_draft": "JSON", "photo_label": "VARCHAR(32)", "photo_label_original": "VARCHAR(64)"},
+    "wear_log": {"outfit_id": "INTEGER"},
 }
 
 
@@ -41,6 +42,8 @@ def _add_missing_columns() -> None:
     with engine.begin() as conn:
         for table, columns in _NEW_COLUMNS.items():
             existing = {row[1] for row in conn.exec_driver_sql(f"PRAGMA table_info({table})")}
+            if not existing:  # la tabla no existe: create_all la crea ya completa
+                continue
             for name, sql_type in columns.items():
                 if name not in existing:
                     conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}")

@@ -80,6 +80,27 @@ export type CodexUsage = {
   secondary: UsageWindow | null;
 };
 
+export type Weather = {
+  city: string;
+  temp_now: number;
+  temp_max: number;
+  temp_min: number;
+  rain_probability: number;
+  description: string;
+  icon: string;
+};
+
+export type Today = {
+  date: string;
+  city: string;
+  weather: Weather | null;
+  outfit: { id: number; status: string; affinity: number; day_kind: string; garments: Garment[] } | null;
+  missing: string[];
+  notes: string[];
+  in_laundry: number;
+  total: number;
+};
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -125,6 +146,10 @@ export const api = {
   /** La clave se envía al servidor y no vuelve nunca. Cadena vacía = borrarla. */
   saveClaudeKey: (key: string) => request<Settings>("/api/settings", json("PATCH", { anthropic_api_key: key })),
   updateSettings: (changes: Partial<Settings>) => request<Settings>("/api/settings", json("PATCH", changes)),
+  today: () => request<Today>("/api/today"),
+  todayNext: (action: "otra" | "pasar") => request<Today>("/api/today/next", json("POST", { action })),
+  todayChoose: () => request<Today>("/api/today/choose", { method: "POST" }),
+  todayUnchoose: () => request<Today>("/api/today/unchoose", { method: "POST" }),
   garments: () => request<Garment[]>("/api/garments"),
   garment: (id: number) => request<Garment>(`/api/garments/${id}`),
   updateGarment: (id: number, changes: Partial<GarmentFields> & { favorite?: boolean; in_laundry?: boolean }) =>

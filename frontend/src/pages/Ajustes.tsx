@@ -262,7 +262,7 @@ export default function Ajustes() {
                 onBlur={() => city.trim() && city.trim() !== settings?.city && change({ city: city.trim() })}
               />
             </div>
-            <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.proximamente}</p>
+            <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.ciudadAyuda}</p>
           </Section>
 
           <p className="text-center text-[11px] tracking-wider text-text-3">{t.ajustes.version}</p>

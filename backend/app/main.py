@@ -11,7 +11,7 @@ from sqlalchemy import select
 from . import config
 from .db import SessionLocal, init_db
 from .models import Garment
-from .routers import garments, settings
+from .routers import garments, settings, today
 from .services import storage
 
 
@@ -49,6 +49,7 @@ if config.CORS_ORIGINS:
 
 app.include_router(garments.router)
 app.include_router(settings.router)
+app.include_router(today.router)
 
 
 @app.get("/api/health")

@@ -6,37 +6,31 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 ## Estado
 
 - Diseño cerrado. Stitch queda solo como referencia visual; no se le mandan más cambios.
-- Fase 1: prototipo completo en local. Hoy provisional; Armario (filtros, vacío, botón "+"); Nueva prenda
-  (análisis, borrador, error, a mano); Ficha (fotos, favorita, lavadora, uso, editar, eliminar); Ajustes
-  (tema, IA, lavadora, aviso y ciudad guardados para la Fase 2). Las fotos huérfanas se limpian al arrancar.
-- Desplegada en el Umbrel como app de la tienda propia (`Ismaeloul/umbrel-app-store`, carpeta
-  `ismaeloul-armario`, puerto 7798, detrás del login de Umbrel). El usuario ha añadido una prenda allí y
-  Codex la ha analizado dentro del contenedor (17-11-2026).
+- **Publicada en el Umbrel: 0.2.0** (17-11-2026), como app de la tienda propia (`Ismaeloul/umbrel-app-store`,
+  carpeta `ismaeloul-armario`, puerto 7798, detrás del login de Umbrel). Incluye toda la Fase 1 más: sesión
+  y límite de Codex desde Ajustes, foto de etiqueta, aviso de dudas en el color y reglas afinadas de la IA.
+- **En `main`, sin publicar: Fase 2 (outfit del día).** Tiempo de la ciudad con Open-Meteo
+  (`services/weather.py`), propuesta por reglas sin IA (`services/outfits.py`), tabla `outfits` con el estado
+  de cada propuesta, y pantalla Hoy con «Pasar», «Me gusta» (apunta el uso de cada prenda, se puede
+  deshacer) y «Generar otra propuesta». No propone prendas en la lavadora ni repite combinaciones.
 - Versiones: no publicar en el Umbrel cambio a cambio. Se acumulan mejoras y arreglos en `main` y se publica
   una versión grande cuando el usuario lo diga.
-- Sin publicar todavía (irán en la próxima versión): iniciar y cerrar sesión de Codex desde Ajustes;
-  cada prenda guarda la propuesta original de la IA (`ai_draft`) y `GET /api/ai/corrections` resume qué
-  campos corrigió el usuario.
-- También sin publicar: tercera foto opcional de la etiqueta (`photo_label`), de la que la IA lee marca y
-  talla; y el límite de Codex en Ajustes (ventana de 5 horas y semanal), leído con `codex app-server`
-  (`account/rateLimits/read`). Lo de los límites solo está probado en Windows, no dentro del contenedor.
-- Reglas de la IA afinadas el 17-11-2026 con 5 prendas del usuario: temporada por tipo de prenda (sudadera,
-  jersey, abrigo y botas = invierno; el usuario usa las sudaderas sobre todo en invierno), estampado nuevo
-  "bloques de color" y criterio logo/gráfico/texturizado, nombres en singular. El usuario suele guardar el
-  borrador sin revisar, así que el informe de correcciones sale vacío: hay que mirar las fotos uno mismo.
-- También sin publicar: la IA devuelve `color_primary_alt` cuando duda entre dos colores y el borrador lo
-  avisa con dos botones para elegir. El parche o la etiqueta de marca no cuentan como estampado "logo".
-- Afinado de la IA en curso: el usuario sube fotos de Vinted al backend local (`http://localhost:8000`,
-  con sesión de Codex propia en `codex-home/`, aparte de la del Codex de escritorio), corrige el borrador
-  y con el informe de correcciones se ajusta el prompt de `backend/app/services/ai/base.py`.
-- Ciudad y aviso diario solo se guardan: no hay tiempo ni notificaciones hasta las fases 2 y 4.
 - Publicar una versión: subir el tag `vX.Y.Z` en este repo (el workflow publica
-  `ghcr.io/ismaeloul/armario:X.Y.Z`) y actualizar `version` e `image` en la carpeta de la tienda.
-  El Umbrel tarda unos minutos en refrescar la tienda; no instalar hasta ver la versión nueva.
-- Pendiente de la Fase 1: probar Claude con API key real (se pega en Ajustes), probar el resto de
-  pantallas y la cámara desde el iPhone y, al final, quitar el fondo de las fotos.
+  `ghcr.io/ismaeloul/armario:X.Y.Z`) y actualizar `version`, `image` y `releaseNotes` en la carpeta de la
+  tienda. El Umbrel tarda unos minutos en refrescar la tienda; no instalar hasta ver la versión nueva.
+- Sin probar en el Umbrel (solo en Windows): el lector de límites de Codex (`codex app-server`) y la
+  migración de columnas sobre la base de datos real. Sin probar en ningún sitio: Claude con API key real.
+- Pendiente de la Fase 2: el aviso diario (llega con la app de iPhone, Fase 4) y afinar las reglas del
+  outfit con el uso real. La «afinidad» que se muestra es orientativa, no aprendida.
 - "Crear look con esta prenda" se muestra desactivado ("Pronto"): llega en la Fase 3.
-- Codex por suscripción: funciona en el PC (12-18 s por análisis) y dentro del contenedor del Umbrel.
+- Afinado de la IA: el usuario prueba en el backend local (`http://localhost:8000`, sesión de Codex propia
+  en `codex-home/`, aparte de la del Codex de escritorio) con fotos de Vinted. Reglas ajustadas el
+  17-11-2026: temporada por tipo de prenda (sudadera, jersey, abrigo y botas = invierno; el usuario usa las
+  sudaderas sobre todo en invierno), estampado "bloques de color", criterio logo/gráfico/texturizado y
+  nombres en singular. El usuario suele guardar el borrador sin revisar, así que el informe
+  `GET /api/ai/corrections` sale vacío: hay que mirar las fotos uno mismo.
+- Codex por suscripción funciona en el PC (7-18 s por análisis) y dentro del contenedor del Umbrel. La
+  cuenta del usuario es plan Plus.
 
 ## Comandos
 
