@@ -66,6 +66,7 @@ def _items(db: Session, garments: list[Garment], today: date) -> list[outfits.It
             season=g.season,
             favorite=g.favorite,
             pattern=g.pattern,
+            details=f"{g.name} {g.details or ''}",
             days_since_worn=(today - stats[g.id][1]).days if g.id in stats and stats[g.id][1] else None,
         )
         for g in garments

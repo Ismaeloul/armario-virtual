@@ -28,6 +28,7 @@ class Piece:
     color: str
     style: str
     pattern: str
+    details: str = ""
 
 
 @dataclass

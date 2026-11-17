@@ -9,6 +9,8 @@ import random
 from dataclasses import dataclass, field
 from datetime import date
 
+from . import style_rules
+
 # Colores que combinan con casi todo. El vaquero (azul o celeste) cuenta como neutro.
 NEUTRALS = {"negro", "blanco", "gris", "beige", "crudo", "azul marino", "marrón"}
 DENIM = {"vaquero"}
@@ -33,6 +35,7 @@ class Item:
     favorite: bool = False
     pattern: str = "liso"
     days_since_worn: int | None = None  # None = nunca
+    details: str = ""  # nombre y detalles en texto; de aquí sale, p. ej., si lleva cremallera
 
 
 @dataclass
@@ -115,12 +118,13 @@ def _recency(item: Item) -> float:
 
 def score(items: list[Item], kind: str) -> float:
     total = sum(_season_fit(item, kind) + _recency(item) + (0.5 if item.favorite else 0) for item in items)
-    return total + _color_harmony(items) + _style_fit(items)
+    return total + _color_harmony(items) + _style_fit(items) + style_rules.prior(items)
 
 
 def _affinity(value: float, pieces: int) -> int:
     """Convierte la puntuación en un porcentaje legible. Es orientativo, no una medida real."""
-    best = pieces * 2.5 + 3.5  # todo encaja de temporada, favorito, color y estilo perfectos
+    # Todo encaja de temporada, favorito, color y estilo perfectos, y las reglas generales a favor.
+    best = pieces * 2.5 + 3.5 + 1.2 * pieces * (pieces - 1) / 2
     return max(40, min(99, round(55 + 44 * value / best)))
 
 
@@ -187,5 +191,9 @@ def propose(
 
 def combo_affinity(pieces: list, taste=None) -> int:
     """Afinidad de una combinación sin mirar el tiempo: solo colores, estilo y lo aprendido."""
-    value = _color_harmony(pieces) + _style_fit(pieces) + (taste.adjust(pieces) if taste else 0.0)
-    return max(10, min(99, round(62 + 8 * value)))
+    value = _color_harmony(pieces) + _style_fit(pieces) + style_rules.prior(pieces)
+    value += taste.adjust(pieces) if taste else 0.0
+    # Casi todo se suma por parejas de prendas, así que se reparte entre ellas: si no, cuatro prendas
+    # puntuarían siempre más que dos.
+    pairs = len(pieces) * (len(pieces) - 1) / 2
+    return max(10, min(99, round(40 + 20 * value / (1 + 0.9 * pairs))))

@@ -22,6 +22,12 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   local (`data/`) tiene 25 prendas de Vinted analizadas por Codex además de las suyas; no son su armario
   real. Gustos enseña antes las combinaciones que no mezclan verano con invierno. En Ajustes, escondido
   tras «Opciones avanzadas», está «Borrar lo aprendido» (doble toque para confirmar).
+- **En `main`, sin publicar: reglas generales de estilo** (`services/style_rules.py` + `style_rules.json`,
+  17-11-2026). Punto de partida del algoritmo antes de conocer los gustos: parejas de colores, estilos,
+  estampados y tipos, y qué capa va sobre qué, sacadas de guías de moda (búsqueda corta con Haiku: 12
+  búsquedas, muchas notas inferidas; se puede ampliar). Pesan poco a propósito: lo valorado en Gustos manda.
+  Regla del usuario: cazadora o sobrecamisa sobre sudadera con cremallera no se propone (la cremallera se
+  detecta por la palabra en el nombre o los detalles; no hay campo propio).
 - También sin publicar: al añadir se elige "Prenda de ropa" o "Zapatilla". El calzado tiene vistas
   propias (lateral, de frente, otro lateral) y una cuarta foto `photo_extra`.
 - Versiones: no publicar en el Umbrel cambio a cambio. Se acumulan mejoras y arreglos en `main` y se publica

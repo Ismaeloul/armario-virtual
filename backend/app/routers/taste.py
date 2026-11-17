@@ -40,7 +40,10 @@ class RateIn(BaseModel):
 
 
 def piece(g: Garment) -> taste.Piece:
-    return taste.Piece(id=g.id, type=g.type, category=g.category, color=g.color_primary, style=g.style, pattern=g.pattern)
+    return taste.Piece(
+        id=g.id, type=g.type, category=g.category, color=g.color_primary, style=g.style, pattern=g.pattern,
+        details=f"{g.name} {g.details or ''}",
+    )
 
 
 def load_taste(db: Session) -> taste.Taste:
