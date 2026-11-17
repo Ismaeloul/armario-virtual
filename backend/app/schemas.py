@@ -154,3 +154,11 @@ class AIStatus(BaseModel):
     codex_installed: bool
     codex_logged_in: bool
     claude_configured: bool
+
+
+class CodexLogin(BaseModel):
+    state: Literal["idle", "pending", "done", "failed"]
+    url: str | None = None
+    code: str | None = None
+    error: str | None = None
+    expires_in: int | None = None

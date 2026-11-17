@@ -12,6 +12,9 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 - Desplegada en el Umbrel como app de la tienda propia (`Ismaeloul/umbrel-app-store`, carpeta
   `ismaeloul-armario`, puerto 7798, detrás del login de Umbrel). El usuario ha añadido una prenda allí y
   Codex la ha analizado dentro del contenedor (17-11-2026).
+- Versiones: no publicar en el Umbrel cambio a cambio. Se acumulan mejoras y arreglos en `main` y se publica
+  una versión grande cuando el usuario lo diga.
+- Sin publicar todavía (irán en la próxima versión): iniciar y cerrar sesión de Codex desde Ajustes.
 - Publicar una versión: subir el tag `vX.Y.Z` en este repo (el workflow publica
   `ghcr.io/ismaeloul/armario:X.Y.Z`) y actualizar `version` e `image` en la carpeta de la tienda.
   El Umbrel tarda unos minutos en refrescar la tienda; no instalar hasta ver la versión nueva.

@@ -78,3 +78,17 @@ def test_si_fallan_los_dos_hay_error_claro(analyzers):
     result = selector.analyze([], preferred="codex")
     assert result.draft is None and result.provider is None
     assert "codex" in result.error and "claude" in result.error
+
+
+def test_lee_el_enlace_y_el_codigo_del_login_de_codex():
+    from app.services.ai.codex_login import parse_device_prompt
+
+    salida = (
+        "Welcome to Codex [v\x1b[90m0.169.0\x1b[0m]\n\n"
+        "1. Open this link in your browser and sign in to your account\n"
+        "   \x1b[94mhttps://auth.openai.com/codex/device\x1b[0m\n\n"
+        "2. Enter this one-time code \x1b[90m(expires in 15 minutes)\x1b[0m\n"
+        "   \x1b[94mABCD-12345\x1b[0m\n"
+    )
+    assert parse_device_prompt(salida) == ("https://auth.openai.com/codex/device", "ABCD-12345")
+    assert parse_device_prompt("Welcome to Codex") == (None, None)

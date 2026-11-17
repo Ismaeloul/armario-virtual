@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import catalog
 from ..db import get_db
 from ..models import Setting
-from ..schemas import AIStatus, SettingsOut, SettingsUpdate
+from ..schemas import AIStatus, CodexLogin, SettingsOut, SettingsUpdate
+from ..services.ai import codex_login
 from ..services.ai import claude as claude_ai
 from ..services.ai.selector import ANALYZERS
 
@@ -62,6 +63,34 @@ def ai_status():
         codex_logged_in=codex.available() and codex.logged_in(),
         claude_configured=claude_ai.api_key() is not None,
     )
+
+
+@router.post("/ai/codex/login", response_model=CodexLogin)
+def codex_login_start():
+    """Empieza el inicio de sesión de Codex: devuelve el enlace y el código que hay que introducir."""
+    try:
+        return codex_login.start()
+    except RuntimeError as exc:
+        raise HTTPException(502, str(exc)) from exc
+
+
+@router.get("/ai/codex/login", response_model=CodexLogin)
+def codex_login_status():
+    return codex_login.status()
+
+
+@router.delete("/ai/codex/login", status_code=204)
+def codex_login_cancel():
+    codex_login.cancel()
+
+
+@router.post("/ai/codex/logout", response_model=AIStatus)
+def codex_logout():
+    try:
+        codex_login.logout()
+    except RuntimeError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    return ai_status()
 
 
 @router.get("/catalog")

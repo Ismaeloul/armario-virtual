@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { CodexSession } from "../components/CodexSession";
 import { Segmented, inputClass } from "../components/Controls";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
@@ -41,7 +42,9 @@ export default function Ajustes() {
   const [ai, setAi] = useState<AIStatus | null>(null);
   const [claudeKey, setClaudeKey] = useState("");
 
-  const loadAi = () => api.aiStatus().then(setAi).catch(() => undefined);
+  const loadAi = useCallback(() => {
+    api.aiStatus().then(setAi).catch(() => undefined);
+  }, []);
   const saveKey = (key: string) =>
     api
       .saveClaudeKey(key)
@@ -135,6 +138,8 @@ export default function Ajustes() {
                 ))}
               </div>
             )}
+
+            {ai && <CodexSession ai={ai} onChange={loadAi} />}
 
             <form
               className="flex flex-col gap-1.5"

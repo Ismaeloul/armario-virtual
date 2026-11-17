@@ -63,6 +63,13 @@ export type Settings = {
 
 export type AIStatus = { codex_installed: boolean; codex_logged_in: boolean; claude_configured: boolean };
 
+export type CodexLogin = {
+  state: "idle" | "pending" | "done" | "failed";
+  url: string | null;
+  code: string | null;
+  error: string | null;
+};
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -99,6 +106,10 @@ export const mediaUrl = (path: string) => BASE + path;
 export const api = {
   catalog: () => request<Catalog>("/api/catalog"),
   settings: () => request<Settings>("/api/settings"),
+  codexLoginStart: () => request<CodexLogin>("/api/ai/codex/login", { method: "POST" }),
+  codexLoginStatus: () => request<CodexLogin>("/api/ai/codex/login"),
+  codexLoginCancel: () => request<void>("/api/ai/codex/login", { method: "DELETE" }),
+  codexLogout: () => request<AIStatus>("/api/ai/codex/logout", { method: "POST" }),
   aiStatus: () => request<AIStatus>("/api/ai/status"),
   /** La clave se envía al servidor y no vuelve nunca. Cadena vacía = borrarla. */
   saveClaudeKey: (key: string) => request<Settings>("/api/settings", json("PATCH", { anthropic_api_key: key })),
