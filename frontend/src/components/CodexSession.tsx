@@ -125,13 +125,32 @@ export function CodexSession({ ai, onChange }: { ai: AIStatus; onChange: () => v
   };
 
   const copy = (code: string) => {
-    navigator.clipboard
-      ?.writeText(code)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      })
-      .catch(() => undefined);
+    const done = () => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    };
+    // El portapapeles moderno solo existe en páginas seguras (https o localhost). En el Umbrel la
+    // app se abre por http, así que ahí se copia a la antigua: con un campo de texto oculto.
+    const legacy = () => {
+      const field = document.createElement("textarea");
+      field.value = code;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      field.setSelectionRange(0, code.length); // iOS no selecciona con select() a secas
+      try {
+        if (document.execCommand("copy")) done();
+      } finally {
+        field.remove();
+      }
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(code).then(done).catch(legacy);
+    } else {
+      legacy();
+    }
   };
 
   if (login?.state === "pending" && login.url && login.code) {
