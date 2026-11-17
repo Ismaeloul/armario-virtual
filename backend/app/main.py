@@ -20,7 +20,7 @@ def _cleanup_orphan_photos() -> None:
     with SessionLocal() as db:
         referenced = {
             photo
-            for row in db.execute(select(Garment.photo_front, Garment.photo_back))
+            for row in db.execute(select(Garment.photo_front, Garment.photo_back, Garment.photo_label))
             for photo in row
             if photo
         }

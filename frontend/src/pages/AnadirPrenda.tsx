@@ -65,8 +65,10 @@ export default function AnadirPrenda() {
   const [step, setStep] = useState<Step>("fotos");
   const [front, setFront] = useState<File | null>(null);
   const [back, setBack] = useState<File | null>(null);
+  const [label, setLabel] = useState<File | null>(null);
   const [frontUrl, setFrontUrl] = useState<string | null>(null);
   const [backUrl, setBackUrl] = useState<string | null>(null);
+  const [labelUrl, setLabelUrl] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [form, setForm] = useState<GarmentFields>(EMPTY_GARMENT);
   const [saving, setSaving] = useState(false);
@@ -88,6 +90,11 @@ export default function AnadirPrenda() {
     setBackUrl(url);
     return () => { if (url) URL.revokeObjectURL(url); };
   }, [back]);
+  useEffect(() => {
+    const url = label ? URL.createObjectURL(label) : null;
+    setLabelUrl(url);
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [label]);
 
   const pick = async (set: (f: File) => void) => {
     const file = await pickPhoto();
@@ -101,8 +108,13 @@ export default function AnadirPrenda() {
     try {
       const result = await api.analyze(
         analysis
-          ? { frontId: analysis.photo_front.id, backId: analysis.photo_back?.id, skipAi }
-          : { front: front!, back: back ?? undefined, skipAi },
+          ? {
+              frontId: analysis.photo_front.id,
+              backId: analysis.photo_back?.id,
+              labelId: analysis.photo_label?.id,
+              skipAi,
+            }
+          : { front: front!, back: back ?? undefined, label: label ?? undefined, skipAi },
       );
       setAnalysis(result);
       if (result.draft) {
@@ -134,6 +146,7 @@ export default function AnadirPrenda() {
         ...form,
         photo_front: analysis.photo_front.id,
         photo_back: analysis.photo_back?.id ?? null,
+        photo_label: analysis.photo_label?.id ?? null,
         ai_provider: analysis.draft ? analysis.provider : null,
         ai_confidence: analysis.draft?.confidence ?? null,
         ai_draft: analysis.draft, // la propuesta original, para ver después qué se corrigió
@@ -172,6 +185,40 @@ export default function AnadirPrenda() {
                 onPick={() => pick(setBack)}
                 onRotate={() => back && rotateFile(back).then(setBack)}
               />
+            </div>
+
+            {/* Tercera foto, opcional: la etiqueta, para que la IA rellene marca y talla. */}
+            <div className="card flex items-center gap-3 p-3">
+              <button
+                type="button"
+                onClick={() => pick(setLabel)}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left active:opacity-70"
+              >
+                {labelUrl ? (
+                  <img src={labelUrl} alt={t.nueva.etiquetaFoto} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                ) : (
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-card-2 text-primary">
+                    <Icon name="sell" />
+                  </span>
+                )}
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2">
+                    <span className="font-display text-[15px] font-semibold">{t.nueva.etiquetaFoto}</span>
+                    <span className="label-caps rounded-full bg-chip px-2 py-0.5 text-on-chip">{t.nueva.opcional}</span>
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-tight text-text-2">
+                    {labelUrl ? t.nueva.etiquetaLista : t.nueva.etiquetaAyuda}
+                  </span>
+                </span>
+              </button>
+              {label && (
+                <div className="flex shrink-0 flex-col items-center gap-1">
+                  <RotateButton onClick={() => rotateFile(label).then(setLabel)} />
+                  <button type="button" onClick={() => setLabel(null)} className="text-[11px] text-text-2 underline">
+                    {t.nueva.quitar}
+                  </button>
+                </div>
+              )}
             </div>
             {formError && <p className="text-center text-sm text-danger">{formError}</p>}
             <PrimaryButton disabled={!front} onClick={() => runAnalysis(false)}>
@@ -219,14 +266,20 @@ export default function AnadirPrenda() {
         {step === "formulario" && analysis && catalog && (
           <form onSubmit={save} className="mt-6 flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-2">
-              {(["photo_front", "photo_back"] as const).map((side) => {
+              {(["photo_front", "photo_back", "photo_label"] as const).map((side) => {
                 const photo = analysis[side];
                 return (
                   photo && (
                     <div key={side} className="relative">
                       <img
                         src={mediaUrl(photo.url)}
-                        alt={side === "photo_front" ? t.nueva.delante : t.nueva.detras}
+                        alt={
+                          side === "photo_front"
+                            ? t.nueva.delante
+                            : side === "photo_back"
+                              ? t.nueva.detras
+                              : t.nueva.etiquetaFoto
+                        }
                         className="aspect-[3/4] w-full rounded-xl border border-line object-cover"
                       />
                       <RotateButton

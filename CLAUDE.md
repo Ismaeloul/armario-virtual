@@ -17,6 +17,9 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 - Sin publicar todavía (irán en la próxima versión): iniciar y cerrar sesión de Codex desde Ajustes;
   cada prenda guarda la propuesta original de la IA (`ai_draft`) y `GET /api/ai/corrections` resume qué
   campos corrigió el usuario.
+- También sin publicar: tercera foto opcional de la etiqueta (`photo_label`), de la que la IA lee marca y
+  talla; y el límite de Codex en Ajustes (ventana de 5 horas y semanal), leído con `codex app-server`
+  (`account/rateLimits/read`). Lo de los límites solo está probado en Windows, no dentro del contenedor.
 - Afinado de la IA en curso: el usuario sube fotos de Vinted al backend local (`http://localhost:8000`,
   con sesión de Codex propia en `codex-home/`, aparte de la del Codex de escritorio), corrige el borrador
   y con el informe de correcciones se ajusta el prompt de `backend/app/services/ai/base.py`.

@@ -23,7 +23,7 @@ class Analyzer(Protocol):
     def available(self) -> bool:
         """¿Está configurado? (binario instalado, API key presente…)"""
 
-    def analyze(self, images: list[Path]) -> str:
+    def analyze(self, images: list[Path], prompt: str) -> str:
         """Devuelve el JSON de la respuesta como texto. Lanza AnalysisError si falla."""
 
 
@@ -62,9 +62,9 @@ OUTPUT_SCHEMA = {
     "additionalProperties": False,
 }
 
-PROMPT = """\
-Eres el catalogador de un armario personal. Te paso una o dos fotos de UNA prenda de ropa \
-o calzado de hombre: la primera es la parte delantera y, si hay segunda, es la trasera.
+_PROMPT = """\
+Eres el catalogador de un armario personal. Te paso {fotos} de UNA prenda de ropa o calzado de hombre:
+{orden}
 
 Describe la prenda rellenando el esquema JSON. Reglas:
 - Escribe en español.
@@ -75,10 +75,34 @@ Elige el más cercano.
 "todo_el_ano" para el resto.
 - "color_primary": el color dominante. "colors_secondary": otros colores visibles (lista vacía si es de un solo color). \
 En "hex" pon el tono real que ves en la foto.
-- "brand" y "size": solo si se leen con claridad en una etiqueta o logo de las fotos. Si no, null. No adivines.
+- {marca}
 - "confidence": tu certeza global entre 0 y 1. Bájala si la foto es mala o la prenda es ambigua.
 
 Responde únicamente con el JSON. No ejecutes comandos ni leas otros archivos."""
+
+_SIN_ETIQUETA = (
+    '"brand" y "size": solo si se leen con claridad en una etiqueta o logo de las fotos. Si no, null. No adivines.'
+)
+_CON_ETIQUETA = (
+    '"brand" y "size": léelos de la foto de la etiqueta. "brand" es la marca tal como está escrita. '
+    '"size" es la talla tal como aparece (S, M, L, XL, 42, 43 EU…); si hay varias, la europea o la internacional. '
+    "Si alguno no se lee con claridad, null. No adivines. La etiqueta no cuenta para los colores ni el estampado."
+)
+
+
+def build_prompt(has_back: bool, has_label: bool) -> str:
+    """Las instrucciones dependen de qué fotos se mandan y en qué orden."""
+    order = ["- Foto 1: la parte delantera."]
+    if has_back:
+        order.append(f"- Foto {len(order) + 1}: la parte trasera.")
+    if has_label:
+        order.append(f"- Foto {len(order) + 1}: la etiqueta de la prenda, en primer plano.")
+    count = len(order)
+    return _PROMPT.format(
+        fotos="una foto" if count == 1 else f"{count} fotos",
+        orden="\n".join(order),
+        marca=_CON_ETIQUETA if has_label else _SIN_ETIQUETA,
+    )
 
 
 def parse_draft(raw: str) -> GarmentDraft:

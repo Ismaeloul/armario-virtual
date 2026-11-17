@@ -8,7 +8,7 @@ import anthropic
 from ... import config
 from ...db import SessionLocal
 from ...models import Setting
-from .base import OUTPUT_SCHEMA, PROMPT, AnalysisError
+from .base import OUTPUT_SCHEMA, AnalysisError
 
 API_KEY_SETTING = "anthropic_api_key"
 
@@ -28,7 +28,7 @@ class ClaudeAnalyzer:
     def available(self) -> bool:
         return api_key() is not None
 
-    def analyze(self, images: list[Path]) -> str:
+    def analyze(self, images: list[Path], prompt: str) -> str:
         key = api_key()
         if not key:
             raise AnalysisError("Claude no está configurado (falta la API key)")
@@ -44,7 +44,7 @@ class ClaudeAnalyzer:
             }
             for path in images
         ]
-        content.append({"type": "text", "text": PROMPT})
+        content.append({"type": "text", "text": prompt})
 
         client = anthropic.Anthropic(api_key=key, timeout=config.AI_TIMEOUT_SECONDS, max_retries=1)
         try:

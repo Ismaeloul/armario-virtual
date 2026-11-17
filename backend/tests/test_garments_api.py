@@ -198,3 +198,29 @@ def test_la_base_de_datos_antigua_recibe_las_columnas_nuevas():
     with old.begin() as conn:
         assert "ai_draft" in {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(garments)")}
         assert conn.exec_driver_sql("SELECT name FROM garments").scalar() == "de antes"
+
+
+def test_foto_de_etiqueta_para_marca_y_talla(client, analyzers, photo_bytes):
+    draft = {**VALID_DRAFT, "brand": "Primark", "size": "XL"}
+    codex, _ = analyzers(FakeAnalyzer("codex", json.dumps(draft)), FakeAnalyzer("claude"))
+
+    analysis = client.post(
+        "/api/garments/analyze",
+        files={
+            "front": ("delante.jpg", photo_bytes, "image/jpeg"),
+            "label": ("etiqueta.jpg", photo_bytes, "image/jpeg"),
+        },
+    ).json()
+    assert analysis["photo_label"] and analysis["photo_back"] is None
+    assert len(codex.images) == 2  # delantera + etiqueta
+    assert "Foto 2: la etiqueta" in codex.prompt
+    assert (analysis["draft"]["brand"], analysis["draft"]["size"]) == ("Primark", "XL")
+
+    body = {k: v for k, v in analysis["draft"].items() if k != "confidence"}
+    body.update(photo_front=analysis["photo_front"]["id"], photo_label=analysis["photo_label"]["id"])
+    garment = client.post("/api/garments", json=body).json()
+    assert garment["photo_label"]["id"] == analysis["photo_label"]["id"]
+
+    # Al borrar la prenda se borra también la foto de la etiqueta.
+    client.delete(f"/api/garments/{garment['id']}")
+    assert client.get(garment["photo_label"]["url"]).status_code == 404

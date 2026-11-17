@@ -41,7 +41,7 @@ export default function FichaPrenda() {
   const [garment, setGarment] = useState<Garment | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [missing, setMissing] = useState(false);
-  const [showBack, setShowBack] = useState(false);
+  const [view, setView] = useState<"photo_front" | "photo_back" | "photo_label">("photo_front");
 
   useEffect(() => {
     api.garment(Number(id)).then(setGarment).catch(() => setMissing(true));
@@ -81,7 +81,14 @@ export default function FichaPrenda() {
     navigate("/armario", { replace: true });
   };
 
-  const photo = showBack && garment.photo_back ? garment.photo_back : garment.photo_front;
+  const views = (
+    [
+      ["photo_front", t.ficha.delante],
+      ["photo_back", t.ficha.detras],
+      ["photo_label", t.ficha.etiqueta],
+    ] as const
+  ).filter(([key]) => garment[key]);
+  const photo = garment[view] ?? garment.photo_front;
   const brandSize = [garment.brand, garment.size].filter(Boolean).join(" · ");
 
   return (
@@ -110,20 +117,20 @@ export default function FichaPrenda() {
               )}
               <span className="label-caps">{garment.in_laundry ? t.ficha.enLavadora : t.ficha.disponible}</span>
             </div>
-            {garment.photo_back && (
+            {views.length > 1 && (
               <div className="absolute bottom-3 left-3 right-3 flex justify-center">
                 <div className="flex gap-1 rounded-full bg-text/75 p-1 backdrop-blur-md">
-                  {[false, true].map((back) => (
+                  {views.map(([key, label]) => (
                     <button
-                      key={String(back)}
+                      key={key}
                       type="button"
-                      aria-pressed={showBack === back}
-                      onClick={() => setShowBack(back)}
+                      aria-pressed={view === key}
+                      onClick={() => setView(key)}
                       className={`rounded-full px-3 py-1 text-[11px] font-medium ${
-                        showBack === back ? "bg-bg text-text" : "text-bg"
+                        view === key ? "bg-bg text-text" : "text-bg"
                       }`}
                     >
-                      {back ? t.ficha.detras : t.ficha.delante}
+                      {label}
                     </button>
                   ))}
                 </div>

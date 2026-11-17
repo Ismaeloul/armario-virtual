@@ -51,7 +51,7 @@ def test_usa_el_proveedor_preferido(analyzers):
     codex, claude = analyzers(
         FakeAnalyzer("codex", json.dumps(VALID_DRAFT)), FakeAnalyzer("claude", json.dumps(VALID_DRAFT))
     )
-    result = selector.analyze([], preferred="codex")
+    result = selector.analyze([], preferred="codex", prompt="x")
     assert (result.provider, result.fallback_used) == ("codex", False)
     assert claude.calls == 0
 
@@ -60,7 +60,7 @@ def test_pasa_al_plan_b_y_lo_dice(analyzers):
     analyzers(
         FakeAnalyzer("codex", error=AnalysisError("sin sesión")), FakeAnalyzer("claude", json.dumps(VALID_DRAFT))
     )
-    result = selector.analyze([], preferred="codex")
+    result = selector.analyze([], preferred="codex", prompt="x")
     assert (result.provider, result.fallback_used) == ("claude", True)
     assert result.draft is not None
 
@@ -70,12 +70,12 @@ def test_respuesta_invalida_tambien_activa_el_plan_b(analyzers):
         FakeAnalyzer("codex", json.dumps({**VALID_DRAFT, "season": "otoño"})),
         FakeAnalyzer("claude", json.dumps(VALID_DRAFT)),
     )
-    assert selector.analyze([], preferred="codex").provider == "claude"
+    assert selector.analyze([], preferred="codex", prompt="x").provider == "claude"
 
 
 def test_si_fallan_los_dos_hay_error_claro(analyzers):
     analyzers(FakeAnalyzer("codex", is_available=False), FakeAnalyzer("claude", error=AnalysisError("sin saldo")))
-    result = selector.analyze([], preferred="codex")
+    result = selector.analyze([], preferred="codex", prompt="x")
     assert result.draft is None and result.provider is None
     assert "codex" in result.error and "claude" in result.error
 
@@ -92,3 +92,34 @@ def test_lee_el_enlace_y_el_codigo_del_login_de_codex():
     )
     assert parse_device_prompt(salida) == ("https://auth.openai.com/codex/device", "ABCD-12345")
     assert parse_device_prompt("Welcome to Codex") == (None, None)
+
+
+def test_el_prompt_explica_que_foto_es_cada_una():
+    from app.services.ai.base import build_prompt
+
+    solo = build_prompt(has_back=False, has_label=False)
+    assert "una foto" in solo and "trasera" not in solo and "No adivines" in solo
+
+    completo = build_prompt(has_back=True, has_label=True)
+    assert "3 fotos" in completo
+    assert "Foto 2: la parte trasera" in completo and "Foto 3: la etiqueta" in completo
+    assert "léelos de la foto de la etiqueta" in completo
+
+    # Sin trasera, la etiqueta pasa a ser la foto 2.
+    assert "Foto 2: la etiqueta" in build_prompt(has_back=False, has_label=True)
+
+
+def test_resumen_de_los_limites_de_codex():
+    from app.services.ai.codex_usage import parse_rate_limits
+
+    usage = parse_rate_limits({
+        "ordinaryUsageAllowed": True,
+        "rateLimits": {
+            "planType": "plus",
+            "primary": {"usedPercent": 2, "windowDurationMins": 300, "resetsAt": 1794956350},
+            "secondary": {"usedPercent": 0, "windowDurationMins": 10080, "resetsAt": 1795543150},
+        },
+    })
+    assert usage["plan"] == "plus" and usage["allowed"] is True
+    assert usage["primary"] == {"used_percent": 2, "window_minutes": 300, "resets_at": 1794956350}
+    assert parse_rate_limits({})["primary"] is None

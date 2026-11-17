@@ -25,7 +25,7 @@ class AnalysisResult:
     error: str | None
 
 
-def analyze(images: list[Path], preferred: str) -> AnalysisResult:
+def analyze(images: list[Path], preferred: str, prompt: str) -> AnalysisResult:
     order = [preferred] + [name for name in ANALYZERS if name != preferred]
     errors: list[str] = []
 
@@ -35,7 +35,7 @@ def analyze(images: list[Path], preferred: str) -> AnalysisResult:
             errors.append(f"{name}: no configurado")
             continue
         try:
-            draft = parse_draft(analyzer.analyze(images))
+            draft = parse_draft(analyzer.analyze(images, prompt))
         except AnalysisError as exc:
             log.warning("Análisis con %s fallido: %s", name, exc)
             errors.append(f"{name}: {exc}")

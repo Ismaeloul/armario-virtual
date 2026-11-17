@@ -1,7 +1,72 @@
 import { useEffect, useState } from "react";
 import { t } from "../i18n/es";
-import { api, type AIStatus, type CodexLogin } from "../lib/api";
+import { api, type AIStatus, type CodexLogin, type CodexUsage, type UsageWindow } from "../lib/api";
 import { Icon } from "./Icon";
+
+function resetText(resetsAt: number | null): string {
+  if (!resetsAt) return "";
+  const date = new Date(resetsAt * 1000);
+  const sameDay = date.toDateString() === new Date().toDateString();
+  const time = date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  return sameDay
+    ? `hoy a las ${time}`
+    : `el ${date.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })} a las ${time}`;
+}
+
+function UsageBar({ label, window }: { label: string; window: UsageWindow }) {
+  const used = Math.round(window.used_percent ?? 0);
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-baseline justify-between text-xs">
+        <span className="font-medium">{label}</span>
+        <span className="text-text-2">{t.codex.usado(used)}</span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-control">
+        <div
+          className={`h-full rounded-full ${used >= 90 ? "bg-danger" : "bg-primary"}`}
+          style={{ width: `${Math.min(100, Math.max(2, used))}%` }}
+        />
+      </div>
+      {window.resets_at && <span className="text-[11px] text-text-3">{t.codex.seRenueva(resetText(window.resets_at))}</span>}
+    </div>
+  );
+}
+
+/** Cuánto límite de la suscripción queda: ventana de 5 horas y semanal. */
+function Usage() {
+  const [usage, setUsage] = useState<CodexUsage | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const load = () => {
+    setLoading(true);
+    setFailed(false);
+    api
+      .codexUsage()
+      .then(setUsage)
+      .catch(() => setFailed(true))
+      .finally(() => setLoading(false));
+  };
+  useEffect(load, []);
+
+  return (
+    <div className="flex flex-col gap-2.5 rounded-xl border border-line bg-card-2 p-3.5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold">
+          {t.codex.uso}
+          {usage?.plan && <span className="ml-2 font-normal capitalize text-text-2">{t.codex.plan(usage.plan)}</span>}
+        </span>
+        <button type="button" onClick={load} disabled={loading} className="text-[11px] text-text-2 underline disabled:opacity-40">
+          {loading ? t.comun.cargando : t.codex.actualizar}
+        </button>
+      </div>
+      {failed && <p className="text-[11px] text-danger">{t.codex.usoError}</p>}
+      {usage?.primary && <UsageBar label={t.codex.ventana5h} window={usage.primary} />}
+      {usage?.secondary && <UsageBar label={t.codex.ventanaSemana} window={usage.secondary} />}
+      {usage && !usage.allowed && <p className="text-[11px] text-danger">{t.codex.agotado}</p>}
+    </div>
+  );
+}
 
 /** Iniciar y cerrar la sesión de Codex (suscripción de ChatGPT) sin pasar por la terminal. */
 export function CodexSession({ ai, onChange }: { ai: AIStatus; onChange: () => void }) {
@@ -111,7 +176,8 @@ export function CodexSession({ ai, onChange }: { ai: AIStatus; onChange: () => v
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2.5">
+      {ai.codex_logged_in && <Usage />}
       {ai.codex_logged_in ? (
         <button
           type="button"

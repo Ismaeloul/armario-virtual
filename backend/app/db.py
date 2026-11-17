@@ -33,7 +33,7 @@ def init_db() -> None:
 # Columnas añadidas después de la primera versión. create_all no toca tablas que ya existen,
 # así que se añaden a mano para que actualizar la app no pierda datos.
 _NEW_COLUMNS = {
-    "garments": {"ai_draft": "JSON"},
+    "garments": {"ai_draft": "JSON", "photo_label": "VARCHAR(32)", "photo_label_original": "VARCHAR(64)"},
 }
 
 

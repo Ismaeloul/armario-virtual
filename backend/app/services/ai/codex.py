@@ -12,7 +12,7 @@ import tempfile
 from pathlib import Path
 
 from ... import config
-from .base import OUTPUT_SCHEMA, PROMPT, AnalysisError
+from .base import OUTPUT_SCHEMA, AnalysisError
 
 
 class CodexAnalyzer:
@@ -29,7 +29,7 @@ class CodexAnalyzer:
         home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
         return (home / "auth.json").is_file()
 
-    def analyze(self, images: list[Path]) -> str:
+    def analyze(self, images: list[Path], prompt: str) -> str:
         binary = self._binary()
         if not binary:
             raise AnalysisError("Codex no está instalado en el servidor")
@@ -58,7 +58,7 @@ class CodexAnalyzer:
             try:
                 proc = subprocess.run(
                     cmd,
-                    input=PROMPT,
+                    input=prompt,
                     capture_output=True,
                     text=True,
                     encoding="utf-8",

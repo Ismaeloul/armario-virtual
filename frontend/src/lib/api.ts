@@ -24,6 +24,7 @@ export type Garment = GarmentFields & {
   category: string;
   photo_front: Photo;
   photo_back: Photo | null;
+  photo_label: Photo | null;
   in_laundry: boolean;
   favorite: boolean;
   ai_provider: string | null;
@@ -36,6 +37,7 @@ export type Draft = GarmentFields & { confidence: number };
 export type Analysis = {
   photo_front: Photo;
   photo_back: Photo | null;
+  photo_label: Photo | null;
   draft: Draft | null;
   provider: string | null;
   fallback_used: boolean;
@@ -68,6 +70,14 @@ export type CodexLogin = {
   url: string | null;
   code: string | null;
   error: string | null;
+};
+
+export type UsageWindow = { used_percent: number | null; window_minutes: number | null; resets_at: number | null };
+export type CodexUsage = {
+  plan: string | null;
+  allowed: boolean;
+  primary: UsageWindow | null;
+  secondary: UsageWindow | null;
 };
 
 export class ApiError extends Error {
@@ -110,6 +120,7 @@ export const api = {
   codexLoginStatus: () => request<CodexLogin>("/api/ai/codex/login"),
   codexLoginCancel: () => request<void>("/api/ai/codex/login", { method: "DELETE" }),
   codexLogout: () => request<AIStatus>("/api/ai/codex/logout", { method: "POST" }),
+  codexUsage: () => request<CodexUsage>("/api/ai/codex/usage"),
   aiStatus: () => request<AIStatus>("/api/ai/status"),
   /** La clave se envía al servidor y no vuelve nunca. Cadena vacía = borrarla. */
   saveClaudeKey: (key: string) => request<Settings>("/api/settings", json("PATCH", { anthropic_api_key: key })),
@@ -125,12 +136,22 @@ export const api = {
   clearLaundry: () => request<{ cleared: number }>("/api/laundry/clear", { method: "POST" }),
 
   /** Sube fotos nuevas o reutiliza las ya subidas (ids) para reintentar el análisis. */
-  analyze: (opts: { front?: File; back?: File; frontId?: string; backId?: string; skipAi?: boolean }) => {
+  analyze: (opts: {
+    front?: File;
+    back?: File;
+    label?: File;
+    frontId?: string;
+    backId?: string;
+    labelId?: string;
+    skipAi?: boolean;
+  }) => {
     const form = new FormData();
     if (opts.front) form.append("front", opts.front);
     if (opts.back) form.append("back", opts.back);
+    if (opts.label) form.append("label", opts.label);
     if (opts.frontId) form.append("front_id", opts.frontId);
     if (opts.backId) form.append("back_id", opts.backId);
+    if (opts.labelId) form.append("label_id", opts.labelId);
     if (opts.skipAi) form.append("skip_ai", "true");
     return request<Analysis>("/api/garments/analyze", { method: "POST", body: form });
   },
@@ -139,6 +160,7 @@ export const api = {
     body: GarmentFields & {
       photo_front: string;
       photo_back: string | null;
+      photo_label: string | null;
       ai_provider: string | null;
       ai_confidence: number | null;
       ai_draft: Draft | null;

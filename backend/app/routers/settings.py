@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from .. import catalog
 from ..db import get_db
 from ..models import Setting
-from ..schemas import AIStatus, CodexLogin, SettingsOut, SettingsUpdate
-from ..services.ai import codex_login
+from ..schemas import AIStatus, CodexLogin, CodexUsage, SettingsOut, SettingsUpdate
+from ..services.ai import codex_login, codex_usage
 from ..services.ai import claude as claude_ai
 from ..services.ai.selector import ANALYZERS
 
@@ -88,9 +88,19 @@ def codex_login_cancel():
 def codex_logout():
     try:
         codex_login.logout()
+        codex_usage.forget()
     except RuntimeError as exc:
         raise HTTPException(502, str(exc)) from exc
     return ai_status()
+
+
+@router.get("/ai/codex/usage", response_model=CodexUsage)
+def codex_usage_read():
+    """Cuánto límite de Codex queda en la cuenta (ventana de 5 horas y semanal)."""
+    try:
+        return codex_usage.read()
+    except RuntimeError as exc:
+        raise HTTPException(502, str(exc)) from exc
 
 
 @router.get("/catalog")

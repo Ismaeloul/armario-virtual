@@ -34,6 +34,9 @@ class Garment(Base):
     photo_back: Mapped[str | None] = mapped_column(String(32), nullable=True)
     photo_front_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
     photo_back_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Foto opcional de la etiqueta: de ahí salen la marca y la talla.
+    photo_label: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    photo_label_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     in_laundry: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     laundry_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

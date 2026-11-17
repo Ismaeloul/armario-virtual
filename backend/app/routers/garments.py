@@ -19,6 +19,7 @@ from ..schemas import (
     WearIn,
 )
 from ..services import ai, storage
+from ..services.ai.base import build_prompt
 from .settings import read_settings
 
 router = APIRouter(prefix="/api", tags=["prendas"])
@@ -53,6 +54,7 @@ def _to_out(g: Garment, stats: dict[int, tuple[int, date | None]]) -> GarmentOut
         notes=g.notes,
         photo_front=storage.to_schema(g.photo_front),
         photo_back=storage.to_schema(g.photo_back) if g.photo_back else None,
+        photo_label=storage.to_schema(g.photo_label) if g.photo_label else None,
         in_laundry=g.in_laundry,
         laundry_since=g.laundry_since,
         favorite=g.favorite,
@@ -92,8 +94,10 @@ def _resolve_photo(upload: UploadFile | None, existing_id: str | None, required:
 def analyze_garment(
     front: UploadFile | None = File(None),
     back: UploadFile | None = File(None),
+    label: UploadFile | None = File(None),
     front_id: str | None = Form(None),
     back_id: str | None = Form(None),
+    label_id: str | None = Form(None),
     skip_ai: bool = Form(False),
     db: Session = Depends(get_db),
 ):
@@ -104,6 +108,7 @@ def analyze_garment(
     """
     front_photo = _resolve_photo(front, front_id, required=True)
     back_photo = _resolve_photo(back, back_id, required=False)
+    label_photo = _resolve_photo(label, label_id, required=False)
 
     if skip_ai:
         result = ai.AnalysisResult(draft=None, provider=None, fallback_used=False, error=None)
@@ -112,11 +117,18 @@ def analyze_garment(
         images = [storage.photo_path(front_photo)]
         if back_photo:
             images.append(storage.photo_path(back_photo))
-        result = ai.analyze(images, preferred=read_settings(db).ai_provider)
+        if label_photo:  # la etiqueta, para leer marca y talla
+            images.append(storage.photo_path(label_photo))
+        result = ai.analyze(
+            images,
+            preferred=read_settings(db).ai_provider,
+            prompt=build_prompt(has_back=bool(back_photo), has_label=bool(label_photo)),
+        )
 
     return AnalyzeResponse(
         photo_front=storage.to_schema(front_photo),
         photo_back=storage.to_schema(back_photo) if back_photo else None,
+        photo_label=storage.to_schema(label_photo) if label_photo else None,
         draft=result.draft,
         provider=result.provider,
         fallback_used=result.fallback_used,
@@ -126,7 +138,7 @@ def analyze_garment(
 
 @router.post("/garments", response_model=GarmentOut, status_code=201)
 def create_garment(body: GarmentCreate, db: Session = Depends(get_db)):
-    for photo_id in (body.photo_front, body.photo_back):
+    for photo_id in (body.photo_front, body.photo_back, body.photo_label):
         if photo_id and not storage.exists(photo_id):
             raise HTTPException(422, "La foto no existe; vuelve a subirla")
 
@@ -148,6 +160,8 @@ def create_garment(body: GarmentCreate, db: Session = Depends(get_db)):
         photo_back=body.photo_back,
         photo_front_original=storage.original_name(body.photo_front),
         photo_back_original=storage.original_name(body.photo_back) if body.photo_back else None,
+        photo_label=body.photo_label,
+        photo_label_original=storage.original_name(body.photo_label) if body.photo_label else None,
         ai_provider=body.ai_provider,
         ai_confidence=body.ai_confidence,
         ai_draft=body.ai_draft.model_dump() if body.ai_draft else None,
@@ -267,7 +281,7 @@ def update_garment(garment_id: int, body: GarmentUpdate, db: Session = Depends(g
 @router.delete("/garments/{garment_id}", status_code=204)
 def delete_garment(garment_id: int, db: Session = Depends(get_db)):
     garment = _get_or_404(db, garment_id)
-    photos = (garment.photo_front, garment.photo_back)
+    photos = (garment.photo_front, garment.photo_back, garment.photo_label)
     db.delete(garment)
     db.commit()
     for photo_id in photos:
@@ -292,8 +306,13 @@ def rotate_photo(photo_id: str, db: Session = Depends(get_db)):
         raise HTTPException(404, str(exc)) from exc
 
     for garment in db.scalars(
-        select(Garment).where(or_(Garment.photo_front == photo_id, Garment.photo_back == photo_id))
+        select(Garment).where(
+            or_(Garment.photo_front == photo_id, Garment.photo_back == photo_id, Garment.photo_label == photo_id)
+        )
     ):
+        if garment.photo_label == photo_id:
+            garment.photo_label = new_id
+            garment.photo_label_original = storage.original_name(new_id)
         if garment.photo_front == photo_id:
             garment.photo_front = new_id
             garment.photo_front_original = storage.original_name(new_id)

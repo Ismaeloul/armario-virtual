@@ -46,8 +46,10 @@ class FakeAnalyzer:
     def available(self):
         return self.is_available
 
-    def analyze(self, images):
+    def analyze(self, images, prompt):
         self.calls += 1
+        self.images = list(images)
+        self.prompt = prompt
         if self.error:
             raise self.error
         return self.response
