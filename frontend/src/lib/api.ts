@@ -32,7 +32,7 @@ export type Garment = GarmentFields & {
   last_worn_on: string | null;
 };
 
-export type Draft = GarmentFields & { confidence: number };
+export type Draft = GarmentFields & { confidence: number; color_primary_alt: string | null };
 
 export type Analysis = {
   photo_front: Photo;

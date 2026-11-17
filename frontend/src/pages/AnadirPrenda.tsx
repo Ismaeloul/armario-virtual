@@ -118,7 +118,7 @@ export default function AnadirPrenda() {
       );
       setAnalysis(result);
       if (result.draft) {
-        const { confidence: _c, ...fields } = result.draft;
+        const { confidence: _c, color_primary_alt: _alt, ...fields } = result.draft;
         setForm(fields);
         setStep("formulario");
       } else if (skipAi) {
@@ -313,7 +313,16 @@ export default function AnadirPrenda() {
             )}
 
             <span className="label-caps text-text-2">{t.nueva.atributos}</span>
-            <GarmentForm catalog={catalog} form={form} onChange={setForm} />
+            <GarmentForm
+              catalog={catalog}
+              form={form}
+              onChange={setForm}
+              colorDoubt={
+                analysis.draft?.color_primary_alt
+                  ? [analysis.draft.color_primary.name, analysis.draft.color_primary_alt]
+                  : undefined
+              }
+            />
 
             {formError && <p className="text-center text-sm text-danger">{formError}</p>}
             <PrimaryButton type="submit" disabled={saving}>

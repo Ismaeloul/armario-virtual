@@ -24,6 +24,8 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   jersey, abrigo y botas = invierno; el usuario usa las sudaderas sobre todo en invierno), estampado nuevo
   "bloques de color" y criterio logo/gráfico/texturizado, nombres en singular. El usuario suele guardar el
   borrador sin revisar, así que el informe de correcciones sale vacío: hay que mirar las fotos uno mismo.
+- También sin publicar: la IA devuelve `color_primary_alt` cuando duda entre dos colores y el borrador lo
+  avisa con dos botones para elegir. El parche o la etiqueta de marca no cuentan como estampado "logo".
 - Afinado de la IA en curso: el usuario sube fotos de Vinted al backend local (`http://localhost:8000`,
   con sesión de Codex propia en `codex-home/`, aparte de la del Codex de escritorio), corrige el borrador
   y con el informe de correcciones se ajusta el prompt de `backend/app/services/ai/base.py`.

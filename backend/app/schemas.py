@@ -49,6 +49,9 @@ class GarmentFields(BaseModel):
 class GarmentDraft(GarmentFields):
     """Respuesta validada de la IA."""
 
+    # Si dudaba entre dos colores para el principal, el otro candidato. No se guarda en la prenda:
+    # solo sirve para avisar en el borrador.
+    color_primary_alt: ColorName | None = None
     confidence: float = Field(ge=0, le=1)
 
 

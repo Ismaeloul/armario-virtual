@@ -45,6 +45,11 @@ OUTPUT_SCHEMA = {
         "name": {"type": "string", "description": "Nombre corto y descriptivo, 2-4 palabras"},
         "type": {"type": "string", "enum": list(catalog.TYPES)},
         "color_primary": _COLOR_SCHEMA,
+        "color_primary_alt": {
+            "type": ["string", "null"],
+            "enum": [*catalog.COLORS, None],
+            "description": "El otro color candidato si dudas entre dos para el principal; si no dudas, null",
+        },
         "colors_secondary": {"type": "array", "items": _COLOR_SCHEMA},
         "pattern": {"type": "string", "enum": catalog.PATTERNS},
         "style": {"type": "string", "enum": catalog.STYLES},
@@ -56,7 +61,7 @@ OUTPUT_SCHEMA = {
         "confidence": {"type": "number", "description": "Certeza global entre 0 y 1"},
     },
     "required": [
-        "name", "type", "color_primary", "colors_secondary", "pattern", "style",
+        "name", "type", "color_primary", "color_primary_alt", "colors_secondary", "pattern", "style",
         "details", "season", "brand", "size", "notes", "confidence",
     ],
     "additionalProperties": False,
@@ -74,7 +79,9 @@ Siempre en singular, también los pantalones: "Vaquero ancho azul", no "Vaqueros
 Elige el más cercano.
 - "pattern": mira el dibujo de la tela, no su tacto.
   - "liso": un solo color, sin nada estampado.
-  - "logo": un logo, una marca o un texto pequeño (en el pecho, en la manga), aunque el resto sea de un color.
+  - "logo": un logo, una marca o un texto pequeño estampado o bordado como adorno (en el pecho, en la manga), \
+aunque el resto sea de un color. La etiqueta cosida, el parche de la cintura de un vaquero o el logo de la \
+suela no cuentan: eso lo lleva cualquier prenda.
   - "gráfico": un dibujo, una ilustración o un texto grande que ocupa buena parte de la prenda. \
 Si delante hay un logo pequeño y detrás un dibujo grande, es "gráfico".
   - "bloques de color": varias franjas o paneles grandes de colores distintos.
@@ -90,6 +97,7 @@ sobrecamisa y chaquetas finas.
 una camisa de franela gruesa es "invierno".
 - "color_primary": el color dominante. "colors_secondary": otros colores visibles (lista vacía si es de un solo color). \
 En "hex" pon el tono real que ves en la foto.
+- "color_primary_alt": si el color principal está entre dos nombres de la lista y otra persona podría elegir el otro (blanco o crudo, gris o negro, azul o celeste, beige o marrón, verde o verde oliva…), pon aquí ese segundo candidato. Si el color es claro, null. No lo uses para los colores secundarios.
 - {marca}
 - "confidence": tu certeza global entre 0 y 1. Bájala si la foto es mala o la prenda es ambigua.
 

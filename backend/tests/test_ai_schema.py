@@ -123,3 +123,11 @@ def test_resumen_de_los_limites_de_codex():
     assert usage["plan"] == "plus" and usage["allowed"] is True
     assert usage["primary"] == {"used_percent": 2, "window_minutes": 300, "resets_at": 1794956350}
     assert parse_rate_limits({})["primary"] is None
+
+
+def test_la_ia_puede_decir_entre_que_colores_dudaba():
+    assert parse_draft(json.dumps(VALID_DRAFT)).color_primary_alt is None
+    assert parse_draft(json.dumps({**VALID_DRAFT, "color_primary_alt": "gris"})).color_primary_alt == "gris"
+    with pytest.raises(AnalysisError):
+        parse_draft(json.dumps({**VALID_DRAFT, "color_primary_alt": "antracita"}))
+    assert None in OUTPUT_SCHEMA["properties"]["color_primary_alt"]["enum"]

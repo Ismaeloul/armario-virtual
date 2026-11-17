@@ -57,6 +57,8 @@ export const t = {
       texto: "La IA no ha respondido. Puedes volver a intentarlo o rellenar los datos tú.",
     },
     atributos: "Atributos de la prenda",
+    dudaColor: (a: string, b: string) => `La IA dudaba entre ${a} y ${b}. Comprueba el color.`,
+    usarColor: (c: string) => `Usar ${c}`,
     campos: {
       nombre: "Nombre",
       tipo: "Tipo de prenda",
