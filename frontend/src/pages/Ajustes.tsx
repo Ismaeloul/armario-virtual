@@ -4,7 +4,7 @@ import { Segmented, inputClass } from "../components/Controls";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
-import { api, mediaUrl, type Garment, type Settings } from "../lib/api";
+import { api, mediaUrl, type AIStatus, type Garment, type Settings } from "../lib/api";
 import { applyTheme, storedTheme } from "../lib/theme";
 
 function Section({ label, children }: { label: string; children: ReactNode }) {
@@ -38,6 +38,18 @@ export default function Ajustes() {
   const [theme, setTheme] = useState(storedTheme());
   const [city, setCity] = useState("");
   const [laundry, setLaundry] = useState<Garment[]>([]);
+  const [ai, setAi] = useState<AIStatus | null>(null);
+  const [claudeKey, setClaudeKey] = useState("");
+
+  const loadAi = () => api.aiStatus().then(setAi).catch(() => undefined);
+  const saveKey = (key: string) =>
+    api
+      .saveClaudeKey(key)
+      .then(() => {
+        setClaudeKey("");
+        loadAi();
+      })
+      .catch(() => undefined);
 
   useEffect(() => {
     api
@@ -49,6 +61,7 @@ export default function Ajustes() {
         applyTheme(s.theme);
       })
       .catch(() => undefined);
+    loadAi();
     api
       .garments()
       .then((g) => setLaundry(g.filter((x) => x.in_laundry)))
@@ -94,6 +107,67 @@ export default function Ajustes() {
               options={["codex", "claude"].map((value) => ({ value, label: t.proveedores[value] }))}
             />
             <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.iaTexto}</p>
+
+            {ai && (
+              <div className="flex flex-col gap-1.5 border-t border-control pt-3">
+                {[
+                  {
+                    ok: ai.codex_logged_in,
+                    text: !ai.codex_installed
+                      ? t.ajustes.estado.codexNoInstalado
+                      : ai.codex_logged_in
+                        ? t.ajustes.estado.codexListo
+                        : t.ajustes.estado.codexSinSesion,
+                  },
+                  {
+                    ok: ai.claude_configured,
+                    text: ai.claude_configured ? t.ajustes.estado.claudeListo : t.ajustes.estado.claudeFalta,
+                  },
+                ].map((row) => (
+                  <p key={row.text} className="flex items-center gap-2 text-xs">
+                    <Icon
+                      name={row.ok ? "check_circle" : "error"}
+                      size={16}
+                      className={row.ok ? "text-primary" : "text-text-3"}
+                    />
+                    <span className={row.ok ? "text-text" : "text-text-2"}>{row.text}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+
+            <form
+              className="flex flex-col gap-1.5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (claudeKey.trim()) saveKey(claudeKey.trim());
+              }}
+            >
+              <span className="label-caps text-text-2">{t.ajustes.claveEtiqueta}</span>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  autoComplete="off"
+                  className={inputClass}
+                  placeholder={t.ajustes.clavePlaceholder}
+                  value={claudeKey}
+                  onChange={(e) => setClaudeKey(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  disabled={!claudeKey.trim()}
+                  className="shrink-0 rounded-lg bg-primary px-4 text-xs font-semibold text-on-primary disabled:opacity-40"
+                >
+                  {t.ajustes.claveGuardar}
+                </button>
+              </div>
+              <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.claveAyuda}</p>
+              {ai?.claude_configured && (
+                <button type="button" onClick={() => saveKey("")} className="self-start text-[11px] text-danger">
+                  {t.ajustes.claveBorrar}
+                </button>
+              )}
+            </form>
           </Section>
 
           <Section label={t.ajustes.lavadora}>

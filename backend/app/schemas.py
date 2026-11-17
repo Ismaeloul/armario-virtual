@@ -146,3 +146,11 @@ class SettingsUpdate(BaseModel):
     city: str | None = Field(default=None, min_length=1, max_length=80)
     notify_enabled: bool | None = None
     notify_time: str | None = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    # Solo escritura: nunca se devuelve. Cadena vacía = borrar la clave guardada.
+    anthropic_api_key: str | None = Field(default=None, max_length=300)
+
+
+class AIStatus(BaseModel):
+    codex_installed: bool
+    codex_logged_in: bool
+    claude_configured: bool

@@ -5,6 +5,7 @@ que puede ejecutar comandos, así que se lanza en una carpeta temporal vacía, e
 y sin guardar la sesión.
 """
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -23,6 +24,11 @@ class CodexAnalyzer:
     def available(self) -> bool:
         return self._binary() is not None
 
+    def logged_in(self) -> bool:
+        """¿Hay una sesión guardada? (auth.json en CODEX_HOME)"""
+        home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
+        return (home / "auth.json").is_file()
+
     def analyze(self, images: list[Path]) -> str:
         binary = self._binary()
         if not binary:
@@ -38,7 +44,7 @@ class CodexAnalyzer:
                 binary, "exec",
                 "--ephemeral",
                 "--skip-git-repo-check",
-                "--sandbox", "read-only",
+                "--sandbox", config.CODEX_SANDBOX,
                 "--cd", str(work),
                 "--output-schema", str(schema_file),
                 "--output-last-message", str(result_file),

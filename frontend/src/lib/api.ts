@@ -61,6 +61,8 @@ export type Settings = {
   notify_time: string;
 };
 
+export type AIStatus = { codex_installed: boolean; codex_logged_in: boolean; claude_configured: boolean };
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -97,6 +99,9 @@ export const mediaUrl = (path: string) => BASE + path;
 export const api = {
   catalog: () => request<Catalog>("/api/catalog"),
   settings: () => request<Settings>("/api/settings"),
+  aiStatus: () => request<AIStatus>("/api/ai/status"),
+  /** La clave se envía al servidor y no vuelve nunca. Cadena vacía = borrarla. */
+  saveClaudeKey: (key: string) => request<Settings>("/api/settings", json("PATCH", { anthropic_api_key: key })),
   updateSettings: (changes: Partial<Settings>) => request<Settings>("/api/settings", json("PATCH", changes)),
   garments: () => request<Garment[]>("/api/garments"),
   garment: (id: number) => request<Garment>(`/api/garments/${id}`),

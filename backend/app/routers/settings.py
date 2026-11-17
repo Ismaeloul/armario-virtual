@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 from .. import catalog
 from ..db import get_db
 from ..models import Setting
-from ..schemas import SettingsOut, SettingsUpdate
+from ..schemas import AIStatus, SettingsOut, SettingsUpdate
+from ..services.ai import claude as claude_ai
+from ..services.ai.selector import ANALYZERS
 
 router = APIRouter(prefix="/api", tags=["ajustes"])
 
@@ -36,11 +38,30 @@ def get_settings(db: Session = Depends(get_db)):
 
 @router.patch("/settings", response_model=SettingsOut)
 def update_settings(body: SettingsUpdate, db: Session = Depends(get_db)):
-    for key, value in body.model_dump(exclude_none=True).items():
+    changes = body.model_dump(exclude_none=True)
+    api_key = changes.pop("anthropic_api_key", None)
+    if api_key is not None:  # se guarda aparte y nunca se devuelve
+        api_key = api_key.strip()
+        if api_key:
+            db.merge(Setting(key=claude_ai.API_KEY_SETTING, value=api_key))
+        else:
+            db.query(Setting).filter(Setting.key == claude_ai.API_KEY_SETTING).delete()
+    for key, value in changes.items():
         stored = ("true" if value else "false") if isinstance(value, bool) else str(value)
         db.merge(Setting(key=key, value=stored))
     db.commit()
     return read_settings(db)
+
+
+@router.get("/ai/status", response_model=AIStatus)
+def ai_status():
+    """Qué proveedores están listos, para que Ajustes lo muestre. No devuelve ninguna clave."""
+    codex = ANALYZERS["codex"]
+    return AIStatus(
+        codex_installed=codex.available(),
+        codex_logged_in=codex.available() and codex.logged_in(),
+        claude_configured=claude_ai.api_key() is not None,
+    )
 
 
 @router.get("/catalog")

@@ -131,3 +131,16 @@ def test_limpieza_de_fotos_huerfanas(client, photo_bytes):
     assert storage.cleanup_orphans({kept}, max_age_hours=0) >= 1  # también las que dejaron otros tests
     assert storage.exists(kept) and not storage.exists(orphan)
     assert not storage.thumb_path(orphan).exists()
+
+
+def test_la_api_key_de_claude_se_guarda_pero_nunca_se_devuelve(client):
+    assert client.get("/api/ai/status").json()["claude_configured"] is False
+
+    saved = client.patch("/api/settings", json={"anthropic_api_key": "clave-de-prueba"})
+    assert saved.status_code == 200
+    assert "clave-de-prueba" not in saved.text and "anthropic_api_key" not in saved.json()
+    assert "clave-de-prueba" not in client.get("/api/settings").text
+    assert client.get("/api/ai/status").json()["claude_configured"] is True
+
+    client.patch("/api/settings", json={"anthropic_api_key": ""})  # vacía = borrar
+    assert client.get("/api/ai/status").json()["claude_configured"] is False

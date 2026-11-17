@@ -21,6 +21,9 @@ AI_TIMEOUT_SECONDS = int(os.environ.get("ARMARIO_AI_TIMEOUT", "90"))
 # Codex: suscripción de ChatGPT a través del CLI (sin API key).
 CODEX_BIN = os.environ.get("CODEX_BIN", "codex")
 CODEX_MODEL = os.environ.get("CODEX_MODEL", "")  # vacío = el que use el CLI por defecto
+# Aislamiento que aplica Codex a sus propios comandos. "read-only" es lo seguro; dentro de un
+# contenedor que no lo soporte se puede relajar, porque el contenedor ya aísla.
+CODEX_SANDBOX = os.environ.get("CODEX_SANDBOX", "read-only")
 
 # Claude: API de Anthropic con API key.
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-haiku-5-5")

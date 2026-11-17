@@ -1,4 +1,4 @@
-"""Claude por la API de Anthropic (API key en ANTHROPIC_API_KEY)."""
+"""Claude por la API de Anthropic (API key pegada en Ajustes o en ANTHROPIC_API_KEY)."""
 import base64
 import os
 from pathlib import Path
@@ -6,18 +6,32 @@ from pathlib import Path
 import anthropic
 
 from ... import config
+from ...db import SessionLocal
+from ...models import Setting
 from .base import OUTPUT_SCHEMA, PROMPT, AnalysisError
+
+API_KEY_SETTING = "anthropic_api_key"
+
+
+def api_key() -> str | None:
+    """La API key: la de Ajustes (pegada en la app) o, si no hay, la del entorno."""
+    with SessionLocal() as db:
+        stored = db.get(Setting, API_KEY_SETTING)
+    if stored and stored.value:
+        return stored.value
+    return os.environ.get("ANTHROPIC_API_KEY") or None
 
 
 class ClaudeAnalyzer:
     name = "claude"
 
     def available(self) -> bool:
-        return bool(os.environ.get("ANTHROPIC_API_KEY"))
+        return api_key() is not None
 
     def analyze(self, images: list[Path]) -> str:
-        if not self.available():
-            raise AnalysisError("Claude no está configurado (falta ANTHROPIC_API_KEY)")
+        key = api_key()
+        if not key:
+            raise AnalysisError("Claude no está configurado (falta la API key)")
 
         content: list[dict] = [
             {
@@ -32,7 +46,7 @@ class ClaudeAnalyzer:
         ]
         content.append({"type": "text", "text": PROMPT})
 
-        client = anthropic.Anthropic(timeout=config.AI_TIMEOUT_SECONDS, max_retries=1)
+        client = anthropic.Anthropic(api_key=key, timeout=config.AI_TIMEOUT_SECONDS, max_retries=1)
         try:
             response = client.messages.create(
                 model=config.CLAUDE_MODEL,
