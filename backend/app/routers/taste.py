@@ -87,7 +87,9 @@ def _state(db: Session) -> TasteOut:
     pending = [c for c in _all_combos(garments) if frozenset(g.id for g in c) not in rated_sets]
     combo = None
     if pending:
-        chosen = random.choice(pending)
+        # Primero las combinaciones que alguien se pondría: sin mezclar prendas de verano con las de invierno.
+        coherent = [c for c in pending if not {"verano", "invierno"} <= {g.season for g in c}]
+        chosen = random.choice(coherent or pending)
         stats = _wear_stats(db, [g.id for g in chosen])
         combo = Combo(
             garments=[_to_out(g, stats) for g in chosen],

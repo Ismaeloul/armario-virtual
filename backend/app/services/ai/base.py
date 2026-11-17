@@ -80,8 +80,9 @@ Elige el más cercano.
 - "pattern": mira el dibujo de la tela, no su tacto.
   - "liso": un solo color, sin nada estampado.
   - "logo": un logo, una marca o un texto pequeño estampado o bordado como adorno (en el pecho, en la manga), \
-aunque el resto sea de un color. La etiqueta cosida, el parche de la cintura de un vaquero o el logo de la \
-suela no cuentan: eso lo lleva cualquier prenda.
+aunque el resto sea de un color. La etiqueta cosida, la marca impresa por dentro del cuello, el parche de la cintura \
+o del bolsillo trasero de un vaquero o una bermuda y el logo de la suela no cuentan: eso lo lleva cualquier prenda. \
+Lo que solo se ve en la foto de la etiqueta tampoco cuenta.
   - "gráfico": un dibujo, una ilustración o un texto grande que ocupa buena parte de la prenda. \
 Si delante hay un logo pequeño y detrás un dibujo grande, es "gráfico".
   - "bloques de color": varias franjas o paneles grandes de colores distintos.

@@ -205,6 +205,11 @@ export const t = {
     claveGuardar: "Guardar",
     claveBorrar: "Borrar la clave guardada",
     claveAyuda: "Se guarda en tu servidor y no se vuelve a mostrar.",
+    avanzadas: "Opciones avanzadas",
+    olvidarTexto: "Borra todas las valoraciones de Gustos y de Hoy. El algoritmo vuelve a empezar de cero; tus prendas no se tocan.",
+    olvidar: "Borrar lo aprendido",
+    olvidarConfirmar: "Toca otra vez para confirmar",
+    olvidado: "Hecho. El algoritmo empieza de cero.",
     version: "Armario · v0.2.0",
   },
   codex: {

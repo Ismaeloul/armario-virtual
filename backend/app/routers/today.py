@@ -146,7 +146,12 @@ def _response(db: Session, today: date, forecast, city: str, outfit: Outfit | No
         notes = []
         if "calzado" not in categories:
             notes.append("sin_calzado")
-        if "capa_exterior" not in categories and outfits.wants_layer(
+        has_layer = db.scalar(
+            select(func.count()).select_from(Garment).where(
+                Garment.category == "capa_exterior", Garment.in_laundry.is_(False)
+            )
+        )
+        if "capa_exterior" not in categories and not has_layer and outfits.wants_layer(
             outfit.day_kind, forecast.temp_max if forecast else None, forecast.rain_probability if forecast else 0
         ):
             notes.append("sin_capa")

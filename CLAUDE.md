@@ -18,7 +18,10 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   varias prendas) y
   `services/taste.py` aprende parejas de prendas, de colores y de estilos; lo aprendido ajusta el outfit
   de Hoy y la afinidad. No se distingue quién valora (decisión del usuario: al algoritmo solo le importa
-  si pega o no). El usuario entrena en local con datos de prueba para ver cómo se comporta.
+  si pega o no). El usuario entrena en local con datos de prueba para ver cómo se comporta: la copia
+  local (`data/`) tiene 25 prendas de Vinted analizadas por Codex además de las suyas; no son su armario
+  real. Gustos enseña antes las combinaciones que no mezclan verano con invierno. En Ajustes, escondido
+  tras «Opciones avanzadas», está «Borrar lo aprendido» (doble toque para confirmar).
 - También sin publicar: al añadir se elige "Prenda de ropa" o "Zapatilla". El calzado tiene vistas
   propias (lateral, de frente, otro lateral) y una cuarta foto `photo_extra`.
 - Versiones: no publicar en el Umbrel cambio a cambio. Se acumulan mejoras y arreglos en `main` y se publica

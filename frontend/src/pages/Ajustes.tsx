@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { CodexSession } from "../components/CodexSession";
+import { ForgetTaste } from "../components/ForgetTaste";
 import { Segmented, inputClass } from "../components/Controls";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
@@ -266,6 +267,7 @@ export default function Ajustes() {
           </Section>
 
           <p className="text-center text-[11px] tracking-wider text-text-3">{t.ajustes.version}</p>
+          <ForgetTaste />
         </div>
       </Screen>
       <BottomNav />
