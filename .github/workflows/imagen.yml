@@ -34,7 +34,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/ismaeloul/armario-virtual:${{ steps.version.outputs.numero }}
-            ghcr.io/ismaeloul/armario-virtual:latest
+            ghcr.io/ismaeloul/armario:${{ steps.version.outputs.numero }}
+            ghcr.io/ismaeloul/armario:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
