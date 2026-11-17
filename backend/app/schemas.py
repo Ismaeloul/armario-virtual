@@ -57,6 +57,7 @@ class GarmentCreate(GarmentFields):
     photo_back: str | None = Field(default=None, pattern=PHOTO_ID)
     ai_provider: AIProvider | None = None
     ai_confidence: float | None = Field(default=None, ge=0, le=1)
+    ai_draft: GarmentDraft | None = None  # la propuesta original de la IA, sin los retoques del usuario
 
 
 class GarmentUpdate(BaseModel):
@@ -162,3 +163,22 @@ class CodexLogin(BaseModel):
     code: str | None = None
     error: str | None = None
     expires_in: int | None = None
+
+
+class Correction(BaseModel):
+    """Un campo que el usuario cambió respecto a lo que propuso la IA."""
+
+    garment_id: int
+    garment: str
+    provider: str | None
+    field: str
+    ai: object
+    saved: object
+    photo: str
+
+
+class CorrectionsReport(BaseModel):
+    analyzed: int  # prendas guardadas a partir de un borrador de la IA
+    untouched: int  # de ellas, las que se guardaron sin tocar nada
+    by_field: dict[str, int]
+    corrections: list[Correction]

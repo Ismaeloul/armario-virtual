@@ -14,7 +14,13 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   Codex la ha analizado dentro del contenedor (17-11-2026).
 - Versiones: no publicar en el Umbrel cambio a cambio. Se acumulan mejoras y arreglos en `main` y se publica
   una versión grande cuando el usuario lo diga.
-- Sin publicar todavía (irán en la próxima versión): iniciar y cerrar sesión de Codex desde Ajustes.
+- Sin publicar todavía (irán en la próxima versión): iniciar y cerrar sesión de Codex desde Ajustes;
+  cada prenda guarda la propuesta original de la IA (`ai_draft`) y `GET /api/ai/corrections` resume qué
+  campos corrigió el usuario.
+- Afinado de la IA en curso: el usuario sube fotos de Vinted al backend local (`http://localhost:8000`,
+  con sesión de Codex propia en `codex-home/`, aparte de la del Codex de escritorio), corrige el borrador
+  y con el informe de correcciones se ajusta el prompt de `backend/app/services/ai/base.py`.
+- Ciudad y aviso diario solo se guardan: no hay tiempo ni notificaciones hasta las fases 2 y 4.
 - Publicar una versión: subir el tag `vX.Y.Z` en este repo (el workflow publica
   `ghcr.io/ismaeloul/armario:X.Y.Z`) y actualizar `version` e `image` en la carpeta de la tienda.
   El Umbrel tarda unos minutos en refrescar la tienda; no instalar hasta ver la versión nueva.

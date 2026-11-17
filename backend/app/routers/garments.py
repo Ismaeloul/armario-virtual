@@ -10,6 +10,7 @@ from ..models import Garment, WearLog, now_utc
 from ..schemas import (
     AnalyzeResponse,
     Color,
+    CorrectionsReport,
     GarmentCreate,
     GarmentOut,
     GarmentUpdate,
@@ -149,6 +150,7 @@ def create_garment(body: GarmentCreate, db: Session = Depends(get_db)):
         photo_back_original=storage.original_name(body.photo_back) if body.photo_back else None,
         ai_provider=body.ai_provider,
         ai_confidence=body.ai_confidence,
+        ai_draft=body.ai_draft.model_dump() if body.ai_draft else None,
     )
     db.add(garment)
     db.commit()
@@ -187,6 +189,48 @@ def garments_summary(db: Session = Depends(get_db)):
     by_category = dict(db.execute(select(Garment.category, func.count()).group_by(Garment.category)).all())
     in_laundry = db.scalar(select(func.count()).select_from(Garment).where(Garment.in_laundry.is_(True)))
     return Summary(total=sum(by_type.values()), in_laundry=in_laundry or 0, by_type=by_type, by_category=by_category)
+
+
+_COMPARED = ["name", "type", "color_primary", "colors_secondary", "pattern", "style", "season", "brand", "size"]
+
+
+def _saved_value(garment: Garment, field: str):
+    if field == "color_primary":
+        return garment.color_primary
+    if field == "colors_secondary":
+        return sorted(c["name"] for c in garment.colors_secondary or [])
+    return getattr(garment, field)
+
+
+def _draft_value(draft: dict, field: str):
+    if field == "color_primary":
+        return draft["color_primary"]["name"]
+    if field == "colors_secondary":
+        return sorted(c["name"] for c in draft.get("colors_secondary") or [])
+    return draft.get(field)
+
+
+@router.get("/ai/corrections", response_model=CorrectionsReport)
+def ai_corrections(db: Session = Depends(get_db)):
+    """Qué cambió el usuario respecto a lo que propuso la IA. Sirve para afinar las instrucciones.
+
+    Solo compara nombres de la paleta, no el tono exacto, y no cuenta detalles ni notas.
+    """
+    garments = [g for g in db.scalars(select(Garment).order_by(Garment.id)) if g.ai_draft]
+    corrections, by_field, untouched = [], {}, 0
+    for g in garments:
+        changed = False
+        for field in _COMPARED:
+            ai_value, saved = _draft_value(g.ai_draft, field), _saved_value(g, field)
+            if ai_value != saved:
+                changed = True
+                by_field[field] = by_field.get(field, 0) + 1
+                corrections.append(
+                    dict(garment_id=g.id, garment=g.name, provider=g.ai_provider, field=field,
+                         ai=ai_value, saved=saved, photo=storage.to_schema(g.photo_front).thumb_url)
+                )
+        untouched += not changed
+    return CorrectionsReport(analyzed=len(garments), untouched=untouched, by_field=by_field, corrections=corrections)
 
 
 @router.get("/garments/{garment_id}", response_model=GarmentOut)

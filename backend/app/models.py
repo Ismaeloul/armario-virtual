@@ -41,6 +41,8 @@ class Garment(Base):
 
     ai_provider: Mapped[str | None] = mapped_column(String(20), nullable=True)
     ai_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # Lo que propuso la IA, tal cual, para compararlo con lo que se guardó y afinar las instrucciones.
+    ai_draft: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)

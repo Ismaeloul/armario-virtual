@@ -136,6 +136,7 @@ export default function AnadirPrenda() {
         photo_back: analysis.photo_back?.id ?? null,
         ai_provider: analysis.draft ? analysis.provider : null,
         ai_confidence: analysis.draft?.confidence ?? null,
+        ai_draft: analysis.draft, // la propuesta original, para ver después qué se corrigió
       });
       navigate("/armario", { replace: true });
     } catch {

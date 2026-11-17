@@ -5,20 +5,10 @@
       "name": "armario",
       "runtimeExecutable": "C:\\Users\\ismae\\Desktop\\Armario virtual\\backend\\.venv\\Scripts\\python.exe",
       "runtimeArgs": [
-        "-m", "uvicorn", "app.main:app",
-        "--app-dir", "C:\\Users\\ismae\\Desktop\\Armario virtual\\backend",
-        "--port", "8000"
+        "-c",
+        "import os, sys, uvicorn; root = r'C:\\Users\\ismae\\Desktop\\Armario virtual'; os.environ['CODEX_HOME'] = os.path.join(root, 'codex-home'); os.makedirs(os.environ['CODEX_HOME'], exist_ok=True); sys.path.insert(0, os.path.join(root, 'backend')); uvicorn.run('app.main:app', port=8000)"
       ],
       "port": 8000
-    },
-    {
-      "name": "armario-sin-sesion",
-      "runtimeExecutable": "C:\\Users\\ismae\\Desktop\\Armario virtual\\backend\\.venv\\Scripts\\python.exe",
-      "runtimeArgs": [
-        "-c",
-        "import os, sys, tempfile, uvicorn; t = tempfile.gettempdir(); os.environ['CODEX_HOME'] = os.path.join(t, 'armario-codex-prueba'); os.environ['ARMARIO_DATA_DIR'] = os.path.join(t, 'armario-datos-prueba'); sys.path.insert(0, r'C:\\Users\\ismae\\Desktop\\Armario virtual\\backend'); uvicorn.run('app.main:app', port=8001)"
-      ],
-      "port": 8001
     }
   ]
 }

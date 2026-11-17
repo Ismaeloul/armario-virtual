@@ -141,6 +141,7 @@ export const api = {
       photo_back: string | null;
       ai_provider: string | null;
       ai_confidence: number | null;
+      ai_draft: Draft | null;
     },
   ) => request<Garment>("/api/garments", json("POST", body)),
 };

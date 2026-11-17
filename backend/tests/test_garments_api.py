@@ -164,3 +164,37 @@ def test_girar_una_foto(client, photo_bytes):
     # La prenda pasa a apuntar a la foto girada.
     assert client.get(f"/api/garments/{garment['id']}").json()["photo_front"]["id"] == new["id"]
     assert client.post(f"/api/photos/{old}/rotate").status_code == 404
+
+
+def test_informe_de_correcciones_a_la_ia(client, photo_bytes):
+    # Una prenda guardada tal cual la propuso la IA y otra con la temporada y el color corregidos.
+    _create(client, photo_bytes, ai_provider="codex", ai_draft=VALID_DRAFT)
+    _create(client, photo_bytes, ai_provider="codex", ai_draft=VALID_DRAFT, season="verano",
+            color_primary={"name": "azul marino", "hex": "#1f2a44"})
+    _create(client, photo_bytes)  # rellenada a mano: no cuenta
+
+    report = client.get("/api/ai/corrections").json()
+    assert report["analyzed"] == 2 and report["untouched"] == 1
+    assert report["by_field"] == {"color_primary": 1, "season": 1}
+    season = next(c for c in report["corrections"] if c["field"] == "season")
+    assert (season["ai"], season["saved"]) == ("invierno", "verano")
+
+
+def test_la_base_de_datos_antigua_recibe_las_columnas_nuevas():
+    from sqlalchemy import create_engine
+
+    from app import db
+
+    old = create_engine("sqlite://")
+    with old.begin() as conn:
+        conn.exec_driver_sql("CREATE TABLE garments (id INTEGER PRIMARY KEY, name TEXT)")
+        conn.exec_driver_sql("INSERT INTO garments (name) VALUES ('de antes')")
+    real, db.engine = db.engine, old
+    try:
+        db._add_missing_columns()
+        db._add_missing_columns()  # repetirlo no falla
+    finally:
+        db.engine = real
+    with old.begin() as conn:
+        assert "ai_draft" in {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(garments)")}
+        assert conn.exec_driver_sql("SELECT name FROM garments").scalar() == "de antes"
