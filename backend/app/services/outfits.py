@@ -31,6 +31,7 @@ class Item:
     style: str
     season: str
     favorite: bool = False
+    pattern: str = "liso"
     days_since_worn: int | None = None  # None = nunca
 
 
@@ -131,6 +132,7 @@ def propose(
     avoid: list[set[int]] | None = None,
     disliked_pairs: set[frozenset[int]] | None = None,
     rng: random.Random | None = None,
+    taste=None,  # services.taste.Taste: lo aprendido en la pestaña Gustos
 ) -> Proposal | None:
     """Elige un outfit entre las prendas disponibles (las de la lavadora ya vienen quitadas).
 
@@ -159,7 +161,7 @@ def propose(
     for top, bottom, shoe, layer in itertools.product(tops, bottoms, shoes, layers):
         combo = [piece for piece in (layer, top, bottom, shoe) if piece is not None]
         ids = {piece.id for piece in combo}
-        value = score(combo, kind)
+        value = score(combo, kind) + (taste.adjust(combo) if taste else 0.0)
         if frozenset((top.id, bottom.id)) in disliked_pairs:
             value -= 2.0  # esta pareja ya se descartó alguna vez
         penalty = 100.0 if any(ids == seen for seen in avoid) else 0.0
@@ -181,3 +183,9 @@ def propose(
         with_layer=any(piece.category == "capa_exterior" for piece in combo),
         notes=notes,
     )
+
+
+def combo_affinity(pieces: list, taste=None) -> int:
+    """Afinidad de una combinación sin mirar el tiempo: solo colores, estilo y lo aprendido."""
+    value = _color_harmony(pieces) + _style_fit(pieces) + (taste.adjust(pieces) if taste else 0.0)
+    return max(10, min(99, round(62 + 8 * value)))

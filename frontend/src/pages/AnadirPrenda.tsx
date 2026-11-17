@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { PrimaryButton, RotateButton, SecondaryButton } from "../components/Controls";
+import { PrimaryButton, RotateButton, SecondaryButton, Segmented } from "../components/Controls";
 import { EMPTY_GARMENT, GarmentForm } from "../components/GarmentForm";
-import { Icon } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Analysis, type Catalog, type GarmentFields } from "../lib/api";
@@ -58,6 +58,54 @@ function PhotoSlot({
   );
 }
 
+/** Fila para una foto opcional (otro lateral, etiqueta): miniatura, texto y botones de girar/quitar. */
+function RowSlot({
+  icon,
+  title,
+  help,
+  file,
+  preview,
+  onPick,
+  onChange,
+}: {
+  icon: IconName;
+  title: string;
+  help: string;
+  file: File | null;
+  preview: string | null;
+  onPick: () => void;
+  onChange: (file: File | null) => void;
+}) {
+  return (
+    <div className="card flex items-center gap-3 p-3">
+      <button type="button" onClick={onPick} className="flex min-w-0 flex-1 items-center gap-3 text-left active:opacity-70">
+        {preview ? (
+          <img src={preview} alt={title} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+        ) : (
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-card-2 text-primary">
+            <Icon name={icon} />
+          </span>
+        )}
+        <span className="min-w-0">
+          <span className="flex items-center gap-2">
+            <span className="font-display text-[15px] font-semibold">{title}</span>
+            <span className="label-caps rounded-full bg-chip px-2 py-0.5 text-on-chip">{t.nueva.opcional}</span>
+          </span>
+          <span className="mt-0.5 block text-xs leading-tight text-text-2">{preview ? t.nueva.etiquetaLista : help}</span>
+        </span>
+      </button>
+      {file && (
+        <div className="flex shrink-0 flex-col items-center gap-1">
+          <RotateButton onClick={() => rotateFile(file).then(onChange)} />
+          <button type="button" onClick={() => onChange(null)} className="text-[11px] text-text-2 underline">
+            {t.nueva.quitar}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AnadirPrenda() {
   const navigate = useNavigate();
   const [catalog, setCatalog] = useState<Catalog | null>(null);
@@ -65,10 +113,13 @@ export default function AnadirPrenda() {
   const [step, setStep] = useState<Step>("fotos");
   const [front, setFront] = useState<File | null>(null);
   const [back, setBack] = useState<File | null>(null);
+  const [extra, setExtra] = useState<File | null>(null);
   const [label, setLabel] = useState<File | null>(null);
+  const [kind, setKind] = useState<"ropa" | "calzado">("ropa");
   const [frontUrl, setFrontUrl] = useState<string | null>(null);
   const [backUrl, setBackUrl] = useState<string | null>(null);
   const [labelUrl, setLabelUrl] = useState<string | null>(null);
+  const [extraUrl, setExtraUrl] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [form, setForm] = useState<GarmentFields>(EMPTY_GARMENT);
   const [saving, setSaving] = useState(false);
@@ -95,6 +146,11 @@ export default function AnadirPrenda() {
     setLabelUrl(url);
     return () => { if (url) URL.revokeObjectURL(url); };
   }, [label]);
+  useEffect(() => {
+    const url = extra ? URL.createObjectURL(extra) : null;
+    setExtraUrl(url);
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [extra]);
 
   const pick = async (set: (f: File) => void) => {
     const file = await pickPhoto();
@@ -111,10 +167,19 @@ export default function AnadirPrenda() {
           ? {
               frontId: analysis.photo_front.id,
               backId: analysis.photo_back?.id,
+              extraId: analysis.photo_extra?.id,
               labelId: analysis.photo_label?.id,
+              kind,
               skipAi,
             }
-          : { front: front!, back: back ?? undefined, label: label ?? undefined, skipAi },
+          : {
+              front: front!,
+              back: back ?? undefined,
+              extra: kind === "calzado" ? (extra ?? undefined) : undefined,
+              label: label ?? undefined,
+              kind,
+              skipAi,
+            },
       );
       setAnalysis(result);
       if (result.draft) {
@@ -146,6 +211,7 @@ export default function AnadirPrenda() {
         ...form,
         photo_front: analysis.photo_front.id,
         photo_back: analysis.photo_back?.id ?? null,
+        photo_extra: analysis.photo_extra?.id ?? null,
         photo_label: analysis.photo_label?.id ?? null,
         ai_provider: analysis.draft ? analysis.provider : null,
         ai_confidence: analysis.draft?.confidence ?? null,
@@ -171,55 +237,57 @@ export default function AnadirPrenda() {
 
         {step === "fotos" && (
           <div className="mt-6 flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <span className="label-caps text-text-2">{t.nueva.queEs}</span>
+              <Segmented
+                value={kind}
+                onChange={setKind}
+                options={[
+                  { value: "ropa", label: t.nueva.ropa },
+                  { value: "calzado", label: t.nueva.calzado },
+                ]}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               <PhotoSlot
-                label={t.nueva.delante}
+                label={kind === "calzado" ? t.nueva.lateral : t.nueva.delante}
                 preview={frontUrl}
                 onPick={() => pick(setFront)}
                 onRotate={() => front && rotateFile(front).then(setFront)}
               />
               <PhotoSlot
-                label={t.nueva.detras}
-                hint={t.nueva.detrasAyuda}
+                label={kind === "calzado" ? t.nueva.frente : t.nueva.detras}
+                hint={kind === "calzado" ? t.nueva.frenteAyuda : t.nueva.detrasAyuda}
                 preview={backUrl}
                 onPick={() => pick(setBack)}
                 onRotate={() => back && rotateFile(back).then(setBack)}
               />
             </div>
 
-            {/* Tercera foto, opcional: la etiqueta, para que la IA rellene marca y talla. */}
-            <div className="card flex items-center gap-3 p-3">
-              <button
-                type="button"
-                onClick={() => pick(setLabel)}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left active:opacity-70"
-              >
-                {labelUrl ? (
-                  <img src={labelUrl} alt={t.nueva.etiquetaFoto} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
-                ) : (
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-card-2 text-primary">
-                    <Icon name="sell" />
-                  </span>
-                )}
-                <span className="min-w-0">
-                  <span className="flex items-center gap-2">
-                    <span className="font-display text-[15px] font-semibold">{t.nueva.etiquetaFoto}</span>
-                    <span className="label-caps rounded-full bg-chip px-2 py-0.5 text-on-chip">{t.nueva.opcional}</span>
-                  </span>
-                  <span className="mt-0.5 block text-xs leading-tight text-text-2">
-                    {labelUrl ? t.nueva.etiquetaLista : t.nueva.etiquetaAyuda}
-                  </span>
-                </span>
-              </button>
-              {label && (
-                <div className="flex shrink-0 flex-col items-center gap-1">
-                  <RotateButton onClick={() => rotateFile(label).then(setLabel)} />
-                  <button type="button" onClick={() => setLabel(null)} className="text-[11px] text-text-2 underline">
-                    {t.nueva.quitar}
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* En el calzado, una tercera vista: no todas las zapatillas son iguales por los dos lados. */}
+            {kind === "calzado" && (
+              <RowSlot
+                icon="add_a_photo"
+                title={t.nueva.otroLado}
+                help={t.nueva.otroLadoAyuda}
+                file={extra}
+                preview={extraUrl}
+                onPick={() => pick(setExtra)}
+                onChange={setExtra}
+              />
+            )}
+
+            {/* La etiqueta, para que la IA rellene marca y talla. */}
+            <RowSlot
+              icon="sell"
+              title={t.nueva.etiquetaFoto}
+              help={t.nueva.etiquetaAyuda}
+              file={label}
+              preview={labelUrl}
+              onPick={() => pick(setLabel)}
+              onChange={setLabel}
+            />
             {formError && <p className="text-center text-sm text-danger">{formError}</p>}
             <PrimaryButton disabled={!front} onClick={() => runAnalysis(false)}>
               <Icon name="auto_awesome" size={20} />
@@ -266,20 +334,14 @@ export default function AnadirPrenda() {
         {step === "formulario" && analysis && catalog && (
           <form onSubmit={save} className="mt-6 flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-2">
-              {(["photo_front", "photo_back", "photo_label"] as const).map((side) => {
+              {(["photo_front", "photo_back", "photo_extra", "photo_label"] as const).map((side) => {
                 const photo = analysis[side];
                 return (
                   photo && (
                     <div key={side} className="relative">
                       <img
                         src={mediaUrl(photo.url)}
-                        alt={
-                          side === "photo_front"
-                            ? t.nueva.delante
-                            : side === "photo_back"
-                              ? t.nueva.detras
-                              : t.nueva.etiquetaFoto
-                        }
+                        alt=""
                         className="aspect-[3/4] w-full rounded-xl border border-line object-cover"
                       />
                       <RotateButton

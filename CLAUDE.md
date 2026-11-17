@@ -13,6 +13,13 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   (`services/weather.py`), propuesta por reglas sin IA (`services/outfits.py`), tabla `outfits` con el estado
   de cada propuesta, y pantalla Hoy con «Pasar», «Me gusta» (apunta el uso de cada prenda, se puede
   deshacer) y «Generar otra propuesta». No propone prendas en la lavadora ni repite combinaciones.
+- **En `main`, sin publicar: pestaña Gustos (inicio de la Fase 3).** Se valoran combinaciones (me gusta /
+  no me gusta con motivos: colores, calzado, estilo, soso, recargado, o señalando la prenda) y
+  `services/taste.py` aprende parejas de prendas, de colores y de estilos; lo aprendido ajusta el outfit
+  de Hoy y la afinidad. No se distingue quién valora (decisión del usuario: al algoritmo solo le importa
+  si pega o no). El usuario entrena en local con datos de prueba para ver cómo se comporta.
+- También sin publicar: al añadir se elige "Prenda de ropa" o "Zapatilla". El calzado tiene vistas
+  propias (lateral, de frente, otro lateral) y una cuarta foto `photo_extra`.
 - Versiones: no publicar en el Umbrel cambio a cambio. Se acumulan mejoras y arreglos en `main` y se publica
   una versión grande cuando el usuario lo diga.
 - Publicar una versión: subir el tag `vX.Y.Z` en este repo (el workflow publica
@@ -73,9 +80,10 @@ Más adelante: recomendaciones de qué prenda comprar según lo que ya hay.
 ## Diseño
 
 - `stitch/*.html` son referencia visual, no base de código. `stitch/original/` es lo que salió de Stitch sin tocar.
-- Pantallas: Hoy, Armario (catálogo), Añadir Prenda, Ficha de Prenda, Ajustes. Cada una en claro y oscuro.
-- Barra inferior con 3 pestañas: Hoy, Armario, Ajustes.
-- Botón flotante "+" solo en Armario (abajo a la derecha, encima de la barra).
+- Pantallas: Hoy, Armario (catálogo), Añadir Prenda, Ficha de Prenda, Gustos y Ajustes, en claro y oscuro.
+  Gustos no tiene diseño en Stitch: se hizo directamente en código con el mismo estilo.
+- Barra inferior con 5 elementos: Hoy, Armario, botón "+" en el centro (añadir prenda), Gustos y Ajustes.
+  Decidido el 17-11-2026: sustituye a la barra de 3 pestañas con el "+" flotante en Armario.
 - Cabeceras: percha + "Armario" en Hoy y Armario; flecha atrás + nombre de pantalla en las secundarias
   ("Nueva prenda", "Detalle"); "Ajustes" a secas en Ajustes.
 - El modo oscuro se cambia solo en Ajustes: Claro / Oscuro / Sistema.

@@ -68,7 +68,7 @@ OUTPUT_SCHEMA = {
 }
 
 _PROMPT = """\
-Eres el catalogador de un armario personal. Te paso {fotos} de UNA prenda de ropa o calzado de hombre:
+Eres el catalogador de un armario personal. Te paso {fotos} de {que}:
 {orden}
 
 Describe la prenda rellenando el esquema JSON. Reglas:
@@ -113,16 +113,34 @@ _CON_ETIQUETA = (
 )
 
 
-def build_prompt(has_back: bool, has_label: bool) -> str:
-    """Las instrucciones dependen de qué fotos se mandan y en qué orden."""
-    order = ["- Foto 1: la parte delantera."]
+_VISTAS = {
+    # tipo de artículo -> (qué es, foto principal, segunda, tercera)
+    "ropa": ("UNA prenda de ropa de hombre", "la parte delantera", "la parte trasera", "otro ángulo de la prenda"),
+    "calzado": (
+        "UN par de zapatillas o zapatos de hombre",
+        "el lateral",
+        "la vista de frente o desde arriba",
+        "el otro lateral",
+    ),
+}
+
+
+def build_prompt(has_back: bool, has_label: bool, has_extra: bool = False, kind: str = "ropa") -> str:
+    """Las instrucciones dependen de qué se fotografía, qué fotos se mandan y en qué orden."""
+    what, first, second, third = _VISTAS.get(kind, _VISTAS["ropa"])
+    order = [f"- Foto 1: {first}."]
     if has_back:
-        order.append(f"- Foto {len(order) + 1}: la parte trasera.")
+        order.append(f"- Foto {len(order) + 1}: {second}.")
+    if has_extra:
+        order.append(f"- Foto {len(order) + 1}: {third}.")
     if has_label:
-        order.append(f"- Foto {len(order) + 1}: la etiqueta de la prenda, en primer plano.")
-    count = len(order)
+        order.append(f"- Foto {len(order) + 1}: la etiqueta, en primer plano.")
+    if kind == "calzado":
+        order.append('Es calzado: "type" solo puede ser "zapatillas", "zapatos" o "botas".')
+    count = len([line for line in order if line.startswith("- Foto")])
     return _PROMPT.format(
         fotos="una foto" if count == 1 else f"{count} fotos",
+        que=what,
         orden="\n".join(order),
         marca=_CON_ETIQUETA if has_label else _SIN_ETIQUETA,
     )

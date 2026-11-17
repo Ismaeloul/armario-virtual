@@ -24,6 +24,7 @@ export type Garment = GarmentFields & {
   category: string;
   photo_front: Photo;
   photo_back: Photo | null;
+  photo_extra: Photo | null;
   photo_label: Photo | null;
   in_laundry: boolean;
   favorite: boolean;
@@ -37,6 +38,7 @@ export type Draft = GarmentFields & { confidence: number; color_primary_alt: str
 export type Analysis = {
   photo_front: Photo;
   photo_back: Photo | null;
+  photo_extra: Photo | null;
   photo_label: Photo | null;
   draft: Draft | null;
   provider: string | null;
@@ -101,6 +103,14 @@ export type Today = {
   total: number;
 };
 
+export type Taste = {
+  combo: { garments: Garment[]; affinity: number } | null;
+  rated: number;
+  liked: number;
+  remaining: number;
+  learned: { likes: string[][]; dislikes: string[][] };
+};
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -146,6 +156,9 @@ export const api = {
   /** La clave se envía al servidor y no vuelve nunca. Cadena vacía = borrarla. */
   saveClaudeKey: (key: string) => request<Settings>("/api/settings", json("PATCH", { anthropic_api_key: key })),
   updateSettings: (changes: Partial<Settings>) => request<Settings>("/api/settings", json("PATCH", changes)),
+  tasteNext: () => request<Taste>("/api/taste/next"),
+  tasteRate: (body: { garment_ids: number[]; liked: boolean; reasons: string[]; culprit_id: number | null }) =>
+    request<Taste>("/api/taste/rate", json("POST", body)),
   today: () => request<Today>("/api/today"),
   todayNext: (action: "otra" | "pasar") => request<Today>("/api/today/next", json("POST", { action })),
   todayChoose: () => request<Today>("/api/today/choose", { method: "POST" }),
@@ -164,19 +177,25 @@ export const api = {
   analyze: (opts: {
     front?: File;
     back?: File;
+    extra?: File;
     label?: File;
     frontId?: string;
     backId?: string;
+    extraId?: string;
     labelId?: string;
+    kind?: "ropa" | "calzado";
     skipAi?: boolean;
   }) => {
     const form = new FormData();
     if (opts.front) form.append("front", opts.front);
     if (opts.back) form.append("back", opts.back);
+    if (opts.extra) form.append("extra", opts.extra);
     if (opts.label) form.append("label", opts.label);
     if (opts.frontId) form.append("front_id", opts.frontId);
     if (opts.backId) form.append("back_id", opts.backId);
+    if (opts.extraId) form.append("extra_id", opts.extraId);
     if (opts.labelId) form.append("label_id", opts.labelId);
+    if (opts.kind) form.append("kind", opts.kind);
     if (opts.skipAi) form.append("skip_ai", "true");
     return request<Analysis>("/api/garments/analyze", { method: "POST", body: form });
   },
@@ -185,6 +204,7 @@ export const api = {
     body: GarmentFields & {
       photo_front: string;
       photo_back: string | null;
+      photo_extra: string | null;
       photo_label: string | null;
       ai_provider: string | null;
       ai_confidence: number | null;

@@ -9,11 +9,12 @@ from sqlalchemy.orm import Session
 
 from .. import catalog
 from ..db import get_db
-from ..models import Garment, Outfit, WearLog
+from ..models import Garment, Outfit, Rating, WearLog
 from ..schemas import GarmentOut
 from ..services import outfits, weather
 from .garments import _to_out, _wear_stats
 from .settings import read_settings
+from .taste import load_taste
 
 router = APIRouter(prefix="/api", tags=["hoy"])
 
@@ -64,6 +65,7 @@ def _items(db: Session, garments: list[Garment], today: date) -> list[outfits.It
             style=g.style,
             season=g.season,
             favorite=g.favorite,
+            pattern=g.pattern,
             days_since_worn=(today - stats[g.id][1]).days if g.id in stats and stats[g.id][1] else None,
         )
         for g in garments
@@ -115,6 +117,7 @@ def _generate(db: Session, today: date, forecast: weather.Weather | None) -> tup
         today=today,
         avoid=avoid,
         disliked_pairs=disliked,
+        taste=load_taste(db),
     )
     if proposal is None:
         return None, [], []
@@ -193,6 +196,9 @@ def next_outfit(body: NextIn, db: Session = Depends(get_db)):
         raise HTTPException(409, "Ya has elegido el outfit de hoy")
     if current:
         current.status = DISCARDED if body.action == "pasar" else REPLACED
+        if body.action == "pasar":  # también enseña, pero menos: no sabemos el motivo
+            db.add(Rating(garment_ids=current.garment_ids, liked=False, weight=0.5, reasons=[],
+                          source="hoy", outfit_id=current.id))
         db.commit()
     return _today_state(db, regenerate=True)
 
@@ -211,6 +217,8 @@ def choose_outfit(db: Session = Depends(get_db)):
         current.status = CHOSEN
         for garment_id in current.garment_ids:
             db.add(WearLog(garment_id=garment_id, worn_on=today, outfit_id=current.id))
+        db.add(Rating(garment_ids=current.garment_ids, liked=True, weight=1.0, reasons=[],
+                      source="hoy", outfit_id=current.id))
         db.commit()
     return _today_state(db)
 
@@ -222,5 +230,6 @@ def unchoose_outfit(db: Session = Depends(get_db)):
     if current and current.status == CHOSEN:
         current.status = PROPOSED
         db.query(WearLog).filter(WearLog.outfit_id == current.id).delete()
+        db.query(Rating).filter(Rating.outfit_id == current.id, Rating.liked.is_(True)).delete()
         db.commit()
     return _today_state(db)

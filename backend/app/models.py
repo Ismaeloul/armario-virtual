@@ -34,6 +34,9 @@ class Garment(Base):
     photo_back: Mapped[str | None] = mapped_column(String(32), nullable=True)
     photo_front_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
     photo_back_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Tercera vista opcional (en el calzado, el otro lateral).
+    photo_extra: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    photo_extra_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
     # Foto opcional de la etiqueta: de ahí salen la marca y la talla.
     photo_label: Mapped[str | None] = mapped_column(String(32), nullable=True)
     photo_label_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -80,6 +83,22 @@ class Outfit(Base):
     affinity: Mapped[int] = mapped_column(Integer, default=0)
     day_kind: Mapped[str] = mapped_column(String(20), default="templado")
     weather: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # el tiempo que hacía
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class Rating(Base):
+    """Una valoración de una combinación: de aquí aprende el algoritmo qué pega y qué no."""
+
+    __tablename__ = "ratings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    garment_ids: Mapped[list] = mapped_column(JSON)
+    liked: Mapped[bool] = mapped_column(Boolean)
+    weight: Mapped[float] = mapped_column(Float, default=1.0)
+    reasons: Mapped[list] = mapped_column(JSON, default=list)  # por qué no gustó
+    culprit_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # la prenda que estropea el conjunto
+    source: Mapped[str] = mapped_column(String(20), default="gustos")  # "gustos" o "hoy"
+    outfit_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
 
 

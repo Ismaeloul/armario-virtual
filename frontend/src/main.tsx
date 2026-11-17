@@ -10,6 +10,7 @@ import Ajustes from "./pages/Ajustes";
 import Armario from "./pages/Armario";
 import EditarPrenda from "./pages/EditarPrenda";
 import FichaPrenda from "./pages/FichaPrenda";
+import Gustos from "./pages/Gustos";
 import Hoy from "./pages/Hoy";
 import "./theme/tokens.css";
 
@@ -26,6 +27,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/nueva" element={<AnadirPrenda />} />
         <Route path="/prenda/:id" element={<FichaPrenda />} />
         <Route path="/prenda/:id/editar" element={<EditarPrenda />} />
+        <Route path="/gustos" element={<Gustos />} />
         <Route path="/ajustes" element={<Ajustes />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

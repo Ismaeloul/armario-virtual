@@ -41,7 +41,7 @@ export default function FichaPrenda() {
   const [garment, setGarment] = useState<Garment | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [missing, setMissing] = useState(false);
-  const [view, setView] = useState<"photo_front" | "photo_back" | "photo_label">("photo_front");
+  const [view, setView] = useState<"photo_front" | "photo_back" | "photo_extra" | "photo_label">("photo_front");
 
   useEffect(() => {
     api.garment(Number(id)).then(setGarment).catch(() => setMissing(true));
@@ -83,8 +83,9 @@ export default function FichaPrenda() {
 
   const views = (
     [
-      ["photo_front", t.ficha.delante],
-      ["photo_back", t.ficha.detras],
+      ["photo_front", garment.category === "calzado" ? t.ficha.lateral : t.ficha.delante],
+      ["photo_back", garment.category === "calzado" ? t.ficha.frente : t.ficha.detras],
+      ["photo_extra", t.ficha.otroLado],
       ["photo_label", t.ficha.etiqueta],
     ] as const
   ).filter(([key]) => garment[key]);

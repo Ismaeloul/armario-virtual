@@ -58,6 +58,7 @@ class GarmentDraft(GarmentFields):
 class GarmentCreate(GarmentFields):
     photo_front: str = Field(pattern=PHOTO_ID)
     photo_back: str | None = Field(default=None, pattern=PHOTO_ID)
+    photo_extra: str | None = Field(default=None, pattern=PHOTO_ID)
     photo_label: str | None = Field(default=None, pattern=PHOTO_ID)
     ai_provider: AIProvider | None = None
     ai_confidence: float | None = Field(default=None, ge=0, le=1)
@@ -104,6 +105,7 @@ class GarmentOut(BaseModel):
     notes: str
     photo_front: Photo
     photo_back: Photo | None
+    photo_extra: Photo | None
     photo_label: Photo | None
     in_laundry: bool
     laundry_since: datetime | None
@@ -121,6 +123,7 @@ class AnalyzeResponse(BaseModel):
 
     photo_front: Photo
     photo_back: Photo | None
+    photo_extra: Photo | None
     photo_label: Photo | None
     draft: GarmentDraft | None
     provider: str | None  # quién analizó de verdad

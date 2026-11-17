@@ -11,7 +11,7 @@ from sqlalchemy import select
 from . import config
 from .db import SessionLocal, init_db
 from .models import Garment
-from .routers import garments, settings, today
+from .routers import garments, settings, taste, today
 from .services import storage
 
 
@@ -20,7 +20,7 @@ def _cleanup_orphan_photos() -> None:
     with SessionLocal() as db:
         referenced = {
             photo
-            for row in db.execute(select(Garment.photo_front, Garment.photo_back, Garment.photo_label))
+            for row in db.execute(select(Garment.photo_front, Garment.photo_back, Garment.photo_extra, Garment.photo_label))
             for photo in row
             if photo
         }
@@ -50,6 +50,7 @@ if config.CORS_ORIGINS:
 app.include_router(garments.router)
 app.include_router(settings.router)
 app.include_router(today.router)
+app.include_router(taste.router)
 
 
 @app.get("/api/health")

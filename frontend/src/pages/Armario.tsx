@@ -164,17 +164,6 @@ export default function Armario() {
         )}
       </Screen>
 
-      {/* Botón flotante "+": solo en Armario, encima de la barra inferior. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md">
-        <Link
-          to="/nueva"
-          aria-label={t.armario.anadir}
-          className="pointer-events-auto absolute right-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary shadow-float transition-transform active:scale-95"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5rem)" }}
-        >
-          <Icon name="add" size={28} />
-        </Link>
-      </div>
       <BottomNav />
     </>
   );
