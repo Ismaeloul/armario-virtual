@@ -47,14 +47,14 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 ## Plan de fases
 
 1. **Armario.** Añadir prenda con análisis por IA, catálogo con filtros, ficha, lavadora, Ajustes (tema y
-   proveedor de IA), armario vacío y error de análisis. PWA instalable. Al final, si da tiempo: quitar el
-   fondo de las fotos en local (p. ej. rembg), guardando siempre también la original.
+   proveedor de IA), armario vacío y error de análisis. PWA instalable.
 2. **Outfit del día.** Outfit diario según temporada y tiempo de la ciudad (API meteo gratuita, p. ej.
    Open-Meteo). Botones "Me gusta", "Pasar" y "Generar otra propuesta". Registrar lo que se usa cada día y
    no repetir outfits seguidos. No proponer prendas en la lavadora.
 3. **Que aprenda.** Algoritmo propio que puntúa combinaciones a partir de las valoraciones; la IA ayuda al
    principio y con prendas nuevas, el objetivo es que el algoritmo acabe proponiendo solo. % e índice de
-   afinidad reales. "Crear look con esta prenda". Aviso de prendas olvidadas.
+   afinidad reales. "Crear look con esta prenda". Aviso de prendas olvidadas. Quitar el fondo de las fotos en local (p. ej. rembg),
+   guardando siempre también la original (el usuario lo movió aquí desde la Fase 1 el 17-11-2026).
 4. **iPhone.** App con Capacitor (instalada como .ipa). Notificación diaria con el outfit a la hora configurada.
 
 Más adelante: recomendaciones de qué prenda comprar según lo que ya hay.

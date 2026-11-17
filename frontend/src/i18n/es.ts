@@ -145,7 +145,7 @@ export const t = {
     claveGuardar: "Guardar",
     claveBorrar: "Borrar la clave guardada",
     claveAyuda: "Se guarda en tu servidor y no se vuelve a mostrar.",
-    version: "Armario · v0.1.2",
+    version: "Armario · v0.2.0",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",
