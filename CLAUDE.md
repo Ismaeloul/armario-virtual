@@ -27,7 +27,16 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   estampados y tipos, y qué capa va sobre qué, sacadas de guías de moda (búsqueda corta con Haiku: 12
   búsquedas, muchas notas inferidas; se puede ampliar). Pesan poco a propósito: lo valorado en Gustos manda.
   Regla del usuario: cazadora o sobrecamisa sobre sudadera con cremallera no se propone (la cremallera se
-  detecta por la palabra en el nombre o los detalles; no hay campo propio).
+  detecta con la palabra clave `closure`; si la prenda aún no la tiene, por la palabra en el texto).
+  Ampliadas el mismo día (32 búsquedas): 171 parejas de colores, 94 de ellas sin fuente y en neutro.
+- **En `main`, sin publicar: palabras clave de la prenda** (17-11-2026): `closure` (sin cierre, botones,
+  media cremallera, cremallera), `hood`, `fit` (ajustado, normal, ancho) y `thickness` (fino, medio,
+  grueso). Listas cerradas en `catalog.py`; las rellena la IA, se editan en el formulario y salen en la
+  Ficha como «Rasgos». El calzado no las lleva. Las prendas anteriores las tienen vacías hasta
+  reanalizarlas: al publicar habrá que hacerlo con las del Umbrel (en local ya está hecho).
+- **Ropa de verano solo del 1 de mayo al 30 de septiembre** (decisión del usuario, 17-11-2026): fuera de
+  esos meses Hoy no propone pantalón corto, manga corta ni nada de temporada Verano aunque suba la
+  temperatura. Camisetas y polos cuentan como manga corta salvo que digan «manga larga».
 - También sin publicar: al añadir se elige "Prenda de ropa" o "Zapatilla". El calzado tiene vistas
   propias (lateral, de frente, otro lateral) y una cuarta foto `photo_extra`.
 - Versiones: no publicar en el Umbrel cambio a cambio. Se acumulan mejoras y arreglos en `main` y se publica
@@ -37,7 +46,7 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   tienda. El Umbrel tarda unos minutos en refrescar la tienda; no instalar hasta ver la versión nueva.
 - Sin probar en el Umbrel (solo en Windows): el lector de límites de Codex (`codex app-server`) y la
   migración de columnas sobre la base de datos real. Sin probar en ningún sitio: Claude con API key real.
-- Pendiente de la Fase 2: el aviso diario (llega con la app de iPhone, Fase 4) y afinar las reglas del
+- Pendiente de la Fase 2: el aviso diario (llega con la app de iPhone, Fase 5) y afinar las reglas del
   outfit con el uso real. La «afinidad» que se muestra es orientativa, no aprendida.
 - "Crear look con esta prenda" se muestra desactivado ("Pronto"): llega en la Fase 3.
 - Afinado de la IA: el usuario prueba en el backend local (`http://localhost:8000`, sesión de Codex propia
@@ -66,9 +75,18 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
    principio y con prendas nuevas, el objetivo es que el algoritmo acabe proponiendo solo. % e índice de
    afinidad reales. "Crear look con esta prenda". Aviso de prendas olvidadas. Quitar el fondo de las fotos en local (p. ej. rembg),
    guardando siempre también la original (el usuario lo movió aquí desde la Fase 1 el 17-11-2026).
-4. **iPhone.** App con Capacitor (instalada como .ipa). Notificación diaria con el outfit a la hora configurada.
-
-Más adelante: recomendaciones de qué prenda comprar según lo que ya hay.
+4. **Compras.** (Decidido el 17-11-2026; el iPhone pasó a la Fase 5.) Pestaña «Compras» con un carrito,
+   entre Gustos y Ajustes. El usuario activa tiendas (se empieza solo con Zara; después Pull&Bear, Bershka…)
+   y la app trae cada semana las novedades de su catálogo: nombre, precio, fotos de producto y enlace.
+   Se puntúan contra el armario con las reglas de estilo y lo aprendido en Gustos, y también se propone
+   «lo que le falta al armario». Me gusta / no me gusta enseña al algoritmo. «La he comprado» pasa la
+   prenda al armario con las fotos de la tienda, ya analizada (solo se elige talla). Codex no navega por
+   las tiendas: solo analiza las fotos de las finalistas (10-15 por tanda) para no gastar el límite; el
+   catálogo lo trae un conector por tienda. La app enlaza a la tienda y nunca compra ni guarda datos de
+   pago. Lo primero a comprobar antes de construir: si Zara deja leer el catálogo desde el Umbrel sin
+   navegador (el 17-11-2026 se leyó desde un navegador con `<categoría>.html?ajax=true` y
+   `<producto>.html?ajax=true`; las fotos de producto son las `-e1`, `-e2`… de `xmedia`).
+5. **iPhone.** App con Capacitor (instalada como .ipa). Notificación diaria con el outfit a la hora configurada.
 
 ## Stack
 

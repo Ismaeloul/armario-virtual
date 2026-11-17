@@ -10,6 +10,9 @@ Season = Literal[*catalog.SEASONS]
 ColorName = Literal[*catalog.COLORS]
 Pattern = Literal[*catalog.PATTERNS]
 Style = Literal[*catalog.STYLES]
+Closure = Literal[*catalog.CLOSURES]
+Fit = Literal[*catalog.FITS]
+Thickness = Literal[*catalog.THICKNESSES]
 AIProvider = Literal[*catalog.AI_PROVIDERS]
 Theme = Literal[*catalog.THEMES]
 
@@ -37,6 +40,10 @@ class GarmentFields(BaseModel):
     colors_secondary: list[Color] = Field(default_factory=list, max_length=4)
     pattern: Pattern
     style: Style
+    closure: Closure | None = None
+    hood: bool = False
+    fit: Fit | None = None
+    thickness: Thickness | None = None
     details: str = Field(default="", max_length=300)
     season: Season
     brand: str | None = Field(default=None, max_length=80)
@@ -72,6 +79,10 @@ class GarmentUpdate(BaseModel):
     colors_secondary: list[Color] | None = Field(default=None, max_length=4)
     pattern: Pattern | None = None
     style: Style | None = None
+    closure: Closure | None = None
+    hood: bool | None = None
+    fit: Fit | None = None
+    thickness: Thickness | None = None
     details: str | None = Field(default=None, max_length=300)
     season: Season | None = None
     brand: str | None = Field(default=None, max_length=80)
@@ -98,6 +109,10 @@ class GarmentOut(BaseModel):
     colors_secondary: list[Color]
     pattern: str
     style: str
+    closure: str | None
+    hood: bool
+    fit: str | None
+    thickness: str | None
     details: str
     season: str
     brand: str | None

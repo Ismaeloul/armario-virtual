@@ -35,7 +35,10 @@ class Item:
     favorite: bool = False
     pattern: str = "liso"
     days_since_worn: int | None = None  # None = nunca
-    details: str = ""  # nombre y detalles en texto; de aquí sale, p. ej., si lleva cremallera
+    details: str = ""  # nombre y detalles en texto, por si la prenda aún no tiene palabras clave
+    closure: str | None = None
+    fit: str | None = None
+    thickness: str | None = None
 
 
 @dataclass
@@ -74,7 +77,29 @@ def wants_layer(kind: str, temp_max: float | None, rain_probability: int) -> boo
     return kind == "frio" or (temp_max is not None and temp_max <= LAYER_UNTIL) or rain_probability >= RAIN_LAYER_FROM
 
 
-def _season_fit(item: Item, kind: str) -> float:
+def warm_months(today: date) -> bool:
+    """De mediados de primavera a final de verano: del 1 de mayo al 30 de septiembre."""
+    return 5 <= today.month <= 9
+
+
+def summer_only(item) -> bool:
+    """Pantalón corto, manga corta y todo lo marcado como de verano."""
+    if item.season == "verano" or item.type == "pantalón corto":
+        return True
+    text = (getattr(item, "details", "") or "").lower()
+    if "manga larga" in text:
+        return False
+    return "manga corta" in text or item.type in ("camiseta", "polo")
+
+
+# Fuera de esos meses la ropa de verano no se propone aunque un día suelto suba la temperatura
+# (decisión del usuario: 15 °C en invierno no es día de pantalón corto).
+OUT_OF_SEASON = -8.0
+
+
+def _season_fit(item: Item, kind: str, today: date | None = None) -> float:
+    if today is not None and not warm_months(today) and summer_only(item):
+        return OUT_OF_SEASON
     if kind == "calor":
         return {"verano": 2, "todo_el_ano": 1, "invierno": -6}[item.season]
     if kind == "frio":
@@ -116,8 +141,8 @@ def _recency(item: Item) -> float:
     return 0.0
 
 
-def score(items: list[Item], kind: str) -> float:
-    total = sum(_season_fit(item, kind) + _recency(item) + (0.5 if item.favorite else 0) for item in items)
+def score(items: list[Item], kind: str, today: date | None = None) -> float:
+    total = sum(_season_fit(item, kind, today) +_recency(item) + (0.5 if item.favorite else 0) for item in items)
     return total + _color_harmony(items) + _style_fit(items) + style_rules.prior(items)
 
 
@@ -165,7 +190,7 @@ def propose(
     for top, bottom, shoe, layer in itertools.product(tops, bottoms, shoes, layers):
         combo = [piece for piece in (layer, top, bottom, shoe) if piece is not None]
         ids = {piece.id for piece in combo}
-        value = score(combo, kind) + (taste.adjust(combo) if taste else 0.0)
+        value = score(combo, kind, today) + (taste.adjust(combo) if taste else 0.0)
         if frozenset((top.id, bottom.id)) in disliked_pairs:
             value -= 2.0  # esta pareja ya se descartó alguna vez
         penalty = 100.0 if any(ids == seen for seen in avoid) else 0.0

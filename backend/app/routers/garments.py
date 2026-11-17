@@ -47,6 +47,10 @@ def _to_out(g: Garment, stats: dict[int, tuple[int, date | None]]) -> GarmentOut
         colors_secondary=[Color(**c) for c in (g.colors_secondary or [])],
         pattern=g.pattern,
         style=g.style,
+        closure=g.closure,
+        hood=bool(g.hood),
+        fit=g.fit,
+        thickness=g.thickness,
         details=g.details,
         season=g.season,
         brand=g.brand,
@@ -164,6 +168,10 @@ def create_garment(body: GarmentCreate, db: Session = Depends(get_db)):
         colors_secondary=[c.model_dump() for c in body.colors_secondary],
         pattern=body.pattern,
         style=body.style,
+        closure=body.closure,
+        hood=body.hood,
+        fit=body.fit,
+        thickness=body.thickness,
         details=body.details.strip(),
         season=body.season,
         brand=body.brand,
@@ -283,7 +291,7 @@ def update_garment(garment_id: int, body: GarmentUpdate, db: Session = Depends(g
         garment.laundry_since = now_utc() if body.in_laundry else None
 
     not_nullable = {"name", "type", "pattern", "style", "season", "details", "notes",
-                    "colors_secondary", "favorite", "in_laundry"}
+                    "colors_secondary", "favorite", "in_laundry", "hood"}
     for key, value in changes.items():
         if value is None and key in not_nullable:
             continue

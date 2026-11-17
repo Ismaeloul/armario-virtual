@@ -212,6 +212,15 @@ export default function FichaPrenda() {
             <Row icon="style" label={t.ficha.filas.estilo}>
               <Pill>{cap(garment.style)}</Pill>
             </Row>
+            {(garment.closure || garment.fit || garment.thickness || garment.hood) && (
+              <Row icon="style" label={t.ficha.filas.rasgos}>
+                {[garment.closure, garment.fit, garment.thickness, garment.hood ? t.ficha.filas.capucha : null]
+                  .filter((v): v is string => Boolean(v))
+                  .map((v) => (
+                    <Pill key={v}>{cap(v)}</Pill>
+                  ))}
+              </Row>
+            )}
             <Row icon="calendar" label={t.ficha.filas.temporada}>
               <Pill strong>{catalog.seasons[garment.season]}</Pill>
             </Row>

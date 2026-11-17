@@ -1,203 +1,2009 @@
 {
   "color_pairs": [
-    {"a": "azul marino", "b": "beige", "score": 2, "nota": "Pareja clásica (beige con marino, p. ej. chinos beige con polo marino). Thevou y guías de básicos."},
-    {"a": "azul marino", "b": "blanco", "score": 2, "nota": "Clásico: marino con camisa blanca. Thevou (traje marino, camisa blanca)."},
-    {"a": "azul marino", "b": "gris", "score": 2, "nota": "Marino y gris como neutros de base; combinación muy usada en smart casual."},
-    {"a": "azul marino", "b": "negro", "score": 1, "nota": "Ambos neutros oscuros; funciona pero es más plana que marino-marrón. Thevou: marino con zapatos negros de vestir."},
-    {"a": "azul marino", "b": "marrón", "score": 2, "nota": "Pareja clásica del menswear. El marrón da calidez al frío del marino (guías Westwood Hart y Sayki)."},
-    {"a": "azul marino", "b": "celeste", "score": 2, "nota": "Camisa celeste con pantalón o chaqueta marino: clásico de oficina casual (Icon Amsterdam, RMRS)."},
-    {"a": "azul", "b": "azul marino", "score": -1, "nota": "Azules parecidos: se permiten, pero un casi-igual molesta. Mr Porter y Thevou aconsejan aclararlo con otra textura o una camisa más clara."},
-    {"a": "azul marino", "b": "burdeos", "score": 2, "nota": "Burdeos y marino: clásico de menswear (Westwood Hart). Burdeos como corbata o acento."},
-    {"a": "azul marino", "b": "rojo", "score": 1, "nota": "Corbata roja sobre prenda neutra funciona (RMRS). Sin pareja de prendas grandes; uso de acento."},
-    {"a": "amarillo", "b": "azul marino", "score": 1, "nota": "Pañuelo amarillo con americana carbón y vaquero oscuro (RMRS). Solo como acento pequeño."},
-    {"a": "azul marino", "b": "rosa", "score": 1, "nota": "Pañuelo rosa sobre americana oscura o marino (RMRS). Acento, no prenda grande."},
-    {"a": "azul marino", "b": "crudo", "score": 1, "nota": "Jersey crudo con pantalón marino: contraste suave. Inferido de la regla de neutros."},
-    {"a": "azul marino", "b": "verde oliva", "score": 0, "nota": "Ninguna fuente da regla directa para marino con oliva. Sin consenso."},
-    {"a": "azul marino", "b": "azul marino", "score": 1, "nota": "Monocromo marino en varias prendas: se ve pulido si cambian texturas (RMRS)."},
-    {"a": "beige", "b": "blanco", "score": 1, "nota": "Chinos beige con polo o camiseta blanca: correcto, sin mucho contraste."},
-    {"a": "beige", "b": "crudo", "score": 1, "nota": "Tonos cercanos en distinta textura: aporta interés (RMRS). Mejor con textura distinta."},
-    {"a": "beige", "b": "gris", "score": 1, "nota": "Neutros de base; se combinan bien pero sin mucho contraste. Regla general de neutros (RMRS)."},
-    {"a": "beige", "b": "marrón", "score": 2, "nota": "Tonos tierra: beige y marrón en la misma gama (Thevou: crudo, oliva y marrón)."},
-    {"a": "beige", "b": "negro", "score": 1, "nota": "Neutros de base; funciona pero el beige suele ir mejor con marrón o marino."},
-    {"a": "beige", "b": "verde oliva", "score": 2, "nota": "Tonos tierra: chinos beige con oliva o caqui (RMRS: caqui y oliva en la base neutra)."},
-    {"a": "beige", "b": "beige", "score": 1, "nota": "Monocromo beige en texturas distintas: pulido (RMRS, tonal)."},
-    {"a": "blanco", "b": "gris", "score": 2, "nota": "Gris y blanco: contraste suave y clásico (Thevou, traje gris con camisa blanca)."},
-    {"a": "blanco", "b": "negro", "score": 2, "nota": "Contraste alto clásico (Thevou: traje negro, camisa blanca). Muy seguro."},
-    {"a": "blanco", "b": "marrón", "score": 1, "nota": "Camisa blanca con marrón: correcto en smart casual. Solo una guía lo confirma en esta búsqueda."},
-    {"a": "blanco", "b": "verde oliva", "score": 1, "nota": "Blanco con oliva: contraste suave; menos citado que crudo con oliva."},
-    {"a": "blanco", "b": "burdeos", "score": 2, "nota": "Camisa blanca con corbata burdeos (Thevou)."},
-    {"a": "blanco", "b": "rojo", "score": 1, "nota": "Acento rojo sobre prenda blanca: contraste fuerte, usar pequeño."},
-    {"a": "azul", "b": "blanco", "score": 1, "nota": "Vaquero azul con zapatillas blancas (Thevou). Combinación casual muy usada."},
-    {"a": "celeste", "b": "gris", "score": 2, "nota": "Camisa celeste con pantalón carbón (Thevou)."},
-    {"a": "celeste", "b": "marrón", "score": 2, "nota": "Celeste con marrón (cinturón y zapatos) (Thevou)."},
-    {"a": "gris", "b": "negro", "score": 2, "nota": "Contraste sutil muy usado; Westwood Hart: negro y gris casi siempre bien. Thevou: traje negro con corbata gris."},
-    {"a": "burdeos", "b": "gris", "score": 2, "nota": "Carbón con corbata burdeos y camisa blanca (Thevou)."},
-    {"a": "azul", "b": "gris", "score": 1, "nota": "Azul, gris y blanco (Thevou). Funciona en casual."},
-    {"a": "beige", "b": "gris", "score": 1, "nota": "Ver fila beige-gris; neutros."},
-    {"a": "amarillo", "b": "gris", "score": 1, "nota": "Acento amarillo sobre americana o pantalón gris: pañuelo o calcetín (RMRS)."},
-    {"a": "gris", "b": "rosa", "score": 1, "nota": "Pañuelo rosa con americana carbón (RMRS)."},
-    {"a": "gris", "b": "marrón", "score": 0, "nota": "Fuentes contradictorias: una guía dice que el gris frío choca con el marrón cálido; otra lo recomienda en invierno. Sin consenso."},
-    {"a": "gris", "b": "verde oliva", "score": 0, "nota": "Sin fuente directa."},
-    {"a": "gris", "b": "gris", "score": 2, "nota": "Monocromo gris en varias prendas: se ve pulido (Mr Porter, 'gris sobre gris')."},
-    {"a": "marrón", "b": "verde oliva", "score": 2, "nota": "Oliva, verde bosque o salvia con marrón: excelente (RMRS)."},
-    {"a": "crudo", "b": "marrón", "score": 2, "nota": "Jersey crudo con chaqueta marrón y botas (Thevou)."},
-    {"a": "marrón", "b": "negro", "score": 0, "nota": "Sin consenso: las guías lo tratan como acentos distintos. Calzado negro con pantalón marrón no tiene regla clara."},
-    {"a": "marrón", "b": "marrón", "score": 1, "nota": "Monocromo marrón en texturas distintas: pulido (RMRS, tonal)."},
-    {"a": "negro", "b": "negro", "score": 2, "nota": "Monocromo negro: Mr Porter lo cita como combinación fiable. Mejor con texturas distintas."},
-    {"a": "burdeos", "b": "rojo", "score": -1, "nota": "Dos rojos cercanos: choca. Mejor uno solo."},
-    {"a": "rojo", "b": "verde", "score": -1, "nota": "RMRS: rojo y verde pueden funcionar, pero con tono o cantidad mal elegidos parece decoración navideña."},
-    {"a": "naranja", "b": "rojo", "score": -1, "nota": "Dos colores vivos en el mismo look: regla de un solo acento brillante (RMRS)."},
-    {"a": "amarillo", "b": "naranja", "score": -1, "nota": "Dos vivos juntos: regla de un solo acento vivo."},
-    {"a": "amarillo", "b": "rosa", "score": -1, "nota": "Dos vivos juntos: regla de un solo acento vivo."},
-    {"a": "multicolor", "b": "multicolor", "score": -2, "nota": "Dos prendas estampadas o multicolor: demasiado; RMRS avisa de usar 1-2 colores vivos."},
-    {"a": "multicolor", "b": "negro", "score": 0, "nota": "Multicolor como única pieza con neutros: sin fuente directa."},
-    {"a": "multicolor", "b": "gris", "score": 0, "nota": "Multicolor con neutro: sin fuente directa."},
-    {"a": "verde", "b": "verde oliva", "score": -1, "nota": "Verdes parecidos: como azules parecidos, se nota el desajuste (regla de Mr Porter aplicada a verdes)."},
-    {"a": "verde oliva", "b": "verde oliva", "score": 1, "nota": "Monocromo oliva: tonal y pulido."},
-    {"a": "rosa", "b": "rojo", "score": -1, "nota": "Dos vivos juntos: regla de un solo acento."}
+    {
+      "a": "negro",
+      "b": "negro",
+      "score": 2,
+      "nota": "Monocromo negro: Mr Porter lo cita como combinacion fiable (snippet, no reverificada). Mejor con texturas distintas.",
+      "fuentes": 1
+    },
+    {
+      "a": "negro",
+      "b": "blanco",
+      "score": 2,
+      "nota": "Contraste alto clasico (Thevou, traje negro con camisa blanca; original).",
+      "fuentes": 1
+    },
+    {
+      "a": "negro",
+      "b": "gris",
+      "score": 2,
+      "nota": "Thevou (fetch): 'Grey & black' como pareja recomendada. Contraste sutil.",
+      "fuentes": 2
+    },
+    {
+      "a": "negro",
+      "b": "beige",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "crudo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "marrón",
+      "score": -1,
+      "nota": "Corregido: RMRS (fetch) prefiere calzado marron a negro con neutros; GG (fetch) dice que el calzado negro 'queda raro' con tonos tierra por poco contraste. Dos fuentes coinciden en calzado; en prendas grandes sigue sin consenso.",
+      "fuentes": 2
+    },
+    {
+      "a": "negro",
+      "b": "azul marino",
+      "score": 1,
+      "nota": "Corregido al alza: Mr Porter (snippet) dice que el mito es 'nonsense' y que marino con negro funciona si el contraste de valor es claro; pantalon casi marino junto a americana negra choca.",
+      "fuentes": 2
+    },
+    {
+      "a": "negro",
+      "b": "azul",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "celeste",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "verde",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "verde oliva",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "burdeos",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "amarillo",
+      "score": 1,
+      "nota": "Camiseta mayoritariamente negra con detalle amarillo: acento (snippet de guia de streetwear).",
+      "fuentes": 1
+    },
+    {
+      "a": "negro",
+      "b": "naranja",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "negro",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "blanco",
+      "b": "blanco",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "blanco",
+      "b": "gris",
+      "score": 2,
+      "nota": "Modest Man (snippet): camisa gris clara con pantalon blanco/carbon/marino/oliva; contraste suave y clasico.",
+      "fuentes": 2
+    },
+    {
+      "a": "blanco",
+      "b": "beige",
+      "score": 1,
+      "nota": "Chinos beige con polo o camiseta blanca: correcto, poco contraste (original, no reverificada).",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "crudo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "blanco",
+      "b": "marrón",
+      "score": 1,
+      "nota": "Camisa blanca con marron: correcto en smart casual (original, una guia).",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "azul marino",
+      "score": 2,
+      "nota": "Thevou (fetch): 'Navy blue & white' como pareja recomendada. Clasico.",
+      "fuentes": 2
+    },
+    {
+      "a": "blanco",
+      "b": "azul",
+      "score": 1,
+      "nota": "Vaquero azul con zapatillas blancas (Thevou, original). Casual.",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "celeste",
+      "score": 1,
+      "nota": "Camisa de vestir blanca con pantalon azul (snippet lussolife); lo claro con lo claro es poco contraste.",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "verde",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "blanco",
+      "b": "verde oliva",
+      "score": 1,
+      "nota": "Blanco con oliva: contraste suave (original). Menswearhouse (snippet) prefiere crema o marfil con oliva.",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "rojo",
+      "score": 1,
+      "nota": "Acento rojo sobre prenda blanca: usar en pequeno (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "burdeos",
+      "score": 2,
+      "nota": "Camisa blanca con corbata burdeos (Thevou, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "amarillo",
+      "score": 1,
+      "nota": "RMRS (fetch): pañuelo amarillo con camisa blanca o azul claro como acento.",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "naranja",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "blanco",
+      "b": "rosa",
+      "score": 1,
+      "nota": "RMRS (fetch): pañuelo rosa como acento con camisa blanca o azul claro.",
+      "fuentes": 1
+    },
+    {
+      "a": "blanco",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "blanco",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "gris",
+      "b": "gris",
+      "score": 2,
+      "nota": "Monocromo gris en varias prendas: se ve pulido (Mr Porter, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "gris",
+      "b": "beige",
+      "score": 1,
+      "nota": "Neutros de base; combinan sin mucho contraste (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "gris",
+      "b": "crudo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "gris",
+      "b": "marrón",
+      "score": 1,
+      "nota": "Corregido: GG (fetch) dice que se puede combinar ('no reason why you can't'), con contraste suficiente y gris suave con tan o marron oscuro; sin contraste 'se ve sucio'. Una guia original lo desaconseja (tonos frios vs calidos). Positivo con condiciones.",
+      "fuentes": 2
+    },
+    {
+      "a": "gris",
+      "b": "azul marino",
+      "score": 2,
+      "nota": "Navy y gris suave como base neutra (Westwood Hart, snippet: 'navy and soft gray' fiable en mayores de 50; Modest Man).",
+      "fuentes": 2
+    },
+    {
+      "a": "gris",
+      "b": "azul",
+      "score": 1,
+      "nota": "Azul, gris y blanco (Thevou, original). Casual.",
+      "fuentes": 1
+    },
+    {
+      "a": "gris",
+      "b": "celeste",
+      "score": 2,
+      "nota": "Camisa celeste con pantalon carbon (Thevou, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "gris",
+      "b": "verde",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "gris",
+      "b": "verde oliva",
+      "score": 1,
+      "nota": "Modest Man (snippet): camisa gris clara con pantalon oliva. Sin estudio propio.",
+      "fuentes": 1
+    },
+    {
+      "a": "gris",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "gris",
+      "b": "burdeos",
+      "score": 2,
+      "nota": "Carbon con corbata burdeos y camisa blanca (Thevou, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "gris",
+      "b": "amarillo",
+      "score": 1,
+      "nota": "Acento amarillo sobre americana o pantalon gris: panuelo o calcetin (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "gris",
+      "b": "naranja",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "gris",
+      "b": "rosa",
+      "score": 2,
+      "nota": "Camisa rosa bajo traje gris: 'fashion staple' (snippet de blog) y panuelo rosa con americana carbon (RMRS, original).",
+      "fuentes": 2
+    },
+    {
+      "a": "gris",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "gris",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Multicolor con neutro: sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "beige",
+      "b": "beige",
+      "score": 1,
+      "nota": "Monocromo beige en texturas distintas: pulido (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "beige",
+      "b": "crudo",
+      "score": 1,
+      "nota": "Tonos cercanos en distinta textura: interes (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "beige",
+      "b": "marrón",
+      "score": 2,
+      "nota": "Tonos tierra: beige con marron. GG earth tones (fetch) y Menswearhouse (snippet) incluyen estos neutros tierra.",
+      "fuentes": 2
+    },
+    {
+      "a": "beige",
+      "b": "azul marino",
+      "score": 2,
+      "nota": "Westwood Hart (snippet): blazer marino con pantalon beige y zapatos marron oscuro como 'timeless'.",
+      "fuentes": 2
+    },
+    {
+      "a": "beige",
+      "b": "azul",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "beige",
+      "b": "celeste",
+      "score": 1,
+      "nota": "Camisa de lino tostada con chinos azul claro (snippet de blog): combinacion suave.",
+      "fuentes": 1
+    },
+    {
+      "a": "beige",
+      "b": "verde",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "beige",
+      "b": "verde oliva",
+      "score": 2,
+      "nota": "Menswearhouse (snippet): oliva combina con beige; chinos beige con oliva o caqui (RMRS, original).",
+      "fuentes": 2
+    },
+    {
+      "a": "beige",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "beige",
+      "b": "burdeos",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "beige",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "beige",
+      "b": "naranja",
+      "score": 1,
+      "nota": "Snippet de guia: marron y beige funcionan con naranja tostado (rust). Un solo snippet.",
+      "fuentes": 1
+    },
+    {
+      "a": "beige",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "beige",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "beige",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "crudo",
+      "score": 1,
+      "nota": "Monocromo crema en texturas distintas (Westwood Hart, 'antique cream and ecru linen', snippet).",
+      "fuentes": 1
+    },
+    {
+      "a": "crudo",
+      "b": "marrón",
+      "score": 2,
+      "nota": "Thevou (fetch): 'Brown & cream' como pareja recomendada. Original: jersey crudo con chaqueta marron.",
+      "fuentes": 2
+    },
+    {
+      "a": "crudo",
+      "b": "azul marino",
+      "score": 1,
+      "nota": "Jersey crudo con pantalon marino: contraste suave (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "crudo",
+      "b": "azul",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "celeste",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "verde",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "verde oliva",
+      "score": 2,
+      "nota": "Westwood Hart (snippet): 'olive and cream' combinacion natural y asentada. Menswearhouse: marfil con oliva.",
+      "fuentes": 3
+    },
+    {
+      "a": "crudo",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "burdeos",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "naranja",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "crudo",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "marrón",
+      "b": "marrón",
+      "score": 1,
+      "nota": "Monocromo marron en texturas distintas: pulido (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "marrón",
+      "b": "azul marino",
+      "score": 2,
+      "nota": "Pareja clasica (Westwood Hart, Sayki, Alpine Swiss, StudioSuits en snippets; GG: zapatos marron con traje marino 'nothing more normal').",
+      "fuentes": 3
+    },
+    {
+      "a": "marrón",
+      "b": "azul",
+      "score": 2,
+      "nota": "GG (titulo 'How to Pair Brown and Blue', snippet) y camisa azul claro con pantalon marron (snippet Modest Man).",
+      "fuentes": 2
+    },
+    {
+      "a": "marrón",
+      "b": "celeste",
+      "score": 2,
+      "nota": "Celeste con marron (cinturon y zapatos) (Thevou, original).",
+      "fuentes": 2
+    },
+    {
+      "a": "marrón",
+      "b": "verde",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "marrón",
+      "b": "verde oliva",
+      "score": 2,
+      "nota": "Menswearhouse (snippet): marron combina con oliva; GG earth tones (fetch): traje marron u oliva con acentos tierra. Original RMRS.",
+      "fuentes": 3
+    },
+    {
+      "a": "marrón",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "marrón",
+      "b": "burdeos",
+      "score": 1,
+      "nota": "GG earth tones (fetch): guante verde oscuro y bufanda burdeos con abrigo tan (acento).",
+      "fuentes": 1
+    },
+    {
+      "a": "marrón",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "marrón",
+      "b": "naranja",
+      "score": 1,
+      "nota": "Snippet: marron y beige funcionan con naranja quemado (rust).",
+      "fuentes": 1
+    },
+    {
+      "a": "marrón",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "marrón",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "marrón",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul marino",
+      "b": "azul marino",
+      "score": 1,
+      "nota": "Monocromo marino en varias prendas: pulido si cambian texturas (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "azul marino",
+      "b": "azul",
+      "score": -1,
+      "nota": "Azules parecidos: se nota el desajuste (Mr Porter/Thevou, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "azul marino",
+      "b": "celeste",
+      "score": 2,
+      "nota": "Camisa celeste con marino: clasico de oficina casual (Icon Amsterdam, RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "azul marino",
+      "b": "verde",
+      "score": 1,
+      "nota": "Snippet de blog: verde oscuro con jersey marino es 'low-risk'. Verde y marino reconocido como combinacion.",
+      "fuentes": 2
+    },
+    {
+      "a": "azul marino",
+      "b": "verde oliva",
+      "score": 2,
+      "nota": "Corregido de 0 a 2: cuatro fuentes (snippets) coinciden: jersey marino con chinos oliva, americana marino con pantalon oliva. Marino arriba, oliva abajo es la version mas segura.",
+      "fuentes": 4
+    },
+    {
+      "a": "azul marino",
+      "b": "rojo",
+      "score": 1,
+      "nota": "Corbata roja sobre prenda neutra (RMRS, original). Solo acento.",
+      "fuentes": 1
+    },
+    {
+      "a": "azul marino",
+      "b": "burdeos",
+      "score": 2,
+      "nota": "Marino con burdeos: corbata o acento sobre base marina (Westwood Hart; snippet de traje marino con corbata burdeos).",
+      "fuentes": 2
+    },
+    {
+      "a": "azul marino",
+      "b": "amarillo",
+      "score": 1,
+      "nota": "Panuelo amarillo con americana carbon/marino (RMRS, original). Acento.",
+      "fuentes": 1
+    },
+    {
+      "a": "azul marino",
+      "b": "naranja",
+      "score": 2,
+      "nota": "Snippet: marino calma el naranja vivo ('gold standard'). Una fuente.",
+      "fuentes": 1
+    },
+    {
+      "a": "azul marino",
+      "b": "rosa",
+      "score": 2,
+      "nota": "Camisa rosa con traje marino: pareja clasica (snippet de blog) y panuelo rosa (RMRS, original).",
+      "fuentes": 2
+    },
+    {
+      "a": "azul marino",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul marino",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul",
+      "b": "azul",
+      "score": -1,
+      "nota": "Azules iguales o casi: se ven como error (Mr Porter/Thevou, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "azul",
+      "b": "celeste",
+      "score": -1,
+      "nota": "Dos azules claros cercanos: se nota el desajuste, igual que con marino (regla de tonos parecidos).",
+      "fuentes": 1
+    },
+    {
+      "a": "azul",
+      "b": "verde",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul",
+      "b": "verde oliva",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul",
+      "b": "burdeos",
+      "score": 1,
+      "nota": "Snippet: burdeos con azul/marino en prendas pequenas. Una fuente.",
+      "fuentes": 1
+    },
+    {
+      "a": "azul",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul",
+      "b": "naranja",
+      "score": 1,
+      "nota": "Thevou (fetch): azul y naranja como complementarios.",
+      "fuentes": 1
+    },
+    {
+      "a": "azul",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "azul",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "celeste",
+      "b": "celeste",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "celeste",
+      "b": "verde",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "celeste",
+      "b": "verde oliva",
+      "score": 1,
+      "nota": "Camisa chambray/azul claro con chinos oliva (snippet de blog de baja calidad).",
+      "fuentes": 1
+    },
+    {
+      "a": "celeste",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "celeste",
+      "b": "burdeos",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "celeste",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "celeste",
+      "b": "naranja",
+      "score": 1,
+      "nota": "Thevou (fetch): azul y naranja complementarios; camisa coral con chino celeste (snippet).",
+      "fuentes": 2
+    },
+    {
+      "a": "celeste",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "celeste",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "celeste",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde",
+      "b": "verde",
+      "score": -1,
+      "nota": "Evitar verde con verde: 'come off as matchy-matchy' (snippet RMRS/Mr Porter, original).",
+      "fuentes": 2
+    },
+    {
+      "a": "verde",
+      "b": "verde oliva",
+      "score": -1,
+      "nota": "Verdes parecidos: se nota el desajuste (original); mismo aviso de evitar verde con verde (snippet).",
+      "fuentes": 2
+    },
+    {
+      "a": "verde",
+      "b": "rojo",
+      "score": 1,
+      "nota": "Corregido de -1 a 1: RMRS (fetch) y Thevou (fetch) lo llaman complementario 'con cuidado'; el riesgo es tono o cantidad (aspecto navideno).",
+      "fuentes": 2
+    },
+    {
+      "a": "verde",
+      "b": "burdeos",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde",
+      "b": "naranja",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde",
+      "b": "morado",
+      "score": 1,
+      "nota": "GG (snippet): morado y verde como pareja de accesorios.",
+      "fuentes": 1
+    },
+    {
+      "a": "verde",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde oliva",
+      "b": "verde oliva",
+      "score": 1,
+      "nota": "Monocromo oliva: tonal y pulido (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "verde oliva",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde oliva",
+      "b": "burdeos",
+      "score": 1,
+      "nota": "GG (fetch): abrigo tan con guantes verde oscuro y bufanda burdeos.",
+      "fuentes": 1
+    },
+    {
+      "a": "verde oliva",
+      "b": "amarillo",
+      "score": 1,
+      "nota": "Snippet: amarillos tierra (mostaza, ocre) se llevan mejor; oliva con mostaza como tono tierra.",
+      "fuentes": 1
+    },
+    {
+      "a": "verde oliva",
+      "b": "naranja",
+      "score": 1,
+      "nota": "Snippet: oliva es de los pares fiables con naranja arriba. Una fuente de consenso.",
+      "fuentes": 1
+    },
+    {
+      "a": "verde oliva",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde oliva",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "verde oliva",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "rojo",
+      "b": "rojo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "rojo",
+      "b": "burdeos",
+      "score": -1,
+      "nota": "Dos rojos cercanos: choca (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "rojo",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "RMRS (fetch): hasta 1-2 colores vivos en pequenas dosis; dos vivos a la vez se permiten pero con cuidado.",
+      "fuentes": 1
+    },
+    {
+      "a": "rojo",
+      "b": "naranja",
+      "score": -1,
+      "nota": "Dos colores vivos en el mismo look: un solo acento brillante (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "rojo",
+      "b": "rosa",
+      "score": -1,
+      "nota": "Dos vivos juntos: un solo acento (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "rojo",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "rojo",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "burdeos",
+      "b": "burdeos",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "burdeos",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "burdeos",
+      "b": "naranja",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "burdeos",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "burdeos",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "burdeos",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "amarillo",
+      "b": "amarillo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "amarillo",
+      "b": "naranja",
+      "score": -1,
+      "nota": "Dos vivos juntos: un solo acento vivo (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "amarillo",
+      "b": "rosa",
+      "score": -1,
+      "nota": "Dos vivos juntos: un solo acento vivo (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "amarillo",
+      "b": "morado",
+      "score": 1,
+      "nota": "Thevou (fetch): amarillo y morado como complementarios.",
+      "fuentes": 1
+    },
+    {
+      "a": "amarillo",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "naranja",
+      "b": "naranja",
+      "score": 0,
+      "nota": "Naranja sobre naranja: dificil (snippet, sin regla clara).",
+      "fuentes": 0
+    },
+    {
+      "a": "naranja",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "naranja",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "naranja",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "rosa",
+      "b": "rosa",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "rosa",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "rosa",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "morado",
+      "b": "morado",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "morado",
+      "b": "multicolor",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "multicolor",
+      "b": "multicolor",
+      "score": -2,
+      "nota": "Dos prendas multicolor o estampadas: demasiado (RMRS, original).",
+      "fuentes": 1
+    }
   ],
   "color_rules": [
-    {"regla": "Base neutra: negro, blanco, gris, azul marino, marrón/caqui, beige y verde oliva forman la mayor parte del armario; los colores vivos son acentos.", "fuentes": 4},
-    {"regla": "Proporción: neutros en torno al 60-70 % del look; un color de apoyo en torno al 20-30 %; los colores de acento, mínimos.", "fuentes": 2},
-    {"regla": "Máximo tres colores por look (ancla, secundario, acento). Cuatro es aceptable si los extra son mínimos (calcetines, pañuelo, cinturón); cinco solo en look avanzado.", "fuentes": 3},
-    {"regla": "Como mucho uno o dos colores vivos por look; el resto, apagados. Un solo vivo como foco.", "fuentes": 3},
-    {"regla": "Look monocromo o tonal (misma familia en texturas distintas) es seguro y se ve pulido.", "fuentes": 3},
-    {"regla": "El calzado y el cinturón cuentan en el total de colores; repetir el color del cuero (cinturón y zapatos) da cohesión.", "fuentes": 2},
-    {"regla": "Calzado marrón combina mejor con la mayoría de neutros; el negro queda reservado a lo formal.", "fuentes": 2},
-    {"regla": "Marino + marrón es una pareja clásica (marrón en zapatos o pantalón).", "fuentes": 2},
-    {"regla": "Negro y gris: contraste sutil muy usado; negro con blanco es contraste alto.", "fuentes": 2},
-    {"regla": "Gris con marrón: sin consenso (una guía lo desaconseja por tonos fríos vs cálidos; otra lo recomienda en invierno).", "fuentes": 2},
-    {"regla": "Colores de acento (pañuelo, corbata, calcetines, cinturón) en un color vivo sobre base neutra es el uso más seguro.", "fuentes": 2},
-    {"regla": "Rojo y verde pueden funcionar, pero un tono o cantidad mal elegidos parece decoración navideña.", "fuentes": 1},
-    {"regla": "Prendas de un color parecido (azul con azul, verde con verde) se ven como error; diferenciar con textura o tono claro.", "fuentes": 1},
-    {"regla": "Calzado claro con pantalón claro; pantalón de tono medio (marino, oliva, caqui) con marrón; pantalón negro con negro o marrón oscuro.", "fuentes": 1},
-    {"regla": "El tono de piel pesa poco (unos 10 % de la decisión): se decide después de las reglas de neutros y acentos.", "fuentes": 1}
+    {
+      "regla": "Base neutra: negro, blanco, gris, azul marino, marron, beige, crudo y verde oliva forman la mayor parte del armario; los colores vivos son acentos. RMRS (fetch): los neutros son 'los colores que van con la mayoria'.",
+      "fuentes": 4
+    },
+    {
+      "regla": "Proporcion: los neutros son la mayoria del armario y del look. No hay porcentaje fuente: la cifra 60-70 % del original no se ha confirmado y se retira.",
+      "fuentes": 1
+    },
+    {
+      "regla": "Maximo tres colores por look. Corregido: GG (snippet) dice que mas de tres colores puede funcionar si se cuida la escala y la armonia; se mantiene como guia, no regla dura.",
+      "fuentes": 3
+    },
+    {
+      "regla": "Como mucho uno o dos colores vivos por look, en toques pequenos (RMRS, fetch: 'Use only 1-2 brighter colors, in small touches').",
+      "fuentes": 2
+    },
+    {
+      "regla": "Look monocromo o tonal (misma familia en texturas distintas) es seguro y se ve pulido.",
+      "fuentes": 3
+    },
+    {
+      "regla": "El calzado y el cinturon cuentan en el total de colores; repetir el color del cuero da cohesion.",
+      "fuentes": 2
+    },
+    {
+      "regla": "Calzado marron combina mejor con la mayoria de neutros; el negro queda para lo formal o se usa con contraste claro (RMRS y GG, fetch).",
+      "fuentes": 2
+    },
+    {
+      "regla": "Marino + marron es una pareja clasica (marron en zapatos o pantalon).",
+      "fuentes": 3
+    },
+    {
+      "regla": "Negro y gris: contraste sutil muy usado (Thevou fetch). Negro con blanco: contraste alto.",
+      "fuentes": 2
+    },
+    {
+      "regla": "Gris con marron: funciona con contraste suficiente (gris suave con tan o marron oscuro). Sin contraste se ve sucio (GG, fetch). Corregido: el original lo marcaba sin consenso.",
+      "fuentes": 2
+    },
+    {
+      "regla": "Colores de acento (panuelo, corbata, calcetines, cinturon) en un color vivo sobre base neutra es el uso mas seguro (RMRS, fetch).",
+      "fuentes": 2
+    },
+    {
+      "regla": "Rojo y verde: complementarios que funcionan 'con cuidado' (RMRS y Thevou, fetch). El tono o la cantidad mal elegidos parecen decoracion navidena. Corregido: el original lo marcaba como 'no funciona'.",
+      "fuentes": 2
+    },
+    {
+      "regla": "Prendas de un color parecido (azul con azul, verde con verde) se ven como error; diferenciar con textura o tono claro.",
+      "fuentes": 2
+    },
+    {
+      "regla": "Navy arriba y oliva abajo (o al reves con cuidado) es una combinacion bien aceptada; oliva con marron o beige tambien (snippets y Menswearhouse).",
+      "fuentes": 4
+    },
+    {
+      "regla": "Negro con marino funciona si hay contraste de valor claro; si el pantalon queda casi marino junto a una prenda negra, choca (Mr Porter, snippet).",
+      "fuentes": 2
+    },
+    {
+      "regla": "Calzado claro con pantalon claro; pantalon de tono medio (marino, oliva, caqui) con marron; pantalon negro con negro o marron oscuro.",
+      "fuentes": 1
+    },
+    {
+      "regla": "El tono de piel pesa poco (unos 10 % de la decision): se decide despues de las reglas de neutros y acentos (RMRS, fetch).",
+      "fuentes": 1
+    }
   ],
   "layer_over_top": [
-    {"capa": "sobrecamisa", "arriba": "camiseta", "score": 2, "nota": "Sobrecamisa sobre camiseta lisa o jersey fino: la combinación básica (Apetogentleman)."},
-    {"capa": "sobrecamisa", "arriba": "camisa", "score": 1, "nota": "Sobrecamisa sobre camisa: correcto si la camisa es lisa y la sobrecamisa no repite estampado. Inferido; una fuente lo permite con cuidado."},
-    {"capa": "sobrecamisa", "arriba": "polo", "score": 0, "nota": "Sin fuente directa."},
-    {"capa": "sobrecamisa", "arriba": "sudadera", "score": -1, "nota": "Sudadera gruesa como capa interior: limita movimiento y abulta (Apetogentleman). Mejor sudadera fina o camiseta."},
-    {"capa": "sobrecamisa", "arriba": "jersey", "score": 2, "nota": "Jersey fino bajo sobrecamisa: ej. jersey crudo con sobrecamisa oliva (Apetogentleman). Jersey grueso ya es capa."},
-    {"capa": "chaqueta", "arriba": "camiseta", "score": 2, "nota": "Chaqueta sobre camiseta o dos camisetas (Henley y cuello V) (RMRS)."},
-    {"capa": "chaqueta", "arriba": "camisa", "score": 2, "nota": "Camisa de vestir bajo chaqueta, con chaleco en medio para formal (RMRS, look más serio)."},
-    {"capa": "chaqueta", "arriba": "polo", "score": 1, "nota": "Polo ajustado bajo chaqueta ligera: inferido de la regla de capas finas dentro."},
-    {"capa": "chaqueta", "arriba": "sudadera", "score": 1, "nota": "Bomber, vaquera o acolchada sobre sudadera: lo más citado. Sudadera ajustada, no abultada (Apetogentleman, RMRS). Sudadera gruesa con chaqueta: -1."},
-    {"capa": "chaqueta", "arriba": "jersey", "score": 1, "nota": "Jersey o cárdigan fino bajo chaqueta de ante o lana (RMRS: cárdigan bajo ante). Jersey grueso bajo chaqueta: abulta."},
-    {"capa": "abrigo", "arriba": "camiseta", "score": 0, "nota": "Solo si el abrigo tiene holgura: si cierra sobre camiseta, le falta espacio (RMRS). Mejor capa intermedia."},
-    {"capa": "abrigo", "arriba": "camisa", "score": 2, "nota": "Camisa bajo abrigo de lana o trench: look clásico (RMRS, capas de vestir)."},
-    {"capa": "abrigo", "arriba": "polo", "score": 1, "nota": "Polo fino bajo abrigo: inferido de la regla de capa intermedia ligera."},
-    {"capa": "abrigo", "arriba": "sudadera", "score": 0, "nota": "Fuentes contradictorias: sudadera gruesa desaconsejada (Apetogentleman); un abrigo marino sobre sudadera gris ligera aparece como ejemplo positivo en otra guía."},
-    {"capa": "abrigo", "arriba": "jersey", "score": 2, "nota": "Jersey fino o de punto como capa intermedia bajo abrigo de lana (RMRS, capa media)."}
+    {
+      "capa": "sobrecamisa",
+      "arriba": "camiseta",
+      "score": 2,
+      "nota": "Sobrecamisa sobre camiseta lisa: la combinacion basica (Apetogentleman, original; snippet de overshirt).",
+      "fuentes": 2
+    },
+    {
+      "capa": "sobrecamisa",
+      "arriba": "camisa",
+      "score": 1,
+      "nota": "Sobrecamisa sobre camisa: correcto si la camisa es lisa y el conjunto es ligero y holgado (snippet, varias guias).",
+      "fuentes": 2
+    },
+    {
+      "capa": "sobrecamisa",
+      "arriba": "polo",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "capa": "sobrecamisa",
+      "arriba": "sudadera",
+      "score": -1,
+      "nota": "Sudadera gruesa como capa interior: abulta y limita el movimiento (Apetogentleman, original).",
+      "fuentes": 1
+    },
+    {
+      "capa": "sobrecamisa",
+      "arriba": "jersey",
+      "score": 2,
+      "nota": "Jersey fino bajo sobrecamisa (Apetogentleman, original).",
+      "fuentes": 1
+    },
+    {
+      "capa": "chaqueta",
+      "arriba": "camiseta",
+      "score": 2,
+      "nota": "Chaqueta sobre camiseta (RMRS original; GG/RMRS fetch: capas de fino a grueso).",
+      "fuentes": 2
+    },
+    {
+      "capa": "chaqueta",
+      "arriba": "camisa",
+      "score": 2,
+      "nota": "Camisa de vestir bajo chaqueta; con chaleco en medio, mas formal (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "capa": "chaqueta",
+      "arriba": "polo",
+      "score": 0,
+      "nota": "Corregido: el 1 original era inferido. Sin fuente directa, se pone a 0.",
+      "fuentes": 0
+    },
+    {
+      "capa": "chaqueta",
+      "arriba": "sudadera",
+      "score": 1,
+      "nota": "Sudadera fina o ajustada bajo chaqueta casual (Apetogentleman, original; snippet: sudadera de 400 GSM o mas abulta bajo chaqueta denim).",
+      "fuentes": 2
+    },
+    {
+      "capa": "chaqueta",
+      "arriba": "jersey",
+      "score": 1,
+      "nota": "Jersey o cardigan fino bajo chaqueta de ante o lana (RMRS, original). Jersey grueso abulta.",
+      "fuentes": 1
+    },
+    {
+      "capa": "abrigo",
+      "arriba": "camiseta",
+      "score": 0,
+      "nota": "Solo si el abrigo tiene holgura (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "capa": "abrigo",
+      "arriba": "camisa",
+      "score": 2,
+      "nota": "Camisa bajo abrigo de lana o trench: look clasico (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "capa": "abrigo",
+      "arriba": "polo",
+      "score": 0,
+      "nota": "Corregido: el 1 original era inferido. Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "capa": "abrigo",
+      "arriba": "sudadera",
+      "score": 0,
+      "nota": "Fuentes contradictorias: sudadera gruesa desaconsejada (Apetogentleman) frente a ejemplo positivo en otra guia.",
+      "fuentes": 2
+    },
+    {
+      "capa": "abrigo",
+      "arriba": "jersey",
+      "score": 2,
+      "nota": "Jersey fino como capa intermedia bajo abrigo de lana (RMRS original; RMRS fetch: capas de fino a grueso).",
+      "fuentes": 2
+    }
   ],
   "style_pairs": [
-    {"a": "casual", "b": "casual", "score": 2, "nota": "Mismo registro: coherente."},
-    {"a": "casual", "b": "smart casual", "score": 2, "nota": "Registros vecinos: se mezclan muy bien (zapatillas limpias con chino)."},
-    {"a": "casual", "b": "deportivo", "score": 1, "nota": "Zapatillas limpias con vaquero o chino: contraste ligero que funciona (Hockerty y guías de calzado)."},
-    {"a": "casual", "b": "formal", "score": -1, "nota": "Americana formal con pantalón muy casual: desconectado (Gentleman's Gazette y guías de capas)."},
-    {"a": "smart casual", "b": "smart casual", "score": 2, "nota": "Mismo registro, coherente."},
-    {"a": "smart casual", "b": "deportivo", "score": 1, "nota": "Zapatillas limpias y minimalistas con chino o blazer: aceptado. Chándal con americana: ver type_pairs."},
-    {"a": "smart casual", "b": "formal", "score": 1, "nota": "Traje o americana con camisa de vestir y pantalón de vestir: registros vecinos (Thevou, capas de vestir)."},
-    {"a": "deportivo", "b": "deportivo", "score": 1, "nota": "Coherencia deportiva; sin fuente de estilo mixto."},
-    {"a": "deportivo", "b": "formal", "score": -2, "nota": "Chándal o forro con americana estructurada o traje: choque (MR PORTER, 'sweats con blazer'; pinstripe con forro polar se ve chocante)."},
-    {"a": "formal", "b": "formal", "score": 2, "nota": "Mismo registro: coherente."}
+    {
+      "a": "casual",
+      "b": "casual",
+      "score": 2,
+      "nota": "Mismo registro: coherente.",
+      "fuentes": 1
+    },
+    {
+      "a": "casual",
+      "b": "smart casual",
+      "score": 2,
+      "nota": "Registros vecinos: se mezclan bien (zapatillas limpias con chino).",
+      "fuentes": 2
+    },
+    {
+      "a": "casual",
+      "b": "deportivo",
+      "score": 1,
+      "nota": "Zapatillas limpias con vaquero o chino: contraste ligero que funciona.",
+      "fuentes": 2
+    },
+    {
+      "a": "casual",
+      "b": "formal",
+      "score": -1,
+      "nota": "Americana formal con pantalon muy casual: desconectado (GG y guias de capas, original).",
+      "fuentes": 2
+    },
+    {
+      "a": "smart casual",
+      "b": "smart casual",
+      "score": 2,
+      "nota": "Mismo registro, coherente.",
+      "fuentes": 1
+    },
+    {
+      "a": "smart casual",
+      "b": "deportivo",
+      "score": 1,
+      "nota": "Zapatillas blancas de piel limpias con chino o blazer: aceptado (Hockerty, Josbank, Stitch Fix en snippets). Zapatillas de running: no.",
+      "fuentes": 3
+    },
+    {
+      "a": "smart casual",
+      "b": "formal",
+      "score": 1,
+      "nota": "Americana con camisa de vestir y pantalon de vestir: registros vecinos (Thevou, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "deportivo",
+      "b": "deportivo",
+      "score": 1,
+      "nota": "Coherencia deportiva.",
+      "fuentes": 1
+    },
+    {
+      "a": "deportivo",
+      "b": "formal",
+      "score": -1,
+      "nota": "Corregido de -2 a -1: MR PORTER (original) rechaza chandal con americana, pero una guia (snippet) dice que la sudadera/jogger con americana estructurada funciona con estructura en dos prendas. Fuentes divididas: no es choque total.",
+      "fuentes": 2
+    },
+    {
+      "a": "formal",
+      "b": "formal",
+      "score": 2,
+      "nota": "Mismo registro: coherente.",
+      "fuentes": 1
+    }
   ],
   "pattern_pairs": [
-    {"a": "liso", "b": "rayas", "score": 2, "nota": "Una prenda con patrón y el resto liso: regla base de estampados."},
-    {"a": "liso", "b": "cuadros", "score": 2, "nota": "Patrón en una prenda, el resto liso: regla base."},
-    {"a": "liso", "b": "gráfico", "score": 2, "nota": "Una prenda gráfica sobre base lisa: lo más seguro (RMRS)."},
-    {"a": "liso", "b": "logo", "score": 1, "nota": "Logo sobre prenda lisa: correcto si es sobrio."},
-    {"a": "liso", "b": "texturizado", "score": 2, "nota": "Textura sin estampado: interés sin ruido (RMRS, varía textura)."},
-    {"a": "bloques de color", "b": "liso", "score": 2, "nota": "Bloques de color sobre prenda lisa neutra: un solo foco."},
-    {"a": "rayas", "b": "cuadros", "score": 1, "nota": "Mezcla clásica (Mr Porter, 'cómo mezclar rayas con cuadros') si la escala es distinta. Mismo tamaño: caótico."},
-    {"a": "rayas", "b": "gráfico", "score": -1, "nota": "Dos patrones llamativos: demasiado; uno solo."},
-    {"a": "cuadros", "b": "gráfico", "score": -1, "nota": "Dos patrones llamativos: demasiado."},
-    {"a": "gráfico", "b": "logo", "score": -2, "nota": "Logo y gráfico a la vez: desorden visual (MR PORTER: logos en americana y pantalón = desorden)."},
-    {"a": "logo", "b": "rayas", "score": -1, "nota": "Logo con patrón: uno de los dos debe ir solo."},
-    {"a": "logo", "b": "cuadros", "score": -1, "nota": "Logo con patrón: uno de los dos debe ir solo."},
-    {"a": "bloques de color", "b": "gráfico", "score": -1, "nota": "Dos piezas llamativas juntas."},
-    {"a": "bloques de color", "b": "rayas", "score": 0, "nota": "Sin fuente clara."},
-    {"a": "rayas", "b": "rayas", "score": 0, "nota": "Opiniones divididas: aceptable si la escala es distinta (camisa fina con corbata gruesa), no si es igual."},
-    {"a": "cuadros", "b": "cuadros", "score": 0, "nota": "Mismo patrón: opiniones divididas, solo con escala distinta."},
-    {"a": "gráfico", "b": "gráfico", "score": -1, "nota": "Dos piezas gráficas: demasiado."},
-    {"a": "logo", "b": "logo", "score": -1, "nota": "Dos logos visibles: clutter (MR PORTER)."},
-    {"a": "texturizado", "b": "rayas", "score": 1, "nota": "Textura en una pieza y rayas en otra: interés por textura (RMRS)."},
-    {"a": "texturizado", "b": "cuadros", "score": 1, "nota": "Textura con cuadros: mezcla razonable."},
-    {"a": "texturizado", "b": "gráfico", "score": 0, "nota": "Sin fuente clara."},
-    {"a": "texturizado", "b": "logo", "score": 0, "nota": "Sin fuente clara."},
-    {"a": "texturizado", "b": "bloques de color", "score": 1, "nota": "Textura con bloques de color: inferido."},
-    {"a": "texturizado", "b": "texturizado", "score": 1, "nota": "Misma familia en texturas distintas: tonal, pulido."},
-    {"a": "rayas", "b": "logo", "score": -1, "nota": "Ver logo con patrón."}
+    {
+      "a": "liso",
+      "b": "rayas",
+      "score": 2,
+      "nota": "Una prenda con patron y el resto liso: regla base de estampados (original; 'maximo dos patrones' en snippets).",
+      "fuentes": 2
+    },
+    {
+      "a": "liso",
+      "b": "cuadros",
+      "score": 2,
+      "nota": "Patron en una prenda, el resto liso: regla base.",
+      "fuentes": 2
+    },
+    {
+      "a": "liso",
+      "b": "gráfico",
+      "score": 2,
+      "nota": "Una prenda grafica sobre base lisa: lo mas seguro (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "liso",
+      "b": "logo",
+      "score": 1,
+      "nota": "Logo sobre prenda lisa: correcto si es sobrio.",
+      "fuentes": 1
+    },
+    {
+      "a": "liso",
+      "b": "texturizado",
+      "score": 2,
+      "nota": "Textura sin estampado: interes sin ruido (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "bloques de color",
+      "b": "liso",
+      "score": 2,
+      "nota": "Bloques de color sobre prenda lisa neutra: un solo foco (original, sin fuente nueva).",
+      "fuentes": 0
+    },
+    {
+      "a": "rayas",
+      "b": "cuadros",
+      "score": 1,
+      "nota": "Hespokestyle (snippet): combinar dos tipos de patron es la primera regla. Escala distinta: bien; misma escala: caotico.",
+      "fuentes": 2
+    },
+    {
+      "a": "rayas",
+      "b": "gráfico",
+      "score": -1,
+      "nota": "Dos patrones llamativos: demasiado; uno solo.",
+      "fuentes": 1
+    },
+    {
+      "a": "cuadros",
+      "b": "gráfico",
+      "score": -1,
+      "nota": "Dos patrones llamativos: demasiado.",
+      "fuentes": 1
+    },
+    {
+      "a": "gráfico",
+      "b": "logo",
+      "score": -2,
+      "nota": "Logo y grafico a la vez: desorden visual (MR PORTER, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "logo",
+      "b": "rayas",
+      "score": -1,
+      "nota": "Logo con patron: uno de los dos debe ir solo.",
+      "fuentes": 1
+    },
+    {
+      "a": "logo",
+      "b": "cuadros",
+      "score": -1,
+      "nota": "Logo con patron: uno de los dos debe ir solo.",
+      "fuentes": 1
+    },
+    {
+      "a": "bloques de color",
+      "b": "gráfico",
+      "score": -1,
+      "nota": "Dos piezas llamativas juntas.",
+      "fuentes": 0
+    },
+    {
+      "a": "bloques de color",
+      "b": "rayas",
+      "score": 0,
+      "nota": "Sin fuente clara.",
+      "fuentes": 0
+    },
+    {
+      "a": "rayas",
+      "b": "rayas",
+      "score": 0,
+      "nota": "Divididas: aceptable con escala distinta (snippet: 'two stripes fine if one smaller'), no si es igual. Se mantiene 0.",
+      "fuentes": 2
+    },
+    {
+      "a": "cuadros",
+      "b": "cuadros",
+      "score": 0,
+      "nota": "Mismo patron: divididas, solo con escala distinta.",
+      "fuentes": 2
+    },
+    {
+      "a": "gráfico",
+      "b": "gráfico",
+      "score": -1,
+      "nota": "Dos piezas graficas: demasiado.",
+      "fuentes": 1
+    },
+    {
+      "a": "logo",
+      "b": "logo",
+      "score": -1,
+      "nota": "Dos logos visibles: clutter (MR PORTER, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "texturizado",
+      "b": "rayas",
+      "score": 1,
+      "nota": "Textura en una pieza y rayas en otra: interes por textura (RMRS, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "texturizado",
+      "b": "cuadros",
+      "score": 1,
+      "nota": "Textura con cuadros: mezcla razonable.",
+      "fuentes": 1
+    },
+    {
+      "a": "texturizado",
+      "b": "gráfico",
+      "score": 0,
+      "nota": "Sin fuente clara.",
+      "fuentes": 0
+    },
+    {
+      "a": "texturizado",
+      "b": "logo",
+      "score": 0,
+      "nota": "Sin fuente clara.",
+      "fuentes": 0
+    },
+    {
+      "a": "texturizado",
+      "b": "bloques de color",
+      "score": 1,
+      "nota": "Textura con bloques de color: inferido (sin fuente nueva).",
+      "fuentes": 0
+    },
+    {
+      "a": "texturizado",
+      "b": "texturizado",
+      "score": 1,
+      "nota": "Misma familia en texturas distintas: tonal, pulido.",
+      "fuentes": 1
+    }
   ],
   "type_pairs": [
-    {"a": "camiseta", "b": "pantalón corto", "score": 2, "nota": "Básico de tiempo cálido (RMRS sobre pantalones cortos)."},
-    {"a": "camisa", "b": "pantalón corto", "score": 1, "nota": "Camisa con pantalón corto: solo con pantalón corto de vestir o tipo Bermuda."},
-    {"a": "polo", "b": "chino", "score": 2, "nota": "Polo marino con chino beige o blanco (guías de color)."},
-    {"a": "camisa", "b": "chino", "score": 2, "nota": "Camisa de cuadros o celeste con chino: smart casual."},
-    {"a": "camiseta", "b": "vaquero", "score": 2, "nota": "Básico casual."},
-    {"a": "camisa", "b": "vaquero", "score": 1, "nota": "Camisa con vaquero: correcto si es lisa."},
-    {"a": "jersey", "b": "pantalón", "score": 1, "nota": "Jersey fino con pantalón de vestir: smart casual."},
-    {"a": "camisa", "b": "chándal", "score": -1, "nota": "Contraste de registros: camisa de vestir con chándal. Sin fuente directa."},
-    {"a": "camiseta", "b": "chándal", "score": 1, "nota": "Camiseta con chándal: casual deportivo."},
-    {"a": "sudadera", "b": "vaquero", "score": 2, "nota": "Sudadera con vaquero: clásico casual, sobre todo en invierno."},
-    {"a": "sudadera", "b": "pantalón", "score": 0, "nota": "Sudadera con pantalón de vestir: solo si es smart casual; sin fuente directa."},
-    {"a": "chándal", "b": "zapatos", "score": -2, "nota": "Chándal con zapatos de vestir: choque; el calzado debe ser limpio y deportivo (MR PORTER, sweats+blazer)."},
-    {"a": "chándal", "b": "zapatillas", "score": 1, "nota": "Chándal con zapatillas limpias: casual deportivo."},
-    {"a": "chándal", "b": "botas", "score": -1, "nota": "Botas pesadas con chándal: desequilibrio."},
-    {"a": "pantalón corto", "b": "zapatillas", "score": 1, "nota": "Zapatillas blancas, bajas y limpias con pantalón a mitad de muslo: versátil (RMRS). Zapatillas de running o voluminosas: -1."},
-    {"a": "pantalón corto", "b": "zapatos", "score": -1, "nota": "Solo mocasines de ante claro o Derby de ante claro con Bermuda/chino (RMRS). Zapatos negros de vestir: no."},
-    {"a": "pantalón corto", "b": "botas", "score": -2, "nota": "Botas (combat, trabajo, senderismo) con pantalón corto: se evitan (RMRS)."},
-    {"a": "chino", "b": "zapatillas", "score": 1, "nota": "Zapatillas limpias con chino: choque justo que lo hace atractivo; con cuidado (Hockerty, guías)."},
-    {"a": "chino", "b": "zapatos", "score": 2, "nota": "Zapatos marrones con chino: smart casual clásico (Icon/guías de color)."},
-    {"a": "chino", "b": "botas", "score": 1, "nota": "Botas tipo chukka o desert con chino: casual."},
-    {"a": "vaquero", "b": "zapatillas", "score": 2, "nota": "Vaquero con zapatillas blancas: casual básico (Thevou)."},
-    {"a": "vaquero", "b": "botas", "score": 1, "nota": "Botas tipo Chelsea o desert con vaquero: casual."},
-    {"a": "vaquero", "b": "zapatos", "score": 0, "nota": "Sin consenso."},
-    {"a": "pantalón", "b": "zapatos", "score": 2, "nota": "Pantalón de vestir con zapatos: formal y smart casual."},
-    {"a": "pantalón", "b": "zapatillas", "score": -1, "nota": "Pantalón de vestir o entallado con zapatillas: desconectado (Gentleman's Gazette)."},
-    {"a": "pantalón", "b": "botas", "score": 1, "nota": "Pantalón de vestir con botas tipo chukka: smart casual (MR PORTER)."}
+    {
+      "a": "camiseta",
+      "b": "pantalón",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "camiseta",
+      "b": "vaquero",
+      "score": 2,
+      "nota": "Basico casual (Thevou, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "camiseta",
+      "b": "chino",
+      "score": 1,
+      "nota": "Camiseta con chino: casual, sin fuente nueva.",
+      "fuentes": 1
+    },
+    {
+      "a": "camiseta",
+      "b": "pantalón corto",
+      "score": 2,
+      "nota": "Basico de tiempo calido: Modest Man (fetch) recomienda camiseta bien ajustada con shorts de lino; RMRS (original).",
+      "fuentes": 2
+    },
+    {
+      "a": "camiseta",
+      "b": "chándal",
+      "score": 1,
+      "nota": "Camiseta con chandal: casual deportivo (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "camisa",
+      "b": "pantalón",
+      "score": 2,
+      "nota": "Camisa y pantalon de vestir: mismo registro; smart casual o formal (sin fuente nueva).",
+      "fuentes": 1
+    },
+    {
+      "a": "camisa",
+      "b": "vaquero",
+      "score": 1,
+      "nota": "Camisa con vaquero: correcto si es lisa (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "camisa",
+      "b": "chino",
+      "score": 2,
+      "nota": "Camisa de cuadros o celeste con chino: smart casual (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "camisa",
+      "b": "pantalón corto",
+      "score": 1,
+      "nota": "Camisa con pantalon corto: solo Bermuda o corto de vestir (AoM, fetch: 'Bermuda ... shorts with blazers' solo en tropicos).",
+      "fuentes": 2
+    },
+    {
+      "a": "camisa",
+      "b": "chándal",
+      "score": 0,
+      "nota": "Corregido: el -1 original era inferido. Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "polo",
+      "b": "pantalón",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "polo",
+      "b": "vaquero",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "polo",
+      "b": "chino",
+      "score": 2,
+      "nota": "Polo marino con chino beige o blanco (guias de color, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "polo",
+      "b": "pantalón corto",
+      "score": 2,
+      "nota": "Polo con shorts: Modest Man (fetch) y AoM; RMRS: polo con shorts y mocasines (original).",
+      "fuentes": 2
+    },
+    {
+      "a": "polo",
+      "b": "chándal",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "sudadera",
+      "b": "pantalón",
+      "score": 0,
+      "nota": "Solo smart casual; sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "sudadera",
+      "b": "vaquero",
+      "score": 2,
+      "nota": "Sudadera con vaquero: clasico casual, sobre todo en invierno (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "sudadera",
+      "b": "chino",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "sudadera",
+      "b": "pantalón corto",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "sudadera",
+      "b": "chándal",
+      "score": 1,
+      "nota": "Sudadera con jogger: 'generally fine for casual settings' (snippet de guia). Solo casual.",
+      "fuentes": 2
+    },
+    {
+      "a": "jersey",
+      "b": "pantalón",
+      "score": 1,
+      "nota": "Jersey fino con pantalon de vestir: smart casual (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "jersey",
+      "b": "vaquero",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "jersey",
+      "b": "chino",
+      "score": 1,
+      "nota": "Chinos con punto y americana (Marc Darcy, snippet): smart casual.",
+      "fuentes": 1
+    },
+    {
+      "a": "jersey",
+      "b": "chándal",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "jersey",
+      "b": "pantalón corto",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "pantalón",
+      "b": "zapatillas",
+      "score": -1,
+      "nota": "Pantalon de vestir con zapatillas: desconectado (GG, original; GG no reverificada en fetch).",
+      "fuentes": 1
+    },
+    {
+      "a": "pantalón",
+      "b": "zapatos",
+      "score": 2,
+      "nota": "Pantalon de vestir con zapatos: formal y smart casual (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "pantalón",
+      "b": "botas",
+      "score": 1,
+      "nota": "Pantalon de vestir con botas tipo chukka: smart casual (MR PORTER, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "vaquero",
+      "b": "zapatillas",
+      "score": 2,
+      "nota": "Vaquero con zapatillas blancas: casual basico (Thevou, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "vaquero",
+      "b": "botas",
+      "score": 1,
+      "nota": "Botas tipo Chelsea o desert con vaquero: casual (original; snippets de botas Chelsea).",
+      "fuentes": 1
+    },
+    {
+      "a": "vaquero",
+      "b": "zapatos",
+      "score": 0,
+      "nota": "Sin consenso.",
+      "fuentes": 0
+    },
+    {
+      "a": "chino",
+      "b": "zapatillas",
+      "score": 1,
+      "nota": "Zapatillas de piel limpias con chino: smart casual (Hockerty, Josbank, Stitch Fix, Mizzen en snippets). Running: no.",
+      "fuentes": 3
+    },
+    {
+      "a": "chino",
+      "b": "zapatos",
+      "score": 2,
+      "nota": "Zapatos marrones (mocasines o derby) con chino: smart casual clasico (original; snippet Josbank: mocasines solo smart casual).",
+      "fuentes": 2
+    },
+    {
+      "a": "chino",
+      "b": "botas",
+      "score": 1,
+      "nota": "Chelsea con chino: 'standard pairing' para look cuidado; botas de trabajo anchas, peor encaje (Timberland, snippet).",
+      "fuentes": 2
+    },
+    {
+      "a": "pantalón corto",
+      "b": "zapatillas",
+      "score": 1,
+      "nota": "Zapatillas blancas bajas y limpias con shorts: aceptado (RMRS original; Modest Man, fetch: high-tops con set camiseta+short). Running voluminoso: -1.",
+      "fuentes": 2
+    },
+    {
+      "a": "pantalón corto",
+      "b": "zapatos",
+      "score": 0,
+      "nota": "Corregido: AoM (fetch) dice que mocasines y boat shoes van bien con shorts; zapatos de vestir no. Mixto.",
+      "fuentes": 2
+    },
+    {
+      "a": "pantalón corto",
+      "b": "botas",
+      "score": -2,
+      "nota": "Botas (combat, trabajo, senderismo) con pantalon corto: se evitan (RMRS, original; no reverificada).",
+      "fuentes": 1
+    },
+    {
+      "a": "pantalón corto",
+      "b": "chándal",
+      "score": 0,
+      "nota": "Sin fuente directa.",
+      "fuentes": 0
+    },
+    {
+      "a": "chándal",
+      "b": "zapatillas",
+      "score": 1,
+      "nota": "Chandal con zapatillas limpias: casual deportivo (original).",
+      "fuentes": 1
+    },
+    {
+      "a": "chándal",
+      "b": "zapatos",
+      "score": -2,
+      "nota": "Chandal con zapatos de vestir: choque (MR PORTER, original).",
+      "fuentes": 1
+    },
+    {
+      "a": "chándal",
+      "b": "botas",
+      "score": 0,
+      "nota": "Corregido: el -1 original no tenia fuente. Sin fuente directa.",
+      "fuentes": 0
+    }
   ],
   "temperature": [
-    {"regla": "Por debajo de 4 °C: abrigo o capa exterior con capa intermedia (jersey o sudadera), pantalón largo, gorro y guantes (Nike, banda -12 a -4 °C con capa intermedia y shell).", "min_c": null, "max_c": 4},
-    {"regla": "Entre -3 y 4 °C: chaqueta exterior o cortavientos sobre capa base; capa intermedia opcional si se está quieto. Pantalón largo.", "min_c": -3, "max_c": 4},
-    {"regla": "Entre 4 y 13 °C: chaqueta ligera o cortavientos; capa intermedia recomendable. Pantalón largo.", "min_c": 4, "max_c": 13},
-    {"regla": "Entre 13 y 21 °C: capa base con cortavientos si llueve o hace viento; sin abrigo. Pantalón largo; capa intermedia por si baja la temperatura.", "min_c": 13, "max_c": 21},
-    {"regla": "Entre 21 y 29 °C: camiseta o polo; pantalón corto o pantalón ligero admitido; chaqueta solo como capa opcional.", "min_c": 21, "max_c": 29},
-    {"regla": "A partir de 29 °C: sin capa exterior; camiseta o polo; pantalón corto o pantalón ligero.", "min_c": 29, "max_c": null}
+    {
+      "regla": "Por debajo de 0 °C: abrigo pesado; capa intermedia (jersey o sudadera) bajo el abrigo; pantalon largo. Gorro y guantes si hay viento (guia de capas de tienda, snippet; Nike para correr: bajo 5 °C 'abrigate bien').",
+      "min_c": null,
+      "max_c": 0,
+      "fuentes": 2,
+      "nota": "Umbral de abrigo pesado: 0 °C (guia de estilo, 32 °F) frente a 5 °C (Nike, pensada para correr). Contradiccion entre fuentes; se toma 0 °C para calle."
+    },
+    {
+      "regla": "Entre 0 y 10 °C: chaqueta de entretiempo gruesa, de lana o tweed; capa intermedia; pantalon largo.",
+      "min_c": 0,
+      "max_c": 10,
+      "fuentes": 2,
+      "nota": "Guia de estilo (snippet): banda 32-50 °F con chaqueta de lana/tweed o gabardina. Nike: 4-13 °C capa base + shell (uso deportivo)."
+    },
+    {
+      "regla": "Entre 10 y 18 °C: chaqueta ligera (bomber, denim, trench, cortavientos); sin abrigo; pantalon largo. Camiseta o camisa debajo.",
+      "min_c": 10,
+      "max_c": 18,
+      "fuentes": 2,
+      "nota": "Guia de estilo (snippet): banda 50-65 °F con chaqueta ligera. Nike: 13-21 °C capa base + cortavientos (uso deportivo)."
+    },
+    {
+      "regla": "Entre 18 y 25 °C: sin chaqueta o solo ligera; pantalon largo o chino. Pantalon corto admitido si hace sol y calma; con viento o nublado, mejor pantalon largo.",
+      "min_c": 18,
+      "max_c": 25,
+      "fuentes": 3,
+      "nota": "Umbral de shorts: 18-20 °C en varias fuentes (guia alemana ~20 °C, blog britanico 18 °C, arhfoundation 60 °F = 15,5 °C como limite inferior). Fuentes de baja calidad. Forum: personas muy distintas (10-30 °C). AoM: pasar a pantalon 'en cuanto sea soportable'."
+    },
+    {
+      "regla": "A partir de 25 °C: pantalon corto o pantalon ligero; camiseta o polo; chaqueta solo como capa opcional. A partir de 29 °C, sin capa exterior.",
+      "min_c": 25,
+      "max_c": null,
+      "fuentes": 3,
+      "nota": "25 °C (77 °F) es el umbral mas citado para shorts en blogs; AoM: 'hot enough that you really want them'. GG y Mr Porter no dan cifra (solo dicen que es clima calido). Original 21 °C y 29 °C se ajustan a 25 °C para shorts y 29 °C se mantiene solo como limite de 'sin capa'."
+    },
+    {
+      "regla": "Pantalon corto con frio: llama la atencion y se evita (AoM, fetch: 'wearing shorts when it's cold out is going to draw attention'). Cuando hace frio, pantalon largo aunque haga sol.",
+      "min_c": null,
+      "max_c": null,
+      "fuentes": 1,
+      "nota": "Regla de contexto, no de umbral numerico."
+    }
   ],
   "otras": [
-    "Tres capas como máximo: base fina (camiseta, henley, jersey fino), intermedia (jersey, cárdigan, chaleco) y exterior (abrigo, chaqueta). Cuatro o más abultan (RMRS).",
-    "Ordenar por grosor: lo más fino dentro, lo más grueso fuera. La prenda exterior debe ser la más larga (RMRS).",
-    "Solo una prenda voluminosa o con cremallera por look: dos abultadas a la vez pesan. Parar si hay tirones de tela o sudor (Apetogentleman).",
-    "Cada capa debe funcionar sola: si no se vería bien sola, quitarla (RMRS).",
-    "Camisa bajo jersey: smart casual con cuello y puños visibles; con chaleco y americana, look más formal (RMRS).",
-    "Sudadera con capucha gruesa: no como capa interior bajo chaqueta; mejor una sudadera ajustada, o una camiseta/jersey fino.",
-    "Un abrigo sobre capa ligera debe tener holgura. Si cierra justo sobre una camiseta, le falta espacio (RMRS).",
-    "No repetir patrón del mismo tipo y escala en capas: vaquero sobre vaquero, rayas sobre rayas (RMRS).",
-    "Zapatillas limpias y minimalistas: sin running, sin suela gruesa ni logos llamativos, con pantalón de vestir o pantalón corto (RMRS, Primer, Permanent Style).",
-    "Los colores o pesos dominantes (traje, abrigo, pantalón) se equilibran con acentos pequeños (corbata, pañuelo, calcetines) (RMRS).",
-    "Las reglas de color son orientativas: una guía dice 'seguir el instinto' si el look encaja con la ocasión (RMRS).",
-    "Demasiada sobrecarga de patrones (rayas, cuadros y gráficos a la vez): máximo dos patrones por look (Mr Porter y guías de patrón).",
-    "Calcetines: un acento vivo en calcetines es la forma más segura de meter color sin tocar la silueta (RMRS, 4 colores).",
-    "Las fuentes son sobre todo blogs y tiendas; no se encontraron GQ, Esquire, Permanent Style (bloqueado 403) ni r/malefashionadvice en la búsqueda, así que la mayoría de reglas tienen 1-3 fuentes."
+    "Tres capas como maximo: base fina, intermedia y exterior. Cuatro o mas abultan. RMRS (fetch): 'The magic number here is 3'.",
+    "Ordenar por grosor: lo mas fino dentro, lo mas grueso fuera. La prenda exterior debe ser la mas larga (RMRS, fetch: 'layer thin to thick').",
+    "Solo una prenda voluminosa o con cremallera por look: dos abultadas a la vez pesan (Apetogentleman, original).",
+    "Cada capa debe funcionar sola: si no se veria bien sola, quitarla (RMRS, fetch: 'Make each layer work alone').",
+    "Camisa bajo jersey: smart casual con cuello y punos visibles; con chaleco y americana, mas formal (RMRS, original).",
+    "Sudadera con capucha gruesa: no como capa interior bajo chaqueta; mejor una sudadera ajustada, o una camiseta o jersey fino.",
+    "Un abrigo sobre capa ligera debe tener holgura (RMRS, original).",
+    "No repetir patron del mismo tipo en capas: vaquero sobre vaquero, rayas sobre rayas (RMRS, fetch: 'Avoid repeating patterns'; el aviso de denim sobre denim aparece literal).",
+    "Zapatillas limpias y minimalistas: sin running, sin suela gruesa ni logos llamativos (Hockerty, Josbank y Stitch Fix en snippets; RMRS original).",
+    "Los colores o pesos dominantes (traje, abrigo, pantalon) se equilibran con acentos pequenos (corbata, panuelo, calcetines) (RMRS, fetch).",
+    "Las reglas de color son orientativas. Varias guias (snippets y GG) lo dicen: el contexto y la ocasion pesan mas.",
+    "Maximo dos patrones por look (Mr Porter y Hespokestyle, original y snippet).",
+    "Calcetines: un acento vivo en calcetines es la forma mas segura de meter color sin tocar la silueta (RMRS, original).",
+    "Shorts (GG, fetch): no con americana ni corbata salvo en climas tropicales; calcetines visibles no. AoM (fetch): en negocios, pantalon; las Bermuda son la excepcion en tropicos.",
+    "Pantalon corto: GG (fetch) recomienda colores claros o neutros y evitar negro o carbon: 'Shorts are made for warm weather'.",
+    "Fuentes: las guias de mayor calidad (RMRS, GG, AoM, Modest Man, Thevou, Westwood Hart) se han abierto en parte; Mr Porter, Esquire y GQ devolvieron 403 o no aparecieron. Muchas reglas se basan en snippets de blogs de baja calidad."
   ],
   "fuentes": [
-    "https://www.realmenrealstyle.com/match-colors-style-rules/",
-    "https://www.realmenrealstyle.com/style-layer-rules/",
-    "https://www.realmenrealstyle.com/3-color-outfits/",
-    "https://www.realmenrealstyle.com/shoes-with-shorts/",
-    "https://www.apetogentleman.com/new-rules-winter-layering/",
-    "https://www.nike.com/au/a/how-to-layer-clothes",
-    "https://thevou.com/blog/three-colour-rule-style-guide-men/",
-    "https://www.mrporter.com/en-it/journal/fashion/you-asked-can-i-wear-sweatpants-with-a-blazer-872204",
-    "https://www.mrporter.com/en-us/journal/fashion/how-to-mix-stripes-with-checks-686194",
-    "https://www.mrporter.com/journal/fashion/what-shoes-to-wear-with-chinos-666684",
-    "https://westwoodhart.com/blogs/westwood-hart/mens-wardrobe-color-combinations-classic-menswear-palette",
-    "https://www.sayki.com/blogs/sayki/navy-suit-brown-shoes-a-complete-style-guide",
-    "https://icon-amsterdam.com/es/pages/como-combinar-tonos-de-ropa-para-hombres",
-    "https://hespokestyle.com/pattern-mixing-rules",
-    "https://www.hockerty.com/en/blog/chinos-and-sneakers",
-    "https://www.gentlemansgazette.com/dress-sneakers-for-men/",
-    "https://www.permanentstyle.com/2017/10/how-to-wear-trainers-part-3-style.html"
+    "LEIDA (fetch): https://www.realmenrealstyle.com/match-colors-style-rules/",
+    "LEIDA (fetch): https://www.realmenrealstyle.com/style-layer-rules/",
+    "LEIDA (fetch): https://www.gentlemansgazette.com/earth-tones-outfit-ideas/",
+    "LEIDA (fetch): https://www.gentlemansgazette.com/summer-shorts-guide/",
+    "LEIDA (fetch): https://www.gentlemansgazette.com/how-to-pair-brown-gray/",
+    "LEIDA (fetch): https://thevou.com/blog/two-colours-go-well-together-men/",
+    "LEIDA (fetch): https://www.artofmanliness.com/style/clothing/guide-to-shorts/",
+    "LEIDA (fetch): https://www.themodestman.com/how-to-wear-shorts",
+    "SNIPPET (busqueda): https://www.gentlemansgazette.com/matching-colors-for-men/",
+    "SNIPPET (busqueda): https://www.gentlemansgazette.com/how-wear-pink-menswear/",
+    "SNIPPET (busqueda): https://www.gentlemansgazette.com/how-to-wear-pair-orange/",
+    "SNIPPET (busqueda): https://www.gentlemansgazette.com/dress-sneakers-for-men/ (no leida)",
+    "SNIPPET (busqueda): https://www.menswearhouse.com/blog/?p=9072 (fetch bloqueado, Access Denied)",
+    "SNIPPET (busqueda): https://www.mrporter.com/en-us/journal/fashion/you-asked-whats-the-rule-on-navy-and-black-539166 (fetch 403)",
+    "SNIPPET (busqueda): https://www.mrporter.com/en-gb/journal/fashion/the-grown-mans-guide-to-wearing-shorts-543086 (fetch 403)",
+    "SNIPPET (busqueda): https://www.mrporter.com/en-es/journal/fashion/the-mans-guide-to-wearing-colour-528672",
+    "SNIPPET (busqueda): https://westwoodhart.com/blogs/westwood-hart/mens-wardrobe-color-combinations-classic-menswear-palette",
+    "SNIPPET (busqueda): https://hespokestyle.com/pattern-mixing-rules (fetch no realizado)",
+    "SNIPPET (busqueda): https://www.hockerty.com/en/blog/chinos-and-sneakers",
+    "SNIPPET (busqueda): https://www.arhfoundation.org/what-temperature-wear-shorts (baja calidad)",
+    "SNIPPET (busqueda): https://www.permanentstyle.com/2024/10/combining-colours-and-patterns-how-to-dress-like-andreas-weinas",
+    "SNIPPET (busqueda): https://www.alpineswiss.com/blog/a-mans-guide-to-combining-colors/",
+    "SNIPPET (busqueda): https://www.studiosuits.com/en-in/blogs/articles/best-color-combinations",
+    "ORIGINAL (no reverificada en esta sesion): https://www.realmenrealstyle.com/3-color-outfits/",
+    "ORIGINAL (no reverificada): https://www.realmenrealstyle.com/shoes-with-shorts/",
+    "ORIGINAL (no reverificada): https://www.apetogentleman.com/new-rules-winter-layering/",
+    "ORIGINAL (no reverificada): https://www.nike.com/au/a/how-to-layer-clothes",
+    "ORIGINAL (no reverificada): https://thevou.com/blog/three-colour-rule-style-guide-men/",
+    "ORIGINAL (no reverificada): https://westwoodhart.com/blogs/westwood-hart/mens-wardrobe-color-combinations-classic-menswear-palette",
+    "ORIGINAL (no reverificada): https://www.sayki.com/blogs/sayki/navy-suit-brown-shoes-a-complete-style-guide",
+    "ORIGINAL (no reverificada): https://icon-amsterdam.com/es/pages/como-combinar-tonos-de-ropa-para-hombres",
+    "ORIGINAL (no reverificada): https://www.mrporter.com/en-it/journal/fashion/you-asked-can-i-wear-sweatpants-with-a-blazer-872204",
+    "ORIGINAL (no reverificada): https://www.mrporter.com/en-us/journal/fashion/how-to-mix-stripes-with-checks-686194",
+    "ORIGINAL (no reverificada): https://www.mrporter.com/en-it/journal/fashion/what-shoes-to-wear-with-chinos-666684",
+    "ORIGINAL (no reverificada): https://www.gentlemansgazette.com/dress-sneakers-for-men/",
+    "ORIGINAL (no reverificada): https://www.permanentstyle.com/2017/10/how-to-wear-trainers-part-3-style.html"
   ]
 }

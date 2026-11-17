@@ -16,6 +16,7 @@ _FILE = Path(__file__).with_name("style_rules.json")
 W_COLOR, W_STYLE, W_PATTERN, W_TYPE, W_LAYER = 0.4, 0.3, 0.3, 0.5, 0.6
 # Regla del usuario: una cazadora o sobrecamisa encima de una sudadera con cremallera no se pone.
 ZIP_CLASH = -10.0
+BULKY_UNDER_LAYER = -2.0
 
 
 @lru_cache(maxsize=1)
@@ -39,6 +40,10 @@ def _denim_blue(piece) -> bool:
 
 
 def has_zip(piece) -> bool:
+    """Cremallera entera. Si la prenda aún no tiene palabras clave, se busca en el texto."""
+    closure = getattr(piece, "closure", None)
+    if closure is not None:
+        return closure == "cremallera"
     return "cremallera" in (getattr(piece, "details", "") or "").lower()
 
 
@@ -59,4 +64,10 @@ def prior(pieces: list) -> float:
         total += W_LAYER * t["layers"].get((layer.type, top.type), 0.0)
         if top.type == "sudadera" and has_zip(top) and layer.type in ("chaqueta", "sobrecamisa"):
             total += ZIP_CLASH
+        if layer.type != "abrigo":
+            # Bajo una cazadora o una sobrecamisa no cabe bien algo gordo, ni algo ancho si la capa es ajustada.
+            if getattr(top, "thickness", None) == "grueso":
+                total += BULKY_UNDER_LAYER
+            if getattr(top, "fit", None) == "ancho" and getattr(layer, "fit", None) == "ajustado":
+                total += BULKY_UNDER_LAYER
     return total

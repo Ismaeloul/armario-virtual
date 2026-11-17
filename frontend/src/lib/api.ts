@@ -12,6 +12,10 @@ export type GarmentFields = {
   colors_secondary: Color[];
   pattern: string;
   style: string;
+  closure: string | null;
+  hood: boolean;
+  fit: string | null;
+  thickness: string | null;
   details: string;
   season: string;
   brand: string | null;
@@ -53,6 +57,9 @@ export type Catalog = {
   colors: string[];
   patterns: string[];
   styles: string[];
+  closures: string[];
+  fits: string[];
+  thicknesses: string[];
   ai_providers: string[];
   themes: string[];
 };

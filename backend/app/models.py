@@ -22,6 +22,10 @@ class Garment(Base):
     colors_secondary: Mapped[list] = mapped_column(JSON, default=list)  # [{name, hex}]
     pattern: Mapped[str] = mapped_column(String(40))
     style: Mapped[str] = mapped_column(String(40))
+    closure: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    hood: Mapped[bool | None] = mapped_column(nullable=True)
+    fit: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    thickness: Mapped[str | None] = mapped_column(String(20), nullable=True)
     details: Mapped[str] = mapped_column(Text, default="")
     season: Mapped[str] = mapped_column(String(20), index=True)
     brand: Mapped[str | None] = mapped_column(String(80), nullable=True)

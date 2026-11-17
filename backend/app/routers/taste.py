@@ -42,7 +42,7 @@ class RateIn(BaseModel):
 def piece(g: Garment) -> taste.Piece:
     return taste.Piece(
         id=g.id, type=g.type, category=g.category, color=g.color_primary, style=g.style, pattern=g.pattern,
-        details=f"{g.name} {g.details or ''}",
+        details=f"{g.name} {g.details or ''}", closure=g.closure, fit=g.fit, thickness=g.thickness,
     )
 
 

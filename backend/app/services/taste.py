@@ -29,6 +29,9 @@ class Piece:
     style: str
     pattern: str
     details: str = ""
+    closure: str | None = None
+    fit: str | None = None
+    thickness: str | None = None
 
 
 @dataclass

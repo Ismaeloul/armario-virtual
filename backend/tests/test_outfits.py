@@ -49,7 +49,7 @@ def test_con_frio_anade_capa_exterior_y_con_calor_no():
 def test_con_calor_no_elige_prendas_de_invierno_si_hay_alternativa():
     prendas = BASICO + [item(5, "parte_superior", season="invierno", type_="sudadera")]
     for seed in range(20):
-        assert 5 not in propose(prendas, 30, 0, HOY, rng=random.Random(seed)).ids
+        assert 5 not in propose(prendas, 30, 0, date(2026, 7, 10), rng=random.Random(seed)).ids
 
 
 def test_no_repite_una_combinacion_ya_propuesta():
@@ -171,3 +171,23 @@ def test_sin_dato_del_tiempo_propone_igual(client, sin_tiempo, photo_bytes):
     _armario(client, photo_bytes)
     hoy = client.get("/api/today").json()
     assert hoy["weather"] is None and hoy["outfit"] is not None
+
+
+def test_fuera_de_los_meses_de_calor_no_propone_ropa_de_verano_aunque_suba_la_temperatura():
+    prendas = [
+        item(1, "parte_superior", type_="camiseta"),
+        item(2, "parte_superior", type_="sudadera", season="invierno"),
+        item(3, "parte_inferior", type_="pantalón corto", season="verano"),
+        item(4, "parte_inferior", color="azul", type_="vaquero"),
+        item(5, "calzado", color="blanco", type_="zapatillas"),
+    ]
+    for semilla in range(20):
+        invierno = propose(prendas, 24, 0, date(2026, 2, 20), rng=random.Random(semilla))
+        assert {p.id for p in invierno.items} == {2, 4, 5}
+    verano = propose(prendas, 30, 0, date(2026, 7, 10), rng=random.Random(1))
+    assert 2 not in {p.id for p in verano.items}
+
+
+def test_la_camiseta_de_manga_larga_no_cuenta_como_de_verano():
+    larga = item(1, "parte_superior", details="Camiseta manga larga")
+    assert outfits.summer_only(item(2, "parte_superior")) and not outfits.summer_only(larga)

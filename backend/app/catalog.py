@@ -43,6 +43,12 @@ PATTERNS = ["liso", "rayas", "cuadros", "bloques de color", "gráfico", "logo", 
 
 STYLES = ["casual", "smart casual", "deportivo", "formal"]
 
+# Palabras clave de la prenda: las reglas de estilo las usan tal cual, sin leer el texto de detalles.
+# No se aplican al calzado (se quedan vacías).
+CLOSURES = ["sin cierre", "botones", "media cremallera", "cremallera"]
+FITS = ["ajustado", "normal", "ancho"]
+THICKNESSES = ["fino", "medio", "grueso"]
+
 AI_PROVIDERS = ["codex", "claude"]
 THEMES = ["claro", "oscuro", "sistema"]
 
@@ -59,6 +65,9 @@ def as_dict() -> dict:
         "colors": COLORS,
         "patterns": PATTERNS,
         "styles": STYLES,
+        "closures": CLOSURES,
+        "fits": FITS,
+        "thicknesses": THICKNESSES,
         "ai_providers": AI_PROVIDERS,
         "themes": THEMES,
     }

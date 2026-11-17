@@ -11,6 +11,10 @@ export const EMPTY_GARMENT: GarmentFields = {
   colors_secondary: [],
   pattern: "liso",
   style: "casual",
+  closure: null,
+  hood: false,
+  fit: null,
+  thickness: null,
   details: "",
   season: "todo_el_ano",
   brand: null,
@@ -160,6 +164,47 @@ export function GarmentForm({
           </select>
         </Field>
       </div>
+
+      {catalog.types[form.type] !== "calzado" && (
+        <>
+      <div className="grid grid-cols-3 gap-2">
+        <Field label={t.nueva.campos.cierre}>
+          <select className={inputClass} value={form.closure ?? ""} onChange={(e) => set("closure", e.target.value || null)}>
+            <option value="">{t.nueva.campos.sinDato}</option>
+            {catalog.closures.map((v) => (
+              <option key={v} value={v}>
+                {cap(v)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t.nueva.campos.corte}>
+          <select className={inputClass} value={form.fit ?? ""} onChange={(e) => set("fit", e.target.value || null)}>
+            <option value="">{t.nueva.campos.sinDato}</option>
+            {catalog.fits.map((v) => (
+              <option key={v} value={v}>
+                {cap(v)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t.nueva.campos.grosor}>
+          <select className={inputClass} value={form.thickness ?? ""} onChange={(e) => set("thickness", e.target.value || null)}>
+            <option value="">{t.nueva.campos.sinDato}</option>
+            {catalog.thicknesses.map((v) => (
+              <option key={v} value={v}>
+                {cap(v)}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+      <label className="flex items-center gap-2 text-sm text-text">
+        <input type="checkbox" checked={form.hood} onChange={(e) => set("hood", e.target.checked)} />
+        {t.nueva.campos.capucha}
+      </label>
+        </>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <span className="label-caps text-text-2">{t.nueva.campos.temporada}</span>

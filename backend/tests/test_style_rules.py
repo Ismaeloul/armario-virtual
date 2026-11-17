@@ -39,3 +39,22 @@ def test_chandal_con_zapatos_puntua_peor_que_con_zapatillas():
     zapatos = p(3, "zapatos", "calzado", style="formal")
     zapatillas = p(3, "zapatillas", "calzado", "blanco")
     assert style_rules.prior([top, chandal, zapatos]) < style_rules.prior([top, chandal, zapatillas])
+
+
+def test_las_palabras_clave_mandan_sobre_el_texto():
+    cazadora = p(1, "chaqueta", "capa_exterior")
+    vaquero = p(3, "vaquero", "parte_inferior", "azul")
+    media = p(2, "sudadera", "parte_superior", details="Sudadera con cremallera en el cuello")
+    media.closure = "media cremallera"  # el texto dice cremallera, pero no es entera
+    entera = p(2, "sudadera", "parte_superior", details="Sudadera con capucha")
+    entera.closure = "cremallera"
+    assert not style_rules.has_zip(media) and style_rules.has_zip(entera)
+    assert style_rules.prior([cazadora, entera, vaquero]) < style_rules.prior([cazadora, media, vaquero]) - 3
+
+
+def test_algo_grueso_bajo_una_cazadora_puntua_peor():
+    cazadora = p(1, "chaqueta", "capa_exterior")
+    vaquero = p(3, "vaquero", "parte_inferior", "azul")
+    fino, gordo = p(2, "jersey", "parte_superior"), p(2, "jersey", "parte_superior")
+    fino.thickness, gordo.thickness = "fino", "grueso"
+    assert style_rules.prior([cazadora, gordo, vaquero]) < style_rules.prior([cazadora, fino, vaquero])

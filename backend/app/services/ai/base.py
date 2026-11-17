@@ -53,6 +53,10 @@ OUTPUT_SCHEMA = {
         "colors_secondary": {"type": "array", "items": _COLOR_SCHEMA},
         "pattern": {"type": "string", "enum": catalog.PATTERNS},
         "style": {"type": "string", "enum": catalog.STYLES},
+        "closure": {"type": ["string", "null"], "enum": [*catalog.CLOSURES, None]},
+        "hood": {"type": "boolean"},
+        "fit": {"type": ["string", "null"], "enum": [*catalog.FITS, None]},
+        "thickness": {"type": ["string", "null"], "enum": [*catalog.THICKNESSES, None]},
         "details": {"type": "string", "description": "Corte, cuello, cierres… una frase breve"},
         "season": {"type": "string", "enum": list(catalog.SEASONS)},
         "brand": {"type": ["string", "null"]},
@@ -62,6 +66,7 @@ OUTPUT_SCHEMA = {
     },
     "required": [
         "name", "type", "color_primary", "color_primary_alt", "colors_secondary", "pattern", "style",
+        "closure", "hood", "fit", "thickness",
         "details", "season", "brand", "size", "notes", "confidence",
     ],
     "additionalProperties": False,
@@ -96,6 +101,11 @@ El lavado desgastado de un vaquero no cuenta: un vaquero sin dibujo es "liso".
 sobrecamisa y chaquetas finas.
   - Solo te sales de esta regla si el tejido lo deja claro: una sudadera muy fina es "todo_el_ano", \
 una camisa de franela gruesa es "invierno".
+- Palabras clave de la prenda (si es calzado: "closure", "fit" y "thickness" van a null y "hood" a false):
+  - "closure": cómo se abre por delante. "cremallera" si la cremallera va de arriba abajo; "media cremallera" si solo abre el cuello o medio pecho; "botones" si se abrocha con botones (camisa, polo, sobrecamisa, cárdigan); "sin cierre" si se mete por la cabeza. En pantalones, siempre "sin cierre".
+  - "hood": true solo si tiene capucha.
+  - "fit": el corte. "ajustado" si va pegado al cuerpo (slim, skinny), "ancho" si es holgado (oversize, boxy, relaxed, baggy, balloon), "normal" en el resto.
+  - "thickness": el grosor del tejido. "fino" (camiseta, camisa, lino, cortavientos), "medio" (sudadera normal, vaquero, chino, jersey fino, sobrecamisa), "grueso" (punto gordo, borreguito, acolchado, paño de abrigo).
 - "color_primary": el color dominante. "colors_secondary": otros colores visibles (lista vacía si es de un solo color). \
 En "hex" pon el tono real que ves en la foto.
 - "color_primary_alt": si el color principal está entre dos nombres de la lista y otra persona podría elegir el otro (blanco o crudo, gris o negro, azul o celeste, beige o marrón, verde o verde oliva…), pon aquí ese segundo candidato. Si el color es claro, null. No lo uses para los colores secundarios.
