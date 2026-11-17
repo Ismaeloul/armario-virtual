@@ -9,12 +9,16 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 - Fase 1: prototipo completo en local. Hoy provisional; Armario (filtros, vacío, botón "+"); Nueva prenda
   (análisis, borrador, error, a mano); Ficha (fotos, favorita, lavadora, uso, editar, eliminar); Ajustes
   (tema, IA, lavadora, aviso y ciudad guardados para la Fase 2). Las fotos huérfanas se limpian al arrancar.
-- Pendiente de la Fase 1: desplegar y probar en el Umbrel (Docker y Codex dentro del contenedor sin probar,
-  aquí no hay Docker), probar Claude con API key real, probar la cámara desde el iPhone y, al final,
-  quitar el fondo de las fotos.
+- Desplegada en el Umbrel como app de la tienda propia (`Ismaeloul/umbrel-app-store`, carpeta
+  `ismaeloul-armario`, puerto 7798, detrás del login de Umbrel). El usuario ha añadido una prenda allí y
+  Codex la ha analizado dentro del contenedor (17-11-2026).
+- Publicar una versión: subir el tag `vX.Y.Z` en este repo (el workflow publica
+  `ghcr.io/ismaeloul/armario:X.Y.Z`) y actualizar `version` e `image` en la carpeta de la tienda.
+  El Umbrel tarda unos minutos en refrescar la tienda; no instalar hasta ver la versión nueva.
+- Pendiente de la Fase 1: probar Claude con API key real (se pega en Ajustes), probar el resto de
+  pantallas y la cámara desde el iPhone y, al final, quitar el fondo de las fotos.
 - "Crear look con esta prenda" se muestra desactivado ("Pronto"): llega en la Fase 3.
-- Codex por suscripción probado en el PC con `codex exec`: funciona, unos 12-18 s por análisis.
-  Sin probar todavía dentro del contenedor.
+- Codex por suscripción: funciona en el PC (12-18 s por análisis) y dentro del contenedor del Umbrel.
 
 ## Comandos
 
