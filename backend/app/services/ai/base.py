@@ -68,11 +68,26 @@ Eres el catalogador de un armario personal. Te paso {fotos} de UNA prenda de rop
 
 Describe la prenda rellenando el esquema JSON. Reglas:
 - Escribe en español.
-- "name": nombre corto y natural, como lo diría su dueño ("Bomber negra", "Camiseta boxy cruda").
+- "name": nombre corto y natural, como lo diría su dueño ("Bomber negra", "Camiseta boxy cruda"). \
+Siempre en singular, también los pantalones: "Vaquero ancho azul", no "Vaqueros anchos azules".
 - "type", "pattern", "style", "season" y los nombres de color solo pueden ser valores de las listas del esquema. \
 Elige el más cercano.
-- "season": una sola. "verano" para prendas claramente de calor, "invierno" para prendas claramente de frío, \
-"todo_el_ano" para el resto.
+- "pattern": mira el dibujo de la tela, no su tacto.
+  - "liso": un solo color, sin nada estampado.
+  - "logo": un logo, una marca o un texto pequeño (en el pecho, en la manga), aunque el resto sea de un color.
+  - "gráfico": un dibujo, una ilustración o un texto grande que ocupa buena parte de la prenda. \
+Si delante hay un logo pequeño y detrás un dibujo grande, es "gráfico".
+  - "bloques de color": varias franjas o paneles grandes de colores distintos.
+  - "rayas" y "cuadros": solo si el patrón se repite por toda la tela.
+  - "texturizado": solo cuando el relieve del tejido es lo que más se ve (punto grueso, pana, borreguito). \
+El lavado desgastado de un vaquero no cuenta: un vaquero sin dibujo es "liso".
+- "season": una sola, y decide por el tipo de prenda para que dos prendas parecidas salgan siempre igual.
+  - "invierno": sudadera, jersey, abrigo, botas y chaquetas gruesas o acolchadas.
+  - "verano": pantalón corto y prendas de tejido muy fino o fresco (lino, tirantes).
+  - "todo_el_ano": camiseta, camisa, polo, vaquero, chino, pantalón, chándal, zapatillas, zapatos, \
+sobrecamisa y chaquetas finas.
+  - Solo te sales de esta regla si el tejido lo deja claro: una sudadera muy fina es "todo_el_ano", \
+una camisa de franela gruesa es "invierno".
 - "color_primary": el color dominante. "colors_secondary": otros colores visibles (lista vacía si es de un solo color). \
 En "hex" pon el tono real que ves en la foto.
 - {marca}

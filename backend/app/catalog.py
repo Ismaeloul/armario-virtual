@@ -39,7 +39,7 @@ COLORS = [
     "verde", "verde oliva", "rojo", "burdeos", "amarillo", "naranja", "rosa", "morado", "multicolor",
 ]
 
-PATTERNS = ["liso", "rayas", "cuadros", "gráfico", "logo", "texturizado"]
+PATTERNS = ["liso", "rayas", "cuadros", "bloques de color", "gráfico", "logo", "texturizado"]
 
 STYLES = ["casual", "smart casual", "deportivo", "formal"]
 
