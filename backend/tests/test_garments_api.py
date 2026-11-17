@@ -119,3 +119,15 @@ def test_ajustes_por_defecto_y_cambio(client):
     updated = client.patch("/api/settings", json={"theme": "oscuro", "ai_provider": "claude"}).json()
     assert updated["theme"] == "oscuro" and updated["ai_provider"] == "claude"
     assert client.patch("/api/settings", json={"theme": "rosa"}).status_code == 422
+
+
+def test_limpieza_de_fotos_huerfanas(client, photo_bytes):
+    from app.services import storage
+
+    kept = _create(client, photo_bytes).json()["photo_front"]["id"]
+    orphan = _analyze(client, photo_bytes, skip_ai="true").json()["photo_front"]["id"]
+
+    assert storage.cleanup_orphans({kept}) == 0  # reciente: puede ser un borrador en curso
+    assert storage.cleanup_orphans({kept}, max_age_hours=0) >= 1  # también las que dejaron otros tests
+    assert storage.exists(kept) and not storage.exists(orphan)
+    assert not storage.thumb_path(orphan).exists()

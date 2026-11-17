@@ -28,6 +28,7 @@ export type Garment = GarmentFields & {
   favorite: boolean;
   ai_provider: string | null;
   wear_count: number;
+  last_worn_on: string | null;
 };
 
 export type Draft = GarmentFields & { confidence: number };
@@ -98,6 +99,12 @@ export const api = {
   settings: () => request<Settings>("/api/settings"),
   updateSettings: (changes: Partial<Settings>) => request<Settings>("/api/settings", json("PATCH", changes)),
   garments: () => request<Garment[]>("/api/garments"),
+  garment: (id: number) => request<Garment>(`/api/garments/${id}`),
+  updateGarment: (id: number, changes: Partial<GarmentFields> & { favorite?: boolean; in_laundry?: boolean }) =>
+    request<Garment>(`/api/garments/${id}`, json("PATCH", changes)),
+  deleteGarment: (id: number) => request<void>(`/api/garments/${id}`, { method: "DELETE" }),
+  wearGarment: (id: number) => request<Garment>(`/api/garments/${id}/wear`, json("POST", {})),
+  clearLaundry: () => request<{ cleared: number }>("/api/laundry/clear", { method: "POST" }),
 
   /** Sube fotos nuevas o reutiliza las ya subidas (ids) para reintentar el análisis. */
   analyze: (opts: { front?: File; back?: File; frontId?: string; backId?: string; skipAi?: boolean }) => {

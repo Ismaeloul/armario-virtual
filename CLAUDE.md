@@ -6,12 +6,13 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 ## Estado
 
 - Diseño cerrado. Stitch queda solo como referencia visual; no se le mandan más cambios.
-- Fase 1 en curso. Hecha la rebanada vertical "añadir prenda" (foto → análisis → borrador → guardar →
-  verla en el armario), con Hoy provisional, Armario (filtros, vacío, botón "+") y Ajustes (tema y
-  proveedor de IA). El backend ya tiene todos los endpoints de la fase.
-- Pendiente de la Fase 1: Ficha de Prenda (ver, editar, lavadora, borrar), sección Lavadora y resto de
-  Ajustes, limpieza de fotos huérfanas (análisis que no se llegan a guardar), probar Docker en el Umbrel
-  (aquí no hay Docker) y, al final, quitar el fondo de las fotos.
+- Fase 1: prototipo completo en local. Hoy provisional; Armario (filtros, vacío, botón "+"); Nueva prenda
+  (análisis, borrador, error, a mano); Ficha (fotos, favorita, lavadora, uso, editar, eliminar); Ajustes
+  (tema, IA, lavadora, aviso y ciudad guardados para la Fase 2). Las fotos huérfanas se limpian al arrancar.
+- Pendiente de la Fase 1: desplegar y probar en el Umbrel (Docker y Codex dentro del contenedor sin probar,
+  aquí no hay Docker), probar Claude con API key real, probar la cámara desde el iPhone y, al final,
+  quitar el fondo de las fotos.
+- "Crear look con esta prenda" se muestra desactivado ("Pronto"): llega en la Fase 3.
 - Codex por suscripción probado en el PC con `codex exec`: funciona, unos 12-18 s por análisis.
   Sin probar todavía dentro del contenedor.
 

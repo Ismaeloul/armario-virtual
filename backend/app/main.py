@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -5,15 +6,34 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from sqlalchemy import select
+
 from . import config
-from .db import init_db
+from .db import SessionLocal, init_db
+from .models import Garment
 from .routers import garments, settings
+from .services import storage
+
+
+def _cleanup_orphan_photos() -> None:
+    """Al arrancar: fuera las fotos de análisis que nunca se guardaron como prenda."""
+    with SessionLocal() as db:
+        referenced = {
+            photo
+            for row in db.execute(select(Garment.photo_front, Garment.photo_back))
+            for photo in row
+            if photo
+        }
+    removed = storage.cleanup_orphans(referenced)
+    if removed:
+        logging.getLogger("armario").info("Fotos huérfanas borradas: %s", removed)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     config.ensure_dirs()
     init_db()
+    _cleanup_orphan_photos()
     yield
 
 

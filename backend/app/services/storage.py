@@ -7,6 +7,7 @@ Cada foto tiene un id (uuid hex). Se guardan tres archivos:
 """
 import io
 import re
+import time
 import uuid
 from pathlib import Path
 
@@ -91,6 +92,24 @@ def save_upload(data: bytes, filename: str | None) -> str:
     thumb.save(thumb_path(photo_id), "WEBP", quality=80)
 
     return photo_id
+
+
+def cleanup_orphans(referenced: set[str], max_age_hours: float = 24) -> int:
+    """Borra las fotos que no pertenecen a ninguna prenda (análisis que no se llegaron a guardar).
+
+    Solo las de hace más de `max_age_hours`, para no tocar un borrador que se está rellenando ahora.
+    """
+    limit = time.time() - max_age_hours * 3600
+    removed = 0
+    for path in config.PHOTOS_DIR.glob("*.webp"):
+        photo_id = path.stem
+        if not _ID_RE.match(photo_id):  # las miniaturas (<id>_thumb) se borran con su foto
+            continue
+        if photo_id in referenced or path.stat().st_mtime > limit:
+            continue
+        delete(photo_id)
+        removed += 1
+    return removed
 
 
 def delete(photo_id: str | None) -> None:

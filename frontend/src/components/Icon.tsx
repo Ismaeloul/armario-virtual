@@ -1,6 +1,21 @@
 // Iconos Material Symbols como SVG en línea: solo se empaquetan los que se usan
 // y funcionan sin conexión (importante para la PWA y para Capacitor).
 import add from "@material-symbols/svg-400/outlined/add.svg?raw";
+import calendar from "@material-symbols/svg-400/outlined/calendar_month.svg?raw";
+import delete_icon from "@material-symbols/svg-400/outlined/delete.svg?raw";
+import done_all from "@material-symbols/svg-400/outlined/done_all.svg?raw";
+import edit from "@material-symbols/svg-400/outlined/edit.svg?raw";
+import favorite from "@material-symbols/svg-400/outlined/favorite.svg?raw";
+import favorite_fill from "@material-symbols/svg-400/outlined/favorite-fill.svg?raw";
+import history from "@material-symbols/svg-400/outlined/history.svg?raw";
+import location from "@material-symbols/svg-400/outlined/location_on.svg?raw";
+import notifications from "@material-symbols/svg-400/outlined/notifications.svg?raw";
+import palette from "@material-symbols/svg-400/outlined/palette.svg?raw";
+import repeat from "@material-symbols/svg-400/outlined/repeat.svg?raw";
+import sell from "@material-symbols/svg-400/outlined/sell.svg?raw";
+import style from "@material-symbols/svg-400/outlined/style.svg?raw";
+import texture from "@material-symbols/svg-400/outlined/texture.svg?raw";
+import weather from "@material-symbols/svg-400/outlined/partly_cloudy_day.svg?raw";
 import add_a_photo from "@material-symbols/svg-400/outlined/add_a_photo.svg?raw";
 import arrow_back from "@material-symbols/svg-400/outlined/arrow_back_ios_new.svg?raw";
 import bookmark_add from "@material-symbols/svg-400/outlined/bookmark_add.svg?raw";
@@ -22,6 +37,21 @@ const auto_awesome =
   '<path d="M18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9z"/></svg>';
 
 const ICONS = {
+  calendar,
+  delete_icon,
+  done_all,
+  edit,
+  favorite,
+  favorite_fill,
+  history,
+  location,
+  notifications,
+  palette,
+  repeat,
+  sell,
+  style,
+  texture,
+  weather,
   add,
   add_a_photo,
   arrow_back,

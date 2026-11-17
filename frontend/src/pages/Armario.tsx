@@ -110,7 +110,7 @@ export default function Armario() {
             </div>
 
             {laundry > 0 && (
-              <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-line bg-chip/40 p-3">
+              <Link to="/ajustes" className="mt-4 flex items-center gap-2.5 rounded-xl border border-line bg-chip/40 p-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-chip text-on-chip">
                   <Icon name="laundry" size={18} />
                 </div>
@@ -120,7 +120,8 @@ export default function Armario() {
                     {t.armario.enLavadoTexto}
                   </p>
                 </div>
-              </div>
+                <Icon name="chevron_right" size={18} className="ml-auto text-text-2" />
+              </Link>
             )}
 
             {visible.length === 0 ? (
@@ -128,7 +129,7 @@ export default function Armario() {
             ) : (
               <section className="mt-4 grid grid-cols-2 gap-3.5">
                 {visible.map((g) => (
-                  <article key={g.id} className="card flex flex-col p-2.5">
+                  <Link key={g.id} to={`/prenda/${g.id}`} className="card flex flex-col p-2.5 active:scale-[0.99]">
                     <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-card-2">
                       <img
                         src={mediaUrl(g.photo_front.thumb_url)}
@@ -155,7 +156,7 @@ export default function Armario() {
                           catalog.seasons[g.season]}
                       </p>
                     </div>
-                  </article>
+                  </Link>
                 ))}
               </section>
             )}
