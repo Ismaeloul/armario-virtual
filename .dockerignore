@@ -1,0 +1,12 @@
+.git
+.claude
+data
+codex-home
+stitch
+.env
+**/node_modules
+**/dist
+**/.venv
+**/__pycache__
+**/.pytest_cache
+backend/tests

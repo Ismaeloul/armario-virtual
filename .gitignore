@@ -1,0 +1,22 @@
+# Datos y credenciales: nunca al repositorio
+data/
+codex-home/
+.env
+.env.*
+!.env.example
+auth.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Varios
+.DS_Store
+Thumbs.db

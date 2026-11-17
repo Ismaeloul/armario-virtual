@@ -1,0 +1,116 @@
+/* Tokens de diseño. Todas las pantallas usan estos nombres; ningún componente lleva colores sueltos. */
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #fbf8fc;
+  --card: #ffffff;
+  --card-2: #f6f2f7;
+  --control: #eae7eb;
+  --primary: #464d48;
+  --on-primary: #ffffff;
+  --text: #1b1b1e;
+  --text-2: #5b5f5c;
+  --text-3: #747874;
+  --chip: #dde0dc;
+  --on-chip: #444844;
+  --line: transparent; /* en claro las tarjetas no llevan borde */
+  --danger: #ba1a1a;
+  --shadow-card: 0 2px 12px rgba(27, 27, 30, 0.04);
+  --shadow-float: 0 6px 20px rgba(70, 77, 72, 0.35);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #131315;
+  --card: #1b1b1e;
+  --card-2: #1f1f22;
+  --control: #2a2a2d;
+  --primary: #c1c8c1;
+  --on-primary: #2b322d;
+  --text: #e4e1e6;
+  --text-2: #c4c7c2;
+  --text-3: #8e918d;
+  --chip: #444844;
+  --on-chip: #e0e3df;
+  --line: rgba(255, 255, 255, 0.06); /* bordes: blanco al 6 % */
+  --danger: #ffb4ab;
+  --shadow-card: none;
+  --shadow-float: 0 6px 20px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-control: var(--control);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-chip: var(--chip);
+  --color-on-chip: var(--on-chip);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+
+  --font-display: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-float: var(--shadow-float);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Etiqueta pequeña en mayúsculas (secciones, categorías). */
+@utility label-caps {
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Tarjeta estándar: sombra suave en claro, borde sutil en oscuro. */
+@utility card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+  border-radius: 1rem;
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.icon svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  display: block;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}

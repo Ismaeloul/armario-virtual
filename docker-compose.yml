@@ -1,0 +1,16 @@
+services:
+  armario:
+    build: .
+    container_name: armario
+    restart: unless-stopped
+    ports:
+      - "8765:8000"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      # Base de datos y fotos: hacer copia de seguridad es copiar esta carpeta.
+      - ./data:/data
+      # Sesión de Codex (auth.json). Tiene que ser escribible: Codex renueva los tokens.
+      # Va aparte de data/ para no llevarse credenciales en las copias.
+      - ./codex-home:/codex-home
