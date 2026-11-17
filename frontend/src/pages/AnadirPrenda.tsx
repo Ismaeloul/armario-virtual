@@ -1,12 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { PrimaryButton, SecondaryButton } from "../components/Controls";
+import { PrimaryButton, RotateButton, SecondaryButton } from "../components/Controls";
 import { EMPTY_GARMENT, GarmentForm } from "../components/GarmentForm";
 import { Icon } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Analysis, type Catalog, type GarmentFields } from "../lib/api";
-import { pickPhoto } from "../lib/camera";
+import { pickPhoto, rotateFile } from "../lib/camera";
 
 type Step = "fotos" | "analizando" | "error" | "formulario";
 
@@ -16,14 +16,18 @@ function PhotoSlot({
   hint,
   preview,
   onPick,
+  onRotate,
 }: {
   label: string;
   hint?: string;
   preview: string | null;
   onPick: () => void;
+  onRotate: () => void;
 }) {
   return (
-    <button type="button" onClick={onPick} className="card flex flex-col overflow-hidden text-left active:opacity-80">
+    <div className="relative">
+      {preview && <RotateButton onClick={onRotate} className="absolute right-2 top-2 z-10" />}
+      <button type="button" onClick={onPick} className="card flex w-full flex-col overflow-hidden text-left active:opacity-80">
       <div className="relative flex aspect-[3/4] w-full flex-col items-center justify-center bg-card-2 p-4 text-center">
         {preview ? (
           <>
@@ -49,7 +53,8 @@ function PhotoSlot({
         <span>{preview ? t.nueva.cambiarFoto : (hint ? t.nueva.opcional : t.nueva.tomarFoto)}</span>
         {preview && <Icon name="check_circle" size={16} className="text-primary" />}
       </div>
-    </button>
+      </button>
+    </div>
   );
 }
 
@@ -153,12 +158,18 @@ export default function AnadirPrenda() {
         {step === "fotos" && (
           <div className="mt-6 flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-2">
-              <PhotoSlot label={t.nueva.delante} preview={frontUrl} onPick={() => pick(setFront)} />
+              <PhotoSlot
+                label={t.nueva.delante}
+                preview={frontUrl}
+                onPick={() => pick(setFront)}
+                onRotate={() => front && rotateFile(front).then(setFront)}
+              />
               <PhotoSlot
                 label={t.nueva.detras}
                 hint={t.nueva.detrasAyuda}
                 preview={backUrl}
                 onPick={() => pick(setBack)}
+                onRotate={() => back && rotateFile(back).then(setBack)}
               />
             </div>
             {formError && <p className="text-center text-sm text-danger">{formError}</p>}
@@ -207,18 +218,29 @@ export default function AnadirPrenda() {
         {step === "formulario" && analysis && catalog && (
           <form onSubmit={save} className="mt-6 flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-2">
-              <img
-                src={mediaUrl(analysis.photo_front.url)}
-                alt={t.nueva.delante}
-                className="aspect-[3/4] w-full rounded-xl border border-line object-cover"
-              />
-              {analysis.photo_back && (
-                <img
-                  src={mediaUrl(analysis.photo_back.url)}
-                  alt={t.nueva.detras}
-                  className="aspect-[3/4] w-full rounded-xl border border-line object-cover"
-                />
-              )}
+              {(["photo_front", "photo_back"] as const).map((side) => {
+                const photo = analysis[side];
+                return (
+                  photo && (
+                    <div key={side} className="relative">
+                      <img
+                        src={mediaUrl(photo.url)}
+                        alt={side === "photo_front" ? t.nueva.delante : t.nueva.detras}
+                        className="aspect-[3/4] w-full rounded-xl border border-line object-cover"
+                      />
+                      <RotateButton
+                        className="absolute right-2 top-2"
+                        onClick={() =>
+                          api
+                            .rotatePhoto(photo.id)
+                            .then((rotated) => setAnalysis((a) => (a ? { ...a, [side]: rotated } : a)))
+                            .catch(() => undefined)
+                        }
+                      />
+                    </div>
+                  )
+                );
+              })}
             </div>
 
             {/* Quién analizó. El plan B nunca es silencioso. */}

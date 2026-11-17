@@ -4,6 +4,7 @@ export const t = {
   nav: { hoy: "Hoy", armario: "Armario", ajustes: "Ajustes" },
   comun: {
     volver: "Volver",
+    girar: "Girar la foto",
     reintentar: "Reintentar",
     cargando: "Cargando…",
     errorRed: "No se pudo conectar con el servidor.",
@@ -137,7 +138,7 @@ export const t = {
     claveGuardar: "Guardar",
     claveBorrar: "Borrar la clave guardada",
     claveAyuda: "Se guarda en tu servidor y no se vuelve a mostrar.",
-    version: "Armario · v0.1",
+    version: "Armario · v0.1.2",
   },
   temas: { claro: "Claro", oscuro: "Oscuro", sistema: "Sistema" } as Record<string, string>,
   proveedores: { codex: "Codex", claude: "Claude" } as Record<string, string>,

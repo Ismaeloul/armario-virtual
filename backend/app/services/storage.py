@@ -94,6 +94,36 @@ def save_upload(data: bytes, filename: str | None) -> str:
     return photo_id
 
 
+def rotate(photo_id: str) -> str:
+    """Gira la foto 90° a la derecha. Devuelve un id nuevo (así el navegador no enseña la antigua en caché)."""
+    if not exists(photo_id):
+        raise InvalidPhoto("La foto no existe")
+    new_id = uuid.uuid4().hex
+
+    with Image.open(photo_path(photo_id)) as img:
+        rotated = img.convert("RGB").transpose(Image.Transpose.ROTATE_270)
+    rotated.save(photo_path(new_id), "WEBP", quality=90)
+    thumb = rotated.copy()
+    thumb.thumbnail((config.THUMB_MAX_SIDE, config.THUMB_MAX_SIDE))
+    thumb.save(thumb_path(new_id), "WEBP", quality=80)
+
+    # El original se gira también si es un formato que se puede reescribir; si no, se conserva tal cual.
+    for original in config.ORIGINALS_DIR.glob(f"{photo_id}.*"):
+        target = config.ORIGINALS_DIR / f"{new_id}{original.suffix}"
+        try:
+            with Image.open(original) as img:
+                fmt = img.format
+                if fmt not in ("JPEG", "PNG", "WEBP"):
+                    raise OSError("formato no reescribible")
+                turned = ImageOps.exif_transpose(img).transpose(Image.Transpose.ROTATE_270)
+                turned.save(target, fmt, quality=95)
+        except (UnidentifiedImageError, OSError):
+            target.write_bytes(original.read_bytes())
+
+    delete(photo_id)
+    return new_id
+
+
 def cleanup_orphans(referenced: set[str], max_age_hours: float = 24) -> int:
     """Borra las fotos que no pertenecen a ninguna prenda (análisis que no se llegaron a guardar).
 

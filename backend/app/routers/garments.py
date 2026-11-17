@@ -13,6 +13,7 @@ from ..schemas import (
     GarmentCreate,
     GarmentOut,
     GarmentUpdate,
+    Photo,
     Summary,
     WearIn,
 )
@@ -236,6 +237,27 @@ def wear_garment(garment_id: int, body: WearIn | None = None, db: Session = Depe
     db.add(WearLog(garment_id=garment.id, worn_on=(body.worn_on if body and body.worn_on else date.today())))
     db.commit()
     return _to_out(garment, _wear_stats(db, [garment.id]))
+
+
+@router.post("/photos/{photo_id}/rotate", response_model=Photo)
+def rotate_photo(photo_id: str, db: Session = Depends(get_db)):
+    """Gira una foto 90° a la derecha, esté ya en una prenda o todavía en un borrador."""
+    try:
+        new_id = storage.rotate(photo_id)
+    except storage.InvalidPhoto as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+    for garment in db.scalars(
+        select(Garment).where(or_(Garment.photo_front == photo_id, Garment.photo_back == photo_id))
+    ):
+        if garment.photo_front == photo_id:
+            garment.photo_front = new_id
+            garment.photo_front_original = storage.original_name(new_id)
+        if garment.photo_back == photo_id:
+            garment.photo_back = new_id
+            garment.photo_back_original = storage.original_name(new_id)
+    db.commit()
+    return storage.to_schema(new_id)
 
 
 @router.post("/laundry/clear")

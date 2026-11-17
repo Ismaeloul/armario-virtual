@@ -11,6 +11,7 @@ import history from "@material-symbols/svg-400/outlined/history.svg?raw";
 import location from "@material-symbols/svg-400/outlined/location_on.svg?raw";
 import notifications from "@material-symbols/svg-400/outlined/notifications.svg?raw";
 import palette from "@material-symbols/svg-400/outlined/palette.svg?raw";
+import rotate from "@material-symbols/svg-400/outlined/rotate_right.svg?raw";
 import repeat from "@material-symbols/svg-400/outlined/repeat.svg?raw";
 import sell from "@material-symbols/svg-400/outlined/sell.svg?raw";
 import style from "@material-symbols/svg-400/outlined/style.svg?raw";
@@ -48,6 +49,7 @@ const ICONS = {
   notifications,
   palette,
   repeat,
+  rotate,
   sell,
   style,
   texture,

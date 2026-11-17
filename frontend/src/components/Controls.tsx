@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { t } from "../i18n/es";
+import { Icon } from "./Icon";
 
 /** Control segmentado tipo iOS (temporada, tema, proveedor de IA). */
 export function Segmented<T extends string>({
@@ -73,6 +75,20 @@ export function SecondaryButton({ children, onClick }: { children: ReactNode; on
       className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-line bg-control text-xs font-medium text-text transition-transform active:scale-[0.98]"
     >
       {children}
+    </button>
+  );
+}
+
+/** Botón redondo para girar una foto 90°. Se coloca encima de la imagen. */
+export function RotateButton({ onClick, className = "" }: { onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      aria-label={t.comun.girar}
+      onClick={onClick}
+      className={`flex h-9 w-9 items-center justify-center rounded-full bg-text/80 text-bg backdrop-blur-md active:scale-90 ${className}`}
+    >
+      <Icon name="rotate" size={18} />
     </button>
   );
 }

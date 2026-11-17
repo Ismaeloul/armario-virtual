@@ -109,6 +109,8 @@ export const api = {
     request<Garment>(`/api/garments/${id}`, json("PATCH", changes)),
   deleteGarment: (id: number) => request<void>(`/api/garments/${id}`, { method: "DELETE" }),
   wearGarment: (id: number) => request<Garment>(`/api/garments/${id}/wear`, json("POST", {})),
+  /** Gira 90° a la derecha. Devuelve la foto con un id nuevo. */
+  rotatePhoto: (photoId: string) => request<Photo>(`/api/photos/${photoId}/rotate`, { method: "POST" }),
   clearLaundry: () => request<{ cleared: number }>("/api/laundry/clear", { method: "POST" }),
 
   /** Sube fotos nuevas o reutiliza las ya subidas (ids) para reintentar el análisis. */

@@ -144,3 +144,23 @@ def test_la_api_key_de_claude_se_guarda_pero_nunca_se_devuelve(client):
 
     client.patch("/api/settings", json={"anthropic_api_key": ""})  # vacía = borrar
     assert client.get("/api/ai/status").json()["claude_configured"] is False
+
+
+def test_girar_una_foto(client, photo_bytes):
+    from PIL import Image
+
+    from app.services import storage
+
+    garment = _create(client, photo_bytes).json()
+    old = garment["photo_front"]["id"]
+    assert Image.open(storage.photo_path(old)).size == (1600, 1200)  # apaisada
+
+    new = client.post(f"/api/photos/{old}/rotate").json()
+    assert new["id"] != old  # id nuevo: el navegador no reutiliza la imagen en caché
+    assert Image.open(storage.photo_path(new["id"])).size == (1200, 1600)  # ahora vertical
+    assert client.get(new["thumb_url"]).status_code == 200
+    assert not storage.exists(old)
+
+    # La prenda pasa a apuntar a la foto girada.
+    assert client.get(f"/api/garments/{garment['id']}").json()["photo_front"]["id"] == new["id"]
+    assert client.post(f"/api/photos/{old}/rotate").status_code == 404

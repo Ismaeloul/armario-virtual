@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { PrimaryButton } from "../components/Controls";
+import { PrimaryButton, RotateButton } from "../components/Controls";
 import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
@@ -92,6 +92,16 @@ export default function FichaPrenda() {
           {/* Foto: delante / detrás */}
           <div className="relative overflow-hidden rounded-xl border border-line bg-card-2">
             <img src={mediaUrl(photo.url)} alt={garment.name} className="aspect-[3/4] w-full object-cover" />
+            <RotateButton
+              className="absolute right-3 top-3"
+              onClick={() =>
+                api
+                  .rotatePhoto(photo.id)
+                  .then(() => api.garment(garment.id))
+                  .then(setGarment)
+                  .catch(() => undefined)
+              }
+            />
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-line bg-card/90 px-2.5 py-1 backdrop-blur-md">
               {garment.in_laundry ? (
                 <Icon name="laundry" size={13} className="text-primary" />
