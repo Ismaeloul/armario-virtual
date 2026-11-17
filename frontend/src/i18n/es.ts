@@ -217,7 +217,7 @@ export const t = {
     olvidar: "Borrar lo aprendido",
     olvidarConfirmar: "Toca otra vez para confirmar",
     olvidado: "Hecho. El algoritmo empieza de cero.",
-    version: "Armario · v0.3.0",
+    version: "Armario · v0.3.1",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",

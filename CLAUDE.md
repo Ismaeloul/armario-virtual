@@ -6,7 +6,7 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 ## Estado
 
 - Diseño cerrado. Stitch queda solo como referencia visual; no se le mandan más cambios.
-- **Etiquetada la 0.3.0 (17-11-2026)** para publicarla en el Umbrel: incluye todo lo que abajo figura
+- **Publicada en el Umbrel: 0.3.1** (17-11-2026; la 0.3.0 más el arreglo de copiar el código de Codex por http): incluye todo lo que abajo figura
   como «en `main`, sin publicar» (Fase 2, Gustos, calzado, reglas de estilo, palabras clave). A partir de
   ahora se publica una versión por fase. El usuario va a fotografiar su ropa real en el Umbrel y a
   entrenar ahí el algoritmo; lo de la copia local es todo ropa de prueba (Vinted y Zara), nada es suyo.
