@@ -6,6 +6,10 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 ## Estado
 
 - Diseño cerrado. Stitch queda solo como referencia visual; no se le mandan más cambios.
+- **Etiquetada la 0.3.0 (17-11-2026)** para publicarla en el Umbrel: incluye todo lo que abajo figura
+  como «en `main`, sin publicar» (Fase 2, Gustos, calzado, reglas de estilo, palabras clave). A partir de
+  ahora se publica una versión por fase. El usuario va a fotografiar su ropa real en el Umbrel y a
+  entrenar ahí el algoritmo; lo de la copia local es todo ropa de prueba (Vinted y Zara), nada es suyo.
 - **Publicada en el Umbrel: 0.2.0** (17-11-2026), como app de la tienda propia (`Ismaeloul/umbrel-app-store`,
   carpeta `ismaeloul-armario`, puerto 7798, detrás del login de Umbrel). Incluye toda la Fase 1 más: sesión
   y límite de Codex desde Ajustes, foto de etiqueta, aviso de dudas en el color y reglas afinadas de la IA.
@@ -83,7 +87,11 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
    prenda al armario con las fotos de la tienda, ya analizada (solo se elige talla). Codex no navega por
    las tiendas: solo analiza las fotos de las finalistas (10-15 por tanda) para no gastar el límite; el
    catálogo lo trae un conector por tienda. La app enlaza a la tienda y nunca compra ni guarda datos de
-   pago. Lo primero a comprobar antes de construir: si Zara deja leer el catálogo desde el Umbrel sin
+   pago. Interacción tipo Tinder: deslizar a la derecha = me gusta, a la izquierda = no me gusta. Las que
+   gustan van a un apartado «Me gustan» dentro de Compras, y desde ahí se compra o se descarta. Todo
+   caduca: las propuestas y los «me gustan» tienen fecha de caducidad porque las tiendas rotan el
+   catálogo (pendiente de fijar el plazo; idea: comprobar cada semana si el producto sigue en la tienda y
+   retirarlo si ya no está). Lo primero a comprobar antes de construir: si Zara deja leer el catálogo desde el Umbrel sin
    navegador (el 17-11-2026 se leyó desde un navegador con `<categoría>.html?ajax=true` y
    `<producto>.html?ajax=true`; las fotos de producto son las `-e1`, `-e2`… de `xmedia`).
 5. **iPhone.** App con Capacitor (instalada como .ipa). Notificación diaria con el outfit a la hora configurada.
