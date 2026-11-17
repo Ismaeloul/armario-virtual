@@ -16,7 +16,7 @@ export default function Gustos() {
   // Al decir "no me gusta" se pregunta por qué antes de pasar a la siguiente.
   const [asking, setAsking] = useState(false);
   const [reasons, setReasons] = useState<string[]>([]);
-  const [culprit, setCulprit] = useState<number | null>(null);
+  const [culprits, setCulprits] = useState<number[]>([]);
 
   useEffect(() => {
     api.tasteNext().then(setState).catch(() => setFailed(true));
@@ -33,13 +33,13 @@ export default function Gustos() {
         garment_ids: combo.garments.map((g) => g.id),
         liked,
         reasons: liked ? [] : reasons,
-        culprit_id: liked ? null : culprit,
+        culprit_ids: liked ? [] : culprits,
       })
       .then((next) => {
         setState(next);
         setAsking(false);
         setReasons([]);
-        setCulprit(null);
+        setCulprits([]);
       })
       .catch(() => undefined)
       .finally(() => setBusy(false));
@@ -100,14 +100,16 @@ export default function Gustos() {
 
                 <div className="flex flex-col gap-3">
                   {combo.garments.map((g) => {
-                    const marked = culprit === g.id;
+                    const marked = culprits.includes(g.id);
                     return (
                       <button
                         key={g.id}
                         type="button"
                         disabled={!asking}
                         aria-pressed={marked}
-                        onClick={() => setCulprit(marked ? null : g.id)}
+                        onClick={() =>
+                          setCulprits((list) => (marked ? list.filter((id) => id !== g.id) : [...list, g.id]))
+                        }
                         className={`flex items-center gap-3.5 rounded-2xl border p-2.5 text-left ${
                           marked ? "border-danger bg-danger/10" : "border-line bg-card-2"
                         }`}
@@ -172,14 +174,14 @@ export default function Gustos() {
                     onClick={() => send(false)}
                     className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-display text-[15px] font-semibold text-on-primary active:scale-[0.98] disabled:opacity-40"
                   >
-                    {reasons.length > 0 || culprit !== null ? t.gustos.enviar : t.gustos.sinMotivo}
+                    {reasons.length > 0 || culprits.length > 0 ? t.gustos.enviar : t.gustos.sinMotivo}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setAsking(false);
                       setReasons([]);
-                      setCulprit(null);
+                      setCulprits([]);
                     }}
                     className="h-10 text-xs font-medium text-text-2 underline"
                   >

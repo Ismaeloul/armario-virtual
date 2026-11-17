@@ -19,7 +19,7 @@ export const t = {
       soso: "Demasiado soso",
       recargado: "Demasiado recargado",
     } as Record<string, string>,
-    tocaPrenda: "También puedes tocar la prenda que estropea el conjunto.",
+    tocaPrenda: "Marca todos los motivos que quieras y toca la prenda o prendas que estropean el conjunto.",
     estaNo: "Esta no",
     enviar: "Enviar y ver la siguiente",
     sinMotivo: "No sé por qué, siguiente",

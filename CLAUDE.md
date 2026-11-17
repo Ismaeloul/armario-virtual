@@ -14,7 +14,8 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   de cada propuesta, y pantalla Hoy con «Pasar», «Me gusta» (apunta el uso de cada prenda, se puede
   deshacer) y «Generar otra propuesta». No propone prendas en la lavadora ni repite combinaciones.
 - **En `main`, sin publicar: pestaña Gustos (inicio de la Fase 3).** Se valoran combinaciones (me gusta /
-  no me gusta con motivos: colores, calzado, estilo, soso, recargado, o señalando la prenda) y
+  no me gusta con varios motivos a la vez: colores, calzado, estilo, soso, recargado, y señalando una o
+  varias prendas) y
   `services/taste.py` aprende parejas de prendas, de colores y de estilos; lo aprendido ajusta el outfit
   de Hoy y la afinidad. No se distingue quién valora (decisión del usuario: al algoritmo solo le importa
   si pega o no). El usuario entrena en local con datos de prueba para ver cómo se comporta.
@@ -82,8 +83,11 @@ Más adelante: recomendaciones de qué prenda comprar según lo que ya hay.
 - `stitch/*.html` son referencia visual, no base de código. `stitch/original/` es lo que salió de Stitch sin tocar.
 - Pantallas: Hoy, Armario (catálogo), Añadir Prenda, Ficha de Prenda, Gustos y Ajustes, en claro y oscuro.
   Gustos no tiene diseño en Stitch: se hizo directamente en código con el mismo estilo.
-- Barra inferior con 5 elementos: Hoy, Armario, botón "+" en el centro (añadir prenda), Gustos y Ajustes.
-  Decidido el 17-11-2026: sustituye a la barra de 3 pestañas con el "+" flotante en Armario.
+- Barra inferior con 4 pestañas: Hoy, Armario, Gustos y Ajustes. Botón flotante "+" solo en Armario
+  (abajo a la derecha, encima de la barra). El 17-11-2026 se probó el "+" en el centro de la barra y al
+  usuario no le gustó: no volver a proponerlo.
+- Iconos: Phosphor (`@phosphor-icons/core`, peso regular) como SVG en línea. Sustituyen a Material
+  Symbols, que al usuario le chirriaban (sobre todo la cámara).
 - Cabeceras: percha + "Armario" en Hoy y Armario; flecha atrás + nombre de pantalla en las secundarias
   ("Nueva prenda", "Detalle"); "Ajustes" a secas en Ajustes.
 - El modo oscuro se cambia solo en Ajustes: Claro / Oscuro / Sistema.

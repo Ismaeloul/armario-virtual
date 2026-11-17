@@ -36,7 +36,7 @@ class Vote:
     liked: bool
     weight: float = 1.0
     reasons: tuple[str, ...] = ()
-    culprit_id: int | None = None
+    culprit_ids: frozenset[int] = frozenset()  # las prendas que estropean el conjunto
 
 
 def loudness(pieces: list[Piece]) -> int:
@@ -83,7 +83,7 @@ class Taste:
             return
 
         reasons = set(vote.reasons)
-        if not reasons and vote.culprit_id is None:
+        if not reasons and not vote.culprit_ids:
             # No dijo por qué: un poco de culpa para todo.
             for a, b in pairs:
                 self._add(self.garments, _key(a.id, b.id), -w)
@@ -93,7 +93,7 @@ class Taste:
 
         for a, b in pairs:
             with_shoe = "calzado" in (a.category, b.category)
-            with_culprit = vote.culprit_id in (a.id, b.id)
+            with_culprit = a.id in vote.culprit_ids or b.id in vote.culprit_ids
             if "colores" in reasons:
                 self._add(self.colors, _key(a.color, b.color), -w)
                 self._add(self.garments, _key(a.id, b.id), -0.5 * w)

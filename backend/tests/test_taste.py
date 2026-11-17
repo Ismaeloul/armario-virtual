@@ -46,7 +46,7 @@ def test_el_motivo_calzado_solo_castiga_las_parejas_con_la_zapatilla():
 
 
 def test_senalar_una_prenda_solo_la_castiga_a_ella():
-    aprendido = taste.build([Vote([VERDE, NEGRO, ZAPA], liked=False, culprit_id=VERDE.id)] * 3)
+    aprendido = taste.build([Vote([VERDE, NEGRO, ZAPA], liked=False, culprit_ids=frozenset({VERDE.id}))] * 3)
     assert aprendido.adjust([NEGRO, ZAPA]) == 0
     assert aprendido.adjust([VERDE, NEGRO]) < 0
 
@@ -118,7 +118,7 @@ def test_gustos_recorre_las_combinaciones_y_aprende(client, photo_bytes):
     ids = [g["id"] for g in estado["combo"]["garments"]]
 
     estado = client.post("/api/taste/rate", json={"garment_ids": ids, "liked": False,
-                                                  "reasons": ["colores"], "culprit_id": ids[0]}).json()
+                                                  "reasons": ["colores", "soso"], "culprit_ids": ids[:2]}).json()
     assert (estado["rated"], estado["liked"], estado["remaining"]) == (1, 0, 1)
     otros = [g["id"] for g in estado["combo"]["garments"]]
     assert set(otros) != set(ids)  # no repite la ya valorada
@@ -151,3 +151,9 @@ def test_zapatilla_con_tres_vistas(client, analyzers, photo_bytes):
                   photo_extra=analisis["photo_extra"]["id"])
     prenda = client.post("/api/garments", json=cuerpo).json()
     assert prenda["category"] == "calzado" and prenda["photo_extra"]["id"] == analisis["photo_extra"]["id"]
+
+
+def test_se_pueden_senalar_varias_prendas():
+    aprendido = taste.build([Vote([VERDE, NEGRO, ZAPA], liked=False, culprit_ids=frozenset({VERDE.id, ZAPA.id}))] * 3)
+    assert aprendido.adjust([VERDE, NEGRO]) < 0 and aprendido.adjust([NEGRO, ZAPA]) < 0  # las dos señaladas
+    assert aprendido.adjust([NEGRO, pieza(9, "calzado", "gris")]) == 0  # lo no señalado, intacto

@@ -36,7 +36,7 @@ class RateIn(BaseModel):
     garment_ids: list[int] = Field(min_length=2, max_length=4)
     liked: bool
     reasons: list[Reason] = Field(default_factory=list)
-    culprit_id: int | None = None
+    culprit_ids: list[int] = Field(default_factory=list, max_length=4)  # prendas que estropean el conjunto
 
 
 def piece(g: Garment) -> taste.Piece:
@@ -56,7 +56,9 @@ def load_taste(db: Session) -> taste.Taste:
                     liked=rating.liked,
                     weight=rating.weight,
                     reasons=tuple(rating.reasons or ()),
-                    culprit_id=rating.culprit_id,
+                    culprit_ids=frozenset(
+                        rating.culprit_ids or ([rating.culprit_id] if rating.culprit_id else [])
+                    ),
                 )
             )
     return taste.build(votes)
@@ -112,15 +114,15 @@ def rate(body: RateIn, db: Session = Depends(get_db)):
     found = {g.id for g in db.scalars(select(Garment).where(Garment.id.in_(body.garment_ids)))}
     if found != set(body.garment_ids):
         raise HTTPException(404, "Alguna prenda de la combinación ya no existe")
-    if body.culprit_id is not None and body.culprit_id not in found:
-        raise HTTPException(422, "La prenda señalada no está en la combinación")
+    if not set(body.culprit_ids) <= found:
+        raise HTTPException(422, "Alguna prenda señalada no está en la combinación")
     db.add(
         Rating(
             garment_ids=body.garment_ids,
             liked=body.liked,
             weight=1.0,
             reasons=[] if body.liked else list(dict.fromkeys(body.reasons)),
-            culprit_id=None if body.liked else body.culprit_id,
+            culprit_ids=[] if body.liked else list(dict.fromkeys(body.culprit_ids)),
             source="gustos",
         )
     )

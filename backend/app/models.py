@@ -96,7 +96,8 @@ class Rating(Base):
     liked: Mapped[bool] = mapped_column(Boolean)
     weight: Mapped[float] = mapped_column(Float, default=1.0)
     reasons: Mapped[list] = mapped_column(JSON, default=list)  # por qué no gustó
-    culprit_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # la prenda que estropea el conjunto
+    culprit_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # (antiguo: una sola prenda)
+    culprit_ids: Mapped[list | None] = mapped_column(JSON, nullable=True)  # las prendas que estropean el conjunto
     source: Mapped[str] = mapped_column(String(20), default="gustos")  # "gustos" o "hoy"
     outfit_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)

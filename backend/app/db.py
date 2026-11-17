@@ -41,6 +41,7 @@ _NEW_COLUMNS = {
         "photo_extra_original": "VARCHAR(64)",
     },
     "wear_log": {"outfit_id": "INTEGER"},
+    "ratings": {"culprit_ids": "JSON"},
 }
 
 

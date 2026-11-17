@@ -157,7 +157,7 @@ export const api = {
   saveClaudeKey: (key: string) => request<Settings>("/api/settings", json("PATCH", { anthropic_api_key: key })),
   updateSettings: (changes: Partial<Settings>) => request<Settings>("/api/settings", json("PATCH", changes)),
   tasteNext: () => request<Taste>("/api/taste/next"),
-  tasteRate: (body: { garment_ids: number[]; liked: boolean; reasons: string[]; culprit_id: number | null }) =>
+  tasteRate: (body: { garment_ids: number[]; liked: boolean; reasons: string[]; culprit_ids: number[] }) =>
     request<Taste>("/api/taste/rate", json("POST", body)),
   today: () => request<Today>("/api/today"),
   todayNext: (action: "otra" | "pasar") => request<Today>("/api/today/next", json("POST", { action })),
