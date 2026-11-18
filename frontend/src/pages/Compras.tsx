@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -189,6 +189,7 @@ function Discover({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fit = useFitHeight(Boolean(next.item));
   // Si guardar la decisión falla, la tarjeta que ya se fue volando tiene que volver.
   const [attempt, setAttempt] = useState(0);
   // Tras un «no me gusta», de qué producto se puede decir el motivo (y si ya se ha dicho).
@@ -328,7 +329,7 @@ function Discover({
       aria-label={t.compras.volverAria}
       disabled={busy || !next.can_undo}
       onClick={undo}
-      className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-xl border border-line bg-control text-text-2 active:scale-[0.98] disabled:opacity-40"
+      className="flex h-12 w-14 flex-col items-center justify-center gap-0.5 rounded-xl border border-line bg-control text-text-2 active:scale-[0.98] disabled:opacity-40"
     >
       <Icon name="undo" size={20} />
       <span className="text-[10px] font-medium">{t.compras.volver}</span>
@@ -338,29 +339,27 @@ function Discover({
   if (item) {
     return (
       <>
+        {/* Todo en una pantalla: la foto se queda con el alto que sobra, para no tener que bajar a los botones. */}
+        <div ref={fit.ref} style={{ height: fit.height }} className="-mt-2 flex min-h-[25rem] flex-col gap-2.5">
         {filters}
-        <header className="flex flex-col gap-1">
-          <span className="label-caps text-text-2">{t.compras.etiqueta}</span>
-          <p className="text-xs text-text-3">
-            {state.running
-              ? state.job === "mas"
-                ? t.compras.mas.aviso
-                : t.compras.buscando.aviso
+        <p className="truncate text-xs text-text-3">
+          {state.running
+            ? state.job === "mas"
+              ? t.compras.mas.aviso
+              : t.compras.buscando.aviso
+            : state.last_more?.low
+              ? t.compras.mas.encajaMenos
               : t.compras.quedan(next.remaining)}
-          </p>
-          {state.last_more?.low && !state.running && (
-            <p className="text-xs text-text-2">{t.compras.mas.encajaMenos}</p>
-          )}
-        </header>
+        </p>
         <SwipeCard key={`${item.id}-${attempt}`} item={item} busy={busy} onDecide={decide} />
         {alert}
-        <section className="grid grid-cols-[auto_1fr_1fr] gap-2">
+        <section className="grid shrink-0 grid-cols-[auto_1fr_1fr] gap-2">
           {undoButton}
           <button
             type="button"
             disabled={busy}
             onClick={() => decide(false)}
-            className="flex h-14 items-center justify-center gap-1.5 rounded-xl border border-line bg-control font-display text-[15px] font-semibold whitespace-nowrap active:scale-[0.98] disabled:opacity-40"
+            className="flex h-12 items-center justify-center gap-1.5 rounded-xl border border-line bg-control font-display text-[15px] font-semibold whitespace-nowrap active:scale-[0.98] disabled:opacity-40"
           >
             <Icon name="close" size={20} className="text-text-2" />
             {t.compras.no}
@@ -369,13 +368,13 @@ function Discover({
             type="button"
             disabled={busy}
             onClick={() => decide(true)}
-            className="flex h-14 items-center justify-center gap-1.5 rounded-xl bg-primary font-display text-[15px] font-semibold whitespace-nowrap text-on-primary active:scale-[0.98] disabled:opacity-40"
+            className="flex h-12 items-center justify-center gap-1.5 rounded-xl bg-primary font-display text-[15px] font-semibold whitespace-nowrap text-on-primary active:scale-[0.98] disabled:opacity-40"
           >
             <Icon name="favorite_fill" size={20} />
             {t.compras.si}
           </button>
         </section>
-        <p className="text-center text-[11px] text-text-3">{t.compras.desliza}</p>
+        </div>
         {reasonBar}
       </>
     );
@@ -630,6 +629,25 @@ function StoreLink({ item }: { item: ShopItem }) {
   );
 }
 
+/** Alto que queda desde donde empieza el elemento hasta la barra inferior, para encajar la vista en una pantalla. */
+function useFitHeight(shown: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number>();
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = ref.current;
+      if (!el) return;
+      const nav = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      setHeight(Math.round(window.innerHeight - top - nav - 10));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [shown]);
+  return { ref, height };
+}
+
 const SWIPE_START = 10; // px que hay que mover para que cuente como arrastre y no como toque
 const FLY_MS = 220;
 
@@ -705,7 +723,7 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
           moved.current = false;
         }
       }}
-      className={`card relative flex flex-col overflow-hidden select-none ${busy && !leaving ? "opacity-50" : ""}`}
+      className={`card relative flex min-h-0 flex-1 flex-col overflow-hidden select-none ${busy && !leaving ? "opacity-50" : ""}`}
       style={{
         touchAction: "pan-y",
         transform: `translateX(${shift}px) rotate(${shift / 22}deg)`,
@@ -718,18 +736,18 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
         aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : undefined}
         disabled={photos.length < 2}
         onClick={() => setPhoto((n) => (n + 1) % photos.length)}
-        className="relative block aspect-[4/5] w-full bg-card-2"
+        className="relative block min-h-0 w-full flex-1 bg-card-2"
       >
         {photos[photo] && (
           <img
             src={mediaUrl(photos[photo].url)}
             alt={item.name}
             draggable={false}
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         )}
         {photos.length > 1 && (
-          <span className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+          <span className="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
             {photos.map((p, i) => (
               <span key={p.id} className={`h-1.5 rounded-full bg-text ${i === photo ? "w-4 opacity-80" : "w-1.5 opacity-30"}`} />
             ))}
@@ -753,19 +771,22 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
         {t.compras.selloNo}
       </span>
 
-      <div className="flex flex-col gap-3 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <span className="label-caps text-text-2">
-              {item.store_name} · {cap(item.type)}
-            </span>
-            <h3 className="font-display text-lg leading-snug font-semibold tracking-tight">{item.name}</h3>
-            {item.store_color && <p className="text-xs text-text-3">{item.store_color}</p>}
-          </div>
-          <span className="shrink-0 font-display text-xl font-semibold">{t.compras.precio(item.price_cents)}</span>
+      <div className="flex shrink-0 flex-col gap-1.5 px-4 pt-3 pb-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="label-caps min-w-0 truncate text-text-2">
+            {[item.store_name, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
+          </span>
+          <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
         </div>
-        <Reasons item={item} />
-        <StoreLink item={item} />
+        <h3 className="truncate font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <div className="max-h-[3.75rem] min-w-0 overflow-hidden pb-0.5">
+            <Reasons item={item} />
+          </div>
+          <div className="shrink-0">
+            <StoreLink item={item} />
+          </div>
+        </div>
       </div>
     </div>
   );
