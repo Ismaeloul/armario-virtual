@@ -23,7 +23,8 @@ type View = "descubrir" | "gustados";
 const POLL_MS = 4000; // cada cuánto se pregunta cómo va la consulta (o el «Ver más») en marcha
 const REASON_MS = 7000; // lo que dura en pantalla la pregunta «¿Qué no te convence?»
 const REASON_DONE_MS = 1500;
-const REASONS: ShopDiscardReason[] = ["estilo", "color", "caro", "ya_tengo"];
+// «Es caro» no se ofrece: el usuario no quiere que el precio sea un motivo.
+const REASONS: ShopDiscardReason[] = ["estilo", "color", "ya_tengo"];
 const NO_FILTER: ShopFilter = { store: null, category: null };
 
 /** «viernes, 20 de noviembre, 9:41» a partir de una fecha con hora. */

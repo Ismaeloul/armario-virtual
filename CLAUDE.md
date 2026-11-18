@@ -23,7 +23,7 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   acepta en general) y parecerse a lo que lleva; los huecos del armario, solo desempate. «Ver más» al
   acabar la tanda (el catálogo entero se guarda como candidatos sin fotos). Tiendas mezcladas en una lista
   con filtros por tienda y por tipo de prenda (no separar por tienda). «Volver» deshace decisiones. Motivo
-  opcional al descartar. La temporada se lee también de la descripción. Codex NO analiza las finalistas.
+  opcional al descartar. El precio NO cuenta ni sale como motivo (el usuario no quiere). La temporada se lee también de la descripción. Codex NO analiza las finalistas.
   Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
   va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se

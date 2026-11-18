@@ -60,7 +60,9 @@ BASE = 30.0
 W_PREF_TYPE = 16.0  # tipo de prenda («sueles descartar los polos»)
 W_PREF_COLOR = 16.0  # color
 W_PREF_WORD = 16.0  # palabras del nombre (cropped, pana, relaxed…), sumadas y topadas en ±1
-W_PREF_PRICE = 8.0  # franja de precio
+# El precio NO cuenta (decisión del usuario, 18-11-2026): ni suma, ni resta, ni sale como motivo.
+# Se sigue apuntando por franjas por si algún día se quiere usar.
+W_PREF_PRICE = 0.0
 PREF_PRIOR_VOTES = 2.0  # votos neutros de relleno: una sola opinión no decide
 USUAL_PRIOR_VOTES = 10.0  # votos de relleno al calcular cuánto acepta el usuario en general
 CLEAR_PREF = 0.35  # opinión a partir de la cual se enseña como motivo
@@ -456,9 +458,9 @@ def score(product, wardrobe: list[outfits.Item], taste=None, prefs: ShopTaste | 
                 reason(f"Te suele gustar lo «{strongest}»")
             elif by_word[strongest] <= -CLEAR_PREF:
                 reason(f"Sueles descartar lo «{strongest}»", "contra")
-        if by_price >= CLEAR_PREF:
+        if W_PREF_PRICE and by_price >= CLEAR_PREF:
             reason("Precio como los que te gustan")
-        elif by_price <= -CLEAR_PREF:
+        elif W_PREF_PRICE and by_price <= -CLEAR_PREF:
             reason("Sueles descartar este rango de precio", "contra")
 
     # 2a. Con cuántas prendas combina: las de las otras categorías, sin mezclar verano con invierno.

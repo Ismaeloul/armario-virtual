@@ -459,7 +459,7 @@ def test_la_nota_aprende_de_los_me_gusta_de_la_tienda():
     no_gusta, motivos = shopping.score(product("b", "polo", "rosa", price=1995), wardrobe, prefs=prefs)
     sin_opinion, _ = shopping.score(product("b", "polo", "rosa", price=1995), wardrobe, prefs=shopping.ShopTaste())
     assert no_gusta < sin_opinion
-    assert {"Sueles descartar los polos", "Sueles descartar el rosa", "Sueles descartar este rango de precio"} <= {
+    assert {"Sueles descartar los polos", "Sueles descartar el rosa"} <= {
         m["text"] for m in motivos if m["kind"] == "contra"
     }
 
