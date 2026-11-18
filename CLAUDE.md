@@ -32,7 +32,7 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   Volver) que animan la tarjeta; en Me gustan, tocar una prenda abre la foto en grande.
   Pendiente (pedido el 18-11-2026, sin hacer): al abrir una prenda en Me gustan o en la Ficha del armario,
   enseñar su referencia de tienda y los datos básicos (tienda, nombre, color, talla, precio, enlace, composición)
-  con botón de copiar; para las prendas compradas desde Compras hay que guardar esos datos en la prenda.
+  con botón de copiar; para las prendas compradas desde Compras hay que guardar esos datos en la prenda. El usuario lo quiere DENTRO del mismo visor de la foto: se desliza hacia arriba y debajo de la foto aparecen los datos (no otra pantalla ni otro modal).
   Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
   va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se
