@@ -4,7 +4,8 @@ ventana con «Access Denied»; JD Sports: desde el Umbrel responde 403 a curl y 
 Snipes y size?: el listado lo pide la propia página; Jules y Bonobo: Cloudflare da 403 a httpx, y en
 Bonobo también a las fotos, que se abren en otra pestaña de la misma sesión: `image`; Uniqlo, Mango, H&M,
 COS y Weekday: Akamai o Vercel, y solo se lee su listado; para sus páginas siguientes, `more` pulsa el
-botón de la propia web o baja hasta el final, como un usuario).
+botón de la propia web o baja hasta el final, como un usuario; Nike: la paginación que pedía sin navegador
+pasó a dar 400, y ahora se baja la página y se oye lo que pide ella).
 
 Lo acordado con el usuario, sin excepciones:
 
@@ -465,10 +466,11 @@ class Session:
             self._last = time.monotonic()
 
     def page_html(self, store: str, url: str) -> tuple[int | None, str | None]:
-        """Abre una página de la tienda y devuelve (estado, HTML de la página ya cargada). Es para las
-        tiendas que hoy se leen sin navegador (Nike, Jack & Jones, Carhartt WIP) si un día dejan de
-        responder a un cliente normal: su conector lee del HTML lo mismo que lee ahora. Un 404 o un 410
-        se devuelven tal cual, con None. Lanza BlockedError si la tienda bloquea o pide un captcha."""
+        """Abre una página de la tienda y devuelve (estado, HTML de la página ya cargada). Lo usa Nike (que
+        dejó de dejarse leer sin navegador el 18-11-2026) y vale para las que hoy se leen sin él (Jack &
+        Jones, Carhartt WIP) si un día dejan de responder a un cliente normal: su conector lee del HTML lo
+        mismo que lee ahora. La página queda abierta (para `more`). Un 404 o un 410 se devuelven tal cual,
+        con None. Lanza BlockedError si la tienda bloquea o pide un captcha."""
         page = self._start()
         self._wait_turn()
         self.pages += 1

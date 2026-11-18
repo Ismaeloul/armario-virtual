@@ -1,37 +1,50 @@
 """Conector de Nike (nike.com/fr): SOLO zapatillas de hombre.
 
-Sin navegador (investigado el 18-11-2026: httpx con cabeceras normales, 200 en todo; Akamai detrás pero
-sin desafíos). Si un día deja de responder a un cliente normal (como JD Sports en el Umbrel), basta con
-poner `needs_browser = True`: las páginas se leen igual, abiertas en el navegador (ver fetch.read_html).
+Se lee CON NAVEGADOR (browser.py), como Uniqlo o Mango. Hasta el 18-11-2026 se leía sin él (httpx): la
+primera página del listado y, para las siguientes, la dirección `pageData.next` de api.nike.com. Esa
+petición pasó a responder HTTP 400 (en el PC y en el Umbrel) y solo se leía la primera página. No se ha
+investigado por qué a base de peticiones: se abre la sección en el navegador de serie, como un usuario, y
+se ESCUCHA lo que pide la propia página al bajar. Nada de cabeceras ni identificadores copiados de la web,
+y nunca se pide a api.nike.com por nuestra cuenta.
 
 - Listado: la página de la sección (`/fr/w/hommes-chaussures-nik1zy7ok?sortBy=newest`, lo más nuevo
   primero) trae en su `__NEXT_DATA__` los 24 primeros modelos (`Wall.productGroupings`, un producto por
-  color) y `pageData.next`: la dirección que la propia página pide al desplazarse para los 24 siguientes
-  (en api.nike.com, con el mismo JSON y su propio `next`). Se sigue hasta que no hay `next` (~33 páginas).
-  Esa dirección la da la página; no se le añade ninguna cabecera ni identificador copiado del navegador.
+  color, agrupados por modelo). Para los siguientes se baja la página hasta el final (`more`) y se oyen las
+  respuestas que pide ella sola (`/discover/product_wall/…&anchor=24&count=24`: el mismo JSON, con su
+  `pages.next`). Se sigue hasta que no hay `next` (~33 páginas) o los topes de crawl.py. Si con `next`
+  pendiente la página ya no pide nada al bajar, la sección queda a medias (`crawl.Partial`).
+- Lo que el listado ya dice de cada color se guarda (`snap`: su foto de producto y los otros colores del
+  mismo modelo), y de día la ficha sale de ahí sin abrir el navegador (`cached_detail`): una sola foto (la
+  lateral, la del listado), sin descripción. De noche, con el navegador abierto, se abre la ficha de
+  verdad (más fotos y la descripción). Elegir otro color de día solo vale con los ya preparados
+  (`prepared_colors`, como JD Sports).
 - Ficha: el `__NEXT_DATA__` de la página del producto (`selectedProduct`): precio, descripción, fotos
   (`contentImages`: en calzado, todas sin modelo) y los otros colores (`colorwayImages`).
 - Tallas: la página no dice cuáles quedan (las enseña todas como «ACTIVE»; el stock lo pide aparte a
   una API interna que NO se llama, por decisión firme). Así que la zapatilla sale SIN tallas y cuenta
   como disponible mientras la tienda la venda (`statusModifier` «BUYABLE…»).
 - Referencia: el código de fabricante, el de la caja y la web («HM6803-019»).
-- Buscador: por referencia o enlace (`/fr/t/x/<código>` redirige a la ficha). Sin texto libre: el
-  buscador de la web está prohibido en su robots.txt.
+- Buscador: el navegador no se abre dentro de una petición HTTP, así que solo encuentra lo ya leído del
+  listado (lo busca shopping en lo guardado, por código o enlace). Con un código o un enlace de Nike que
+  no esté ahí, se explica. Sin texto libre: el buscador de la web está prohibido en su robots.txt.
+- Las fotos, de su CDN (static.nike.com), que responde a un cliente normal.
 """
 import json
 import re
 from urllib.parse import urlsplit
 
 from ... import config
-from . import crawl
-from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from . import browser, crawl
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_shoe_type
 from .estimate import estimate_style
-from .fetch import IMAGE, Fetcher, read_html, read_json
+from .fetch import IMAGE, Fetcher, read_html
 
 BASE = "https://www.nike.com"
-API = "https://api.nike.com"
 SORT = "sortBy=newest"
+WALL_PATH = "/discover/product_wall/"  # lo que pide la página al bajar para traer más modelos
+MORE_WAIT = 15.0  # lo que se espera a que la página pida los siguientes tras bajar
+MAX_COLORS = 12  # otros colores del mismo modelo que se guardan del listado
 # slug -> (nombre para el usuario, ruta). Todo el calzado de hombre: Lifestyle, Jordan, Running… ya van dentro.
 CATEGORIES = {
     "chaussures": ("Zapatillas", "/fr/w/hommes-chaussures-nik1zy7ok"),
@@ -146,17 +159,81 @@ def make_product(item: dict, section: str) -> ShopProduct | None:
     )
 
 
+def _listing_photo(item: dict) -> str | None:
+    """La foto de producto que enseña el listado (la lateral, sin modelo, en cuadrado)."""
+    url = (item.get("colorwayImages") or {}).get("squarishURL")
+    return url if isinstance(url, str) and url.startswith("https://static.nike.com/") else None
+
+
 def parse_wall(groupings: list, section: str) -> list[ShopProduct]:
-    """De `productGroupings` (de la página o de la API que pide al desplazarse) a productos."""
+    """De `productGroupings` (de la página o de lo que pide al bajar) a productos. Cada uno guarda lo que el
+    listado ya dice para su ficha (`snap`): su foto y los demás colores del mismo modelo que salen ahí."""
     products: list[ShopProduct] = []
     refs: set[str] = set()
     for group in groupings or []:
+        found = []
         for item in (group or {}).get("products") or []:
             product = make_product(item, section)
             if product and product.product_ref not in refs:
                 refs.add(product.product_ref)
-                products.append(product)
+                found.append((product, _listing_photo(item)))
+        colors = [{
+            "code": p.store_data["code"], "name": p.store_color, "hex": p.store_data.get("hex"), "url": p.url,
+        } for p, photo in found if photo][:MAX_COLORS]
+        for product, photo in found:
+            if photo:
+                product.store_data["snap"] = {"photo": photo, "colors": colors}
+            products.append(product)
     return products
+
+
+def detail_from_listing(store_data: dict) -> ShopDetail | None:
+    """La ficha a partir de lo que guardó el listado (`snap`), sin abrir la página del producto: la foto del
+    listado y los otros colores del mismo modelo que salían ahí. Sin tallas (como la ficha de verdad) ni
+    descripción. None si el listado no dejó lo necesario."""
+    snap = store_data.get("snap")
+    code = str(store_data.get("code") or "")
+    if not isinstance(snap, dict) or not _CODE.fullmatch(code):
+        return None
+    photo = snap.get("photo")
+    if not isinstance(photo, str) or not photo.startswith("https://static.nike.com/"):
+        return None
+    siblings, own = [], None
+    for color in snap.get("colors") or []:
+        other = str((color or {}).get("code") or "")
+        if not _CODE.fullmatch(other) or any(s["product_ref"] == f"nike:{other}" for s in siblings):
+            continue
+        url = str(color.get("url") or "")
+        if not url.startswith(BASE + "/"):
+            url = f"{BASE}/fr/t/x/{other}"
+        hex_color = color.get("hex") if re.fullmatch(r"#[0-9A-Fa-f]{6}", str(color.get("hex") or "")) else None
+        siblings.append({
+            "product_ref": f"nike:{other}", "name": _clean(color.get("name")), "hex": hex_color, "url": url,
+            "store_data": {"code": other, "group": store_data.get("group"), "url": url, "hex": hex_color},
+        })
+        if other == code:
+            own = siblings[-1]
+    return ShopDetail(
+        price_cents=None,  # el del listado ya está en el producto
+        sizes=[],  # la tienda no dice qué tallas quedan (ver arriba)
+        photo_urls=[photo],
+        siblings=sorted(siblings, key=lambda s: s["product_ref"]) if own and len(siblings) > 1 else None,
+        store_color=own["name"] if own else "",
+        stock_known=False,  # salía en el listado: la tienda la vende
+    )
+
+
+def is_wall(url: str) -> bool:
+    """¿Es la petición con la que la página trae más modelos al bajar?"""
+    parts = urlsplit(url or "")
+    host = (parts.hostname or "").lower()
+    return (host == "nike.com" or host.endswith(".nike.com")) and WALL_PATH in parts.path
+
+
+def anchor_of(url: str) -> int:
+    """Desde qué producto trae esa petición (`anchor=24`); -1 si no lo dice."""
+    match = re.search(r"[?&]anchor=(\d+)", url or "")
+    return int(match.group(1)) if match else -1
 
 
 def _photos(images: list) -> list[str]:
@@ -249,8 +326,12 @@ def parse_query(text: str) -> str:
 class NikeConnector:
     key = "nike"
     name = "Nike"
-    needs_browser = False  # True si deja de responder a un cliente normal: ver fetch.read_html
+    needs_browser = True
+    # Con navegador, pero una sola sección de zapatillas: como JD Sports, Snipes y size?, no cuenta como
+    # «pesada» en el reparto de noches (ver shops/__init__.py).
     heavy = False
+    # Elegir otro color de día no puede abrir el navegador: solo los ya preparados (ver shopping.prepare_colors).
+    prepared_colors = True
     # No se sabe qué día saca novedades: los jueves (reparto de noches, ver shops/__init__.py).
     refresh_weekday = 3
     refresh_after_release = False
@@ -259,6 +340,7 @@ class NikeConnector:
     section_types = {slug: "zapatillas" for slug in CATEGORIES}
 
     def __init__(self, pause: float | None = None):
+        # Solo para las fotos, de su CDN: las páginas de la tienda van por el navegador (fetch.read_html).
         self.fetcher = Fetcher("nike", pause=max(config.SHOP_PAUSE_SECONDS, 3.0) if pause is None else pause,
                                timeout=config.SHOP_TIMEOUT_SECONDS, accept_language="fr-FR,fr;q=0.9")
 
@@ -271,9 +353,11 @@ class NikeConnector:
         return next_data(text)
 
     def list_category(self, slug: str) -> list[ShopProduct]:
-        """La sección entera, de lo más nuevo a lo más viejo: la primera página y luego las que pide la
-        propia web al desplazarse, hasta que no hay más (o el tope). Si una siguiente falla, `crawl.Partial`."""
+        """La sección entera, de lo más nuevo a lo más viejo: la página abierta en el navegador y luego lo que
+        ella misma pide al bajar hasta el final, hasta que no hay más (o el tope). Si una siguiente falla o la
+        página deja de pedir más con más por leer, `crawl.Partial` con lo leído."""
         _label, path = CATEGORIES[slug]
+        session = browser.require(self.key)
         products: list[ShopProduct] = []
         refs: set[str] = set()
 
@@ -286,29 +370,43 @@ class NikeConnector:
             return len(products) - before
 
         crawl.before_page()
-        data = self._page(f"{BASE}{path}?{SORT}")
-        if data is None:
-            raise ShopError("HTTP 404")
-        first = wall(data)
+        status, text = session.page_html(self.key, f"{BASE}{path}?{SORT}")
+        if status != 200 or not text:
+            raise ShopError(f"HTTP {status}")
+        first = wall(next_data(text))
         pages = (first.get("pageData") or {})
         crawl.section_total(pages.get("totalPages") if isinstance(pages.get("totalPages"), int) else None)
         crawl.page_read(add(parse_wall(first.get("productGroupings"), slug)))
         following = pages.get("next")
+        anchors = {0}  # lo que ya se ha leído (la página trae desde el 0)
+        # Una «página» es una tanda de 24 modelos (lo que cuenta `totalPages`). Una bajada hasta el final
+        # suele traer varias (comprobado: tres), porque la página pide la siguiente cada vez que se llega abajo.
+        read = 1
         try:
-            for _ in range(max(0, crawl.max_pages(self.key) - 1)):
-                if not following or len(products) >= crawl.max_products(self.key):
-                    break
-                if not str(following).startswith("/discover/"):
-                    break  # no es la dirección de siempre: no se sigue a ciegas
+            while following and read < crawl.max_pages(self.key) and len(products) < crawl.max_products(self.key):
                 crawl.before_page()
-                status, more = read_json(self, API + following)
-                if status != 200 or not isinstance(more, dict):
-                    raise ShopError(f"HTTP {status}")
-                crawl.page_read(add(parse_wall(more.get("productGroupings"), slug)))
-                following = (more.get("pages") or {}).get("next")
+                responses = session.more(self.key, want=is_wall, wait=MORE_WAIT,
+                                         ready=lambda urls: any(anchor_of(u) not in anchors for u in urls))
+                fresh = sorted((r for r in responses if anchor_of(r.url) not in anchors), key=lambda r: anchor_of(r.url))
+                if not fresh:
+                    raise ShopError("la página no pidió más productos al bajar")
+                for response in fresh:
+                    anchors.add(anchor_of(response.url))
+                    if response.status != 200 or not isinstance(response.data, dict):
+                        raise ShopError(f"HTTP {response.status}")
+                    crawl.page_read(add(parse_wall(response.data.get("productGroupings"), slug)))
+                    read += 1
+                    following = (response.data.get("pages") or {}).get("next")
         except ShopError as exc:
             raise crawl.Partial(products, exc) from exc
         return products
+
+    def cached_detail(self, store_data: dict) -> ShopDetail | None:
+        """De día (sin navegador abierto), la ficha sale de lo que guardó el listado. Con el navegador abierto
+        (de noche, «Ver más»), None: se abre la ficha de verdad, con más fotos y la descripción."""
+        if browser.active():
+            return None
+        return detail_from_listing(store_data)
 
     def detail(self, store_data: dict) -> ShopDetail | None:
         url = str(store_data.get("url") or "")
@@ -317,6 +415,9 @@ class NikeConnector:
             if not _CODE.fullmatch(code):
                 return None
             url = f"{BASE}/fr/t/x/{code}"
+        if not browser.active():  # una petición HTTP normal (elegir otro color): aquí no se abre
+            raise NeedsBrowser(f"{self.name} solo se lee con navegador, en las consultas en segundo plano: "
+                               "ese color no se puede traer ahora")
         data = self._page(url)
         parsed = parse_product_page(data) if data else None
         return parsed[1] if parsed else None
@@ -328,7 +429,14 @@ class NikeConnector:
         return reference(store_data)
 
     def search(self, query: str, limit: int = 12) -> list[ShopProduct]:
-        code = parse_query(query)
+        """Lo ya leído del listado lo encuentra shopping en lo guardado, antes de llegar aquí. Aquí solo
+        llega lo que no está: dentro de una petición HTTP el navegador no se abre, y se explica."""
+        code = parse_query(query)  # NotThisStore si no es de Nike; SearchError si el enlace no es de un producto
+        if not browser.active():
+            raise SearchError(
+                f"{self.name} solo se lee con navegador en las consultas semanales: la referencia {code} no está "
+                "en lo leído de su listado. Actívala en Tiendas y saldrá en Descubrir si está entre sus novedades."
+            )
         data = self._page(f"{BASE}/fr/t/x/{code}")
         parsed = parse_product_page(data) if data else None
         if not parsed:

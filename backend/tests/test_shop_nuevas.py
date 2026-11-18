@@ -11,7 +11,8 @@ from test_shop_navegador import FakeSession, _con_sesion, sin_navegador  # noqa:
 from app import config
 from app.db import SessionLocal
 from app.services import shopping, shops
-from app.services.shops import BlockedError, NotThisStore, SearchError, browser, carhartt, courir, estimate
+from app.services.shops import BlockedError, NeedsBrowser, NotThisStore, SearchError, browser, carhartt, courir
+from app.services.shops import crawl, estimate
 from app.services.shops import fetch, inditex, jackjones, lefties, massimodutti, nike
 
 _REAL_FETCHER_GET = fetch.Fetcher.__dict__["get"]
@@ -133,7 +134,7 @@ def test_lefties_oye_su_categoria_como_bershka(monkeypatch):
     assert session.asked == [] and len(found) == 2  # todo venía en la página
 
 
-# ---------- Nike: solo zapatillas, sin navegador
+# ---------- Nike: solo zapatillas, con navegador (escucha lo que pide la página al bajar)
 
 
 def test_nike_lee_el_listado_con_marca_color_por_tono_y_codigo():
@@ -175,25 +176,193 @@ def test_la_ficha_de_nike_sale_sin_tallas_y_disponible_mientras_se_venda():
     assert not nike.parse_product_page(data)[1].in_stock
 
 
-def test_nike_sigue_la_paginacion_que_pide_la_propia_web_sin_cabeceras_copiadas(monkeypatch):
-    listado = _json("nike_listado.json")
-    following = listado["props"]["pageProps"]["initialState"]["Wall"]["pageData"]["next"]
+NIKE_SECTION = "https://www.nike.com/fr/w/hommes-chaussures-nik1zy7ok?sortBy=newest"
+NIKE_WALL = ("https://api.nike.com/discover/product_wall/v1/marketplace/FR/language/fr/consumerChannelId/x"
+             "?path=/fr/w/hommes-chaussures-nik1zy7ok&queryType=PRODUCTS&anchor={anchor}&count=24")
+
+
+class NikeSession:
+    """El navegador de mentira de Nike: abrir la sección (su HTML, con el `__NEXT_DATA__` dentro) y bajar la
+    página (`more`: lo que ella pide sola). Pedir a la tienda por nuestra cuenta hace saltar el test."""
+
+    def __init__(self, page: str, more=None, status: int = 200):
+        self.page, self.status = page, status
+        self.more_answers = list(more or [])  # una lista de Response por cada bajada
+        self.opened: list[str] = []
+        self.scrolls = 0
+
+    def page_html(self, store, url):
+        self.opened.append(url)
+        return self.status, self.page
+
+    def more(self, store, want, ready, click=None, wait=30):
+        assert click is None  # Nike carga al bajar: no se pulsa nada
+        self.scrolls += 1
+        found = self.more_answers.pop(0) if self.more_answers else []
+        return [r for r in found if want(r.url)]
+
+    def fetch_json(self, store, url):
+        raise AssertionError(f"Se ha llamado a la tienda por nuestra cuenta: {url}")
+
+    fetch_text = open = page_json = fetch_json
+
+
+def _nike_page() -> str:
+    return (f'<html><script id="__NEXT_DATA__" type="application/json">{json.dumps(_json("nike_listado.json"))}'
+            "</script></html>")
+
+
+def _nike_session(monkeypatch, session: NikeSession) -> NikeSession:
+    monkeypatch.setattr(nike.browser, "require", lambda store: session)
+    monkeypatch.setattr(nike.browser, "active", lambda: True)
+    return session
+
+
+def test_nike_baja_la_pagina_y_lee_lo_que_ella_pide_sin_llamar_a_su_api(monkeypatch):
     api = _json("nike_listado_api.json")
     api["pages"]["next"] = ""  # la última
-    page = f'<html><script id="__NEXT_DATA__" type="application/json">{json.dumps(listado)}</script></html>'
-    fake = FakeFetcher({"/fr/w/hommes-chaussures-nik1zy7ok?sortBy=newest": (200, page),
-                        "api.nike.com/discover/product_wall": (200, json.dumps(api))})
-    connector = nike.NikeConnector()
-    connector.fetcher = fake
-    found = connector.list_category("chaussures")
-    assert fake.asked == ["https://www.nike.com/fr/w/hommes-chaussures-nik1zy7ok?sortBy=newest",
-                          "https://api.nike.com" + following]
+    session = _nike_session(monkeypatch, NikeSession(_nike_page(), more=[[
+        browser.Response("https://www.nike.com/assets/otra-cosa.json", 200, {"productGroupings": []}),  # no interesa
+        browser.Response(NIKE_WALL.format(anchor=24), 200, api),
+    ]]))
+    found = nike.NikeConnector().list_category("chaussures")
+    assert session.opened == [NIKE_SECTION] and session.scrolls == 1
     assert len(found) == 6 and found[-1].product_ref == "nike:IX7726-068"
-    # Si la segunda falla, lo leído se guarda (`Partial`).
-    fake.pages["api.nike.com/discover/product_wall"] = (500, "")
+    # Lo que se baja es de la propia página: solo las respuestas de su «product_wall» y de nike.com.
+    assert nike.is_wall(NIKE_WALL.format(anchor=48))
+    assert not nike.is_wall("https://evil.example/discover/product_wall/v1?anchor=24")
+    assert nike.anchor_of(NIKE_WALL.format(anchor=48)) == 48 and nike.anchor_of("https://x/y") == -1
+
+
+def test_nike_sigue_bajando_hasta_que_no_hay_next_y_no_repite_lo_ya_leido(monkeypatch):
+    second = _json("nike_listado_api.json")
+    third = json.loads(json.dumps(second))
+    third["pages"]["next"] = ""
+    for group in third["productGroupings"]:
+        for item in group["products"]:
+            item["productCode"] = item["productCode"][:-3] + "999"
+    session = _nike_session(monkeypatch, NikeSession(_nike_page(), more=[
+        [browser.Response(NIKE_WALL.format(anchor=24), 200, second)],
+        # La página vuelve a oírse con la de antes (ya leída) junto a la nueva: solo cuenta la nueva.
+        [browser.Response(NIKE_WALL.format(anchor=24), 200, second), browser.Response(NIKE_WALL.format(anchor=48), 200, third)],
+        [browser.Response(NIKE_WALL.format(anchor=72), 200, second)],  # no se llega: ya no había `next`
+    ]))
+    found = nike.NikeConnector().list_category("chaussures")
+    assert session.scrolls == 2 and len(found) == 8
+    assert {"nike:IM9624-999", "nike:IX7726-999"} <= {p.product_ref for p in found}
+
+
+def test_nike_a_medias_si_lo_que_pide_falla_o_deja_de_pedir(monkeypatch):
+    # La página pide lo siguiente y la tienda responde 400: lo leído se guarda (`Partial`).
+    _nike_session(monkeypatch, NikeSession(_nike_page(), more=[
+        [browser.Response(NIKE_WALL.format(anchor=24), 400, None)]]))
     with pytest.raises(shops.Partial) as partial:
-        connector.list_category("chaussures")
-    assert len(partial.value.products) == 4
+        nike.NikeConnector().list_category("chaussures")
+    assert len(partial.value.products) == 4 and "HTTP 400" in str(partial.value)
+    # Con más por leer (`next`), la página ya no pide nada al bajar: tampoco se da la sección por completa.
+    _nike_session(monkeypatch, NikeSession(_nike_page(), more=[[]]))
+    with pytest.raises(shops.Partial) as partial:
+        nike.NikeConnector().list_category("chaussures")
+    assert len(partial.value.products) == 4 and "no pidió más" in str(partial.value)
+    # La primera página no carga: error normal (no hay nada que guardar).
+    _nike_session(monkeypatch, NikeSession("", status=404))
+    with pytest.raises(shops.ShopError) as error:
+        nike.NikeConnector().list_category("chaussures")
+    assert not isinstance(error.value, shops.Partial)
+
+
+def test_nike_respeta_los_topes_de_paginas(monkeypatch):
+    monkeypatch.setenv("ARMARIO_SHOP_MAX_PAGES_NIKE", "2")
+    second = _json("nike_listado_api.json")  # con `next`: habría más
+    session = _nike_session(monkeypatch, NikeSession(_nike_page(), more=[
+        [browser.Response(NIKE_WALL.format(anchor=24), 200, second)]] * 5))
+    assert len(nike.NikeConnector().list_category("chaussures")) == 6
+    assert session.scrolls == 1  # la página y una bajada: dos páginas
+    # Una bajada hasta el final suele traer varias tandas de 24 (la página pide otra al llegar abajo): cada
+    # una cuenta como una página, para el tope y para el avance del panel.
+    monkeypatch.setenv("ARMARIO_SHOP_MAX_PAGES_NIKE", "4")
+    session = _nike_session(monkeypatch, NikeSession(_nike_page(), more=[
+        [browser.Response(NIKE_WALL.format(anchor=a), 200, second) for a in (24, 48, 72)]] * 5))
+    run = crawl.Crawl("nike")
+    with crawl.running(run):
+        nike.NikeConnector().list_category("chaussures")
+    assert session.scrolls == 1 and run.progress["pages"] == 4
+    assert run.progress["section_pages_total"] == 33  # lo que dice la página
+
+
+def test_de_dia_la_ficha_de_nike_sale_del_listado_y_de_noche_se_abre_la_de_verdad(monkeypatch):
+    products = nike.parse_wall(nike.wall(_json("nike_listado.json"))["productGroupings"], "chaussures")
+    first = products[0]
+    monkeypatch.setattr(nike.browser, "active", lambda: False)
+    detail = shops.cached_detail("nike", first.store_data)
+    # La foto del listado (la lateral, de su CDN), sin tallas y disponible: salía en el listado.
+    assert detail.photo_urls == [_json("nike_listado.json")["props"]["pageProps"]["initialState"]["Wall"][
+        "productGroupings"][0]["products"][0]["colorwayImages"]["squarishURL"]]
+    assert detail.sizes == [] and detail.in_stock and not detail.stock_known and detail.price_cents is None
+    # Los otros colores del mismo modelo que salían en el listado, con su tono.
+    assert [(s["product_ref"], s["hex"]) for s in detail.siblings] == [
+        ("nike:HM6803-019", first.store_data["hex"]), ("nike:HM6803-101", products[1].store_data["hex"])]
+    assert detail.store_color == first.store_color
+    other = next(s for s in detail.siblings if s["product_ref"] == "nike:HM6803-101")
+    assert other["store_data"]["code"] == "HM6803-101" and other["url"] == products[1].url
+    # Sin lo del listado (guardado antes), nada: de día no se abre el navegador.
+    assert shops.cached_detail("nike", {"code": "HM6803-019", "url": first.url}) is None
+    # Con el navegador abierto (de noche), se abre la ficha de verdad: más fotos y la descripción.
+    monkeypatch.setattr(nike.browser, "active", lambda: True)
+    assert shops.cached_detail("nike", first.store_data) is None
+
+
+def test_sin_navegador_nike_no_abre_fichas_ni_busca_lo_que_no_ha_leido(monkeypatch):
+    monkeypatch.setattr(nike.browser, "active", lambda: False)
+    connector = nike.NikeConnector()
+    with pytest.raises(NeedsBrowser):
+        connector.detail({"code": "HM6803-101", "url": "https://www.nike.com/fr/t/x/HM6803-101"})
+    with pytest.raises(SearchError) as error:
+        connector.search("HM6803-019")
+    assert not isinstance(error.value, NotThisStore) and "HM6803-019" in str(error.value)
+    with pytest.raises(NotThisStore):
+        connector.search("3918/300")
+    # Con el navegador abierto, la ficha se lee de su página (el mismo `__NEXT_DATA__` de siempre).
+    ficha = f'<script id="__NEXT_DATA__" type="application/json">{json.dumps(_json("nike_ficha.json"))}</script>'
+    session = _nike_session(monkeypatch, NikeSession(ficha))
+    detail = connector.detail({"code": "HM6803-019", "url": "https://www.nike.com/fr/t/x/HM6803-019"})
+    assert session.opened == ["https://www.nike.com/fr/t/x/HM6803-019"] and len(detail.photo_urls) == 4
+    assert [p.product_ref for p in connector.search("HM6803-019")] == ["nike:HM6803-019"]
+
+
+def test_nike_de_punta_a_punta_sin_abrir_el_navegador_de_dia(client, monkeypatch, photo_bytes):
+    # El listado (leído de noche con navegador) deja lo necesario: la propuesta y su otro color salen de ahí.
+    from sqlalchemy import select
+
+    from app.models import ShopItem
+
+    connector = shops.CONNECTORS["nike"]
+    products = nike.parse_wall(nike.wall(_json("nike_listado.json"))["productGroupings"], "chaussures")
+    monkeypatch.setattr(connector, "list_category", lambda slug: list(products))
+    asked: list[str] = []
+    monkeypatch.setattr(connector, "download", lambda url: asked.append(url) or photo_bytes)
+    monkeypatch.setattr(shops.browser, "missing", lambda: None)
+    with SessionLocal() as db:
+        shopping.set_store(db, "nike", True, None)
+        shopping.refresh(db, stores=["nike"])
+        new = list(db.scalars(select(ShopItem).where(ShopItem.store == "nike", ShopItem.status == "nuevo")))
+        assert new and all(len(i.photos) == 1 and i.sizes == [] and i.in_stock for i in new)
+        assert all(url.startswith("https://static.nike.com/") for url in asked)
+        vomero = next(i for i in new if i.product_ref.startswith("nike:HM6803-"))
+        other = next(ref for ref in ("nike:HM6803-019", "nike:HM6803-101") if ref != vomero.product_ref)
+        assert [c["available"] for c in shopping.colors_of(vomero)] == [True, False]  # aún sin preparar
+        assert shopping.prepare_colors(db) >= 1
+        db.refresh(vomero)
+        assert all(c["available"] for c in shopping.colors_of(vomero))
+        item_id = vomero.id
+    answer = client.post(f"/api/shop/items/{item_id}/color", json={"product_ref": other})
+    assert answer.status_code == 200
+
+
+def test_nike_va_con_navegador_ligera_y_con_colores_preparados():
+    connector = shops.CONNECTORS["nike"]
+    assert connector.needs_browser and connector.prepared_colors and not connector.heavy
+    assert shops.needs_browser("nike") and not shops.heavy("nike") and connector.refresh_weekday == 3
 
 
 def test_el_buscador_de_nike_entiende_codigos_y_enlaces():

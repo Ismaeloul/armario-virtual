@@ -4,8 +4,8 @@ Reparto de noches (18-11-2026). Cada tienda se consulta un día fijo a la semana
 hora de la noche, y las de una misma noche van una detrás de otra, de madrugada (nadie usa el Umbrel a esa
 hora: que tarde una o dos horas no importa). Con veinte tiendas, cada noche lleva como mucho TRES tiendas y
 como mucho DOS «pesadas» (las de navegador con muchas secciones o muchas páginas: las de Inditex, Jules,
-Bonobo, Uniqlo, Mango, H&M, COS y Weekday). Las de zapatillas con navegador (JD Sports, Snipes, size?) son
-ligeras: una o dos secciones. Además, el bucle de la noche lo hace cumplir aunque coincidan más (recién
+Bonobo, Uniqlo, Mango, H&M, COS y Weekday). Las de zapatillas con navegador (JD Sports, Snipes, size? y
+Nike) son ligeras: una o dos secciones. Además, el bucle de la noche lo hace cumplir aunque coincidan más (recién
 activadas a la vez, una que falló y se repite): las que no caben pasan a la noche siguiente (ver
 `shopping.tonight`; los topes, `ARMARIO_SHOP_STORES_PER_NIGHT` y `ARMARIO_SHOP_HEAVY_PER_NIGHT`).
 
@@ -57,7 +57,7 @@ CONNECTORS: dict[str, ShopConnector] = {
     "bershka": BershkaConnector(),
     "massimodutti": MassimoDuttiConnector(),  # navegador
     "lefties": LeftiesConnector(),  # navegador
-    "nike": NikeConnector(),  # solo zapatillas
+    "nike": NikeConnector(),  # solo zapatillas; navegador (escucha lo que pide la página al bajar)
     "jackjones": JackJonesConnector(),
     "carhartt": CarharttConnector(),
     # Zapatillas de muchas marcas: Snipes (listado con navegador, ficha sin él), size? (con navegador) y Foot
@@ -119,7 +119,7 @@ def maker_code(key: str, store_data: dict) -> str | None:
 
 def cached_detail(key: str, store_data: dict):
     """La ficha de un producto sacada de lo que guardó el listado, sin volver a la tienda (Pull&Bear,
-    Bershka, Massimo Dutti, Lefties y JD Sports la guardan; las demás no). None si no se puede."""
+    Bershka, Massimo Dutti, Lefties, JD Sports, las de solo listado y, de día, Nike). None si no se puede."""
     make = getattr(CONNECTORS.get(key), "cached_detail", None)
     if make is None or not isinstance(store_data, dict):
         return None

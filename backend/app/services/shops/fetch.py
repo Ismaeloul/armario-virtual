@@ -10,7 +10,6 @@ Bershka, de sus CDN). Zara tiene el suyo (es anterior y responde JSON).
   HASTA MAÑANA (lo mismo que con el navegador: `browser.block`): las siguientes peticiones fallan al
   momento con BlockedError, sin tocar la tienda, y el panel «Tiendas» lo enseña. No se insiste.
 """
-import json
 import threading
 import time
 from dataclasses import dataclass
@@ -40,9 +39,6 @@ class Page:
         return self.content.decode("utf-8", "replace")
 
 
-JSON = "application/json"
-
-
 def read_html(connector, url: str) -> tuple[int, str]:
     """(estado, HTML) de una página de la tienda por su camino: un cliente normal (`connector.fetcher`) o,
     si la tienda pasa a leerse con navegador (`needs_browser = True`: lo que hubo que hacer con JD Sports
@@ -53,20 +49,6 @@ def read_html(connector, url: str) -> tuple[int, str]:
         return status or 0, text or ""
     page = connector.fetcher.get(url)
     return page.status, page.text
-
-
-def read_json(connector, url: str) -> tuple[int, object]:
-    """(estado, JSON) de una dirección que la propia web pide (la paginación de Nike), por el mismo camino
-    que `read_html`: con navegador, pedida desde dentro de la página."""
-    if getattr(connector, "needs_browser", False):
-        return browser.require(connector.key).fetch_json(connector.key, url)
-    page = connector.fetcher.get(url, accept=JSON)
-    if page.status != 200:
-        return page.status, None
-    try:
-        return page.status, json.loads(page.content)
-    except ValueError:
-        return page.status, None
 
 
 class Fetcher:

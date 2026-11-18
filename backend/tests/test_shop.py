@@ -709,7 +709,8 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
         ("weekday", "Weekday", False, 6),
     ]
     assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 20  # el falso no lo dice
-    assert [s["browser"] for s in state["stores"]] == [False, False, True, True, True, True, True, False, False, False,
+    # Nike (la octava) va con navegador desde que su paginación sin él empezó a dar 400.
+    assert [s["browser"] for s in state["stores"]] == [False, False, True, True, True, True, True, True, False, False,
                                                        True, True, False, True, True] + [True] * 5
     assert [s["key"] for s in state["stores"] if s["heavy"]] == [
         "pullandbear", "bershka", "massimodutti", "lefties", "jules", "bonobo", "uniqlo", "mango", "hm", "cos",

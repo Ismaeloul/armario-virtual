@@ -59,8 +59,11 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   colores y composición se traducen al español con Codex en lote (`services/ai/translate.py`), con modelo y
   esfuerzo propios en Ajustes (el usuario quiere Luna en bajo para traducir y Terra en alto para las fotos).
   Construidas el 18-11-2026 las 15 tiendas acordadas (en `main`, sin publicar; 20 en total, 416 tests), todas
-  desactivadas: Massimo Dutti y Lefties (`inditex.py`), Nike, Jack & Jones, Carhartt WIP, Foot Locker (estas
-  cuatro sin navegador, sin probar en Linux: si dan 403 allí, pasar a `needs_browser = True`), Snipes, size?,
+  desactivadas: Massimo Dutti y Lefties (`inditex.py`), Jack & Jones, Carhartt WIP, Foot Locker (estas
+  tres sin navegador, sin probar en Linux: si dan 403 allí, pasar a `needs_browser = True`), Nike (con
+  navegador desde el 18-11-2026: la segunda página pedida con httpx empezó a dar HTTP 400, en el PC y en el
+  Umbrel; ahora se baja la página y se escucha lo que pide sola; de día la ficha sale de lo guardado del
+  listado, con una sola foto), Snipes, size?,
   Jules y Bonobo (`sfra.py`), y Uniqlo, Mango, H&M, COS y Weekday (`listing.py`: solo se lee el listado, nunca
   la ficha; H&M, COS, Uniqlo y Mango sin tallas, «Míralas en la tienda» y talla a mano al comprar; H&M con
   tope de 8 páginas por sección). Las zapatillas iguales de varias tiendas salen una sola vez (`maker_code`,
