@@ -391,6 +391,7 @@ def test_las_palabras_del_nombre_se_aprenden():
     prefs = shopping.ShopTaste()
     for i in range(3):
         prefs.learn(product(f"x{i}", "pantalón", "marrón", name="Pantalón pana relaxed fit"), liked=True)
+    for i in range(25):  # un descarte cuenta poco: hace falta repetirlo mucho para que sea una preferencia
         prefs.learn(product(f"y{i}", "vaquero", "azul", name="Jeans skinny fit"), liked=False)
     assert prefs.opinion(prefs.words, "pana") > 0 > prefs.opinion(prefs.words, "skinny")
     assert "pantalon" not in prefs.words and "fit" not in prefs.words
@@ -419,7 +420,7 @@ def test_las_palabras_del_nombre_se_aprenden():
 @pytest.mark.parametrize(
     ("motivo", "esperado"),
     [
-        (None, {"types": -0.5, "colors": -0.5, "prices": -0.5, "words": -0.5}),  # repartido y flojo
+        (None, {"types": -0.2, "colors": -0.2, "prices": -0.2, "words": -0.2}),  # repartido y muy flojo
         ("estilo", {"types": -0.5, "words": -1.0}),  # las palabras del nombre y, algo, el tipo
         ("color", {"colors": -1.0}),
         ("caro", {"prices": -1.0}),
@@ -448,6 +449,7 @@ def test_la_nota_aprende_de_los_me_gusta_de_la_tienda():
     prefs = shopping.ShopTaste()
     for _ in range(4):
         prefs.learn(product("x", "sobrecamisa", "negro", price=4995), liked=True)
+    for _ in range(25):  # los descartes pesan poco y solo cuentan al acumularse
         prefs.learn(product("y", "polo", "rosa", price=1995), liked=False)
 
     gusta, motivos = shopping.score(product("a", "sobrecamisa", "negro", price=3995), wardrobe, prefs=prefs)
@@ -975,7 +977,7 @@ def test_volver_deshace_las_decisiones_una_a_una_y_no_cuentan_al_aprender(client
     decided = {i.id: i for i in _items()}
     assert decided[a["id"]].decided_at and decided[b["id"]].decided_at  # se guarda cuándo se decidió
     learned = _taste()
-    assert learned.types["camisa"] == [0.5, 1.5]  # un me gusta entero y un descarte sin motivo, a medias
+    assert learned.types["camisa"] == pytest.approx([0.8, 1.2])  # un me gusta entero y un descarte, que cuenta poco
 
     # Primera vuelta: el descarte. La tarjeta vuelve tal cual, con sus fotos.
     back = client.post("/api/shop/undo").json()
@@ -996,7 +998,7 @@ def test_volver_deshace_las_decisiones_una_a_una_y_no_cuentan_al_aprender(client
 
     # Se puede volver a decidir lo deshecho, y ahora con otro resultado.
     assert client.post(f"/api/shop/items/{a['id']}/dislike").status_code == 200
-    assert _taste().types["camisa"] == [-0.5, 0.5]
+    assert _taste().types["camisa"] == [-0.2, 0.2]
 
 
 def test_volver_solo_alcanza_a_la_tanda_actual(client, tienda):
@@ -1032,7 +1034,7 @@ def test_el_motivo_del_descarte_se_guarda_y_cambia_lo_aprendido(client, tienda):
     _refresh()
     a, b, c = _items()
     client.post(f"/api/shop/items/{a.id}/dislike")
-    assert _taste().colors["rosa"] == [-0.5, 0.5]  # sin motivo: repartido y flojo
+    assert _taste().colors["rosa"] == [-0.2, 0.2]  # sin motivo: repartido y muy flojo
 
     assert client.post(f"/api/shop/items/{a.id}/reason", json={"reason": "caro"}).status_code == 204
     learned = _taste()

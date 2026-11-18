@@ -109,7 +109,9 @@ _RISKY = re.compile(
 # (tipo, color, precio, palabras). Sin motivo se reparte entre todo, más flojo.
 DISCARD_REASONS = ("estilo", "color", "caro", "ya_tengo")
 _BLAME = {
-    None: (0.5, 0.5, 0.5, 0.5),
+    # Descartar no es decir «no me gusta este tipo de ropa»: puede ser una manga o un detalle. Por eso
+    # un descarte cuenta muy poco (un «me gusta» cuenta 1) y solo pesa cuando se repite muchas veces.
+    None: (0.2, 0.2, 0.2, 0.2),
     "estilo": (0.5, 0.0, 0.0, 1.0),  # el corte: las palabras del nombre y, algo, el tipo
     "color": (0.0, 1.0, 0.0, 0.0),
     "caro": (0.0, 0.0, 1.0, 0.0),

@@ -21,7 +21,6 @@ import {
 type View = "descubrir" | "gustados";
 
 const POLL_MS = 4000; // cada cuánto se pregunta cómo va la consulta (o el «Ver más») en marcha
-const REASON_MS = 7000; // lo que dura en pantalla la pregunta «¿Qué no te convence?»
 const REASON_DONE_MS = 1500;
 // «Es caro» no se ofrece: el usuario no quiere que el precio sea un motivo.
 const REASONS: ShopDiscardReason[] = ["estilo", "color", "ya_tengo"];
@@ -215,7 +214,9 @@ function Discover({
       .then((n) => {
         onNext(n);
         // La pregunta del motivo no frena nada: sale aparte, se puede ignorar y se va sola.
-        ask(liked ? null : { id, done: false }, REASON_MS);
+        // Ya no se pregunta el motivo al descartar (decisión del usuario): descartar una prenda no
+        // siempre tiene un motivo que se pueda decir, y no debe sentirse como una encuesta.
+        ask(null);
       })
       .catch(() => {
         setError(t.compras.errorAccion);
