@@ -40,6 +40,7 @@ from ..db import SessionLocal
 from ..models import Garment, Setting, ShopItem, now_utc
 from . import ai, outfits, shops, storage, style_rules
 from .ai.base import build_prompt
+from .ai import codex_models
 from .shops import NotThisStore, SearchError, ShopError
 from .shops.estimate import estimate_color, norm
 
@@ -712,6 +713,14 @@ def expires_soon(item: ShopItem, now: datetime | None = None) -> bool:
 # ---------- «La he comprado»
 
 
+def _model_used(provider: str | None) -> str | None:
+    """«modelo · esfuerzo» con el que Codex analizó, igual que al añadir una prenda a mano."""
+    if provider != "codex":
+        return None
+    model, effort = codex_models.chosen()
+    return " · ".join(part for part in (model or "automático", effort) if part)
+
+
 class CannotBuy(Exception):
     pass
 
@@ -751,6 +760,7 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
             pattern=draft.pattern, style=draft.style, closure=draft.closure, hood=draft.hood, fit=draft.fit,
             thickness=draft.thickness, details=draft.details.strip(), season=draft.season,
             notes=draft.notes.strip(), ai_provider=result.provider, ai_confidence=draft.confidence,
+            ai_model=_model_used(result.provider),
             ai_draft=saved_draft,
         )
     else:

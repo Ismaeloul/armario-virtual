@@ -1247,8 +1247,6 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
   viewingRef.current = viewing !== null;
   const input = useRef<HTMLInputElement>(null);
   // Leer el portapapeles solo existe en https (o en localhost): por http a secas, el botón no sale.
-  const canPaste =
-    typeof navigator !== "undefined" && window.isSecureContext && typeof navigator.clipboard?.readText === "function";
 
   useEffect(() => {
     input.current?.focus();
@@ -1274,18 +1272,6 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
       .then(setResults)
       .catch((e) => setError(lookupMessage(e)))
       .finally(() => setBusy(false));
-  };
-
-  const paste = () => {
-    navigator.clipboard
-      .readText()
-      .then((text) => {
-        const pasted = text.trim().slice(0, 600);
-        if (!pasted) return setError(t.compras.buscador.portapapelesVacio);
-        setQuery(pasted);
-        search(pasted);
-      })
-      .catch(() => setError(t.compras.buscador.errorPegar));
   };
 
   const update = (item: ShopLookupItem) => {
@@ -1344,18 +1330,6 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
               spellCheck={false}
               className={`${inputClass} h-12 min-w-0 flex-1`}
             />
-            {canPaste && (
-              <button
-                type="button"
-                aria-label={t.compras.buscador.pegar}
-                title={t.compras.buscador.pegar}
-                disabled={busy}
-                onClick={paste}
-                className={topButton}
-              >
-                <Icon name="content_paste" size={20} />
-              </button>
-            )}
             <button
               type="submit"
               aria-label={t.compras.buscador.buscar}

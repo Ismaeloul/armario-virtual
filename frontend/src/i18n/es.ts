@@ -159,9 +159,6 @@ export const t = {
       placeholder: "Referencia o enlace de Zara",
       ayuda:
         "La referencia es el número que aparece en la etiqueta o en la web de Zara, tipo 3918/300. También vale pegar el enlace del producto o escribir qué buscas.",
-      pegar: "Pegar del portapapeles",
-      errorPegar: "No se pudo leer el portapapeles. Pega el texto en el campo.",
-      portapapelesVacio: "El portapapeles está vacío.",
       buscar: "Buscar",
       buscando: "Buscando…",
       error: "No se pudo buscar. Inténtalo de nuevo.",
