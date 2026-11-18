@@ -1605,6 +1605,18 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
     elif target.status == SEARCHED:
         target.first_seen_at = now_utc()  # se ha vuelto a mirar: el plazo de limpieza empieza otra vez
         db.commit()
+    # Es la misma prenda en otro color: lo que ya estaba traducido (el nombre, la composición y el nombre
+    # del color, que viene en la lista de hermanos) se hereda al momento, sin esperar a Codex. Antes el
+    # título volvía al francés al cambiar de color aunque fuera el mismo.
+    inherited = False
+    if item.name_es and not target.name_es and target.name == item.name:
+        target.name_es, inherited = item.name_es, True
+    if item.composition_es and not target.composition_es and target.composition == item.composition:
+        target.composition_es, inherited = item.composition_es, True
+    if sibling.get("name_es") and not target.store_color_es:
+        target.store_color_es, inherited = sibling["name_es"], True
+    if inherited:
+        db.commit()
     if _foreign(target.store, target.url) and not target.translated:
         translate_soon([target.id])
     return target

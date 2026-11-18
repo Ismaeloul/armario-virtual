@@ -447,3 +447,28 @@ def test_los_nombres_de_los_colores_hermanos_se_traducen_en_el_mismo_lote(client
         ]))
         db.commit()
         assert all(s.get("name_es") for s in db.get(ShopItem, item["id"]).siblings)
+
+
+def test_al_cambiar_de_color_se_hereda_el_nombre_ya_traducido(client):
+    """Es la misma prenda en otro color: el título no puede volver al francés mientras llega Codex."""
+    from datetime import datetime, timezone
+
+    def fila(ref, status, **extra):
+        return ShopItem(
+            store="pullandbear", product_ref=ref, name="Pull basique col rond", price_cents=2999,
+            url="https://www.pullandbear.com/fr/x", type="jersey", category="parte_superior", color="verde",
+            pattern="liso", style="casual", season="invierno", status=status,
+            batch=datetime.now(timezone.utc).date(), composition="100% coton", **extra,
+        )
+
+    with SessionLocal() as db:
+        verde = fila("pullandbear:9-500", shopping.NEW, name_es="Jersey básico de cuello redondo",
+                     composition_es="100% algodón",
+                     siblings=[{"product_ref": "pullandbear:9-800", "name": "Noir", "name_es": "Negro", "hex": None}])
+        negro = fila("pullandbear:9-800", shopping.LIKED, liked_at=datetime.now(timezone.utc))
+        db.add_all([verde, negro])
+        db.commit()
+        otro = shopping.switch_color(db, verde, "pullandbear:9-800")
+        assert otro.name_es == "Jersey básico de cuello redondo"
+        assert otro.composition_es == "100% algodón"
+        assert otro.store_color_es == "Negro"
