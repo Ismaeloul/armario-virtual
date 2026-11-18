@@ -1,0 +1,238 @@
+{
+ "response": {
+  "numFound": 1028,
+  "start": 0,
+  "docs": [
+   {
+    "sale_price": 140.0,
+    "url": "/products/19774073",
+    "pid": "15466979033411",
+    "brand": "adidas",
+    "title": "adidas Originals Kegler Super GORE-TEX - size? exclusive",
+    "sale_price_range": [
+     140.0,
+     140.0
+    ],
+    "item_isnew": "true",
+    "handle": "19774073",
+    "custom.products_siblings": [
+     "gid://shopify/Product/15466979066179"
+    ],
+    "images": [
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_806181_a.jpg?v=1793265221",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_806181_b.jpg?v=1793265222",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_806181_c.jpg?v=1793265222",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_806181_d.jpg?v=1793265221",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_806181_e.jpg?v=1793265221",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_806181_f.jpg?v=1793265222"
+    ],
+    "custom.hide_quick_view": "false",
+    "variants": [
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       140.0
+      ],
+      "variant_id": [
+       "54987721867587"
+      ]
+     },
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       140.0
+      ],
+      "variant_id": [
+       "54987721900355"
+      ]
+     },
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       140.0
+      ],
+      "variant_id": [
+       "54987721933123"
+      ]
+     },
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       140.0
+      ],
+      "variant_id": [
+       "54987721965891"
+      ]
+     },
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       140.0
+      ],
+      "variant_id": [
+       "54987721998659"
+      ]
+     },
+     {
+      "availableForSale": [
+       "false"
+      ],
+      "variant_id": [
+       "55057492115779"
+      ]
+     },
+     {
+      "availableForSale": [
+       "false"
+      ],
+      "variant_id": [
+       "55065185091907"
+      ]
+     }
+    ],
+    "docType": "product"
+   },
+   {
+    "sale_price": 210.0,
+    "url": "/products/19773942",
+    "pid": "15460965515587",
+    "brand": "HOKA",
+    "title": "HOKA Tor Summit Field",
+    "sale_price_range": [
+     210.0,
+     210.0
+    ],
+    "item_isnew": "true",
+    "handle": "19773942",
+    "custom.products_siblings": [
+     "gid://shopify/Product/15438390264131"
+    ],
+    "images": [
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_798800_a.jpg?v=1792822604",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_798800_b.jpg?v=1792822604",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_798800_c.jpg?v=1792822604",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_798800_d.jpg?v=1792822604",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_798800_e.jpg?v=1792822604",
+     "https://cdn.shopify.com/s/files/1/0921/0911/1619/files/sz_798800_f.jpg?v=1792822604"
+    ],
+    "custom.hide_quick_view": "false",
+    "variants": [
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       210.0
+      ],
+      "variant_id": [
+       "54960276799811"
+      ]
+     },
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       210.0
+      ],
+      "variant_id": [
+       "54960276832579"
+      ]
+     },
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       210.0
+      ],
+      "variant_id": [
+       "54960276865347"
+      ]
+     },
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       210.0
+      ],
+      "variant_id": [
+       "54960276898115"
+      ]
+     },
+     {
+      "availableForSale": [
+       "true"
+      ],
+      "compareAtPrice": [
+       210.0
+      ],
+      "variant_id": [
+       "54960276930883"
+      ]
+     }
+    ],
+    "docType": "product"
+   }
+  ]
+ },
+ "facet_counts": {
+  "facets": [
+   {
+    "name": "Marques",
+    "type": "text",
+    "value": [
+     {
+      "name": "Nike",
+      "count": 151
+     },
+     {
+      "name": "New Balance",
+      "count": 122
+     },
+     {
+      "name": "Salomon",
+      "count": 35
+     },
+     {
+      "name": "adidas",
+      "count": 205
+     }
+    ]
+   },
+   {
+    "name": "Sélections",
+    "type": "text",
+    "value": [
+     {
+      "name": "Chaussures & Bottes",
+      "count": 850
+     },
+     {
+      "name": "Shoes",
+      "count": 66
+     },
+     {
+      "name": "Sandales & Claquettes",
+      "count": 39
+     },
+     {
+      "name": "Boots",
+      "count": 37
+     }
+    ]
+   }
+  ]
+ }
+}

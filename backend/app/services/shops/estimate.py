@@ -88,31 +88,38 @@ def estimate_type(name: str, default: str | None = None) -> str | None:
 _COLOR_WORDS = [
     (r"multicolor|varios|combinad|combine|estampad|\bmulti\b", "multicolor"),
     (r"azul hielo|bleu glace|ice blue", "celeste"),
+    # «Bleu gris» (Bonobo) es un azul agrisado: sin esto ganaba «gris», que va antes en la lista.
+    (r"bleu gris|blue gr[ae]y", "azul"),
+    (r"vert gris|green gr[ae]y", "verde"),
     # «Glace» a secas (Pull&Bear, Bershka) es un blanco hielo tirando a beige muy claro, no un azul: un
     # pantalón «Glace» claramente beige claro salía como celeste (visto por el usuario, 18-11-2026).
     (r"blanco roto|blanco hueso|off white|off-white|crudo|ecru|hueso|marfil|nata|crema|tiza|mantequilla|"
      r"blanc casse|creme|cream|ivoire|ivory|coquille|\bsail\b|vanille|vanilla|\bglace\b|\bbone\b|\bsalt\b|"
-     r"\bnatural\b|\bcru\b", "crudo"),
+     r"\bnatural\b|\bnaturel\b|\bcru\b|\bchalk\b|\blinen\b|\bphantom\b", "crudo"),
     (r"marino|navy|azul oscuro|azul noche|tinta|marine|bleu nuit|bleu fonce|midnight|obsidian", "azul marino"),
     (r"azul claro|azul cielo|azul palido|celeste|bleu clair|bleu ciel|bleu pale|light blue|sky blue|"
      r"baby blue|\bciel\b", "celeste"),
     (r"oliva|khaki|kaki|caqui|militar|musgo|olive|\bmousse\b", "verde oliva"),
     (r"burdeos|burgundy|granate|vino|berenjena|bordeaux|maroon|\bwine\b|aubergine|grenat", "burdeos"),
     (r"marron|chocolate|conac|tabaco|cuero|tostado|caramelo|camel|taupe|topo|moka|cafe|castano|avellana|cobre|"
-     r"\bbrun|brown|chocolat|cognac|\btan\b|noisette|bronze|cuivre|\bmiel\b|wheat|tobacco|\bcuir\b", "marrón"),
-    (r"beige|arena|piedra|vison|nude|\bsable\b|\bsand\b|stone|\bpierre\b", "beige"),
+     r"\bbrun|brown|chocolat|cognac|\btan\b|noisette|bronze|cuivre|\bmiel\b|wheat|tobacco|\bcuir\b|\bmocha\b|"
+     r"espresso|coffee|cardboard", "marrón"),
+    (r"beige|arena|piedra|vison|nude|\bsable\b|\bsand\b|stone|\bpierre\b|sesame|\bputty\b|oatmeal|\bdesert\b|"
+     r"\bdune\b", "beige"),
     (r"gris|antracita|plomo|plata|marengo|ceniza|humo|grafito|carbon|grey|gray|argent|silver|anthracite|"
-     r"charcoal|graphite|\bash\b|plomb|acier|ardoise|slate", "gris"),
+     r"charcoal|graphite|\bash\b|plomb|acier|ardoise|slate|platinum|platine|cement", "gris"),
     (r"negro|black|noir", "negro"),
     (r"blanco|white|blanc", "blanco"),
-    (r"azul|indigo|anil|petroleo|petrole|denim|cobalto|turquesa|bleu|blue|turquoise|royal", "azul"),
+    (r"azul|indigo|anil|petroleo|petrole|denim|cobalto|turquesa|bleu|blue|turquoise|royal|\bteal\b|\bbrut\b",
+     "azul"),
     (r"verde|verdos|botella|bouteille|menta|esmeralda|\bvert|green|\bmint|menthe|sapin|\bsage\b|\bfir\b|\bleaf\b|\bforest\b|"
      r"\bpine\b|\bmoss\b", "verde"),
     (r"rojo|rojiz|coral|rouge|\bred\b|corail", "rojo"),
     (r"amarillo|mostaza|vainilla|lima|ocre|jaune|yellow|moutarde|\bor\b|\bdore|gold|\bvolt\b", "amarillo"),
     (r"naranja|teja|terracota|ladrillo|oxido|calabaza|orange|rouille|brique", "naranja"),
     (r"rosa|fucsia|salmon|maquillaje|\brose\b|pink|fuchsia|saumon", "rosa"),
-    (r"morado|lila|malva|violeta|lavanda|purpura|violet|purple|lilas|mauve|lavande|prune", "morado"),
+    (r"morado|lila|malva|violeta|lavanda|purpura|violet|purple|lilas|mauve|lavande|prune|\bplum\b|lilac|"
+     r"lavender", "morado"),
 ]
 _COLOR_RE = [(re.compile(words), color) for words, color in _COLOR_WORDS]
 
@@ -143,7 +150,9 @@ _DOUBTFUL = {
     "petroleo", "lima", "ocre", "or", "dore", "gold", "bronze", "cuivre", "cobre", "oxido", "rouille", "teja",
     "ladrillo", "brique", "calabaza", "prune", "berenjena", "aubergine", "vino", "wine", "moka", "cafe",
     "avellana", "noisette", "castano", "bone", "obsidian", "sage", "volt", "ash", "salt", "natural", "tobacco",
-    "fir", "leaf", "forest", "pine", "moss", "mousse", "cuir", "petrole",
+    "fir", "leaf", "forest", "pine", "moss", "mousse", "cuir", "petrole", "chalk", "linen", "phantom", "sesame",
+    "putty", "oatmeal", "desert", "dune", "mocha", "espresso", "coffee", "cardboard", "platinum", "platine",
+    "cement", "teal", "brut", "plum", "naturel",
 }
 
 # El color aún no se sabe: la tienda no lo dice en el listado (Courir) o lo dice con palabras que no

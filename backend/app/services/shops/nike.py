@@ -324,6 +324,9 @@ class NikeConnector:
     def reference(self, store_data: dict) -> str | None:
         return reference(store_data)
 
+    def maker_code(self, store_data: dict) -> str | None:
+        return reference(store_data)
+
     def search(self, query: str, limit: int = 12) -> list[ShopProduct]:
         code = parse_query(query)
         data = self._page(f"{BASE}/fr/t/x/{code}")

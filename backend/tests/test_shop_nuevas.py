@@ -346,14 +346,14 @@ def test_las_cinco_nuevas_nacen_desactivadas_y_con_su_clase_de_ropa(client):
     assert next(s for s in state["stores"] if s["key"] == "zara")["kinds"] == ["parte_superior"]
 
 
-def test_el_reparto_de_la_semana_no_pasa_de_dos_tiendas_ni_de_una_pesada_por_noche():
+def test_el_reparto_de_la_semana_no_pasa_de_los_topes_de_cada_noche():
+    # Con quince tiendas: tres por noche y dos pesadas como mucho (ver test_shop_cinco_mas para el detalle).
     for day in shopping.week_plan():
-        assert len(day) <= 2 and sum(map(shops.heavy, day)) <= 1
-    assert all(sum(map(shops.heavy, day)) <= 1 for day in shopping.week_plan())
+        assert len(day) <= config.SHOP_STORES_PER_NIGHT and sum(map(shops.heavy, day)) <= config.SHOP_HEAVY_PER_NIGHT
     assert sum(map(len, shopping.week_plan())) == len(shops.CONNECTORS)
 
 
-def test_si_coinciden_mas_la_noche_hace_dos_y_las_demas_esperan(client):
+def test_si_coinciden_mas_la_noche_hace_las_que_caben_y_las_demas_esperan(client):
     with SessionLocal() as db:
         for key in shops.CONNECTORS:  # todas activadas a la vez: todas tocarían la primera noche
             shopping.set_store(db, key, True, None)
@@ -362,7 +362,8 @@ def test_si_coinciden_mas_la_noche_hace_dos_y_las_demas_esperan(client):
         ran: list[list[str]] = []
         for _ in range(7):
             picked = shopping.tonight(db, night)
-            assert len(picked) <= config.SHOP_STORES_PER_NIGHT and sum(map(shops.heavy, picked)) <= 1
+            assert len(picked) <= config.SHOP_STORES_PER_NIGHT
+            assert sum(map(shops.heavy, picked)) <= config.SHOP_HEAVY_PER_NIGHT
             shopping.note_tonight(db, picked, night)
             assert shopping.tonight(db, night + timedelta(hours=2)) == []  # esa noche ya no sale ninguna más
             for store in picked:  # como si se hubieran consultado bien
@@ -371,7 +372,8 @@ def test_si_coinciden_mas_la_noche_hace_dos_y_las_demas_esperan(client):
             db.commit()
             ran.append(picked)
             night += timedelta(days=1)
-    assert ran[0] == ["zara", "courir"]  # primero las que más esperan; a igualdad, el orden del panel
+    # Primero las que más esperan; a igualdad, el orden del panel (y sin pasar de dos pesadas).
+    assert ran[0] == ["zara", "courir", "jdsports"]
     # En una semana han salido todas (y alguna, otra vez en su día de siempre).
     assert {s for night_ in ran for s in night_} == set(shops.CONNECTORS)
 

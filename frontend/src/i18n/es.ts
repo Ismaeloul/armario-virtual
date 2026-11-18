@@ -188,8 +188,9 @@ export const t = {
       noDisponible: "No disponible",
       semana: "Reparto de la semana",
       libre: "Libre",
-      repartoTexto: (porNoche: number, pesadas: number) =>
-        `Cada noche se consultan como mucho ${porNoche === 1 ? "una tienda" : `${porNoche} tiendas`}, una detrás de otra, y ${pesadas === 1 ? "solo una" : `como mucho ${pesadas}`} de las pesadas (Pull&Bear, Bershka, Massimo Dutti, Lefties). Si coinciden más, las que no caben pasan a la noche siguiente.`,
+      repartoTexto: (porNoche: number, pesadas: number, nombres: string) =>
+        `Cada noche se consultan como mucho ${porNoche === 1 ? "una tienda" : `${porNoche} tiendas`}, una detrás de otra, y ${pesadas === 1 ? "solo una" : `como mucho ${pesadas}`} de las pesadas (${nombres}, marcadas con «·»). Si coinciden más, las que no caben pasan a la noche siguiente.`,
+      pesada: "pesada: muchas secciones con navegador",
       noche: "Hora de la consulta",
       nocheTexto:
         "Cada tienda se consulta en su día, a esta hora: lee el catálogo entero, despacio. Si la app está apagada a esa hora, lo hace en cuanto arranque.",
@@ -243,6 +244,8 @@ export const t = {
       agotadas: (tallas: string) => `agotadas: ${tallas}`,
       composicion: "Composición",
       enlace: "Enlace",
+      tambienEn: "También en",
+      tambienEnTienda: (tienda: string) => `Abrir en ${tienda}`,
       abrir: "Abrir la página de la tienda",
       guardar: "Guardar en Me gustan",
       guardando: "Guardando…",

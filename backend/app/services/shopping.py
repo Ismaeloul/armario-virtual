@@ -1015,6 +1015,12 @@ def _detail_color(row: ShopItem, detail) -> None:
     extra = getattr(detail, "store_data", None) or {}
     if extra:
         row.store_data = {**(row.store_data or {}), **{k: v for k, v in extra.items() if v}}
+    _note_code(row)
+
+
+def _note_code(row: ShopItem) -> None:
+    """Apunta el código de fabricante (como clave) si la tienda lo dice: ver `also_in` y `_promote`."""
+    row.maker_code = shops.maker_code(row.store, row.store_data or {})
 
 
 def _apply_detail(row: ShopItem, detail) -> None:
@@ -1279,7 +1285,12 @@ def _store_candidate(db: Session, row: ShopItem | None, product, today: date) ->
         row.translated = None
     row.name, row.price_cents, row.url = name, product.price_cents, product.url
     row.brand = (getattr(product, "brand", "") or "")[:40] or None
-    row.store_color, row.section, row.store_data = product.store_color[:60], product.section, product.store_data
+    # Lo que solo dice la ficha (el código de fabricante en Snipes, size? y Foot Locker) no se pierde
+    # porque el listado de la semana siguiente no lo traiga.
+    learnt = {k: v for k, v in (row.store_data or {}).items() if k == "mpn" and v and not product.store_data.get(k)}
+    row.store_color, row.section = product.store_color[:60], product.section
+    row.store_data = {**product.store_data, **learnt}
+    _note_code(row)
     row.type, row.category, row.color = product.type, product.category, product.color
     row.pattern, row.style = product.pattern, product.style
     if not described:
@@ -1323,15 +1334,23 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
     La ficha sale, si se puede, de lo que guardó el listado (Pull&Bear, Bershka, JD Sports): así no se
     abre el navegador para nada y solo se bajan las fotos de su CDN. Con `offline` (la reserva, de día)
     las tiendas de navegador que no guardaron nada se saltan. `stop()` dice si hay que parar (cancelada).
+
+    La misma zapatilla (mismo código de fabricante: modelo y color) puede estar en varias tiendas
+    (Courir, Snipes, size?, Foot Locker, Nike): solo se propone una, la de mejor nota (a igualdad, la más
+    barata). Si la de otra tienda ya está pendiente de ver y esta sale mejor, la otra vuelve a candidata
+    y se queda esta; si ya se dijo algo de ella (me gusta, descartada, comprada), no se propone. Si el
+    código solo se sabe con la ficha (Snipes, size?, Foot Locker), se mira al leerla.
     """
-    scores: list[float] = []
+    promoted: dict[str, float] = {}  # product_ref -> nota de lo traído en esta vuelta
     attempts = 0
     # La misma prenda no se enseña dos veces en dos colores: lo que ya se ve en esta tanda (pendiente,
     # apartado o recién decidido) y sus colores hermanos no entran como propuesta aparte.
     shown, family = _shown_this_round(db)
+    taken = _taken_codes(db)  # código de fabricante -> la fila que ya lo enseña (o lo decidió)
+    best = _best_by_code(ranked)  # código de fabricante -> la mejor de las candidatas con ese código
     stopped: set[str] = set()  # tiendas que han bloqueado o cuyo navegador no arranca: ni una petición más
-    for _value, _reasons, row in ranked:
-        if len(scores) >= limit or attempts >= limit * 2:
+    for value, _reasons, row in ranked:
+        if len(promoted) >= limit or attempts >= limit * 2:
             break
         if stop is not None and stop():
             break
@@ -1341,6 +1360,9 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
             row.last_checked_at = now_utc()  # esta semana ya no se intenta: sale como color de otra
             db.commit()
             continue
+        if row.maker_code and (best.get(row.maker_code, row.product_ref) != row.product_ref or (
+                row.maker_code in taken and not _beats(value, row, taken[row.maker_code]))):
+            continue  # la misma zapatilla ya se enseña (o se decidió), o la de otra tienda sale mejor
         connector = shops.CONNECTORS[row.store]
         attempts += 1
         if on_step is not None and attempts <= limit:
@@ -1358,6 +1380,17 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
             if siblings & shown:
                 db.commit()
                 continue  # es otro color de algo que ya se está enseñando (y de lo que no se sabían los colores)
+            code = shops.maker_code(row.store, {**(row.store_data or {}), **(detail.store_data or {})})
+            rival = taken.get(code) if code else None
+            if rival is not None and rival.product_ref != row.product_ref:
+                if _beats(value, row, rival):
+                    _swap_out(rival)  # pendiente de ver, pero esta sale mejor: se queda esta
+                    promoted.pop(rival.product_ref, None)
+                    shown.discard(rival.product_ref)
+                else:
+                    row.maker_code = code
+                    db.commit()
+                    continue  # la misma zapatilla ya se enseña (de otra tienda)
             description = " ".join((detail.description or "").split())[:DESCRIPTION_MAX]
             if description and description not in (row.details or ""):
                 row.details = f"{row.details or ''} {description}".strip()
@@ -1388,10 +1421,103 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
         _apply_detail(row, detail)
         row.score, row.reasons = context.score(row)  # con la descripción ya leída
         db.commit()
-        scores.append(row.score)
+        promoted[row.product_ref] = row.score
         shown.add(row.product_ref)
         family |= siblings
-    return scores
+        if row.maker_code:
+            taken[row.maker_code] = row
+    return list(promoted.values())
+
+
+# Lo que cuenta como «esa zapatilla ya está» al elegir propuestas: enseñándose, apartada como otro color, en
+# Me gustan, comprada o descartada (descartarla en una tienda es descartarla en todas).
+_CODE_TAKEN = (NEW, VARIANT, LIKED, BOUGHT, DISCARDED)
+
+
+_codes_filled = False
+
+
+def backfill_codes(db: Session) -> int:
+    """Una vez por arranque: el código de fabricante de lo guardado antes de que se apuntara (Courir y
+    Nike ya lo traían en `store_data`). Devuelve cuántos se han puesto."""
+    global _codes_filled
+    if _codes_filled:
+        return 0
+    stores = [key for key, connector in shops.CONNECTORS.items() if hasattr(connector, "maker_code")]
+    filled = 0
+    for row in db.scalars(select(ShopItem).where(ShopItem.maker_code.is_(None), ShopItem.store.in_(stores))):
+        code = shops.maker_code(row.store, row.store_data or {})
+        if code:
+            row.maker_code = code
+            filled += 1
+    db.commit()
+    _codes_filled = True
+    return filled
+
+
+def _taken_codes(db: Session) -> dict[str, ShopItem]:
+    rows = db.scalars(select(ShopItem).where(ShopItem.maker_code.is_not(None), ShopItem.status.in_(_CODE_TAKEN)))
+    return {row.maker_code: row for row in rows if row.maker_code}
+
+
+SAME_SCORE = 1.0  # dos notas a menos de esto son «la misma» al elegir entre copias: manda el precio
+
+
+def _better(value: float, price: int, other_value: float, other_price: int) -> bool:
+    """¿Sale mejor (value, price) que la otra copia? Más nota; a igualdad (casi), más barata."""
+    if abs(value - other_value) >= SAME_SCORE:
+        return value > other_value
+    return price < other_price
+
+
+def _beats(value: float, row: ShopItem, rival: ShopItem) -> bool:
+    """¿Desbanca esta candidata a la misma zapatilla de otra tienda? Solo si la otra está pendiente de ver
+    (no se ha dicho nada de ella) y esta sale mejor."""
+    return rival.status == NEW and rival.store != row.store and _better(
+        value, row.price_cents, rival.score or 0.0, rival.price_cents)
+
+
+def _best_by_code(ranked: list[tuple]) -> dict[str, str]:
+    """De las candidatas con código de fabricante, la mejor de cada código (ver `_better`)."""
+    best: dict[str, tuple[float, int, str]] = {}
+    for value, _reasons, row in ranked:
+        code = row.maker_code
+        if code and (code not in best or _better(value, row.price_cents, best[code][0], best[code][1])):
+            best[code] = (value, row.price_cents, row.product_ref)
+    return {code: ref for code, (_value, _price, ref) in best.items()}
+
+
+def _swap_out(row: ShopItem) -> None:
+    """Una propuesta pendiente de ver deja su sitio a la misma zapatilla de otra tienda, que sale mejor:
+    vuelve a ser candidata (sin fotos) y esta semana no se vuelve a intentar."""
+    _drop_photos(row)
+    row.status = CANDIDATE
+    row.last_checked_at = now_utc()
+
+
+ALSO_IN_STATUSES = (CANDIDATE, NEW, VARIANT, LIKED, SEARCHED)
+
+
+def also_in(item: ShopItem) -> list[dict]:
+    """«También en»: la misma zapatilla (mismo código de fabricante) en otras tiendas, la más barata de
+    cada una: [{"store", "store_name", "price_cents", "url"}], de la más barata a la más cara. Solo lo que
+    sigue en su catálogo; vacío si no se sabe el código."""
+    db = object_session(item)
+    if db is None or not item.maker_code:
+        return []
+    rows = db.scalars(select(ShopItem).where(
+        ShopItem.maker_code == item.maker_code, ShopItem.store != item.store, ShopItem.status.in_(ALSO_IN_STATUSES),
+    ))
+    cheapest: dict[str, ShopItem] = {}
+    for row in rows:
+        if row.store in shops.CONNECTORS and row.price_cents and (
+                row.store not in cheapest or row.price_cents < cheapest[row.store].price_cents):
+            cheapest[row.store] = row
+    return [
+        {"store": row.store, "store_name": shops.CONNECTORS[row.store].name, "price_cents": row.price_cents,
+         "url": row.url}
+        for row in sorted(cheapest.values(), key=lambda r: (r.price_cents, r.store))
+    ]
 
 
 def _shown_this_round(db: Session) -> tuple[set[str], set[str]]:
@@ -1725,6 +1851,7 @@ def refresh(db: Session, today: date | None = None, limit: int | None = None, st
     `progress` es el dict donde se va apuntando por dónde va (lo lee el panel)."""
     total = {"ok": False, "found": 0, "added": 0, "expired": expire_old(db), "failed": 0, "errors": [],
              "cancelled": False}
+    backfill_codes(db)
     clean_lookups(db, LOOKUP_KEEP_ON_REFRESH)  # antes de mirar qué se ha enseñado ya: un «buscado» no cuenta
     pause = config.SHOP_NIGHT_PAUSE if night else config.SHOP_DAY_PAUSE
     cancel = cancel or threading.Event()
@@ -2308,7 +2435,8 @@ def _codes(row: ShopItem) -> set[str]:
     """Las referencias de un producto, en minúsculas y sin separadores ni ceros delante: la de la tienda
     (3918/300/800), el código de fabricante (IF6490), la de sus fotos (807022), el id de Zara…"""
     data = row.store_data or {}
-    values = [store_reference(row), data.get("model"), data.get("ref"), data.get("seo_id"), data.get("sku")]
+    values = [store_reference(row), data.get("model"), data.get("ref"), data.get("seo_id"), data.get("sku"),
+              data.get("mpn"), data.get("pid"), data.get("handle"), row.maker_code]
     snap = data.get("snap")
     if isinstance(snap, dict):
         values.append(snap.get("ref"))
@@ -2338,6 +2466,16 @@ def _link_match(url: str):
         bundle, color = m.group(1), first("colorId")
         return lambda row: row.store == "bershka" and str((row.store_data or {}).get("bundle")) == bundle and (
             not color or str((row.store_data or {}).get("color")) == color)
+    if host.endswith("snipes.com") and (m := re.search(r"/p/[a-z0-9-]+?-(\d{2,9})/?$", path)):
+        return lambda row, ref=f"snipes:{m.group(1)}": row.product_ref == ref
+    if ("sizeofficial." in host or host.endswith("size.co.uk")) and (m := re.search(r"/products/([A-Za-z0-9-]+)", path)):
+        return lambda row, ref=f"size:{m.group(1)}": row.product_ref == ref
+    if "footlocker." in host and (m := re.search(r"/(\d{12})\.html", path)):
+        return lambda row, ref=f"footlocker:{m.group(1)}": row.product_ref == ref
+    if host.endswith("jules.com") and (m := re.search(r"/p/(\d{6,20})\.html", path)):
+        return lambda row, ref=f"jules:{m.group(1)}": row.product_ref == ref
+    if host.endswith("bonoboplanet.com") and (m := re.search(r"-(\d{12,20})\.html", path)):
+        return lambda row, ref=f"bonobo:{m.group(1)}": row.product_ref == ref
     return None
 
 

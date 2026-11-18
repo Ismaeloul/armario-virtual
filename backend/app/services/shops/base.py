@@ -7,8 +7,21 @@ No compra nada ni toca datos de pago: la app solo enlaza a la página del produc
 Para añadir una tienda (Pull&Bear, Bershka…): una clase con esta forma en su propio archivo y una
 línea en `CONNECTORS` (services/shops/__init__.py).
 """
+import re
 from dataclasses import dataclass, field
 from typing import Protocol
+
+
+def maker_key(code) -> str | None:
+    """El código de fabricante de una zapatilla («CW2288-111», «IF6490», «1203A739-200») como clave para
+    reconocer el mismo modelo y color en tiendas distintas: en mayúsculas y sin separadores
+    («CW2288111»). None si no tiene forma de código (muy corto, sin cifras o sin letras ni guion)."""
+    text = re.sub(r"[^A-Z0-9]", "", str(code or "").upper())
+    if not 5 <= len(text) <= 20 or not re.search(r"\d", text):
+        return None
+    if not re.search(r"[A-Z]", text) and "-" not in str(code):
+        return None  # solo cifras y sin guion: un número interno de la tienda, no un código de modelo
+    return text
 
 
 class ShopError(Exception):
@@ -139,6 +152,10 @@ class ShopConnector(Protocol):
     def reference(self, store_data: dict) -> str | None:
         """La referencia del producto como la escribe la tienda («3918/300/800»), para enseñarla y
         copiarla. Es opcional: con un conector sin `reference`, la app no enseña referencia."""
+
+    # Opcional: def maker_code(self, store_data: dict) -> str | None
+    #   El código de fabricante (el de la caja: «CW2288-111»), si se sabe. Sirve para no proponer a la
+    #   vez la misma zapatilla de dos tiendas y para el «También en» del visor (ver shopping).
 
     def search(self, query: str, limit: int) -> list[ShopProduct]:
         """El buscador: lo que el usuario escribe en un solo campo (una referencia, un enlace de

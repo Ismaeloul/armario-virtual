@@ -186,7 +186,12 @@ export type ShopItem = {
   colors: ShopColor[] | null;
   /** Encontrado en lo guardado y aún sin fotos: llegan en segundo plano. */
   photo_pending?: boolean;
+  /** «También en»: la misma zapatilla (mismo código de fabricante) en otras tiendas, de la más barata a la más cara. */
+  also_in?: ShopAlsoIn[];
 };
+
+/** La misma zapatilla en otra tienda. */
+export type ShopAlsoIn = { store: string; store_name: string; price_cents: number; url: string };
 
 /** «Combina con…»: las prendas del armario que mejor van con un producto, por parte del cuerpo. */
 export type ShopMatches = {

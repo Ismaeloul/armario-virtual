@@ -1,0 +1,480 @@
+{
+ "action": "Product-Variation",
+ "queryString": "pid=7275939010",
+ "product": {
+  "uuid": "35290e40c17bc54473a1949c78",
+  "id": "7275939010",
+  "productName": "Tee shirt \"le parfait by JULES\"",
+  "productType": "variationGroup",
+  "brand": "Jules",
+  "brandTitle": "",
+  "brandName": "",
+  "price": {
+   "sales": {
+    "value": 15.99,
+    "currency": "EUR",
+    "formatted": "15,99 €",
+    "decimalPrice": "15.99"
+   },
+   "list": null,
+   "html": "(recortado)",
+   "htmlOp": ""
+  },
+  "images": {
+   "large": [
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.jpg?sw=1562&sh=1800&sm=fit",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.png?sw=1562&sh=1800&sm=fit&sfrm=jpg 1562w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.jpg?sw=1562&sh=1800&sm=fit",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.png?sw=1562&sh=1800&sm=fit&sfrm=jpg 1562w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.jpg?sw=1562&sh=1800&sm=fit",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.png?sw=1562&sh=1800&sm=fit&sfrm=jpg 1562w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.jpg?sw=1562&sh=1800&sm=fit",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.png?sw=1562&sh=1800&sm=fit&sfrm=jpg 1562w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=1562&sh=1800&sm=fit",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.png?sw=1562&sh=1800&sm=fit&sfrm=jpg 1562w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.jpg?sw=1562&sh=1800&sm=fit",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.png?sw=1562&sh=1800&sm=fit&sfrm=jpg 1562w"
+    }
+   ],
+   "small": [
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.jpg?sw=214&sh=320&sm=cut",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.png?sw=82&sh=82&sm=cut&sfrm=jpg 82w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.png?sw=123&sh=123&sm=cut&sfrm=jpg 123w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.png?sw=339&sh=339&sm=cut&sfrm=jpg 339w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw7c43ad91/images/727593_9010_V1.png?sw=439&sh=439&sm=cut&sfrm=jpg 439w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.jpg?sw=214&sh=320&sm=cut",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.png?sw=82&sh=82&sm=cut&sfrm=jpg 82w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.png?sw=123&sh=123&sm=cut&sfrm=jpg 123w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.png?sw=339&sh=339&sm=cut&sfrm=jpg 339w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dweaba55bb/images/727593_9010_V5.png?sw=439&sh=439&sm=cut&sfrm=jpg 439w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.jpg?sw=214&sh=320&sm=cut",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.png?sw=82&sh=82&sm=cut&sfrm=jpg 82w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.png?sw=123&sh=123&sm=cut&sfrm=jpg 123w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.png?sw=339&sh=339&sm=cut&sfrm=jpg 339w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dwec5953b9/images/727593_9010_V4.png?sw=439&sh=439&sm=cut&sfrm=jpg 439w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.jpg?sw=214&sh=320&sm=cut",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.png?sw=82&sh=82&sm=cut&sfrm=jpg 82w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.png?sw=123&sh=123&sm=cut&sfrm=jpg 123w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.png?sw=339&sh=339&sm=cut&sfrm=jpg 339w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw75bd8a0c/images/727593_9010_V2.png?sw=439&sh=439&sm=cut&sfrm=jpg 439w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=214&sh=320&sm=cut",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.png?sw=82&sh=82&sm=cut&sfrm=jpg 82w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.png?sw=123&sh=123&sm=cut&sfrm=jpg 123w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.png?sw=339&sh=339&sm=cut&sfrm=jpg 339w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.png?sw=439&sh=439&sm=cut&sfrm=jpg 439w"
+    },
+    {
+     "staticURL": "/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.jpg",
+     "url": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.jpg?sw=214&sh=320&sm=cut",
+     "alt": "Tee shirt \"le parfait by JULES\"",
+     "title": "Tee shirt \"le parfait by JULES\"",
+     "sourceSet": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.png?sw=82&sh=82&sm=cut&sfrm=jpg 82w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.png?sw=123&sh=123&sm=cut&sfrm=jpg 123w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.png?sw=339&sh=339&sm=cut&sfrm=jpg 339w,https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw3665839e/images/727593_9010_V8.png?sw=439&sh=439&sm=cut&sfrm=jpg 439w"
+    }
+   ]
+  },
+  "selectedQuantity": 1,
+  "minOrderQuantity": 1,
+  "maxOrderQuantity": 10,
+  "variationAttributes": [
+   {
+    "attributeId": "color",
+    "displayName": "Couleur",
+    "id": "color",
+    "swatchable": true,
+    "values": [
+     {
+      "id": "10147",
+      "description": null,
+      "displayValue": "Écru",
+      "value": "10147",
+      "selected": false,
+      "selectable": true,
+      "url": "aHR0cHM6Ly93d3cuanVsZXMuY29tL29uL2RlbWFuZHdhcmUuc3RvcmUvU2l0ZXMtSnVsZXMtU0ZSQS1TaXRlL2ZyX0ZSL1Byb2R1Y3QtVmFyaWF0aW9uP2R3dmFyXzcyNzU5MzkwMTBfY29sb3I9MTAxNDcmcGlkPTcyNzU5MzkwMTAmcXVhbnRpdHk9MQ==",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw01d850e6/images/727593_10147_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw01d850e6/images/727593_10147_V11.jpg",
+      "colorurl": {}
+     },
+     {
+      "id": "11010",
+      "description": null,
+      "displayValue": "Bleu clair",
+      "value": "11010",
+      "selected": false,
+      "selectable": true,
+      "url": "aHR0cHM6Ly93d3cuanVsZXMuY29tL29uL2RlbWFuZHdhcmUuc3RvcmUvU2l0ZXMtSnVsZXMtU0ZSQS1TaXRlL2ZyX0ZSL1Byb2R1Y3QtVmFyaWF0aW9uP2R3dmFyXzcyNzU5MzkwMTBfY29sb3I9MTEwMTAmcGlkPTcyNzU5MzkwMTAmcXVhbnRpdHk9MQ==",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw49938390/images/727593_11010_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw49938390/images/727593_11010_V11.jpg",
+      "colorurl": {}
+     },
+     {
+      "id": "11052",
+      "description": null,
+      "displayValue": "Bleu clair",
+      "value": "11052",
+      "selected": false,
+      "selectable": true,
+      "url": "aHR0cHM6Ly93d3cuanVsZXMuY29tL29uL2RlbWFuZHdhcmUuc3RvcmUvU2l0ZXMtSnVsZXMtU0ZSQS1TaXRlL2ZyX0ZSL1Byb2R1Y3QtVmFyaWF0aW9uP2R3dmFyXzcyNzU5MzkwMTBfY29sb3I9MTEwNTImcGlkPTcyNzU5MzkwMTAmcXVhbnRpdHk9MQ==",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dwbc5d0624/images/727593_11052_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dwbc5d0624/images/727593_11052_V11.jpg",
+      "colorurl": {}
+     }
+    ],
+    "resetUrl": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=&pid=7275939010&quantity=1"
+   },
+   {
+    "attributeId": "size",
+    "displayName": "Taille",
+    "id": "size",
+    "swatchable": false,
+    "values": [
+     {
+      "id": "041010",
+      "description": null,
+      "displayValue": "XS",
+      "value": "041010",
+      "selected": false,
+      "selectable": true,
+      "url": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=9010&dwvar_7275939010_size=041010&pid=7275939010&quantity=1",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg"
+     },
+     {
+      "id": "041015",
+      "description": null,
+      "displayValue": "S",
+      "value": "041015",
+      "selected": false,
+      "selectable": true,
+      "url": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=9010&dwvar_7275939010_size=041015&pid=7275939010&quantity=1",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg"
+     },
+     {
+      "id": "041020",
+      "description": null,
+      "displayValue": "M",
+      "value": "041020",
+      "selected": false,
+      "selectable": true,
+      "url": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=9010&dwvar_7275939010_size=041020&pid=7275939010&quantity=1",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg"
+     },
+     {
+      "id": "041025",
+      "description": null,
+      "displayValue": "L",
+      "value": "041025",
+      "selected": false,
+      "selectable": true,
+      "url": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=9010&dwvar_7275939010_size=041025&pid=7275939010&quantity=1",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg"
+     },
+     {
+      "id": "041030",
+      "description": null,
+      "displayValue": "XL",
+      "value": "041030",
+      "selected": false,
+      "selectable": true,
+      "url": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=9010&dwvar_7275939010_size=041030&pid=7275939010&quantity=1",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg"
+     },
+     {
+      "id": "041035",
+      "description": null,
+      "displayValue": "XXL",
+      "value": "041035",
+      "selected": false,
+      "selectable": true,
+      "url": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=9010&dwvar_7275939010_size=041035&pid=7275939010&quantity=1",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg"
+     },
+     {
+      "id": "041040",
+      "description": null,
+      "displayValue": "XXXL",
+      "value": "041040",
+      "selected": false,
+      "selectable": true,
+      "url": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=9010&dwvar_7275939010_size=041040&pid=7275939010&quantity=1",
+      "img": "https://www.jules.com/dw/image/v2/AAHK_PRD/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg?sw=154&sh=202&sm=cut",
+      "staticImg": "https://www.jules.com/on/demandware.static/-/Sites-core-master-catalog/default/dw10e51482/images/727593_9010_V11.jpg"
+     }
+    ],
+    "resetUrl": "https://www.jules.com/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?dwvar_7275939010_color=9010&dwvar_7275939010_size=&pid=7275939010&quantity=1"
+   }
+  ],
+  "sizeDisplayValue": "",
+  "colorDisplayValue": "Blanc",
+  "colorID": "9010",
+  "longDescription": "<p>Un jersey lourd pour une belle tenue, des coutures solides qui le rendent indéformable, un toucher doux, une étiquette griffée, signature de la marque... Vous comprenez pourquoi on l'appelle \"Le Parfait by Jules\"</p><ul><li>Coupe regular : coupe intemporelle, ni trop ajustée, ni trop large</li><li>Manches courtes</li><li>Col rond</li><li>Grammage : 200 g/m²- jersey lourd</li><li>Garanti 4 ans, soit 2 ans de plus que la garantie légale de conformité de 2 ans.</li><li>Fils sélectionnés avec soin</li><li>Tricotage serré pour limiter la déformation&nbsp;</li><li>Col conçu pour améliorer la tenue au porté et limiter les déformations</li><li>Confectionné dans une usine auditée par un organisme tiers selon un référentiel social et environnemental réglementé, celui de l'ICS</li><li>100% coton issu de l'agriculture biologique, cultivé sans produits chimiques de synthèse (pesticides, insecticides, engrais). Plus de 70% des cultures de coton issu de l'agriculture biologique n'utilisent pas d'irrigation artificielle et se contentent de l'eau de pluie.</li></ul><p>Il est proposé dans un colorama de plusieurs teintes toutes plus tendances les unes que les autres, pour varier les plaisirs, et les styles.</p><p>Le mannequin mesure 1m86 et porte une taille L.</p>",
+  "shortDescription": null,
+  "rating": 4.5,
+  "promotions": null,
+  "attributes": null,
+  "availability": {
+   "messages": [
+    ""
+   ],
+   "ats": 0
+  },
+  "available": true,
+  "options": [],
+  "quantities": [
+   {
+    "value": "1",
+    "selected": true,
+    "url": "/on/demandware.store/Sites-Jules-SFRA-Site/fr_FR/Product-Variation?pid=7275939010&quantity=1"
+   }
+  ],
+  "sizeChartId": null,
+  "selectedProductUrl": "/fr-fr/p/7275939010.html?dwvar_7275939010_color=9010&quantity=undefined",
+  "readyToOrder": false,
+  "online": true,
+  "pageTitle": null,
+  "pageDescription": null,
+  "pageKeywords": null,
+  "pageMetaTags": [
+   {},
+   {},
+   {},
+   {},
+   {},
+   {},
+   {},
+   {},
+   {},
+   {}
+  ],
+  "template": null,
+  "hasRatingsComments": true,
+  "ratingsComments": {},
+  "ratingsNumber": 132,
+  "variationAttributesColors": [
+   {
+    "attributeId": "color",
+    "id": "color",
+    "swatchable": true,
+    "colorSortedMap": {},
+    "values": [
+     {
+      "id": "#ffffff",
+      "description": "#ffffff",
+      "displayValue": "#ffffff",
+      "value": "#ffffff"
+     },
+     {
+      "id": "#eeceac",
+      "description": "#eeceac",
+      "displayValue": "#eeceac",
+      "value": "#eeceac"
+     },
+     {
+      "id": "#5271B6",
+      "description": "#5271B6",
+      "displayValue": "#5271B6",
+      "value": "#5271B6"
+     },
+     {
+      "id": "#FFE484",
+      "description": "#FFE484",
+      "displayValue": "#FFE484",
+      "value": "#FFE484"
+     },
+     {
+      "id": "#850606",
+      "description": "#850606",
+      "displayValue": "#850606",
+      "value": "#850606"
+     },
+     {
+      "id": "#EB86B6",
+      "description": "#EB86B6",
+      "displayValue": "#EB86B6",
+      "value": "#EB86B6"
+     },
+     {
+      "id": "#638D77",
+      "description": "#638D77",
+      "displayValue": "#638D77",
+      "value": "#638D77"
+     },
+     {
+      "id": "#5C656B",
+      "description": "#5C656B",
+      "displayValue": "#5C656B",
+      "value": "#5C656B"
+     },
+     {
+      "id": "#091619",
+      "description": "#091619",
+      "displayValue": "#091619",
+      "value": "#091619"
+     }
+    ]
+   }
+  ],
+  "composition": "Composition principale: 100% Coton.",
+  "agec": true,
+  "agecUUID": null,
+  "enableWaro": true,
+  "agecType": "CrystalChain",
+  "typeEnable": "waro",
+  "laundryAsset": "pdp-laundry-tshirt-polo",
+  "pdpInfoComplementaire": "(recortado)",
+  "pdpInfoComplementaire2": false,
+  "servicing": {
+   "laundryCare_cleaning": {
+    "displayValue": "Nettoyage à sec interdit",
+    "value": "20"
+   },
+   "laundryCare_drying": {
+    "displayValue": "Ne convient pas au séchage en machine",
+    "value": 30
+   },
+   "laundryCare_ironing": {
+    "displayValue": "Repassage Moyen (160°c)",
+    "value": 52
+   },
+   "laundryCare_washing": {
+    "displayValue": "Température maximum de lavage 30°c",
+    "value": 13
+   },
+   "laundryCare_whitening": {
+    "displayValue": "Blanchiment interdit",
+    "value": 40
+   }
+  },
+  "flagsPromo": {
+   "flagPromoNotDisplayLayer": null,
+   "tabOfFlags": [
+    {
+     "flagProduct": "/on/demandware.static/-/Sites-Jules-SFRA-Library/fr_FR/dwead18788/marketing/am/small/flag-juste-prix-parfait.png",
+     "name": "flag-juste-prix-parfait.png"
+    }
+   ],
+   "flagRSE1": "/on/demandware.static/-/Sites-Jules-SFRA-Library/fr_FR/dw6451a7b3/marketing/pictosRSE/Icon-Garantie-4ans.svg",
+   "flagRSE2": "/on/demandware.static/-/Sites-Jules-SFRA-Library/fr_FR/dw88e0def9/marketing/pictosRSE/Icon-Eco-Concu.svg",
+   "flagRSE3": "/on/demandware.static/-/Sites-Jules-SFRA-Library/fr_FR/dwf3689ab3/marketing/pictosRSE/Icon-Coton-Bio.svg",
+   "productRSE": null,
+   "assetFlagRSE1": null,
+   "assetFlagRSE2": null,
+   "assetFlagRSE3": null,
+   "assetFlagRSE4": null
+  },
+  "recommendations": {},
+  "sexe": "Homme",
+  "season": "26W",
+  "masterID": "727593",
+  "primaryCategory": {
+   "id": "HCC25",
+   "name": "T-Shirt",
+   "category": "vetements",
+   "subCategory": "HAUTS",
+   "subSubCategory": "HCC25",
+   "subSubSubCategory": null,
+   "categoryname": "Vêtements",
+   "subCategoryname": "Hauts",
+   "subSubCategoryname": "T-Shirt",
+   "subSubSubCategoryname": null
+  },
+  "brightcoveVideos": {
+   "position": 11,
+   "videoId": "6379986422112",
+   "accountId": "6274329366001",
+   "playerId": "jxKAwDZkkl",
+   "scriptUrl": "//players.brightcove.net/6274329366001/jxKAwDZkkl_default/index.min.js",
+   "alt": "Tee shirt \"le parfait by JULES\"",
+   "poster": "https://cf-images.eu-west-1.prod.boltdns.net/v1/jit/6274329366001/eee5f3c4-9ff0-47de-9f21-33537da85cea/main/1080x1080/4s/match/image.jpg",
+   "thumbnail": "https://cf-images.eu-west-1.prod.boltdns.net/v1/jit/6274329366001/eee5f3c4-9ff0-47de-9f21-33537da85cea/main/360x360/4s/match/image.jpg"
+  },
+  "productFlag": {
+   "name": null,
+   "nameColor": null,
+   "backgroundColor": null
+  },
+  "collectionInfo": {
+   "name": null,
+   "nameColor": null,
+   "backgroundColor": null,
+   "imageUrl": null
+  },
+  "flagsOCS": {
+   "flagOCSName": null,
+   "flagOCSNameNL": null,
+   "flagOCSColor": null,
+   "flagOCSBackgroundColor": null
+  },
+  "sizeRecommendation": null,
+  "highlights": [
+   {
+    "label": "Produit durable (Garantie 4 ans)",
+    "layerId": null
+   },
+   {
+    "label": "Eco-conçu",
+    "layerId": null
+   },
+   {
+    "label": "Coton issu de l'agriculture biologique",
+    "layerId": null
+   }
+  ],
+  "productPageUrl": "https://www.jules.com/fr-fr/p/7275939010.html",
+  "aggregateRating": {
+   "ratingValue": 4.5,
+   "ratingCount": 132
+  },
+  "rctSku": 0,
+  "stressMarketingMessage": "",
+  "isVariant": false,
+  "onStore": true,
+  "pattern": "Uni",
+  "material": "CO",
+  "cut": "Q59",
+  "isOneStock": true,
+  "attributesHtml": ""
+ }
+}

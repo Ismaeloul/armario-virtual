@@ -1,0 +1,624 @@
+{
+ "loaderData": {
+  "0-0-4": {
+   "product": {
+    "id": "314217089904_flfr_frfr",
+    "model": {
+     "id": "206428_flfr_frfr",
+     "styleId": null,
+     "modelWebKey": "MODEL_206428",
+     "companyNumber": "flfr",
+     "banner": "Footlocker France",
+     "languageIsoCode": "fr-fr",
+     "active": true,
+     "number": 206428,
+     "name": "Nike Air Max Tuned 1 - Homme Chaussures",
+     "description": "<p><small>Mention relative au contenu assisté par l'IA. Certains contenus de ce site web, notamment les descriptions de produits et les images, peuvent être générés ou créés avec l'assistance de l'intelligence artificielle.</small></p><h3>Description du produit</h3><p>Les Nike Air Max Tuned 1 sont des baskets inspirées du running, définies par l'amorti Tuned Air, un système d'unités Air sous pression qui absorbe les chocs et ajoute du maintien sous le pied. Conçues à l'origine pour la course, les Air Max Tuned 1 associent une tige en mesh et matière synthétique à des empiècements TPU ondulés, un renfort de voûte plantaire en TPU au milieu du pied et un embout en TPU. Aujourd'hui, elles sont portées au quotidien comme des baskets lifestyle, et les fenêtres Air visibles conservent leur silhouette reconnaissable.</p><h3>Avantages</h3><ul><li>Les unités Tuned Air visibles au talon et à l'avant-pied répartissent l'amorti sur les principaux points de contact.</li><li>La construction en mesh et matière synthétique équilibre la souplesse des mouvements avec plus de structure autour du pied.</li><li>Le renfort de voûte plantaire en TPU au milieu du pied rigidifie le centre de la chaussure pour plus de maintien.</li><li>L'embout en TPU renforce une zone très sollicitée à l'avant.</li><li>La semelle extérieure en caoutchouc ajoute une adhérence durable sur les surfaces du quotidien.</li></ul><h3>Caractéristiques</h3><ul><li><strong>Marque :</strong> Nike</li><li><strong>Modèle :</strong> Air Max Tuned 1</li><li><strong>Genre :</strong> Homme</li><li><strong>Taille et chaussant :</strong> Taille petit. Prends une demi-pointure au-dessus.</li><li><strong>Matière :</strong> Tige en mesh et matière synthétique, offrant un confort souple avec plus de structure autour du pied.</li><li><strong>Semelle :</strong> Semelle intermédiaire en mousse avec amorti Tuned Air et semelle extérieure en caoutchouc, offrant une absorption souple des chocs, un maintien ciblé et une adhérence durable.</li><li><strong>Détails du design :</strong> Empiècements TPU ondulés, renfort de voûte plantaire en TPU au milieu du pied, embout en TPU et fenêtres Air visibles.</li><li><strong>Caractéristiques spéciales :</strong> Amorti Tuned Air, un système d'unités Air sous pression, offrant amorti et maintien à chaque pas.</li><li><strong>Occasion/Convient pour :</strong> Au quotidien</li><li><strong>Style/Tendance :</strong> Baskets lifestyle inspirées du running</li><li><strong>Entretien :</strong> Laver à la main avec un savon doux et laisser sécher à l'air libre.</li></ul>",
+     "keywords": [
+      "Tuned",
+      "Air Max"
+     ],
+     "brand": "Nike",
+     "genders": [
+      "Homme"
+     ],
+     "sports": [],
+     "vendor": "",
+     "productHierarchy": {
+      "productTypes": [
+       "Chaussures"
+      ],
+      "styles": [
+       "Tennis"
+      ],
+      "subStyles": [
+       ""
+      ]
+     },
+     "sizeChartId": "53_frfr"
+    },
+    "style": {
+     "id": "314217089904_flfr_frfr",
+     "colorId": null,
+     "sku": "314217089904",
+     "styleWebKey": "STYLE_311657",
+     "modelWebKey": "MODEL_206428",
+     "modelDocumentId": "206428_flfr_frfr",
+     "companyNumber": "flfr",
+     "banner": "Footlocker France",
+     "languageIsoCode": "fr-fr",
+     "active": true,
+     "description": "",
+     "color": "Black-Hyper Pink-Black",
+     "primaryColor": "Noir",
+     "secondaryColors": [
+      ""
+     ],
+     "width": "",
+     "leagueName": "",
+     "playerName": "",
+     "teamName": "",
+     "fitVariant": "",
+     "keywords": [
+      "Noir",
+      "Maille",
+      "314217089904",
+      "synthétique"
+     ],
+     "productDesignator": "",
+     "newArrivalDate": "2026-03-06T00:00:00Z",
+     "ageBuckets": [
+      {
+       "ageBucket": "",
+       "sizeRange": "",
+       "sku": ""
+      }
+     ],
+     "price": {
+      "currencyIso": "EUR",
+      "listPrice": 189.99,
+      "salePrice": 150,
+      "vendorShippingPrice": null,
+      "formattedListPrice": "€ 189,99",
+      "formattedSalePrice": "€ 150,00",
+      "formattedVendorShippingPrice": "",
+      "priceRange": "150.00-150.00",
+      "topSalesAmount": 0,
+      "taxClassificationCode": ""
+     },
+     "priceNet": {
+      "currencyIso": "EUR",
+      "listPrice": 158.33,
+      "salePrice": 125,
+      "vendorShippingPrice": null,
+      "formattedListPrice": "€ 158,33",
+      "formattedSalePrice": "€ 125,00",
+      "formattedVendorShippingPrice": "",
+      "priceRange": "125.00-125.00",
+      "topSalesAmount": null,
+      "taxClassificationCode": null
+     },
+     "flagsAndRestrictions": {
+      "defaultStyle": false,
+      "newProduct": false,
+      "saleProduct": true,
+      "excludedFromDiscount": false,
+      "mapEnabled": false,
+      "freeShipping": true,
+      "recaptchaOn": false,
+      "shipToAndFromStore": false,
+      "hasShippingRestrictions": false,
+      "isBannerOnly": false
+     },
+     "launchAttributes": {
+      "launchProduct": false,
+      "launchType": "",
+      "webOnlyLaunchMsg": "",
+      "webOnlyLaunch": false,
+      "launchDate": null,
+      "launchDisplayCounterEnabled": false,
+      "launchDisplayCounterKickStartTime": null
+     },
+     "giftCardDenominations": null,
+     "eligiblePaymentTypes": {
+      "creditCard": true,
+      "giftCard": true,
+      "payPal": true,
+      "klarna": true,
+      "applePay": true,
+      "googlePay": true,
+      "payBright": false,
+      "clearPay": false,
+      "idealPay": false,
+      "sofort": false
+     },
+     "vendorAttributes": {
+      "supplierSkus": [
+       "DM0032-020"
+      ]
+     },
+     "imageUrl": {
+      "base": "https://images.footlocker.com/is/image/FLEU/314217089904",
+      "imageSku": "314217089904",
+      "variants": [
+       "https://images.footlocker.com/is/image/FLEU/noimage"
+      ]
+     },
+     "media": null,
+     "badging": null
+    },
+    "inventory": {
+     "inventoryAvailable": true,
+     "storeInventoryAvailable": true,
+     "warehouseInventoryAvailable": true,
+     "dropshipInventoryAvailable": false,
+     "preSell": null,
+     "backOrder": null,
+     "purchaseOrderDate": null,
+     "inventoryAvailableRegions": null,
+     "inventoryAvailableForShip": null,
+     "inventoryAvailableForPickupNow": null
+    },
+    "sizes": [
+     {
+      "id": "314217089904_070_flfr_frfr",
+      "sizeId": null,
+      "productWebKey": "SIZE_2326159",
+      "styleDocumentId": "314217089904_flfr_frfr",
+      "modelDocumentId": "206428_flfr_frfr",
+      "companyNumber": "flfr",
+      "banner": "Footlocker France",
+      "languageIsoCode": "fr-fr",
+      "active": true,
+      "productNumber": "314217089904070",
+      "size": "40",
+      "strippedSize": "070",
+      "sizeVariants": {
+       "eu": "40",
+       "uk": "6 (EU 40)",
+       "us": "7"
+      },
+      "dualSize": null,
+      "upc": "197863696812",
+      "storeUpc": "197863696812",
+      "storeSku": "314217089904070",
+      "price": {
+       "currencyIso": "EUR",
+       "listPrice": 189.99,
+       "salePrice": 150,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 189,99",
+       "formattedSalePrice": "€ 150,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "150.00-150.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "priceNet": {
+       "currencyIso": "EUR",
+       "listPrice": 158.33,
+       "salePrice": 125,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 158,33",
+       "formattedSalePrice": "€ 125,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "125.00-125.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "inventory": {
+       "inventoryAvailable": true,
+       "storeInventoryAvailable": true,
+       "warehouseInventoryAvailable": false,
+       "dropshipInventoryAvailable": false,
+       "preSell": false,
+       "backOrder": false,
+       "purchaseOrderDate": null,
+       "inventoryAvailableRegions": null,
+       "inventoryAvailableForShip": null,
+       "inventoryAvailableForPickupNow": null
+      }
+     },
+     {
+      "id": "314217089904_075_flfr_frfr",
+      "sizeId": null,
+      "productWebKey": "SIZE_2326160",
+      "styleDocumentId": "314217089904_flfr_frfr",
+      "modelDocumentId": "206428_flfr_frfr",
+      "companyNumber": "flfr",
+      "banner": "Footlocker France",
+      "languageIsoCode": "fr-fr",
+      "active": true,
+      "productNumber": "314217089904075",
+      "size": "40.5",
+      "strippedSize": "075",
+      "sizeVariants": {
+       "eu": "40.5",
+       "uk": "6.5",
+       "us": "7.5"
+      },
+      "dualSize": null,
+      "upc": "197863695686",
+      "storeUpc": "197863695686",
+      "storeSku": "314217089904075",
+      "price": {
+       "currencyIso": "EUR",
+       "listPrice": 189.99,
+       "salePrice": 150,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 189,99",
+       "formattedSalePrice": "€ 150,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "150.00-150.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "priceNet": {
+       "currencyIso": "EUR",
+       "listPrice": 158.33,
+       "salePrice": 125,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 158,33",
+       "formattedSalePrice": "€ 125,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "125.00-125.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "inventory": {
+       "inventoryAvailable": true,
+       "storeInventoryAvailable": true,
+       "warehouseInventoryAvailable": false,
+       "dropshipInventoryAvailable": false,
+       "preSell": false,
+       "backOrder": false,
+       "purchaseOrderDate": null,
+       "inventoryAvailableRegions": null,
+       "inventoryAvailableForShip": null,
+       "inventoryAvailableForPickupNow": null
+      }
+     },
+     {
+      "id": "314217089904_080_flfr_frfr",
+      "sizeId": null,
+      "productWebKey": "SIZE_2326161",
+      "styleDocumentId": "314217089904_flfr_frfr",
+      "modelDocumentId": "206428_flfr_frfr",
+      "companyNumber": "flfr",
+      "banner": "Footlocker France",
+      "languageIsoCode": "fr-fr",
+      "active": true,
+      "productNumber": "314217089904080",
+      "size": "41",
+      "strippedSize": "080",
+      "sizeVariants": {
+       "eu": "41",
+       "uk": "7",
+       "us": "8"
+      },
+      "dualSize": null,
+      "upc": "197863702841",
+      "storeUpc": "197863702841",
+      "storeSku": "314217089904080",
+      "price": {
+       "currencyIso": "EUR",
+       "listPrice": 189.99,
+       "salePrice": 150,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 189,99",
+       "formattedSalePrice": "€ 150,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "150.00-150.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "priceNet": {
+       "currencyIso": "EUR",
+       "listPrice": 158.33,
+       "salePrice": 125,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 158,33",
+       "formattedSalePrice": "€ 125,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "125.00-125.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "inventory": {
+       "inventoryAvailable": true,
+       "storeInventoryAvailable": true,
+       "warehouseInventoryAvailable": false,
+       "dropshipInventoryAvailable": false,
+       "preSell": false,
+       "backOrder": false,
+       "purchaseOrderDate": null,
+       "inventoryAvailableRegions": null,
+       "inventoryAvailableForShip": null,
+       "inventoryAvailableForPickupNow": null
+      }
+     },
+     {
+      "id": "314217089904_085_flfr_frfr",
+      "sizeId": null,
+      "productWebKey": "SIZE_2326162",
+      "styleDocumentId": "314217089904_flfr_frfr",
+      "modelDocumentId": "206428_flfr_frfr",
+      "companyNumber": "flfr",
+      "banner": "Footlocker France",
+      "languageIsoCode": "fr-fr",
+      "active": true,
+      "productNumber": "314217089904085",
+      "size": "42",
+      "strippedSize": "085",
+      "sizeVariants": {
+       "eu": "42",
+       "uk": "7.5",
+       "us": "8.5"
+      },
+      "dualSize": null,
+      "upc": "197863694986",
+      "storeUpc": "197863694986",
+      "storeSku": "314217089904085",
+      "price": {
+       "currencyIso": "EUR",
+       "listPrice": 189.99,
+       "salePrice": 150,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 189,99",
+       "formattedSalePrice": "€ 150,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "150.00-150.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "priceNet": {
+       "currencyIso": "EUR",
+       "listPrice": 158.33,
+       "salePrice": 125,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 158,33",
+       "formattedSalePrice": "€ 125,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "125.00-125.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "inventory": {
+       "inventoryAvailable": true,
+       "storeInventoryAvailable": true,
+       "warehouseInventoryAvailable": false,
+       "dropshipInventoryAvailable": false,
+       "preSell": false,
+       "backOrder": false,
+       "purchaseOrderDate": null,
+       "inventoryAvailableRegions": null,
+       "inventoryAvailableForShip": null,
+       "inventoryAvailableForPickupNow": null
+      }
+     }
+    ],
+    "styleVariants": [
+     {
+      "active": true,
+      "styleWebKey": "STYLE_311378",
+      "sku": "314206116304",
+      "upc": "195867595698",
+      "storeUpc": "195867595698",
+      "productWebKey": "SIZE_2323992",
+      "style": "Nike Air Max Tuned 1 - Homme Chaussures",
+      "color": "White-White-Black",
+      "colorId": "",
+      "description": "",
+      "playerName": "",
+      "imageSku": "314206116304",
+      "size": "38.5",
+      "sizeId": "",
+      "ageBuckets": null,
+      "price": {
+       "currencyIso": "EUR",
+       "listPrice": 189.99,
+       "salePrice": 189.99,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 189,99",
+       "formattedSalePrice": "€ 189,99",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "189.99-189.99",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "priceNet": null,
+      "inventory": {
+       "inventoryAvailable": true,
+       "storeInventoryAvailable": true,
+       "warehouseInventoryAvailable": false,
+       "dropshipInventoryAvailable": false,
+       "preSell": false,
+       "backOrder": false,
+       "purchaseOrderDate": null,
+       "inventoryAvailableRegions": null,
+       "inventoryAvailableForShip": null,
+       "inventoryAvailableForPickupNow": null
+      },
+      "media": null
+     },
+     {
+      "active": true,
+      "styleWebKey": "STYLE_311381",
+      "sku": "314206535404",
+      "upc": "886915289224",
+      "storeUpc": "886915289224",
+      "productWebKey": "SIZE_2324044",
+      "style": "Nike Air Max Tuned 1 - Homme Chaussures",
+      "color": "Black-Black-Black",
+      "colorId": "",
+      "description": "",
+      "playerName": "",
+      "imageSku": "314206535404",
+      "size": "38.5",
+      "sizeId": "",
+      "ageBuckets": null,
+      "price": {
+       "currencyIso": "EUR",
+       "listPrice": 189.99,
+       "salePrice": 189.99,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 189,99",
+       "formattedSalePrice": "€ 189,99",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "189.99-189.99",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "priceNet": null,
+      "inventory": {
+       "inventoryAvailable": true,
+       "storeInventoryAvailable": true,
+       "warehouseInventoryAvailable": true,
+       "dropshipInventoryAvailable": false,
+       "preSell": false,
+       "backOrder": false,
+       "purchaseOrderDate": null,
+       "inventoryAvailableRegions": null,
+       "inventoryAvailableForShip": null,
+       "inventoryAvailableForPickupNow": null
+      },
+      "media": null
+     },
+     {
+      "active": true,
+      "styleWebKey": "STYLE_311657",
+      "sku": "314217089904",
+      "upc": "197863696812",
+      "storeUpc": "197863696812",
+      "productWebKey": "SIZE_2326159",
+      "style": "Nike Air Max Tuned 1 - Homme Chaussures",
+      "color": "Black-Hyper Pink-Black",
+      "colorId": "",
+      "description": "",
+      "playerName": "",
+      "imageSku": "314217089904",
+      "size": "40",
+      "sizeId": "",
+      "ageBuckets": null,
+      "price": {
+       "currencyIso": "EUR",
+       "listPrice": 189.99,
+       "salePrice": 150,
+       "vendorShippingPrice": null,
+       "formattedListPrice": "€ 189,99",
+       "formattedSalePrice": "€ 150,00",
+       "formattedVendorShippingPrice": "",
+       "priceRange": "150.00-150.00",
+       "topSalesAmount": null,
+       "taxClassificationCode": null
+      },
+      "priceNet": null,
+      "inventory": {
+       "inventoryAvailable": true,
+       "storeInventoryAvailable": true,
+       "warehouseInventoryAvailable": false,
+       "dropshipInventoryAvailable": false,
+       "preSell": false,
+       "backOrder": false,
+       "purchaseOrderDate": null,
+       "inventoryAvailableRegions": null,
+       "inventoryAvailableForShip": null,
+       "inventoryAvailableForPickupNow": null
+      },
+      "media": null
+     }
+    ],
+    "reviews": {
+     "totalReviews": "3980",
+     "averageRating": "4.3276"
+    }
+   },
+   "gallery": {
+    "set": {
+     "pv": "1.0",
+     "type": "img_set",
+     "n": "FLDM/314217089904",
+     "items": [
+      {
+       "i": {
+        "n": "FLDM/314217089904_01"
+       },
+       "s": {
+        "n": "FLDM/314217089904_01"
+       },
+       "dx": "2000",
+       "dy": "965",
+       "iv": "_XXXXX"
+      },
+      {
+       "i": {
+        "n": "FLDM/314217089904_02"
+       },
+       "s": {
+        "n": "FLDM/314217089904_02"
+       },
+       "dx": "2000",
+       "dy": "955",
+       "iv": "_XXXXX"
+      },
+      {
+       "i": {
+        "n": "FLDM/314217089904_03"
+       },
+       "s": {
+        "n": "FLDM/314217089904_03"
+       },
+       "dx": "2000",
+       "dy": "1036",
+       "iv": "_XXXXX"
+      },
+      {
+       "i": {
+        "n": "FLDM/314217089904_04"
+       },
+       "s": {
+        "n": "FLDM/314217089904_04"
+       },
+       "dx": "2000",
+       "dy": "956",
+       "iv": "_XXXXX"
+      },
+      {
+       "i": {
+        "n": "FLDM/314217089904_05"
+       },
+       "s": {
+        "n": "FLDM/314217089904_05"
+       },
+       "dx": "1481",
+       "dy": "2000",
+       "iv": "_XXXXX"
+      },
+      {
+       "i": {
+        "n": "FLDM/314217089904_06"
+       },
+       "s": {
+        "n": "FLDM/314217089904_06"
+       },
+       "dx": "2000",
+       "dy": "800",
+       "iv": "_XXXXX"
+      },
+      {
+       "i": {
+        "n": "FLDM/314217089904_07"
+       },
+       "s": {
+        "n": "FLDM/314217089904_07"
+       },
+       "dx": "2000",
+       "dy": "2000",
+       "iv": "_XXXXX"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

@@ -1,6 +1,8 @@
 """Un Chromium de verdad, con su ventana, para las tiendas que no se dejan leer de otra forma
 (Pull&Bear y Bershka: a httpx les responden con un desafío de JavaScript y a un Chromium sin
-ventana con «Access Denied»; JD Sports: desde el Umbrel responde 403 a curl y a httpx en casi todo).
+ventana con «Access Denied»; JD Sports: desde el Umbrel responde 403 a curl y a httpx en casi todo;
+Snipes y size?: el listado lo pide la propia página; Jules y Bonobo: Cloudflare da 403 a httpx, y en
+Bonobo también a las fotos, que se abren en otra pestaña de la misma sesión: `image`).
 
 Lo acordado con el usuario, sin excepciones:
 
@@ -193,6 +195,7 @@ class Session:
         self._browser = None
         self._context = None
         self._page = None
+        self._image_page = None  # otra pestaña, solo para abrir fotos (`image`)
         self._xvfb: subprocess.Popen | None = None
         self._locked = False
         self._failed = ""
@@ -276,7 +279,7 @@ class Session:
                 step()
             except Exception:  # cerrar nunca falla hacia fuera
                 log.debug("Compras: fallo al cerrar el navegador", exc_info=True)
-        self._page = self._context = self._browser = self._pw = None
+        self._page = self._image_page = self._context = self._browser = self._pw = None
         if self._xvfb is not None:
             try:
                 self._xvfb.terminate()
@@ -413,24 +416,24 @@ class Session:
         finally:
             self._last = time.monotonic()
 
-    def fetch_json(self, store: str, url: str) -> tuple[int, object]:
-        """Pide `url` desde dentro de la página abierta (mismo origen, como hace la propia web).
-        Devuelve (estado, JSON o None). Lanza BlockedError si la tienda bloquea."""
+    def _fetch(self, store: str, url: str, accept: str) -> tuple[int, str]:
+        """(estado, texto) de `url` pedida desde dentro de la página abierta (mismo origen, como hace la
+        propia web). Lanza BlockedError si la tienda bloquea."""
         page = self._start()
         self._wait_turn()
         try:
             self.fetches += 1
             status, text = page.evaluate(
-                """async (u) => {
+                """async ([u, accept]) => {
                     const ctrl = new AbortController();
                     const timer = setTimeout(() => ctrl.abort(), 40000);
                     try {
                         const r = await fetch(u, {credentials: 'include', signal: ctrl.signal,
-                                                  headers: {'Accept': 'application/json'}});
+                                                  headers: {'Accept': accept}});
                         return [r.status, await r.text()];
                     } catch (e) { return [0, String(e)]; } finally { clearTimeout(timer); }
                 }""",
-                url,
+                [url, accept],
             )
         except Exception as exc:
             raise ShopError(f"la petición falló ({type(exc).__name__})") from exc
@@ -440,6 +443,12 @@ class Session:
             raise block(store, BLOCKED_TEXT)
         if status == 0:
             raise ShopError("no se pudo conectar")
+        return status, text or ""
+
+    def fetch_json(self, store: str, url: str) -> tuple[int, object]:
+        """Pide `url` desde dentro de la página abierta (mismo origen, como hace la propia web).
+        Devuelve (estado, JSON o None). Lanza BlockedError si la tienda bloquea."""
+        status, text = self._fetch(store, url, "application/json")
         try:
             data = json.loads(text) if status == 200 else None
         except ValueError:
@@ -448,6 +457,45 @@ class Session:
                 raise block(store, CAPTCHA_TEXT) from None
             raise ShopError("la respuesta no era la esperada (no es JSON)") from None
         return status, data
+
+    def fetch_text(self, store: str, url: str) -> tuple[int, str]:
+        """Como `fetch_json`, para lo que la web pide en HTML (el «Afficher plus» de las tiendas de
+        Salesforce, Jules y Bonobo: `Search-UpdateGrid` devuelve trozos de HTML). Una página de
+        comprobación en vez de lo pedido es un captcha: se para con la tienda."""
+        status, text = self._fetch(store, url, "text/html, */*; q=0.01")
+        head = text[:3000].lower()
+        # Una rejilla de verdad es larga; una página de comprobación, corta (o no es un 200).
+        suspicious = status != 200 or len(text) < 20_000
+        if suspicious and (any(word in head for word in _CAPTCHA_WORDS) or "just a moment" in head or "cf-chl" in head):
+            raise block(store, CAPTCHA_TEXT)
+        return status, text
+
+    def image(self, store: str, url: str) -> bytes:
+        """Los bytes de una foto abierta como página, en otra pestaña de la misma sesión (Bonobo: su CDN
+        no responde a un cliente normal ni a las peticiones sueltas del navegador, pero sí a la foto
+        abierta en él). La pestaña de la tienda no se mueve. Lanza ShopError si no llega."""
+        self._start()
+        self._wait_turn()
+        try:
+            if self._image_page is None:
+                self._image_page = self._context.new_page()
+            self.pages += 1
+            try:
+                response = self._image_page.goto(url, wait_until="load", timeout=NAV_TIMEOUT_MS)
+            except Exception as exc:
+                raise ShopError(f"la foto no cargó ({type(exc).__name__})") from exc
+            status = response.status if response else None
+            if status in (403, 429):
+                raise block(store, BLOCKED_TEXT)
+            kind = (response.headers.get("content-type") or "") if response else ""
+            if status != 200 or not kind.startswith("image/"):
+                raise ShopError(f"HTTP {status} al bajar la foto")
+            try:
+                return response.body()
+            except Exception as exc:
+                raise ShopError(f"la foto no se pudo leer ({type(exc).__name__})") from exc
+        finally:
+            self._last = time.monotonic()
 
     # --- por dentro
 

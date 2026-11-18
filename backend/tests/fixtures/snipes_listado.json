@@ -1,0 +1,1483 @@
+{
+ "category": {
+  "id": 77,
+  "path": "/hommes/chaussures",
+  "name": "Chaussures",
+  "slug": "chaussures",
+  "parentId": 6,
+  "rootlineIds": [
+   6,
+   77
+  ],
+  "childrenIds": [
+   199,
+   1329,
+   279,
+   280,
+   281,
+   282,
+   283,
+   200,
+   201,
+   202,
+   3676,
+   3677,
+   3678,
+   3679,
+   3671,
+   3711,
+   3712,
+   4045
+  ],
+  "properties": [],
+  "isHidden": false,
+  "depth": 2,
+  "supportedFilter": [
+   "salesGrouping"
+  ],
+  "shopLevelCustomData": {
+   "categoryTrackingId": "men_shoes",
+   "category_slug": {
+    "fr_FR": {
+     "isActive": true,
+     "isVisible": true,
+     "locale": "fr_fr",
+     "url": "/chaussures"
+    }
+   }
+  },
+  "countryLevelCustomData": {
+   "sortingKey": "relevance"
+  },
+  "hreflang": {
+   "SNI": {
+    "es-es": "/es-es/c/hombre/zapatos-77",
+    "it-it": "/it-it/c/uomini/scarpe-77",
+    "de-ch": "/de-ch/c/herren/schuhe-77",
+    "fr-ch": "/fr-ch/c/hommes/chaussures-77",
+    "de-de": "/de-de/c/herren/schuhe-77",
+    "fr-fr": "/fr-fr/c/hommes/chaussures-77",
+    "pl-pl": "/pl-pl/c/mezczyzni/buty-77",
+    "de-at": "/de-at/c/herren/schuhe-77",
+    "fr-be": "/fr-be/c/hommes/chaussures-77",
+    "nl-be": "/nl-be/c/heren/schoenen-77",
+    "hr-hr": "/hr-hr/c/muskarci/obuca-77",
+    "pt-pt": "/pt-pt/c/homens/calcado-77",
+    "nl-nl": "/nl-nl/c/heren/schoenen-77"
+   }
+  }
+ },
+ "pagination": {
+  "currentPage": 0,
+  "pageSize": 24,
+  "sort": "asc",
+  "totalPages": 40,
+  "totalResults": 941,
+  "canonical": false
+ },
+ "sorts": [
+  {
+   "sort": "relevance",
+   "sortDir": "asc",
+   "key": "sort.key.relevance",
+   "code": "key-relevance",
+   "selected": false
+  },
+  {
+   "sort": "new",
+   "sortDir": "desc",
+   "key": "sort.new.desc",
+   "code": "new-desc",
+   "selected": false
+  },
+  {
+   "sort": "price",
+   "sortDir": "asc",
+   "key": "sort.price.asc",
+   "code": "price-asc",
+   "selected": false
+  },
+  {
+   "sort": "price",
+   "sortDir": "desc",
+   "key": "sort.price.desc",
+   "code": "price-desc",
+   "selected": false
+  },
+  {
+   "sort": "reduction",
+   "sortDir": "desc",
+   "key": "sort.reduction.desc",
+   "code": "reduction-desc",
+   "selected": false
+  }
+ ],
+ "currentQuery": {
+  "query": {
+   "value": ""
+  },
+  "url": ""
+ },
+ "facets": [
+  {
+   "category": false,
+   "code": "targetGroup",
+   "innerSearch": false,
+   "multiSelect": true,
+   "name": "Sexe",
+   "seoName": "Sexe",
+   "visible": true,
+   "facetVisualizationType": "LIST",
+   "minValue": 0,
+   "maxValue": 0,
+   "values": [
+    {
+     "code": "men-318717",
+     "count": 941,
+     "name": "Hommes",
+     "id": 318717,
+     "selected": false,
+     "seoName": "Hommes"
+    },
+    {
+     "code": "women-318718",
+     "count": 4,
+     "name": "Femmes",
+     "id": 318718,
+     "selected": false,
+     "seoName": "Femmes"
+    }
+   ],
+   "persistentRemoved": false
+  },
+  {
+   "category": false,
+   "code": "brand",
+   "innerSearch": false,
+   "multiSelect": true,
+   "name": "Marque",
+   "seoName": "Marque",
+   "visible": true,
+   "facetVisualizationType": "SORTEDLIST",
+   "minValue": 0,
+   "maxValue": 0,
+   "values": [
+    {
+     "code": "adidas_originals-830",
+     "count": 127,
+     "name": "adidas Originals",
+     "id": 830,
+     "selected": false,
+     "seoName": "adidas Originals"
+    },
+    {
+     "code": "adidas_sportswear_1-834",
+     "count": 5,
+     "name": "adidas Sportswear",
+     "id": 834,
+     "selected": false,
+     "seoName": "adidas Sportswear"
+    },
+    {
+     "code": "asics_sportstyle-354062",
+     "count": 80,
+     "name": "ASICS SportStyle",
+     "id": 354062,
+     "selected": false,
+     "seoName": "ASICS SportStyle"
+    }
+   ],
+   "persistentRemoved": false
+  },
+  {
+   "category": false,
+   "code": "size",
+   "innerSearch": false,
+   "multiSelect": true,
+   "name": "Taille",
+   "seoName": "Taille",
+   "visible": true,
+   "facetVisualizationType": "LIST",
+   "minValue": 0,
+   "maxValue": 0,
+   "values": [
+    {
+     "code": "3536-3469",
+     "count": 2,
+     "name": "35/36",
+     "id": 3469,
+     "selected": false,
+     "seoName": "35/36"
+    },
+    {
+     "code": "36-431",
+     "count": 9,
+     "name": "36",
+     "id": 431,
+     "selected": false,
+     "seoName": "36"
+    },
+    {
+     "code": "3637-2837",
+     "count": 1,
+     "name": "36/37",
+     "id": 2837,
+     "selected": false,
+     "seoName": "36/37"
+    }
+   ],
+   "persistentRemoved": false
+  }
+ ],
+ "products": [
+  {
+   "id": 141161,
+   "isActive": true,
+   "isSoldOut": false,
+   "isNew": true,
+   "isComposite": false,
+   "createdAt": "2026-10-20T07:07:47+00:00",
+   "updatedAt": "2026-11-18T02:33:10+00:00",
+   "firstLiveAt": "2026-11-07T02:21:36+00:00",
+   "masterKey": "m03290237",
+   "referenceKey": "03290237",
+   "attributes": {
+    "brand": {
+     "label": "Marque",
+     "multiSelect": false,
+     "values": {
+      "id": 1211,
+      "label": "The North Face",
+      "value": "the_north_face_1"
+     }
+    },
+    "name": {
+     "label": "Name",
+     "multiSelect": false,
+     "values": {
+      "id": 20005,
+      "label": "Glenclyffe Urban Low",
+      "value": "name"
+     }
+    },
+    "color": {
+     "label": "Couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 1278,
+      "label": "brun",
+      "value": "brown"
+     }
+    },
+    "category": {
+     "label": "Master Categories (AG)",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1,
+       "label": "Base",
+       "value": "1"
+      }
+     ]
+    },
+    "articleNo": {
+     "label": "Numéro d'article",
+     "multiSelect": false,
+     "values": {
+      "id": 2235857,
+      "label": "10671030",
+      "value": "10671030"
+     }
+    },
+    "productCode": {
+     "label": "Code produit",
+     "multiSelect": false,
+     "values": {
+      "id": 2235856,
+      "label": "03290237",
+      "value": "03290237"
+     }
+    },
+    "phasesOfLife": {
+     "label": "Catégorie d'âge",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 89,
+       "label": "Adultes",
+       "value": "erwachsene"
+      }
+     ]
+    },
+    "genders": {
+     "label": "Sexe",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1200718,
+       "label": "Hommes",
+       "value": "men"
+      }
+     ]
+    },
+    "productType": {
+     "label": "Type de produit",
+     "multiSelect": false,
+     "values": {
+      "id": 1213715,
+      "label": "Sneaker de mode",
+      "value": "fashion_sneakers"
+     }
+    },
+    "productTypeAssortment": {
+     "label": "Catégorie principale",
+     "multiSelect": false,
+     "values": {
+      "id": 1201168,
+      "label": "Chaussures",
+      "value": "shoes"
+     }
+    },
+    "productTypeSubAssortment": {
+     "label": "Catégorie",
+     "multiSelect": false,
+     "values": {
+      "id": 1224488,
+      "label": "sneakers",
+      "value": "sneakers"
+     }
+    },
+    "productTypeHierarchyCode": {
+     "label": "Product Type Hierarchy Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1200214,
+      "label": "shoes|sneakers|fashion_sneakers",
+      "value": "shoessneakersfashion_sneakers"
+     }
+    },
+    "productTypeCode": {
+     "label": "Product Type Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1224490,
+      "label": "fashion_sneakers",
+      "value": "fashion_sneakers"
+     }
+    }
+   },
+   "advancedAttributes": {},
+   "images": [
+    {
+     "public_id": "03290237_1",
+     "view": "still",
+     "metaname": [
+      "The North Face Glenclyffe Urban Low brun",
+      "141161 1"
+     ]
+    },
+    {
+     "public_id": "03290237_2",
+     "view": "still",
+     "metaname": [
+      "The North Face Glenclyffe Urban Low brun",
+      "141161 2"
+     ]
+    },
+    {
+     "public_id": "03290237_3",
+     "view": "still",
+     "metaname": [
+      "The North Face Glenclyffe Urban Low brun",
+      "141161 3"
+     ]
+    },
+    {
+     "public_id": "03290237_4",
+     "view": "still",
+     "metaname": [
+      "The North Face Glenclyffe Urban Low brun",
+      "141161 4"
+     ]
+    },
+    {
+     "public_id": "03290237_5",
+     "view": "still",
+     "metaname": [
+      "The North Face Glenclyffe Urban Low brun",
+      "141161 5"
+     ]
+    },
+    {
+     "public_id": "03290237_6",
+     "view": "still",
+     "metaname": [
+      "The North Face Glenclyffe Urban Low brun",
+      "141161 6"
+     ]
+    },
+    {
+     "public_id": "03290237_7",
+     "view": "still",
+     "metaname": [
+      "The North Face Glenclyffe Urban Low brun",
+      "141161 7"
+     ]
+    }
+   ],
+   "variants": [
+    {
+     "id": 710123,
+     "isComposite": false,
+     "referenceKey": "0329023700000001",
+     "attributes": {
+      "sizeCm": {
+       "id": 1460,
+       "key": "sizeCm",
+       "label": "CM",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 341394,
+        "label": "27",
+        "value": "27"
+       }
+      },
+      "sizeOriginal": {
+       "id": 1386,
+       "key": "sizeOriginal",
+       "label": "Taille originale",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 1224542,
+        "label": "9351:42.00",
+        "value": "93514200"
+       }
+      },
+      "sizeOrderNo": {
+       "id": 1391,
+       "key": "sizeOrderNo",
+       "label": "Ordre de taille",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2086,
+        "label": "1",
+        "value": "1"
+       }
+      },
+      "gtin": {
+       "id": 1392,
+       "key": "gtin",
+       "label": "GTIN",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2237242,
+        "label": "0198269315925",
+        "value": "0198269315925"
+       }
+      },
+      "sizeUs": {
+       "id": 1389,
+       "key": "sizeUs",
+       "label": "US",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 302898,
+        "label": "9",
+        "value": "9"
+       }
+      },
+      "size": {
+       "id": 1385,
+       "key": "size",
+       "label": "Taille",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 404,
+        "label": "42",
+        "value": "42"
+       }
+      },
+      "sizeEu": {
+       "id": 1387,
+       "key": "sizeEu",
+       "label": "EU",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2136,
+        "label": "42",
+        "value": "42"
+       }
+      },
+      "sizeUk": {
+       "id": 1388,
+       "key": "sizeUk",
+       "label": "UK",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2137,
+        "label": "8",
+        "value": "8"
+       }
+      },
+      "ean": {
+       "id": 20009,
+       "key": "ean",
+       "label": "ean",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 20009,
+        "label": "ean",
+        "value": "0198269315925"
+       }
+      },
+      "variantCode": {
+       "id": 1384,
+       "key": "variantCode",
+       "label": "Code de variante",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2235861,
+        "label": "0329023700000001",
+        "value": "0329023700000001"
+       }
+      }
+     },
+     "firstLiveAt": "2026-11-18T02:21:51+00:00",
+     "createdAt": "2026-10-20T07:07:47+00:00",
+     "updatedAt": "2026-11-18T02:21:51+00:00",
+     "stock": {
+      "supplierId": 1,
+      "warehouseId": 1,
+      "quantity": 4,
+      "isSellableWithoutStock": false,
+      "expectedAvailabilityAt": null
+     },
+     "price": {
+      "currencyCode": "EUR",
+      "withTax": 13499,
+      "withoutTax": 11249,
+      "beforeSaleWithTax": null,
+      "recommendedRetailPrice": null,
+      "tax": {
+       "vat": {
+        "amount": 2250,
+        "rate": 0.2
+       }
+      },
+      "appliedReductions": [],
+      "totalAppliedReductions": null,
+      "reductionsRelativeTo": null,
+      "customData": {},
+      "wasPrice": null,
+      "hasStrikeout": false,
+      "formatted": "134,99 €"
+     },
+     "customData": {},
+     "sizeMap": {
+      "size": {
+       "code": "size",
+       "label": "Taille",
+       "value": "42"
+      },
+      "sizeEu": {
+       "code": "sizeEu",
+       "label": "EU",
+       "value": "42"
+      },
+      "sizeUk": {
+       "code": "sizeUk",
+       "label": "UK",
+       "value": "8"
+      },
+      "sizeUs": {
+       "code": "sizeUs",
+       "label": "US",
+       "value": "9"
+      },
+      "sizeCm": {
+       "code": "sizeCm",
+       "label": "CM",
+       "value": "27"
+      }
+     }
+    }
+   ],
+   "priceRange": {
+    "min": {
+     "currencyCode": "EUR",
+     "withTax": 13499,
+     "withoutTax": 11249,
+     "beforeSaleWithTax": null,
+     "recommendedRetailPrice": null,
+     "tax": {
+      "vat": {
+       "amount": 2250,
+       "rate": 0.2
+      }
+     },
+     "appliedReductions": [],
+     "totalAppliedReductions": null,
+     "reductionsRelativeTo": null
+    },
+    "max": {
+     "currencyCode": "EUR",
+     "withTax": 13499,
+     "withoutTax": 11249,
+     "beforeSaleWithTax": null,
+     "recommendedRetailPrice": null,
+     "tax": {
+      "vat": {
+       "amount": 2250,
+       "rate": 0.2
+      }
+     },
+     "appliedReductions": [],
+     "totalAppliedReductions": null,
+     "reductionsRelativeTo": null
+    }
+   },
+   "reductionRange": {
+    "min": {
+     "currencyCode": "EUR",
+     "withTax": 13499,
+     "withoutTax": 11249,
+     "beforeSaleWithTax": null,
+     "recommendedRetailPrice": null,
+     "tax": {
+      "vat": {
+       "amount": 2250,
+       "rate": 0.2
+      }
+     },
+     "appliedReductions": [],
+     "totalAppliedReductions": null,
+     "reductionsRelativeTo": null
+    },
+    "max": {
+     "currencyCode": "EUR",
+     "withTax": 13499,
+     "withoutTax": 11249,
+     "beforeSaleWithTax": null,
+     "recommendedRetailPrice": null,
+     "tax": {
+      "vat": {
+       "amount": 2250,
+       "rate": 0.2
+      }
+     },
+     "appliedReductions": [],
+     "totalAppliedReductions": null,
+     "reductionsRelativeTo": null
+    }
+   },
+   "lowestPriorPrice": {
+    "formatted": null,
+    "withTax": null,
+    "relativeDifferenceToPrice": null
+   },
+   "siblings": [
+    {
+     "id": 141161,
+     "images": [
+      {
+       "public_id": "03290237_1",
+       "view": "still",
+       "metaname": [
+        "The North Face Glenclyffe Urban Low brun",
+        "141161 1"
+       ]
+      },
+      {
+       "public_id": "03290237_2",
+       "view": "still",
+       "metaname": [
+        "The North Face Glenclyffe Urban Low brun",
+        "141161 2"
+       ]
+      },
+      {
+       "public_id": "03290237_3",
+       "view": "still",
+       "metaname": [
+        "The North Face Glenclyffe Urban Low brun",
+        "141161 3"
+       ]
+      },
+      {
+       "public_id": "03290237_4",
+       "view": "still",
+       "metaname": [
+        "The North Face Glenclyffe Urban Low brun",
+        "141161 4"
+       ]
+      },
+      {
+       "public_id": "03290237_5",
+       "view": "still",
+       "metaname": [
+        "The North Face Glenclyffe Urban Low brun",
+        "141161 5"
+       ]
+      },
+      {
+       "public_id": "03290237_6",
+       "view": "still",
+       "metaname": [
+        "The North Face Glenclyffe Urban Low brun",
+        "141161 6"
+       ]
+      },
+      {
+       "public_id": "03290237_7",
+       "view": "still",
+       "metaname": [
+        "The North Face Glenclyffe Urban Low brun",
+        "141161 7"
+       ]
+      }
+     ],
+     "attributes": {
+      "color": {
+       "label": "Couleur",
+       "multiSelect": false,
+       "values": {
+        "id": 1278,
+        "label": "brun",
+        "value": "brown"
+       }
+      },
+      "colorSpace": {
+       "label": "Famille de couleur",
+       "multiSelect": false,
+       "values": {
+        "id": 1287,
+        "label": "brun",
+        "value": "brown"
+       }
+      }
+     },
+     "isSoldOut": false,
+     "url": "/p/the-north-face-glenclyffe-urban-low-brun-141161"
+    }
+   ],
+   "pricePromotionInfo": {
+    "is_any_price_promotion_key_in_sale": false,
+    "are_all_price_promotion_keys_in_sale": false,
+    "quantity_of_price_promotions_keys": 0
+   },
+   "categories": [
+    3,
+    6,
+    51,
+    77,
+    87
+   ],
+   "sellableTimeframe": {
+    "sellableFrom": null,
+    "sellableTo": null
+   },
+   "breadcrumbs": [
+    {
+     "categoryId": 6,
+     "categoryName": "Hommes",
+     "categorySlug": "hommes",
+     "categoryUrl": "/hommes",
+     "categoryHidden": false,
+     "categoryProperties": [],
+     "countryLevelCustomData": {
+      "sortingKey": "relevance"
+     }
+    },
+    {
+     "categoryId": 77,
+     "categoryName": "Chaussures",
+     "categorySlug": "chaussures",
+     "categoryUrl": "/hommes/chaussures",
+     "categoryHidden": false,
+     "categoryProperties": [],
+     "countryLevelCustomData": {
+      "sortingKey": "relevance"
+     }
+    },
+    {
+     "categoryId": 280,
+     "categoryName": "Lifestyle",
+     "categorySlug": "lifestyle",
+     "categoryUrl": "/hommes/chaussures/lifestyle",
+     "categoryHidden": false,
+     "categoryProperties": [],
+     "countryLevelCustomData": {
+      "sortingKey": "relevance",
+      "isPrimaryCategory": true
+     }
+    }
+   ],
+   "url": "/p/the-north-face-glenclyffe-urban-low-brun-141161",
+   "stock": 32,
+   "displayName": "Glenclyffe Urban Low",
+   "tags": [
+    {
+     "id": 2,
+     "priority": 175,
+     "flag": "New",
+     "key": "tag.tagKeys.new",
+     "hasMedia": false,
+     "color": "white"
+    }
+   ],
+   "formattedPrice": "134,99 €",
+   "hasStartingPrice": false,
+   "hasStrikeout": false,
+   "wasPrice": null,
+   "highestRetailPrice": "0,00 €",
+   "relativeDiscount": null,
+   "relativeDiscountFormatted": null,
+   "flat": true,
+   "is30DaysBestPriceCase3": false,
+   "is30DaysBestPriceCase4": false
+  },
+  {
+   "id": 139044,
+   "isActive": true,
+   "isSoldOut": false,
+   "isNew": false,
+   "isComposite": false,
+   "createdAt": "2026-08-26T09:59:38+00:00",
+   "updatedAt": "2026-10-27T00:22:53+00:00",
+   "firstLiveAt": "2026-10-02T06:55:01+00:00",
+   "masterKey": "m02941642",
+   "referenceKey": "02941642",
+   "attributes": {
+    "brand": {
+     "label": "Marque",
+     "multiSelect": false,
+     "values": {
+      "id": 1211,
+      "label": "The North Face",
+      "value": "the_north_face_1"
+     }
+    },
+    "name": {
+     "label": "Name",
+     "multiSelect": false,
+     "values": {
+      "id": 20005,
+      "label": "Clyffe Ultra",
+      "value": "name"
+     }
+    },
+    "color": {
+     "label": "Couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 140,
+      "label": "noir",
+      "value": "schwarz"
+     }
+    },
+    "category": {
+     "label": "Master Categories (AG)",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1,
+       "label": "Base",
+       "value": "1"
+      },
+      {
+       "id": 4,
+       "label": "Base|Shoe",
+       "value": "4"
+      },
+      {
+       "id": 27,
+       "label": "Base|Shoe|Sneaker",
+       "value": "22"
+      }
+     ]
+    },
+    "articleNo": {
+     "label": "Numéro d'article",
+     "multiSelect": false,
+     "values": {
+      "id": 1201773,
+      "label": "10670879",
+      "value": "10670879"
+     }
+    },
+    "productCode": {
+     "label": "Code produit",
+     "multiSelect": false,
+     "values": {
+      "id": 1201772,
+      "label": "02941642",
+      "value": "02941642"
+     }
+    },
+    "phasesOfLife": {
+     "label": "Catégorie d'âge",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 89,
+       "label": "Adultes",
+       "value": "erwachsene"
+      }
+     ]
+    },
+    "genders": {
+     "label": "Sexe",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1200718,
+       "label": "Hommes",
+       "value": "men"
+      }
+     ]
+    },
+    "productType": {
+     "label": "Type de produit",
+     "multiSelect": false,
+     "values": {
+      "id": 1213715,
+      "label": "Sneaker de mode",
+      "value": "fashion_sneakers"
+     }
+    },
+    "productTypeAssortment": {
+     "label": "Catégorie principale",
+     "multiSelect": false,
+     "values": {
+      "id": 1201168,
+      "label": "Chaussures",
+      "value": "shoes"
+     }
+    },
+    "productTypeSubAssortment": {
+     "label": "Catégorie",
+     "multiSelect": false,
+     "values": {
+      "id": 1224488,
+      "label": "sneakers",
+      "value": "sneakers"
+     }
+    },
+    "productTypeHierarchyCode": {
+     "label": "Product Type Hierarchy Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1200214,
+      "label": "shoes|sneakers|fashion_sneakers",
+      "value": "shoessneakersfashion_sneakers"
+     }
+    },
+    "productTypeCode": {
+     "label": "Product Type Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1224490,
+      "label": "fashion_sneakers",
+      "value": "fashion_sneakers"
+     }
+    }
+   },
+   "advancedAttributes": {},
+   "images": [
+    {
+     "public_id": "02941642_1",
+     "view": "still",
+     "metaname": [
+      "The North Face Clyffe Ultra noir",
+      "139044 1"
+     ]
+    },
+    {
+     "public_id": "02941642_2",
+     "view": "still",
+     "metaname": [
+      "The North Face Clyffe Ultra noir",
+      "139044 2"
+     ]
+    },
+    {
+     "public_id": "02941642_3",
+     "view": "still",
+     "metaname": [
+      "The North Face Clyffe Ultra noir",
+      "139044 3"
+     ]
+    },
+    {
+     "public_id": "02941642_4",
+     "view": "still",
+     "metaname": [
+      "The North Face Clyffe Ultra noir",
+      "139044 4"
+     ]
+    },
+    {
+     "public_id": "02941642_5",
+     "view": "still",
+     "metaname": [
+      "The North Face Clyffe Ultra noir",
+      "139044 5"
+     ]
+    },
+    {
+     "public_id": "02941642_6",
+     "view": "still",
+     "metaname": [
+      "The North Face Clyffe Ultra noir",
+      "139044 6"
+     ]
+    },
+    {
+     "public_id": "02941642_7",
+     "view": "still",
+     "metaname": [
+      "The North Face Clyffe Ultra noir",
+      "139044 7"
+     ]
+    },
+    {
+     "public_id": "02941642_8",
+     "view": "still",
+     "metaname": [
+      "The North Face Clyffe Ultra noir",
+      "139044 8"
+     ]
+    }
+   ],
+   "variants": [
+    {
+     "id": 689195,
+     "isComposite": false,
+     "referenceKey": "0294164200000001",
+     "attributes": {
+      "sizeOriginal": {
+       "id": 1386,
+       "key": "sizeOriginal",
+       "label": "Taille originale",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 1224542,
+        "label": "9351:42.00",
+        "value": "93514200"
+       }
+      },
+      "variantCode": {
+       "id": 1384,
+       "key": "variantCode",
+       "label": "Code de variante",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 1201779,
+        "label": "0294164200000001",
+        "value": "0294164200000001"
+       }
+      },
+      "sizeUs": {
+       "id": 1389,
+       "key": "sizeUs",
+       "label": "US",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 302898,
+        "label": "9",
+        "value": "9"
+       }
+      },
+      "size": {
+       "id": 1385,
+       "key": "size",
+       "label": "Taille",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 404,
+        "label": "42",
+        "value": "42"
+       }
+      },
+      "ean": {
+       "id": 20009,
+       "key": "ean",
+       "label": "ean",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 20009,
+        "label": "ean",
+        "value": "0198266844947"
+       }
+      },
+      "sizeEu": {
+       "id": 1387,
+       "key": "sizeEu",
+       "label": "EU",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2136,
+        "label": "42",
+        "value": "42"
+       }
+      },
+      "gtin": {
+       "id": 1392,
+       "key": "gtin",
+       "label": "GTIN",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2227944,
+        "label": "0198266844947",
+        "value": "0198266844947"
+       }
+      },
+      "sizeCm": {
+       "id": 1460,
+       "key": "sizeCm",
+       "label": "CM",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 341394,
+        "label": "27",
+        "value": "27"
+       }
+      },
+      "sizeOrderNo": {
+       "id": 1391,
+       "key": "sizeOrderNo",
+       "label": "Ordre de taille",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2086,
+        "label": "1",
+        "value": "1"
+       }
+      },
+      "sizeUk": {
+       "id": 1388,
+       "key": "sizeUk",
+       "label": "UK",
+       "type": "",
+       "multiSelect": false,
+       "values": {
+        "id": 2137,
+        "label": "8",
+        "value": "8"
+       }
+      }
+     },
+     "firstLiveAt": "2026-10-02T06:55:01+00:00",
+     "createdAt": "2026-08-26T09:59:38+00:00",
+     "updatedAt": "2026-10-02T07:35:27+00:00",
+     "stock": {
+      "supplierId": 1,
+      "warehouseId": 1,
+      "quantity": 2,
+      "isSellableWithoutStock": false,
+      "expectedAvailabilityAt": null
+     },
+     "price": {
+      "currencyCode": "EUR",
+      "withTax": 14999,
+      "withoutTax": 12499,
+      "beforeSaleWithTax": null,
+      "recommendedRetailPrice": null,
+      "tax": {
+       "vat": {
+        "amount": 2500,
+        "rate": 0.2
+       }
+      },
+      "appliedReductions": [],
+      "totalAppliedReductions": null,
+      "reductionsRelativeTo": null,
+      "customData": {},
+      "wasPrice": null,
+      "hasStrikeout": false,
+      "formatted": "149,99 €"
+     },
+     "customData": {},
+     "sizeMap": {
+      "size": {
+       "code": "size",
+       "label": "Taille",
+       "value": "42"
+      },
+      "sizeEu": {
+       "code": "sizeEu",
+       "label": "EU",
+       "value": "42"
+      },
+      "sizeUk": {
+       "code": "sizeUk",
+       "label": "UK",
+       "value": "8"
+      },
+      "sizeUs": {
+       "code": "sizeUs",
+       "label": "US",
+       "value": "9"
+      },
+      "sizeCm": {
+       "code": "sizeCm",
+       "label": "CM",
+       "value": "27"
+      }
+     }
+    }
+   ],
+   "priceRange": {
+    "min": {
+     "currencyCode": "EUR",
+     "withTax": 14999,
+     "withoutTax": 12499,
+     "beforeSaleWithTax": null,
+     "recommendedRetailPrice": null,
+     "tax": {
+      "vat": {
+       "amount": 2500,
+       "rate": 0.2
+      }
+     },
+     "appliedReductions": [],
+     "totalAppliedReductions": null,
+     "reductionsRelativeTo": null
+    },
+    "max": {
+     "currencyCode": "EUR",
+     "withTax": 14999,
+     "withoutTax": 12499,
+     "beforeSaleWithTax": null,
+     "recommendedRetailPrice": null,
+     "tax": {
+      "vat": {
+       "amount": 2500,
+       "rate": 0.2
+      }
+     },
+     "appliedReductions": [],
+     "totalAppliedReductions": null,
+     "reductionsRelativeTo": null
+    }
+   },
+   "reductionRange": {
+    "min": {
+     "currencyCode": "EUR",
+     "withTax": 14999,
+     "withoutTax": 12499,
+     "beforeSaleWithTax": null,
+     "recommendedRetailPrice": null,
+     "tax": {
+      "vat": {
+       "amount": 2500,
+       "rate": 0.2
+      }
+     },
+     "appliedReductions": [],
+     "totalAppliedReductions": null,
+     "reductionsRelativeTo": null
+    },
+    "max": {
+     "currencyCode": "EUR",
+     "withTax": 14999,
+     "withoutTax": 12499,
+     "beforeSaleWithTax": null,
+     "recommendedRetailPrice": null,
+     "tax": {
+      "vat": {
+       "amount": 2500,
+       "rate": 0.2
+      }
+     },
+     "appliedReductions": [],
+     "totalAppliedReductions": null,
+     "reductionsRelativeTo": null
+    }
+   },
+   "lowestPriorPrice": {
+    "formatted": null,
+    "withTax": null,
+    "relativeDifferenceToPrice": null
+   },
+   "siblings": [
+    {
+     "id": 139044,
+     "images": [
+      {
+       "public_id": "02941642_1",
+       "view": "still",
+       "metaname": [
+        "The North Face Clyffe Ultra noir",
+        "139044 1"
+       ]
+      },
+      {
+       "public_id": "02941642_2",
+       "view": "still",
+       "metaname": [
+        "The North Face Clyffe Ultra noir",
+        "139044 2"
+       ]
+      },
+      {
+       "public_id": "02941642_3",
+       "view": "still",
+       "metaname": [
+        "The North Face Clyffe Ultra noir",
+        "139044 3"
+       ]
+      },
+      {
+       "public_id": "02941642_4",
+       "view": "still",
+       "metaname": [
+        "The North Face Clyffe Ultra noir",
+        "139044 4"
+       ]
+      },
+      {
+       "public_id": "02941642_5",
+       "view": "still",
+       "metaname": [
+        "The North Face Clyffe Ultra noir",
+        "139044 5"
+       ]
+      },
+      {
+       "public_id": "02941642_6",
+       "view": "still",
+       "metaname": [
+        "The North Face Clyffe Ultra noir",
+        "139044 6"
+       ]
+      },
+      {
+       "public_id": "02941642_7",
+       "view": "still",
+       "metaname": [
+        "The North Face Clyffe Ultra noir",
+        "139044 7"
+       ]
+      },
+      {
+       "public_id": "02941642_8",
+       "view": "still",
+       "metaname": [
+        "The North Face Clyffe Ultra noir",
+        "139044 8"
+       ]
+      }
+     ],
+     "attributes": {
+      "color": {
+       "label": "Couleur",
+       "multiSelect": false,
+       "values": {
+        "id": 140,
+        "label": "noir",
+        "value": "schwarz"
+       }
+      },
+      "colorSpace": {
+       "label": "Famille de couleur",
+       "multiSelect": false,
+       "values": {
+        "id": 1297,
+        "label": "noir",
+        "value": "black"
+       }
+      }
+     },
+     "isSoldOut": false,
+     "url": "/p/the-north-face-clyffe-ultra-noir-139044"
+    }
+   ],
+   "pricePromotionInfo": {
+    "is_any_price_promotion_key_in_sale": false,
+    "are_all_price_promotion_keys_in_sale": false,
+    "quantity_of_price_promotions_keys": 0
+   },
+   "categories": [
+    3,
+    6,
+    51,
+    77,
+    87
+   ],
+   "sellableTimeframe": {
+    "sellableFrom": null,
+    "sellableTo": null
+   },
+   "breadcrumbs": [
+    {
+     "categoryId": 6,
+     "categoryName": "Hommes",
+     "categorySlug": "hommes",
+     "categoryUrl": "/hommes",
+     "categoryHidden": false,
+     "categoryProperties": [],
+     "countryLevelCustomData": {
+      "sortingKey": "relevance"
+     }
+    },
+    {
+     "categoryId": 77,
+     "categoryName": "Chaussures",
+     "categorySlug": "chaussures",
+     "categoryUrl": "/hommes/chaussures",
+     "categoryHidden": false,
+     "categoryProperties": [],
+     "countryLevelCustomData": {
+      "sortingKey": "relevance"
+     }
+    },
+    {
+     "categoryId": 280,
+     "categoryName": "Lifestyle",
+     "categorySlug": "lifestyle",
+     "categoryUrl": "/hommes/chaussures/lifestyle",
+     "categoryHidden": false,
+     "categoryProperties": [],
+     "countryLevelCustomData": {
+      "isPrimaryCategory": true,
+      "sortingKey": "relevance"
+     }
+    }
+   ],
+   "url": "/p/the-north-face-clyffe-ultra-noir-139044",
+   "stock": 40,
+   "displayName": "Clyffe Ultra",
+   "tags": [],
+   "formattedPrice": "149,99 €",
+   "hasStartingPrice": false,
+   "hasStrikeout": false,
+   "wasPrice": null,
+   "highestRetailPrice": "0,00 €",
+   "relativeDiscount": null,
+   "relativeDiscountFormatted": null,
+   "flat": true,
+   "is30DaysBestPriceCase3": false,
+   "is30DaysBestPriceCase4": false
+  }
+ ]
+}

@@ -175,6 +175,9 @@ class ShopItem(Base):
     composition: Mapped[str | None] = mapped_column(Text, nullable=True)  # de qué está hecha, si la tienda lo dice
     # La marca, en las tiendas de varias marcas (Courir, JD Sports). Al comprarla, es la de la prenda.
     brand: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    # El código de fabricante como clave («CW2288111»), en las tiendas de zapatillas que lo dicen: la misma
+    # zapatilla en dos tiendas no se propone dos veces y el visor dice «También en…». None si no se sabe.
+    maker_code: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
     # Traducción al español de lo que la tienda dice en otro idioma. Lo original (name, store_color,
     # composition) no se toca: es lo que se puntúa y lo que sirve para buscarlo en la tienda.
     name_es: Mapped[str | None] = mapped_column(String(160), nullable=True)

@@ -703,16 +703,20 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
         ("pullandbear", "Pull&Bear", False, 0), ("bershka", "Bershka", False, 3),
         ("massimodutti", "Massimo Dutti", False, 1), ("lefties", "Lefties", False, 5), ("nike", "Nike", False, 3),
         ("jackjones", "Jack & Jones", False, 0), ("carhartt", "Carhartt WIP", False, 2),
+        ("snipes", "Snipes", False, 5), ("size", "size?", False, 6), ("footlocker", "Foot Locker", False, 4),
+        ("jules", "Jules", False, 2), ("bonobo", "Bonobo", False, 4),
     ]
-    assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 10  # el falso no lo dice
-    assert [s["browser"] for s in state["stores"]] == [False, False, True, True, True, True, True, False, False, False]
-    assert [s["key"] for s in state["stores"] if s["heavy"]] == ["pullandbear", "bershka", "massimodutti", "lefties"]
+    assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 15  # el falso no lo dice
+    assert [s["browser"] for s in state["stores"]] == [False, False, True, True, True, True, True, False, False, False,
+                                                       True, True, False, True, True]
+    assert [s["key"] for s in state["stores"] if s["heavy"]] == [
+        "pullandbear", "bershka", "massimodutti", "lefties", "jules", "bonobo"]
     # El reparto de la semana, de lunes a domingo, y su tope por noche.
     assert state["week"] == [
-        ["pullandbear", "jackjones"], ["courir", "massimodutti"], ["jdsports", "carhartt"], ["bershka", "nike"],
-        ["zara"], ["lefties"], [],
+        ["pullandbear", "jackjones"], ["courir", "massimodutti"], ["jdsports", "carhartt", "jules"],
+        ["bershka", "nike"], ["zara", "footlocker", "bonobo"], ["lefties", "snipes"], ["size"],
     ]
-    assert (state["per_night"], state["heavy_per_night"]) == (2, 1)
+    assert (state["per_night"], state["heavy_per_night"]) == (3, 2)
     assert all(c["enabled"] for c in state["stores"][0]["categories"])
     assert state["running"] is False and state["pending"] == 0
     assert state["stores"][0]["weekday"] == 4 and state["stores"][0]["next_check"] is None

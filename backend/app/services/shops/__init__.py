@@ -1,41 +1,44 @@
 """Tiendas de las que la pestaña Compras trae novedades. Una entrada por conector.
 
 Reparto de noches (18-11-2026). Cada tienda se consulta un día fijo a la semana (`refresh_weekday`), a la
-hora de la noche, y las de una misma noche van una detrás de otra. Con diez tiendas ya no hay un día para
-cada una, así que el reparto busca que cada noche haya como mucho DOS tiendas y como mucho UNA «pesada»
-(las de Inditex con navegador: muchas secciones y muchas fichas). Además, el bucle de la noche lo hace
-cumplir aunque coincidan más (recién activadas a la vez, una que falló y se repite): las que no caben
-pasan a la noche siguiente (ver `shopping.tonight`).
+hora de la noche, y las de una misma noche van una detrás de otra, de madrugada (nadie usa el Umbrel a esa
+hora: que tarde una o dos horas no importa). Con quince tiendas (y cinco más en camino) cada noche lleva
+como mucho TRES tiendas y como mucho DOS «pesadas» (las de navegador con muchas secciones y una ficha por
+propuesta: las de Inditex, Jules y Bonobo). Las de zapatillas con navegador (JD Sports, Snipes, size?)
+son ligeras: una o dos secciones. Además, el bucle de la noche lo hace cumplir aunque coincidan más
+(recién activadas a la vez, una que falló y se repite): las que no caben pasan a la noche siguiente (ver
+`shopping.tonight`; los topes, `ARMARIO_SHOP_STORES_PER_NIGHT` y `ARMARIO_SHOP_HEAVY_PER_NIGHT`).
 
-    Lun  Pull&Bear (pesada)       + Jack & Jones
-    Mar  Massimo Dutti (pesada)   + Courir
-    Mié  JD Sports (navegador, ligera: solo zapatillas) + Carhartt WIP
-    Jue  Bershka (pesada)         + Nike
-    Vie  Zara (el día después de sus novedades)
-    Sáb  Lefties (pesada)
-    Dom  libre
+    Lun  Pull&Bear (pesada)       + Jack & Jones                  [+ Uniqlo]
+    Mar  Massimo Dutti (pesada)   + Courir                        [+ Mango]
+    Mié  Jules (pesada)           + JD Sports + Carhartt WIP
+    Jue  Bershka (pesada)         + Nike                          [+ H&M]
+    Vie  Zara (el día después de sus novedades) + Bonobo (pesada) + Foot Locker
+    Sáb  Lefties (pesada)         + Snipes                        [+ COS]
+    Dom  size?                                                    [+ Weekday] (y un sitio libre)
 
-Huecos para las que vienen (Snipes, Size?, Foot Locker, Jules, Bonobo, Uniqlo, Mango, Weekday, H&M,
-COS): con dos por noche quedan cuatro sitios (Vie, Sáb y dos el Dom) y una pesada el Vie y el Dom. Con las
-veinte hará falta subir a tres por noche (`ARMARIO_SHOP_STORES_PER_NIGHT=3`: 21 sitios). Pero por la
-investigación, de las nuevas irían con navegador pesado Jules, Bonobo, H&M, COS y Weekday: nueve pesadas
-en total para siete noches. O se deja que alguna noche lleve dos (`ARMARIO_SHOP_HEAVY_PER_NIGHT=2`) o esas
-pasarán a consultarse cada ocho o nueve días (el bucle las va corriendo solo). Las de zapatillas con
-navegador (Snipes, Size?) serían ligeras, como JD Sports.
+Entre corchetes, el hueco pensado para las cinco que vienen (todas de navegador y pesadas): con ellas
+habrá veinte tiendas en 21 sitios y once pesadas en 14, sin pasar de los topes ninguna noche.
 """
 from . import browser, crawl
 from .base import BlockedError, BrowserUnavailable, NeedsBrowser, NotThisStore, SearchError, ShopConnector, ShopDetail
 from .base import ShopError, ShopProduct
 from .crawl import Cancelled, Partial
+from .base import maker_key
 from .bershka import BershkaConnector
+from .bonobo import BonoboConnector
 from .carhartt import CarharttConnector
 from .courir import CourirConnector
+from .footlocker import FootLockerConnector
 from .jackjones import JackJonesConnector
 from .jdsports import JDSportsConnector
+from .jules import JulesConnector
 from .lefties import LeftiesConnector
 from .massimodutti import MassimoDuttiConnector
 from .nike import NikeConnector
 from .pullandbear import PullAndBearConnector
+from .sizeofficial import SizeConnector
+from .snipes import SnipesConnector
 from .zara import ZaraConnector
 from ... import catalog
 
@@ -52,6 +55,13 @@ CONNECTORS: dict[str, ShopConnector] = {
     "nike": NikeConnector(),  # solo zapatillas
     "jackjones": JackJonesConnector(),
     "carhartt": CarharttConnector(),
+    # Zapatillas de muchas marcas: Snipes (listado con navegador, ficha sin él), size? (con navegador) y Foot
+    # Locker (sin navegador: con él, su antibots niega la API de la web).
+    "snipes": SnipesConnector(),
+    "size": SizeConnector(),
+    "footlocker": FootLockerConnector(),
+    "jules": JulesConnector(),  # navegador
+    "bonobo": BonoboConnector(),  # navegador (también para las fotos)
 }
 
 
@@ -83,6 +93,18 @@ def unavailable(key: str) -> str | None:
     return browser.missing() if needs_browser(key) else None
 
 
+def maker_code(key: str, store_data: dict) -> str | None:
+    """El código de fabricante de un producto, como clave para reconocer la misma zapatilla (modelo y
+    color) en tiendas distintas («CW2288111»). None si la tienda no lo dice o aún no se ha leído su ficha."""
+    make = getattr(CONNECTORS.get(key), "maker_code", None)
+    if make is None or not isinstance(store_data, dict):
+        return None
+    try:
+        return maker_key(make(store_data))
+    except Exception:  # un `store_data` antiguo o raro no puede tumbar nada
+        return None
+
+
 def cached_detail(key: str, store_data: dict):
     """La ficha de un producto sacada de lo que guardó el listado, sin volver a la tienda (Pull&Bear,
     Bershka, Massimo Dutti, Lefties y JD Sports la guardan; las demás no). None si no se puede."""
@@ -98,5 +120,5 @@ def cached_detail(key: str, store_data: dict):
 __all__ = [
     "CONNECTORS", "BlockedError", "BrowserUnavailable", "Cancelled", "NeedsBrowser", "NotThisStore", "Partial",
     "SearchError", "ShopConnector", "ShopDetail", "ShopError", "ShopProduct", "cached_detail", "crawl", "heavy",
-    "kinds", "needs_browser", "unavailable",
+    "kinds", "maker_code", "maker_key", "needs_browser", "unavailable",
 ]

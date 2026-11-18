@@ -41,6 +41,15 @@ class ShopColorOut(BaseModel):
     url: str  # su página en la tienda (para los que no se pueden ver ahora)
 
 
+class ShopAlsoInOut(BaseModel):
+    """La misma zapatilla (mismo código de fabricante) en otra tienda."""
+
+    store: str
+    store_name: str
+    price_cents: int
+    url: str
+
+
 class ShopItemOut(BaseModel):
     id: int
     store: str
@@ -70,6 +79,8 @@ class ShopItemOut(BaseModel):
     colors: list[ShopColorOut] | None
     # Encontrado en lo guardado, de una tienda de navegador, y aún sin fotos: llegan en segundo plano.
     photo_pending: bool = False
+    # «También en»: la misma zapatilla en otras tiendas, de la más barata a la más cara (vacío si no se sabe).
+    also_in: list[ShopAlsoInOut] = []
 
 
 class ShopLookupOut(ShopItemOut):
@@ -292,6 +303,7 @@ def _to_out(item: ShopItem) -> ShopItemOut:
         composition=item.composition_es or item.composition or None,
         colors=shopping.colors_of(item),
         photo_pending=not item.photos and item.status in (shopping.SEARCHED, shopping.LIKED),
+        also_in=shopping.also_in(item),
     )
 
 

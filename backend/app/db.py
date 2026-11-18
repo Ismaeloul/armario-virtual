@@ -55,6 +55,7 @@ _NEW_COLUMNS = {
         "prev_status": "VARCHAR(20)", "siblings": "JSON", "composition": "TEXT",
         "brand": "VARCHAR(40)", "name_es": "VARCHAR(160)", "store_color_es": "VARCHAR(60)",
         "composition_es": "TEXT", "translated": "BOOLEAN", "listed_at": "DATETIME",
+        "maker_code": "VARCHAR(40)",
     },
 }
 

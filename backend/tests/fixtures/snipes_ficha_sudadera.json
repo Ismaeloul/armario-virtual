@@ -1,0 +1,1874 @@
+{
+ "id": 103661,
+ "isActive": true,
+ "isSoldOut": false,
+ "isNew": false,
+ "isComposite": false,
+ "createdAt": "2026-02-10T02:16:42+00:00",
+ "updatedAt": "2026-10-26T19:25:53+00:00",
+ "indexedAt": "2026-11-18T14:55:08+00:00",
+ "firstLiveAt": "2026-09-17T07:14:59+00:00",
+ "masterKey": "m02719866",
+ "referenceKey": "02719866",
+ "attributes": {
+  "articleNoSearch": {
+   "label": "Searchable Article Number",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 884322,
+     "label": "60210754",
+     "value": "60210754"
+    }
+   ]
+  },
+  "buyingBrandId": {
+   "label": "WWS Brand ID",
+   "multiSelect": false,
+   "values": {
+    "id": 1224534,
+    "label": "adidas-originals",
+    "value": "adidasoriginals"
+   }
+  },
+  "brandUrl": {
+   "label": "URL du fabricant",
+   "multiSelect": false,
+   "values": {
+    "id": 372528,
+    "label": "https://www.adidas.com/",
+    "value": "httpswwwadidascom"
+   }
+  },
+  "productTypeHierarchyCode": {
+   "label": "Product Type Hierarchy Code",
+   "multiSelect": false,
+   "values": {
+    "id": 1200277,
+    "label": "apparel|top_training|hoodies",
+    "value": "appareltop_traininghoodies"
+   }
+  },
+  "updateStatus": {
+   "label": "Mise à jour du statut",
+   "multiSelect": false,
+   "values": {
+    "id": 1224466,
+    "label": "akeneoExport",
+    "value": "akeneoexport"
+   }
+  },
+  "phasesOfLife": {
+   "label": "Catégorie d'âge",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 89,
+     "label": "Adultes",
+     "value": "erwachsene"
+    }
+   ]
+  },
+  "color": {
+   "label": "Couleur",
+   "multiSelect": false,
+   "values": {
+    "id": 387,
+    "label": "beige",
+    "value": "beige"
+   }
+  },
+  "productTypeSubAssortment": {
+   "label": "Catégorie",
+   "multiSelect": false,
+   "values": {
+    "id": 1201172,
+    "label": "Hoodies & Sweatshirts",
+    "value": "hoodies_sweatshirts"
+   }
+  },
+  "description": {
+   "label": "Description",
+   "multiSelect": false,
+   "values": {
+    "id": 20006,
+    "label": "",
+    "value": "description"
+   }
+  },
+  "year": {
+   "label": "Année",
+   "multiSelect": false,
+   "values": {
+    "id": 114,
+    "label": "2026",
+    "value": "2026"
+   }
+  },
+  "colorSpace": {
+   "label": "Famille de couleur",
+   "multiSelect": false,
+   "values": {
+    "id": 1285,
+    "label": "beige",
+    "value": "beige"
+   }
+  },
+  "productType": {
+   "label": "Type de produit",
+   "multiSelect": false,
+   "values": {
+    "id": 1213726,
+    "label": "Sweats à capuche",
+    "value": "hoodies"
+   }
+  },
+  "outOfOnlinePeriod": {
+   "label": "Hors période en ligne",
+   "multiSelect": false,
+   "values": {
+    "id": 337130,
+    "label": "false",
+    "value": "false",
+    "useKey": true
+   }
+  },
+  "genders": {
+   "label": "Sexe",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1200718,
+     "label": "Hommes",
+     "value": "men"
+    }
+   ]
+  },
+  "articleNo": {
+   "label": "Numéro d'article",
+   "multiSelect": false,
+   "values": {
+    "id": 884320,
+    "label": "60210754",
+    "value": "60210754"
+   }
+  },
+  "brand": {
+   "label": "Marque",
+   "multiSelect": false,
+   "values": {
+    "id": 830,
+    "label": "adidas Originals",
+    "value": "adidas_originals"
+   }
+  },
+  "manufacturerColor": {
+   "label": "Couleur du fabricant",
+   "multiSelect": false,
+   "values": {
+    "id": 2224471,
+    "label": "wonderwhite/crystal sky",
+    "value": "wonderwhitecrystal_sky"
+   }
+  },
+  "affiliateRevenueModel": {
+   "label": "Modèle de revenus des affiliés",
+   "multiSelect": false,
+   "values": {
+    "id": 1212655,
+    "label": "Standard",
+    "value": "standard"
+   }
+  },
+  "waitingForOnlinePeriodStatusUpdate": {
+   "label": "En attente de la mise à jour du statut de la période en ligne",
+   "multiSelect": false,
+   "values": {
+    "id": 337132,
+    "label": "false",
+    "value": "false",
+    "useKey": true
+   }
+  },
+  "name": {
+   "label": "Name",
+   "multiSelect": false,
+   "values": {
+    "id": 20005,
+    "label": "Graphic Fleece Hoodie",
+    "value": "name"
+   }
+  },
+  "targetGroup": {
+   "label": "Sexe",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 318717,
+     "label": "Hommes",
+     "value": "men"
+    }
+   ]
+  },
+  "productTypeCode": {
+   "label": "Product Type Code",
+   "multiSelect": false,
+   "values": {
+    "id": 1229999,
+    "label": "hoodies",
+    "value": "hoodies"
+   }
+  },
+  "priceAvailableFor": {
+   "label": "Price Available For",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 806566,
+     "label": "SPL",
+     "value": "spl"
+    },
+    {
+     "id": 806567,
+     "label": "SNL",
+     "value": "snl"
+    },
+    {
+     "id": 806568,
+     "label": "SDE",
+     "value": "sde"
+    },
+    {
+     "id": 806569,
+     "label": "SAT",
+     "value": "sat"
+    },
+    {
+     "id": 806570,
+     "label": "SFR",
+     "value": "sfr"
+    },
+    {
+     "id": 806571,
+     "label": "SCH",
+     "value": "sch"
+    },
+    {
+     "id": 806572,
+     "label": "SES",
+     "value": "ses"
+    },
+    {
+     "id": 806573,
+     "label": "SPT",
+     "value": "spt"
+    },
+    {
+     "id": 806574,
+     "label": "SBE",
+     "value": "sbe"
+    },
+    {
+     "id": 806575,
+     "label": "SHR",
+     "value": "shr"
+    },
+    {
+     "id": 806576,
+     "label": "SIT",
+     "value": "sit"
+    }
+   ]
+  },
+  "productName": {
+   "label": "Name",
+   "multiSelect": false,
+   "values": {
+    "id": 1225537,
+    "label": "Graphic Fleece Hoodie",
+    "value": "graphic_fleece_hoodie"
+   }
+  },
+  "fullLegalCompanyName": {
+   "label": "Nom du fabricant",
+   "multiSelect": false,
+   "values": {
+    "id": 357739,
+    "label": "adidas AG",
+    "value": "adidas_ag"
+   }
+  },
+  "isExclusiveFilter": {
+   "label": "Exclusivité",
+   "multiSelect": false,
+   "values": {
+    "id": 1234664,
+    "label": "Disponible uniquement chez nous",
+    "value": "yes"
+   }
+  },
+  "productTypeAssortment": {
+   "label": "Catégorie principale",
+   "multiSelect": false,
+   "values": {
+    "id": 1201167,
+    "label": "Vêtements",
+    "value": "apparel"
+   }
+  },
+  "marketingTrend": {
+   "label": "Tendance marketing",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 601,
+     "label": "Cozy",
+     "value": "cozy"
+    },
+    {
+     "id": 342624,
+     "label": "Exclusivité SNIPES",
+     "value": "snipes_exclusive"
+    },
+    {
+     "id": 925766,
+     "label": "Tons saisonniers",
+     "value": "seasonal_tones"
+    },
+    {
+     "id": 1210335,
+     "label": "Gorpcore",
+     "value": "gorpcore"
+    }
+   ]
+  },
+  "stockLevels": {
+   "label": "Stock Level",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1224475,
+     "label": "Buffalo - aucun stock",
+     "value": "buffalo_no_stock"
+    },
+    {
+     "id": 1224476,
+     "label": "SNIPES (SCH) - aucun stock",
+     "value": "snipes_sch_no_stock"
+    },
+    {
+     "id": 1227783,
+     "label": "solebox - aucun stock",
+     "value": "solebox_no_stock"
+    },
+    {
+     "id": 1230007,
+     "label": "SNIPES (SDE) - stock élevé",
+     "value": "snipes_sde_high_stock"
+    },
+    {
+     "id": 2233719,
+     "label": "SDE (BOSS) - stock élevé",
+     "value": "sde_boss_high_stock"
+    }
+   ]
+  },
+  "manufacturerProductCode": {
+   "label": "Manufacturer number",
+   "multiSelect": false,
+   "values": {
+    "id": 1870206,
+    "label": "LF8784",
+    "value": "lf8784"
+   }
+  },
+  "productCode": {
+   "label": "Code produit",
+   "multiSelect": false,
+   "values": {
+    "id": 884319,
+    "label": "02719866",
+    "value": "02719866"
+   }
+  },
+  "lifecycleStatus": {
+   "label": "Lifecycle Status",
+   "multiSelect": false,
+   "values": {
+    "id": 1225248,
+    "label": "Approved",
+    "value": "approved"
+   }
+  },
+  "isExclusive": {
+   "label": "Exclusivité",
+   "multiSelect": false,
+   "values": {
+    "id": 1230557,
+    "label": "true",
+    "value": "true",
+    "useKey": true
+   }
+  },
+  "parentBrand": {
+   "label": "Marque",
+   "multiSelect": false,
+   "values": {
+    "id": 358782,
+    "label": "adidas",
+    "value": "adidas"
+   }
+  },
+  "material": {
+   "label": "Matériau",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1224493,
+     "label": "coton",
+     "value": "cotton"
+    },
+    {
+     "id": 1224860,
+     "label": "polyester",
+     "value": "polyester_1"
+    }
+   ]
+  },
+  "category": {
+   "label": "Master Categories (AG)",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1,
+     "label": "Base",
+     "value": "1"
+    },
+    {
+     "id": 3,
+     "label": "Base|Apparel",
+     "value": "3"
+    },
+    {
+     "id": 30,
+     "label": "Base|Apparel|Top",
+     "value": "25"
+    }
+   ]
+  },
+  "colorOrderNo": {
+   "label": "Numéro de commande de la couleur",
+   "multiSelect": false,
+   "values": {
+    "id": 2770,
+    "label": "4",
+    "value": "4"
+   }
+  },
+  "isHotRelease": {
+   "label": "Hot release",
+   "multiSelect": false,
+   "values": {
+    "id": 1198854,
+    "label": "false",
+    "value": "false",
+    "useKey": true
+   }
+  },
+  "season": {
+   "label": "Saison",
+   "multiSelect": false,
+   "values": {
+    "id": 1224489,
+    "label": "automne / hiver",
+    "value": "autumn_winter_1_2"
+   }
+  },
+  "rawManufacturerAddress": {
+   "label": "translate.manufacturer",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 999999991,
+     "label": "adidas AG",
+     "value": "adidas AG"
+    },
+    {
+     "id": 999999992,
+     "label": "Adi-Dassler-Strasse 1 , Herzogenaurach , 91074 Germany",
+     "value": "Adi-Dassler-Strasse 1 , Herzogenaurach , 91074 Germany"
+    },
+    {
+     "id": 999999993,
+     "label": "https://www.adidas.com/",
+     "value": "https://www.adidas.com/"
+    }
+   ]
+  },
+  "manufacturerAddress": {
+   "label": "translate.manufacturer",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 999999991,
+     "label": "adidas AG",
+     "value": "adidas AG"
+    },
+    {
+     "id": 999999992,
+     "label": "Adi-Dassler-Strasse 1",
+     "value": "Adi-Dassler-Strasse 1"
+    },
+    {
+     "id": 999999993,
+     "label": "91074 Herzogenaurach",
+     "value": "91074 Herzogenaurach"
+    },
+    {
+     "id": 999999994,
+     "label": "Germany",
+     "value": "Germany"
+    },
+    {
+     "id": 999999995,
+     "label": "https://www.adidas.com/",
+     "value": "https://www.adidas.com/"
+    }
+   ]
+  }
+ },
+ "advancedAttributes": {
+  "materialComposition": {
+   "id": 1468,
+   "key": "materialComposition",
+   "label": "Material percentage information",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "53"
+       },
+       {
+        "value": "Matériau"
+       },
+       {
+        "materialFilter": "coton"
+       },
+       {
+        "percentualUnit": "%"
+       }
+      ]
+     ],
+     "groupSet": []
+    },
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "47"
+       },
+       {
+        "value": "Matériau"
+       },
+       {
+        "materialFilter": "polyester"
+       },
+       {
+        "percentualUnit": "%"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "productDeepLink": {
+   "id": 1466,
+   "key": "productDeepLink",
+   "label": "Product Deep Link",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "country_specific_productDeepLink_103661"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "updatedAt": {
+   "id": 1545,
+   "key": "updatedAt",
+   "label": "updatedAt",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "2026-10-26T18:22:53+00:00"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "productName": {
+   "id": 553,
+   "key": "productName",
+   "label": "Nom de produit",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "Graphic Fleece Hoodie"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "inHouseDate": {
+   "id": 1383,
+   "key": "inHouseDate",
+   "label": "Sur place",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "2026-09-08"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "brandAddress": {
+   "id": 1440,
+   "key": "brandAddress",
+   "label": "Adresse du fabricant",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "Adi-Dassler-Strasse 1 , Herzogenaurach , 91074 Germany"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "description": {
+   "id": 1441,
+   "key": "description",
+   "label": "Description",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "<p>Le sweat-shirt à capuche graphique à coupe ample allie confort douillet et style décontracté, parfait pour les journées fraîches ou pour se détendre à la maison.<br><br>Il t’enveloppe de chaleur et de douceur grâce à son mélange de coton et de molleton en polyester recyclé.<br><br>Sa coupe ample offre une allure décontractée, qui te permet de bouger librement et de superposer le sweat sur tes tenues préférées.<br><br>Avec son style street classique signé <strong>adidas</strong>, ce sweat à capuche est conçu pour te faire sentir bien tout en ayant fière allure.<br><br><strong>Caractéristiques:</strong></p><ul><li>Coupe large</li></ul>"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  }
+ },
+ "images": [
+  {
+   "public_id": "02719866_1",
+   "view": "still",
+   "metaname": [
+    "adidas Originals Graphic Fleece Hoodie beige",
+    "103661 1"
+   ]
+  },
+  {
+   "public_id": "02719866_2",
+   "view": "still",
+   "metaname": [
+    "adidas Originals Graphic Fleece Hoodie beige",
+    "103661 2"
+   ]
+  },
+  {
+   "public_id": "02719866_3",
+   "view": "still",
+   "metaname": [
+    "adidas Originals Graphic Fleece Hoodie beige",
+    "103661 3"
+   ]
+  },
+  {
+   "public_id": "02719866_4",
+   "view": "still",
+   "metaname": [
+    "adidas Originals Graphic Fleece Hoodie beige",
+    "103661 4"
+   ]
+  }
+ ],
+ "variants": [
+  {
+   "id": 498622,
+   "isComposite": false,
+   "referenceKey": "0271986600000001",
+   "attributes": {
+    "sizeOrderNo": {
+     "id": 1391,
+     "key": "sizeOrderNo",
+     "label": "Ordre de taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2086,
+      "label": "1",
+      "value": "1"
+     }
+    },
+    "gtin": {
+     "id": 1392,
+     "key": "gtin",
+     "label": "GTIN",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 1870209,
+      "label": "4069994051265",
+      "value": "4069994051265"
+     }
+    },
+    "variantCode": {
+     "id": 1384,
+     "key": "variantCode",
+     "label": "Code de variante",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 884325,
+      "label": "0271986600000001",
+      "value": "0271986600000001"
+     }
+    },
+    "size": {
+     "id": 1385,
+     "key": "size",
+     "label": "Taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 460,
+      "label": "S",
+      "value": "s"
+     }
+    },
+    "sizeOriginal": {
+     "id": 1386,
+     "key": "sizeOriginal",
+     "label": "Taille originale",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2313,
+      "label": "5903:S",
+      "value": "5903s"
+     }
+    },
+    "ean": {
+     "id": 20009,
+     "key": "ean",
+     "label": "ean",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 20009,
+      "label": "ean",
+      "value": "4069994051265"
+     }
+    },
+    "sizeOther": {
+     "id": 1390,
+     "key": "sizeOther",
+     "label": "Choix de la taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2314,
+      "label": "S",
+      "value": "s"
+     }
+    }
+   },
+   "firstLiveAt": "2026-09-17T07:14:59+00:00",
+   "createdAt": "2026-02-10T02:16:42+00:00",
+   "updatedAt": "2026-09-17T07:14:59+00:00",
+   "stock": {
+    "supplierId": 1,
+    "warehouseId": 1,
+    "quantity": 18,
+    "isSellableWithoutStock": false,
+    "expectedAvailabilityAt": null
+   },
+   "price": {
+    "currencyCode": "EUR",
+    "withTax": 7499,
+    "withoutTax": 6249,
+    "beforeSaleWithTax": null,
+    "recommendedRetailPrice": null,
+    "tax": {
+     "vat": {
+      "amount": 1250,
+      "rate": 0.2
+     }
+    },
+    "appliedReductions": [],
+    "totalAppliedReductions": null,
+    "reductionsRelativeTo": null,
+    "customData": {},
+    "wasPrice": null,
+    "hasStrikeout": false,
+    "formatted": "74,99 €"
+   },
+   "customData": {},
+   "sizeMap": {
+    "size": {
+     "code": "size",
+     "label": "Taille",
+     "value": "S"
+    },
+    "sizeOther": {
+     "code": "sizeOther",
+     "label": "Choix de la taille",
+     "value": "S"
+    }
+   }
+  },
+  {
+   "id": 498621,
+   "isComposite": false,
+   "referenceKey": "0271986600000002",
+   "attributes": {
+    "size": {
+     "id": 1385,
+     "key": "size",
+     "label": "Taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 384,
+      "label": "M",
+      "value": "m"
+     }
+    },
+    "sizeOriginal": {
+     "id": 1386,
+     "key": "sizeOriginal",
+     "label": "Taille originale",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2316,
+      "label": "5903:M",
+      "value": "5903m"
+     }
+    },
+    "sizeOther": {
+     "id": 1390,
+     "key": "sizeOther",
+     "label": "Choix de la taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2318,
+      "label": "M",
+      "value": "m"
+     }
+    },
+    "ean": {
+     "id": 20009,
+     "key": "ean",
+     "label": "ean",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 20009,
+      "label": "ean",
+      "value": "4069994051166"
+     }
+    },
+    "sizeOrderNo": {
+     "id": 1391,
+     "key": "sizeOrderNo",
+     "label": "Ordre de taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2778,
+      "label": "2",
+      "value": "2"
+     }
+    },
+    "gtin": {
+     "id": 1392,
+     "key": "gtin",
+     "label": "GTIN",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 1870212,
+      "label": "4069994051166",
+      "value": "4069994051166"
+     }
+    },
+    "variantCode": {
+     "id": 1384,
+     "key": "variantCode",
+     "label": "Code de variante",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 884324,
+      "label": "0271986600000002",
+      "value": "0271986600000002"
+     }
+    }
+   },
+   "firstLiveAt": "2026-09-17T07:14:59+00:00",
+   "createdAt": "2026-02-10T02:16:42+00:00",
+   "updatedAt": "2026-09-17T07:14:59+00:00",
+   "stock": {
+    "supplierId": 1,
+    "warehouseId": 1,
+    "quantity": 71,
+    "isSellableWithoutStock": false,
+    "expectedAvailabilityAt": null
+   },
+   "price": {
+    "currencyCode": "EUR",
+    "withTax": 7499,
+    "withoutTax": 6249,
+    "beforeSaleWithTax": null,
+    "recommendedRetailPrice": null,
+    "tax": {
+     "vat": {
+      "amount": 1250,
+      "rate": 0.2
+     }
+    },
+    "appliedReductions": [],
+    "totalAppliedReductions": null,
+    "reductionsRelativeTo": null,
+    "customData": {},
+    "wasPrice": null,
+    "hasStrikeout": false,
+    "formatted": "74,99 €"
+   },
+   "customData": {},
+   "sizeMap": {
+    "size": {
+     "code": "size",
+     "label": "Taille",
+     "value": "M"
+    },
+    "sizeOther": {
+     "code": "sizeOther",
+     "label": "Choix de la taille",
+     "value": "M"
+    }
+   }
+  },
+  {
+   "id": 498620,
+   "isComposite": false,
+   "referenceKey": "0271986600000004",
+   "attributes": {
+    "sizeOrderNo": {
+     "id": 1391,
+     "key": "sizeOrderNo",
+     "label": "Ordre de taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2779,
+      "label": "3",
+      "value": "3"
+     }
+    },
+    "gtin": {
+     "id": 1392,
+     "key": "gtin",
+     "label": "GTIN",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 1870207,
+      "label": "4069994051180",
+      "value": "4069994051180"
+     }
+    },
+    "ean": {
+     "id": 20009,
+     "key": "ean",
+     "label": "ean",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 20009,
+      "label": "ean",
+      "value": "4069994051180"
+     }
+    },
+    "variantCode": {
+     "id": 1384,
+     "key": "variantCode",
+     "label": "Code de variante",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 884323,
+      "label": "0271986600000004",
+      "value": "0271986600000004"
+     }
+    },
+    "size": {
+     "id": 1385,
+     "key": "size",
+     "label": "Taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 462,
+      "label": "L",
+      "value": "l"
+     }
+    },
+    "sizeOriginal": {
+     "id": 1386,
+     "key": "sizeOriginal",
+     "label": "Taille originale",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2320,
+      "label": "5903:L",
+      "value": "5903l"
+     }
+    },
+    "sizeOther": {
+     "id": 1390,
+     "key": "sizeOther",
+     "label": "Choix de la taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2322,
+      "label": "L",
+      "value": "l"
+     }
+    }
+   },
+   "firstLiveAt": "2026-09-17T07:14:59+00:00",
+   "createdAt": "2026-02-10T02:16:42+00:00",
+   "updatedAt": "2026-09-17T07:14:59+00:00",
+   "stock": {
+    "supplierId": 1,
+    "warehouseId": 1,
+    "quantity": 80,
+    "isSellableWithoutStock": false,
+    "expectedAvailabilityAt": null
+   },
+   "price": {
+    "currencyCode": "EUR",
+    "withTax": 7499,
+    "withoutTax": 6249,
+    "beforeSaleWithTax": null,
+    "recommendedRetailPrice": null,
+    "tax": {
+     "vat": {
+      "amount": 1250,
+      "rate": 0.2
+     }
+    },
+    "appliedReductions": [],
+    "totalAppliedReductions": null,
+    "reductionsRelativeTo": null,
+    "customData": {},
+    "wasPrice": null,
+    "hasStrikeout": false,
+    "formatted": "74,99 €"
+   },
+   "customData": {},
+   "sizeMap": {
+    "size": {
+     "code": "size",
+     "label": "Taille",
+     "value": "L"
+    },
+    "sizeOther": {
+     "code": "sizeOther",
+     "label": "Choix de la taille",
+     "value": "L"
+    }
+   }
+  }
+ ],
+ "priceRange": {
+  "min": {
+   "currencyCode": "EUR",
+   "withTax": 7499,
+   "withoutTax": 6249,
+   "beforeSaleWithTax": null,
+   "recommendedRetailPrice": null,
+   "tax": {
+    "vat": {
+     "amount": 1250,
+     "rate": 0.2
+    }
+   },
+   "appliedReductions": [],
+   "totalAppliedReductions": null,
+   "reductionsRelativeTo": null
+  },
+  "max": {
+   "currencyCode": "EUR",
+   "withTax": 7499,
+   "withoutTax": 6249,
+   "beforeSaleWithTax": null,
+   "recommendedRetailPrice": null,
+   "tax": {
+    "vat": {
+     "amount": 1250,
+     "rate": 0.2
+    }
+   },
+   "appliedReductions": [],
+   "totalAppliedReductions": null,
+   "reductionsRelativeTo": null
+  }
+ },
+ "reductionRange": {
+  "min": {
+   "currencyCode": "EUR",
+   "withTax": 7499,
+   "withoutTax": 6249,
+   "beforeSaleWithTax": null,
+   "recommendedRetailPrice": null,
+   "tax": {
+    "vat": {
+     "amount": 1250,
+     "rate": 0.2
+    }
+   },
+   "appliedReductions": [],
+   "totalAppliedReductions": null,
+   "reductionsRelativeTo": null
+  },
+  "max": {
+   "currencyCode": "EUR",
+   "withTax": 7499,
+   "withoutTax": 6249,
+   "beforeSaleWithTax": null,
+   "recommendedRetailPrice": null,
+   "tax": {
+    "vat": {
+     "amount": 1250,
+     "rate": 0.2
+    }
+   },
+   "appliedReductions": [],
+   "totalAppliedReductions": null,
+   "reductionsRelativeTo": null
+  }
+ },
+ "lowestPriorPrice": {
+  "formatted": null,
+  "withTax": null,
+  "relativeDifferenceToPrice": null
+ },
+ "siblings": [
+  {
+   "id": 103661,
+   "isSoldOut": false,
+   "referenceKey": "02719866",
+   "attributes": {
+    "articleNoSearch": {
+     "label": "Searchable Article Number",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 884322,
+       "label": "60210754",
+       "value": "60210754"
+      }
+     ]
+    },
+    "buyingBrandId": {
+     "label": "WWS Brand ID",
+     "multiSelect": false,
+     "values": {
+      "id": 1224534,
+      "label": "adidas-originals",
+      "value": "adidasoriginals"
+     }
+    },
+    "brandUrl": {
+     "label": "URL du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 372528,
+      "label": "https://www.adidas.com/",
+      "value": "httpswwwadidascom"
+     }
+    },
+    "productTypeHierarchyCode": {
+     "label": "Product Type Hierarchy Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1200277,
+      "label": "apparel|top_training|hoodies",
+      "value": "appareltop_traininghoodies"
+     }
+    },
+    "updateStatus": {
+     "label": "Mise à jour du statut",
+     "multiSelect": false,
+     "values": {
+      "id": 1224466,
+      "label": "akeneoExport",
+      "value": "akeneoexport"
+     }
+    },
+    "phasesOfLife": {
+     "label": "Catégorie d'âge",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 89,
+       "label": "Adultes",
+       "value": "erwachsene"
+      }
+     ]
+    },
+    "color": {
+     "label": "Couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 387,
+      "label": "beige",
+      "value": "beige"
+     }
+    },
+    "productTypeSubAssortment": {
+     "label": "Catégorie",
+     "multiSelect": false,
+     "values": {
+      "id": 1201172,
+      "label": "Hoodies & Sweatshirts",
+      "value": "hoodies_sweatshirts"
+     }
+    },
+    "description": {
+     "label": "Description",
+     "multiSelect": false,
+     "values": {
+      "id": 20006,
+      "label": "",
+      "value": "description"
+     }
+    },
+    "year": {
+     "label": "Année",
+     "multiSelect": false,
+     "values": {
+      "id": 114,
+      "label": "2026",
+      "value": "2026"
+     }
+    },
+    "colorSpace": {
+     "label": "Famille de couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 1285,
+      "label": "beige",
+      "value": "beige"
+     }
+    },
+    "productType": {
+     "label": "Type de produit",
+     "multiSelect": false,
+     "values": {
+      "id": 1213726,
+      "label": "Sweats à capuche",
+      "value": "hoodies"
+     }
+    },
+    "outOfOnlinePeriod": {
+     "label": "Hors période en ligne",
+     "multiSelect": false,
+     "values": {
+      "id": 337130,
+      "label": "false",
+      "value": "false",
+      "useKey": true
+     }
+    },
+    "genders": {
+     "label": "Sexe",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1200718,
+       "label": "Hommes",
+       "value": "men"
+      }
+     ]
+    },
+    "articleNo": {
+     "label": "Numéro d'article",
+     "multiSelect": false,
+     "values": {
+      "id": 884320,
+      "label": "60210754",
+      "value": "60210754"
+     }
+    },
+    "brand": {
+     "label": "Marque",
+     "multiSelect": false,
+     "values": {
+      "id": 830,
+      "label": "adidas Originals",
+      "value": "adidas_originals"
+     }
+    },
+    "manufacturerColor": {
+     "label": "Couleur du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 2224471,
+      "label": "wonderwhite/crystal sky",
+      "value": "wonderwhitecrystal_sky"
+     }
+    },
+    "affiliateRevenueModel": {
+     "label": "Modèle de revenus des affiliés",
+     "multiSelect": false,
+     "values": {
+      "id": 1212655,
+      "label": "Standard",
+      "value": "standard"
+     }
+    },
+    "waitingForOnlinePeriodStatusUpdate": {
+     "label": "En attente de la mise à jour du statut de la période en ligne",
+     "multiSelect": false,
+     "values": {
+      "id": 337132,
+      "label": "false",
+      "value": "false",
+      "useKey": true
+     }
+    },
+    "name": {
+     "label": "Name",
+     "multiSelect": false,
+     "values": {
+      "id": 20005,
+      "label": "Graphic Fleece Hoodie",
+      "value": "name"
+     }
+    },
+    "targetGroup": {
+     "label": "Sexe",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 318717,
+       "label": "Hommes",
+       "value": "men"
+      }
+     ]
+    },
+    "productTypeCode": {
+     "label": "Product Type Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1229999,
+      "label": "hoodies",
+      "value": "hoodies"
+     }
+    },
+    "priceAvailableFor": {
+     "label": "Price Available For",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 806566,
+       "label": "SPL",
+       "value": "spl"
+      },
+      {
+       "id": 806567,
+       "label": "SNL",
+       "value": "snl"
+      },
+      {
+       "id": 806568,
+       "label": "SDE",
+       "value": "sde"
+      },
+      {
+       "id": 806569,
+       "label": "SAT",
+       "value": "sat"
+      },
+      {
+       "id": 806570,
+       "label": "SFR",
+       "value": "sfr"
+      },
+      {
+       "id": 806571,
+       "label": "SCH",
+       "value": "sch"
+      },
+      {
+       "id": 806572,
+       "label": "SES",
+       "value": "ses"
+      },
+      {
+       "id": 806573,
+       "label": "SPT",
+       "value": "spt"
+      },
+      {
+       "id": 806574,
+       "label": "SBE",
+       "value": "sbe"
+      },
+      {
+       "id": 806575,
+       "label": "SHR",
+       "value": "shr"
+      },
+      {
+       "id": 806576,
+       "label": "SIT",
+       "value": "sit"
+      }
+     ]
+    },
+    "productName": {
+     "label": "Name",
+     "multiSelect": false,
+     "values": {
+      "id": 1225537,
+      "label": "Graphic Fleece Hoodie",
+      "value": "graphic_fleece_hoodie"
+     }
+    },
+    "fullLegalCompanyName": {
+     "label": "Nom du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 357739,
+      "label": "adidas AG",
+      "value": "adidas_ag"
+     }
+    },
+    "isExclusiveFilter": {
+     "label": "Exclusivité",
+     "multiSelect": false,
+     "values": {
+      "id": 1234664,
+      "label": "Disponible uniquement chez nous",
+      "value": "yes"
+     }
+    },
+    "productTypeAssortment": {
+     "label": "Catégorie principale",
+     "multiSelect": false,
+     "values": {
+      "id": 1201167,
+      "label": "Vêtements",
+      "value": "apparel"
+     }
+    },
+    "marketingTrend": {
+     "label": "Tendance marketing",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 601,
+       "label": "Cozy",
+       "value": "cozy"
+      },
+      {
+       "id": 342624,
+       "label": "Exclusivité SNIPES",
+       "value": "snipes_exclusive"
+      },
+      {
+       "id": 925766,
+       "label": "Tons saisonniers",
+       "value": "seasonal_tones"
+      },
+      {
+       "id": 1210335,
+       "label": "Gorpcore",
+       "value": "gorpcore"
+      }
+     ]
+    },
+    "stockLevels": {
+     "label": "Stock Level",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224475,
+       "label": "Buffalo - aucun stock",
+       "value": "buffalo_no_stock"
+      },
+      {
+       "id": 1224476,
+       "label": "SNIPES (SCH) - aucun stock",
+       "value": "snipes_sch_no_stock"
+      },
+      {
+       "id": 1227783,
+       "label": "solebox - aucun stock",
+       "value": "solebox_no_stock"
+      },
+      {
+       "id": 1230007,
+       "label": "SNIPES (SDE) - stock élevé",
+       "value": "snipes_sde_high_stock"
+      },
+      {
+       "id": 2233719,
+       "label": "SDE (BOSS) - stock élevé",
+       "value": "sde_boss_high_stock"
+      }
+     ]
+    },
+    "manufacturerProductCode": {
+     "label": "Manufacturer number",
+     "multiSelect": false,
+     "values": {
+      "id": 1870206,
+      "label": "LF8784",
+      "value": "lf8784"
+     }
+    },
+    "productCode": {
+     "label": "Code produit",
+     "multiSelect": false,
+     "values": {
+      "id": 884319,
+      "label": "02719866",
+      "value": "02719866"
+     }
+    },
+    "lifecycleStatus": {
+     "label": "Lifecycle Status",
+     "multiSelect": false,
+     "values": {
+      "id": 1225248,
+      "label": "Approved",
+      "value": "approved"
+     }
+    },
+    "isExclusive": {
+     "label": "Exclusivité",
+     "multiSelect": false,
+     "values": {
+      "id": 1230557,
+      "label": "true",
+      "value": "true",
+      "useKey": true
+     }
+    },
+    "parentBrand": {
+     "label": "Marque",
+     "multiSelect": false,
+     "values": {
+      "id": 358782,
+      "label": "adidas",
+      "value": "adidas"
+     }
+    },
+    "material": {
+     "label": "Matériau",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224493,
+       "label": "coton",
+       "value": "cotton"
+      },
+      {
+       "id": 1224860,
+       "label": "polyester",
+       "value": "polyester_1"
+      }
+     ]
+    },
+    "category": {
+     "label": "Master Categories (AG)",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1,
+       "label": "Base",
+       "value": "1"
+      },
+      {
+       "id": 3,
+       "label": "Base|Apparel",
+       "value": "3"
+      },
+      {
+       "id": 30,
+       "label": "Base|Apparel|Top",
+       "value": "25"
+      }
+     ]
+    },
+    "colorOrderNo": {
+     "label": "Numéro de commande de la couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 2770,
+      "label": "4",
+      "value": "4"
+     }
+    },
+    "isHotRelease": {
+     "label": "Hot release",
+     "multiSelect": false,
+     "values": {
+      "id": 1198854,
+      "label": "false",
+      "value": "false",
+      "useKey": true
+     }
+    },
+    "season": {
+     "label": "Saison",
+     "multiSelect": false,
+     "values": {
+      "id": 1224489,
+      "label": "automne / hiver",
+      "value": "autumn_winter_1_2"
+     }
+    },
+    "rawManufacturerAddress": {
+     "label": "translate.manufacturer",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 999999991,
+       "label": "adidas AG",
+       "value": "adidas AG"
+      },
+      {
+       "id": 999999992,
+       "label": "Adi-Dassler-Strasse 1 , Herzogenaurach , 91074 Germany",
+       "value": "Adi-Dassler-Strasse 1 , Herzogenaurach , 91074 Germany"
+      },
+      {
+       "id": 999999993,
+       "label": "https://www.adidas.com/",
+       "value": "https://www.adidas.com/"
+      }
+     ]
+    },
+    "manufacturerAddress": {
+     "label": "translate.manufacturer",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 999999991,
+       "label": "adidas AG",
+       "value": "adidas AG"
+      },
+      {
+       "id": 999999992,
+       "label": "Adi-Dassler-Strasse 1",
+       "value": "Adi-Dassler-Strasse 1"
+      },
+      {
+       "id": 999999993,
+       "label": "91074 Herzogenaurach",
+       "value": "91074 Herzogenaurach"
+      },
+      {
+       "id": 999999994,
+       "label": "Germany",
+       "value": "Germany"
+      },
+      {
+       "id": 999999995,
+       "label": "https://www.adidas.com/",
+       "value": "https://www.adidas.com/"
+      }
+     ]
+    }
+   },
+   "images": [
+    {
+     "public_id": "02719866_1",
+     "view": "still",
+     "metaname": [
+      "adidas Originals Graphic Fleece Hoodie beige",
+      "103661 1"
+     ]
+    },
+    {
+     "public_id": "02719866_2",
+     "view": "still",
+     "metaname": [
+      "adidas Originals Graphic Fleece Hoodie beige",
+      "103661 2"
+     ]
+    },
+    {
+     "public_id": "02719866_3",
+     "view": "still",
+     "metaname": [
+      "adidas Originals Graphic Fleece Hoodie beige",
+      "103661 3"
+     ]
+    },
+    {
+     "public_id": "02719866_4",
+     "view": "still",
+     "metaname": [
+      "adidas Originals Graphic Fleece Hoodie beige",
+      "103661 4"
+     ]
+    }
+   ],
+   "url": "/p/adidas-originals-graphic-fleece-hoodie-beige-103661"
+  }
+ ],
+ "pricePromotionInfo": {
+  "is_any_price_promotion_key_in_sale": false,
+  "are_all_price_promotion_keys_in_sale": false,
+  "quantity_of_price_promotions_keys": 0
+ },
+ "categories": [
+  4,
+  6,
+  57,
+  78,
+  205
+ ],
+ "customData": {},
+ "sellableTimeframe": {
+  "sellableFrom": null,
+  "sellableTo": null
+ },
+ "shopID": "1042",
+ "canParseManufacturerAddress": true,
+ "genderSwitch": [],
+ "breadcrumbs": [
+  {
+   "categoryId": 6,
+   "categoryName": "Hommes",
+   "categorySlug": "hommes",
+   "categoryUrl": "/hommes",
+   "categoryHidden": false,
+   "categoryProperties": [],
+   "countryLevelCustomData": {
+    "sortingKey": "relevance"
+   }
+  },
+  {
+   "categoryId": 78,
+   "categoryName": "Vêtements",
+   "categorySlug": "vetements",
+   "categoryUrl": "/hommes/vetements",
+   "categoryHidden": false,
+   "categoryProperties": [],
+   "countryLevelCustomData": {
+    "sortingKey": "relevance"
+   }
+  },
+  {
+   "categoryId": 205,
+   "categoryName": "Hoodies & Sweatshirts",
+   "categorySlug": "hoodies-sweatshirts",
+   "categoryUrl": "/hommes/vetements/hoodies-sweatshirts",
+   "categoryHidden": false,
+   "categoryProperties": [],
+   "countryLevelCustomData": {
+    "sortingKey": "relevance"
+   }
+  },
+  {
+   "categoryId": 1168,
+   "categoryName": "Hoodies",
+   "categorySlug": "hoodies",
+   "categoryUrl": "/hommes/vetements/hoodies-sweatshirts/hoodies",
+   "categoryHidden": false,
+   "categoryProperties": [],
+   "countryLevelCustomData": {
+    "isPrimaryCategory": true,
+    "sortingKey": "relevance"
+   }
+  }
+ ],
+ "url": "/p/adidas-originals-graphic-fleece-hoodie-beige-103661",
+ "canonical": "/p/adidas-originals-graphic-fleece-hoodie-beige-103661",
+ "stock": 227,
+ "displayName": "Graphic Fleece Hoodie",
+ "highestStock": 80,
+ "sizes": [
+  {
+   "code": "sizeOther",
+   "label": "Choix de la taille",
+   "value": "S"
+  }
+ ],
+ "tags": [
+  {
+   "id": 9,
+   "priority": 150,
+   "flag": "Shop Exclusive",
+   "key": "tag.tagKeys.shopExclusive",
+   "hasMedia": false
+  }
+ ],
+ "formattedPrice": "74,99 €",
+ "hasStartingPrice": false,
+ "hasStrikeout": false,
+ "wasPrice": null,
+ "highestRetailPrice": "0,00 €",
+ "relativeDiscount": null,
+ "relativeDiscountFormatted": null,
+ "flat": false,
+ "is30DaysBestPriceCase3": false,
+ "is30DaysBestPriceCase4": false
+}

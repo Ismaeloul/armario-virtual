@@ -1641,6 +1641,12 @@ function PhotoViewer({
     { key: "tallas", label: t.compras.visor.tallas, value: sizes },
     { key: "composicion", label: t.compras.visor.composicion, value: item.composition ?? "" },
     { key: "enlace", label: t.compras.visor.enlace, value: item.url },
+    // La misma zapatilla en otras tiendas: «Snipes 119,99 € · Foot Locker 120,00 €», cada una con su enlace.
+    {
+      key: "tambien",
+      label: t.compras.visor.tambienEn,
+      value: (item.also_in ?? []).map((other) => `${other.store_name} ${t.compras.precio(other.price_cents)}`).join(" · "),
+    },
   ].filter((fact) => fact.value);
   const canSave = item.status === "buscado" || item.status === "variante";
 
@@ -1823,6 +1829,25 @@ function PhotoViewer({
                   >
                     {item.url.replace(/^https?:\/\/(www\.)?/, "")}
                   </a>
+                </CopyRow>
+              ) : fact.key === "tambien" ? (
+                <CopyRow key={fact.key} label={fact.label} value={fact.value}>
+                  <span className="flex flex-wrap gap-x-1 text-sm text-text">
+                    {(item.also_in ?? []).map((other, index) => (
+                      <span key={other.store}>
+                        {index > 0 ? "· " : ""}
+                        <a
+                          href={externalHref(other.url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={t.compras.visor.tambienEnTienda(other.store_name)}
+                          className="font-medium text-primary underline underline-offset-2 active:opacity-60"
+                        >
+                          {other.store_name} {t.compras.precio(other.price_cents)}
+                        </a>
+                      </span>
+                    ))}
+                  </span>
                 </CopyRow>
               ) : (
                 <CopyRow key={fact.key} label={fact.label} value={fact.value} />
@@ -2496,6 +2521,11 @@ function WeekPlan({ state }: { state: ShopState }) {
                     <span key={key} className={store?.enabled ? "text-text" : "text-text-3"}>
                       {index > 0 ? " · " : ""}
                       {store?.name ?? key}
+                      {store?.heavy && (
+                        <sup aria-label={t.compras.panel.pesada} title={t.compras.panel.pesada}>
+                          •
+                        </sup>
+                      )}
                     </span>
                   );
                 })
@@ -2504,7 +2534,16 @@ function WeekPlan({ state }: { state: ShopState }) {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-text-2">{t.compras.panel.repartoTexto(state.per_night, state.heavy_per_night)}</p>
+      <p className="text-xs text-text-2">
+        {t.compras.panel.repartoTexto(
+          state.per_night,
+          state.heavy_per_night,
+          state.stores
+            .filter((store) => store.heavy)
+            .map((store) => store.name)
+            .join(", "),
+        )}
+      </p>
     </section>
   );
 }

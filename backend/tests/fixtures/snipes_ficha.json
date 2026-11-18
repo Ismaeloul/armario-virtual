@@ -1,0 +1,3026 @@
+{
+ "id": 1727,
+ "isActive": true,
+ "isSoldOut": false,
+ "isNew": false,
+ "isComposite": false,
+ "createdAt": "2024-04-02T10:00:19+00:00",
+ "updatedAt": "2026-10-23T10:42:29+00:00",
+ "indexedAt": "2026-11-18T13:53:12+00:00",
+ "firstLiveAt": "2024-05-23T14:37:32+00:00",
+ "masterKey": "m02375402",
+ "referenceKey": "01126425",
+ "attributes": {
+  "surfaceTexture": {
+   "label": "Texture de la surface",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1231991,
+     "label": "Aspect cuir",
+     "value": "leatherlook_1"
+    }
+   ]
+  },
+  "salesGrouping": {
+   "label": "Favorite Styles",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1200382,
+     "label": "Nike Air Force 1",
+     "value": "nike_air_force_1_1"
+    }
+   ]
+  },
+  "targetGroup": {
+   "label": "Sexe",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 318717,
+     "label": "Hommes",
+     "value": "men"
+    }
+   ]
+  },
+  "name": {
+   "label": "Name",
+   "multiSelect": false,
+   "values": {
+    "id": 20005,
+    "label": "Air Force 1 '07",
+    "value": "name"
+   }
+  },
+  "colorSpace": {
+   "label": "Famille de couleur",
+   "multiSelect": false,
+   "values": {
+    "id": 1300,
+    "label": "blanc",
+    "value": "white"
+   }
+  },
+  "functionality": {
+   "label": "Fonctionnalité",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1224479,
+     "label": "résistant",
+     "value": "durable_1"
+    },
+    {
+     "id": 1224505,
+     "label": "respirant",
+     "value": "breathable_1"
+    }
+   ]
+  },
+  "brand": {
+   "label": "Marque",
+   "multiSelect": false,
+   "values": {
+    "id": 392,
+    "label": "Nike",
+    "value": "nike_1"
+   }
+  },
+  "description": {
+   "label": "Description",
+   "multiSelect": false,
+   "values": {
+    "id": 20006,
+    "label": "",
+    "value": "description"
+   }
+  },
+  "productTypeSubAssortment": {
+   "label": "Catégorie",
+   "multiSelect": false,
+   "values": {
+    "id": 1224488,
+    "label": "sneakers",
+    "value": "sneakers"
+   }
+  },
+  "articleNoSearch": {
+   "label": "Searchable Article Number",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 380661,
+     "label": "1000413",
+     "value": "1000413"
+    }
+   ]
+  },
+  "outOfOnlinePeriod": {
+   "label": "Hors période en ligne",
+   "multiSelect": false,
+   "values": {
+    "id": 337130,
+    "label": "false",
+    "value": "false",
+    "useKey": true
+   }
+  },
+  "colorOrderNo": {
+   "label": "Numéro de commande de la couleur",
+   "multiSelect": false,
+   "values": {
+    "id": 2773,
+    "label": "1",
+    "value": "1"
+   }
+  },
+  "priceAvailableFor": {
+   "label": "Price Available For",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 806566,
+     "label": "SPL",
+     "value": "spl"
+    },
+    {
+     "id": 806567,
+     "label": "SNL",
+     "value": "snl"
+    },
+    {
+     "id": 806568,
+     "label": "SDE",
+     "value": "sde"
+    },
+    {
+     "id": 806569,
+     "label": "SAT",
+     "value": "sat"
+    },
+    {
+     "id": 806570,
+     "label": "SFR",
+     "value": "sfr"
+    },
+    {
+     "id": 806571,
+     "label": "SCH",
+     "value": "sch"
+    },
+    {
+     "id": 806572,
+     "label": "SES",
+     "value": "ses"
+    },
+    {
+     "id": 806573,
+     "label": "SPT",
+     "value": "spt"
+    },
+    {
+     "id": 806574,
+     "label": "SBE",
+     "value": "sbe"
+    },
+    {
+     "id": 806575,
+     "label": "SHR",
+     "value": "shr"
+    },
+    {
+     "id": 806576,
+     "label": "SIT",
+     "value": "sit"
+    }
+   ]
+  },
+  "discountExclusionGroup": {
+   "label": "Discount exclusion groups",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1197646,
+     "label": "Shopping Week",
+     "value": "shopping_week"
+    }
+   ]
+  },
+  "hasPhotoSample": {
+   "label": "Has Photo Sample",
+   "multiSelect": false,
+   "values": {
+    "id": 1224497,
+    "label": "true",
+    "value": "true",
+    "useKey": true
+   }
+  },
+  "sneakerCut": {
+   "label": "Coupe sneakers",
+   "multiSelect": false,
+   "values": {
+    "id": 359062,
+    "label": "Low-Cut",
+    "value": "lowcut"
+   }
+  },
+  "season": {
+   "label": "Saison",
+   "multiSelect": false,
+   "values": {
+    "id": 1224462,
+    "label": "toute l’année",
+    "value": "all_year_1_2"
+   }
+  },
+  "productTypeAssortment": {
+   "label": "Catégorie principale",
+   "multiSelect": false,
+   "values": {
+    "id": 1201168,
+    "label": "Chaussures",
+    "value": "shoes"
+   }
+  },
+  "productName": {
+   "label": "Name",
+   "multiSelect": false,
+   "values": {
+    "id": 1283545,
+    "label": "Air Force 1 '07",
+    "value": "air_force_1_07_"
+   }
+  },
+  "productTypeHierarchyCode": {
+   "label": "Product Type Hierarchy Code",
+   "multiSelect": false,
+   "values": {
+    "id": 1200214,
+    "label": "shoes|sneakers|fashion_sneakers",
+    "value": "shoessneakersfashion_sneakers"
+   }
+  },
+  "productCode": {
+   "label": "Code produit",
+   "multiSelect": false,
+   "values": {
+    "id": 17337,
+    "label": "01126425",
+    "value": "01126425"
+   }
+  },
+  "genders": {
+   "label": "Sexe",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1200718,
+     "label": "Hommes",
+     "value": "men"
+    }
+   ]
+  },
+  "innerMaterial": {
+   "label": "Matériau intérieur",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1224529,
+     "label": "textile",
+     "value": "textile_1"
+    }
+   ]
+  },
+  "manufacturerProductCode": {
+   "label": "Manufacturer number",
+   "multiSelect": false,
+   "values": {
+    "id": 1283673,
+    "label": "CW2288-111",
+    "value": "cw2288111"
+   }
+  },
+  "extrasOutsole": {
+   "label": "Semelle extérieure",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 359054,
+     "label": "Durable",
+     "value": "durable"
+    },
+    {
+     "id": 359056,
+     "label": "Haute traction",
+     "value": "high_traction"
+    },
+    {
+     "id": 359058,
+     "label": "Absorbant les chocs",
+     "value": "shock_absorbing"
+    },
+    {
+     "id": 359059,
+     "label": "Résistant à l’abrasion",
+     "value": "abrasion_resistant"
+    },
+    {
+     "id": 1232006,
+     "label": "Antidérapant",
+     "value": "nonslip_1"
+    }
+   ]
+  },
+  "productType": {
+   "label": "Type de produit",
+   "multiSelect": false,
+   "values": {
+    "id": 1213715,
+    "label": "Sneaker de mode",
+    "value": "fashion_sneakers"
+   }
+  },
+  "lifecycleStatus": {
+   "label": "Lifecycle Status",
+   "multiSelect": false,
+   "values": {
+    "id": 1225248,
+    "label": "Approved",
+    "value": "approved"
+   }
+  },
+  "productTypeCode": {
+   "label": "Product Type Code",
+   "multiSelect": false,
+   "values": {
+    "id": 1224490,
+    "label": "fashion_sneakers",
+    "value": "fashion_sneakers"
+   }
+  },
+  "outerMaterial": {
+   "label": "Matériau extérieur",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1224495,
+     "label": "cuir",
+     "value": "leather_1"
+    }
+   ]
+  },
+  "outerSole": {
+   "label": "Outsole material",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1224492,
+     "label": "caoutchouc",
+     "value": "rubber"
+    }
+   ]
+  },
+  "fastening": {
+   "label": "Fastening",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 359053,
+     "label": "Lacets",
+     "value": "laces"
+    }
+   ]
+  },
+  "phasesOfLife": {
+   "label": "Catégorie d'âge",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 89,
+     "label": "Adultes",
+     "value": "erwachsene"
+    }
+   ]
+  },
+  "extrasInsole": {
+   "label": "Semelle intérieure",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 359060,
+     "label": "Respirant",
+     "value": "breathable"
+    },
+    {
+     "id": 359061,
+     "label": "Absorbant les chocs",
+     "value": "shock_absorbing"
+    },
+    {
+     "id": 360152,
+     "label": "Rembourrages confortables",
+     "value": "comfortable_padding"
+    }
+   ]
+  },
+  "waitingForOnlinePeriodStatusUpdate": {
+   "label": "En attente de la mise à jour du statut de la période en ligne",
+   "multiSelect": false,
+   "values": {
+    "id": 337132,
+    "label": "false",
+    "value": "false",
+    "useKey": true
+   }
+  },
+  "isExclusive": {
+   "label": "Exclusivité",
+   "multiSelect": false,
+   "values": {
+    "id": 1227775,
+    "label": "false",
+    "value": "false",
+    "useKey": true
+   }
+  },
+  "articleNo": {
+   "label": "Numéro d'article",
+   "multiSelect": false,
+   "values": {
+    "id": 17338,
+    "label": "1000413",
+    "value": "1000413"
+   }
+  },
+  "updateStatus": {
+   "label": "Mise à jour du statut",
+   "multiSelect": false,
+   "values": {
+    "id": 1224466,
+    "label": "akeneoExport",
+    "value": "akeneoexport"
+   }
+  },
+  "manufacturerColor": {
+   "label": "Couleur du fabricant",
+   "multiSelect": false,
+   "values": {
+    "id": 1283672,
+    "label": "white/white",
+    "value": "whitewhite"
+   }
+  },
+  "affiliateRevenueModel": {
+   "label": "Modèle de revenus des affiliés",
+   "multiSelect": false,
+   "values": {
+    "id": 1212655,
+    "label": "Standard",
+    "value": "standard"
+   }
+  },
+  "buyingBrandId": {
+   "label": "WWS Brand ID",
+   "multiSelect": false,
+   "values": {
+    "id": 1225137,
+    "label": "nike",
+    "value": "nike"
+   }
+  },
+  "parentBrand": {
+   "label": "Marque",
+   "multiSelect": false,
+   "values": {
+    "id": 358774,
+    "label": "Nike  ",
+    "value": "nike_"
+   }
+  },
+  "isHotRelease": {
+   "label": "Hot release",
+   "multiSelect": false,
+   "values": {
+    "id": 1198854,
+    "label": "false",
+    "value": "false",
+    "useKey": true
+   }
+  },
+  "category": {
+   "label": "Master Categories (AG)",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1,
+     "label": "Base",
+     "value": "1"
+    },
+    {
+     "id": 4,
+     "label": "Base|Shoe",
+     "value": "4"
+    },
+    {
+     "id": 27,
+     "label": "Base|Shoe|Sneaker",
+     "value": "22"
+    }
+   ]
+  },
+  "year": {
+   "label": "Année",
+   "multiSelect": false,
+   "values": {
+    "id": 113,
+    "label": "2027",
+    "value": "2027"
+   }
+  },
+  "stockLevels": {
+   "label": "Stock Level",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 1224475,
+     "label": "Buffalo - aucun stock",
+     "value": "buffalo_no_stock"
+    },
+    {
+     "id": 1227783,
+     "label": "solebox - aucun stock",
+     "value": "solebox_no_stock"
+    },
+    {
+     "id": 1230007,
+     "label": "SNIPES (SDE) - stock élevé",
+     "value": "snipes_sde_high_stock"
+    },
+    {
+     "id": 1232172,
+     "label": "SNIPES (SCH) - stock élevé",
+     "value": "snipes_sch_high_stock"
+    },
+    {
+     "id": 2233719,
+     "label": "SDE (BOSS) - stock élevé",
+     "value": "sde_boss_high_stock"
+    }
+   ]
+  },
+  "fullLegalCompanyName": {
+   "label": "Nom du fabricant",
+   "multiSelect": false,
+   "values": {
+    "id": 365538,
+    "label": "Nike EHQ",
+    "value": "nike_ehq"
+   }
+  },
+  "brandUrl": {
+   "label": "URL du fabricant",
+   "multiSelect": false,
+   "values": {
+    "id": 372520,
+    "label": "https://www.nike.com/",
+    "value": "httpswwwnikecom"
+   }
+  },
+  "color": {
+   "label": "Couleur",
+   "multiSelect": false,
+   "values": {
+    "id": 165,
+    "label": "blanc",
+    "value": "weiss"
+   }
+  },
+  "marketingTrend": {
+   "label": "Tendance marketing",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 335406,
+     "label": "White Sneakers",
+     "value": "whitesneaker"
+    },
+    {
+     "id": 335526,
+     "label": "Styles d'automne",
+     "value": "autumnstyles"
+    },
+    {
+     "id": 335527,
+     "label": "Streetwear",
+     "value": "streetwear"
+    },
+    {
+     "id": 336207,
+     "label": "Dance",
+     "value": "dance"
+    },
+    {
+     "id": 345394,
+     "label": "Cadeaux",
+     "value": "gifts"
+    },
+    {
+     "id": 345396,
+     "label": "Essentiels de printemps",
+     "value": "spring_essentials"
+    },
+    {
+     "id": 908652,
+     "label": "Looks de Jour de Match",
+     "value": "matchday_fits"
+    },
+    {
+     "id": 925763,
+     "label": "Clean & Classic Fits",
+     "value": "clean_classic_fits"
+    },
+    {
+     "id": 949978,
+     "label": "Les essentiels du quotidien",
+     "value": "daily_essentials"
+    },
+    {
+     "id": 949979,
+     "label": "Looks pour le premier jour",
+     "value": "first_day_outfits"
+    }
+   ]
+  },
+  "rawManufacturerAddress": {
+   "label": "translate.manufacturer",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 999999991,
+     "label": "Nike EHQ",
+     "value": "Nike EHQ"
+    },
+    {
+     "id": 999999992,
+     "label": " Colosseum 1  , Hilversum , 1213 HJ  Netherlands",
+     "value": " Colosseum 1  , Hilversum , 1213 HJ  Netherlands"
+    },
+    {
+     "id": 999999993,
+     "label": "https://www.nike.com/",
+     "value": "https://www.nike.com/"
+    }
+   ]
+  },
+  "manufacturerAddress": {
+   "label": "translate.manufacturer",
+   "multiSelect": true,
+   "values": [
+    {
+     "id": 999999991,
+     "label": "Nike EHQ",
+     "value": "Nike EHQ"
+    },
+    {
+     "id": 999999992,
+     "label": " Colosseum 1 ",
+     "value": " Colosseum 1 "
+    },
+    {
+     "id": 999999993,
+     "label": "1213 HJ Hilversum",
+     "value": "1213 HJ Hilversum"
+    },
+    {
+     "id": 999999994,
+     "label": " Netherlands",
+     "value": " Netherlands"
+    },
+    {
+     "id": 999999995,
+     "label": "https://www.nike.com/",
+     "value": "https://www.nike.com/"
+    }
+   ]
+  }
+ },
+ "advancedAttributes": {
+  "productName": {
+   "id": 553,
+   "key": "productName",
+   "label": "Nom de produit",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "Air Force 1 '07"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "brandAddress": {
+   "id": 1440,
+   "key": "brandAddress",
+   "label": "Adresse du fabricant",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": " Colosseum 1  , Hilversum , 1213 HJ  Netherlands"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "description": {
+   "id": 1441,
+   "key": "description",
+   "label": "Description",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "<b>LE STYLE LÉGENDAIRE REVISITÉ.</b><br />Le charme continue d'opérer avec la Nike Air Force 1 ’07. Cette silhouette emblématique du basketball revisite ses éléments les plus célèbres : les renforts cousus résistants, les finitions sobres et juste ce qu'il faut d'éclat pour vous faire briller.<br /><br />Renforts cousus sur l'empeigne offrant plus de résistance et de maintien dans un style rétro.<br />Amorti Nike Air, conçu à l’origine pour le basketball de compétition, apportant confort et légèreté tout au long de la journée.<br />Coupe basse offrant un look plus épuré et profilé.<br />Col rembourré pour une sensation de douceur et de confort."
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "inHouseDate": {
+   "id": 1383,
+   "key": "inHouseDate",
+   "label": "Sur place",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "2027-03-15"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "productDeepLink": {
+   "id": 1466,
+   "key": "productDeepLink",
+   "label": "Product Deep Link",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "/p/nike-air-force-1-07-blanc-1727"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  },
+  "updatedAt": {
+   "id": 1545,
+   "key": "updatedAt",
+   "label": "updatedAt",
+   "type": "",
+   "values": [
+    {
+     "fieldSet": [
+      [
+       {
+        "value": "2026-10-23T10:37:41+00:00"
+       }
+      ]
+     ],
+     "groupSet": []
+    }
+   ]
+  }
+ },
+ "images": [
+  {
+   "public_id": "01126425_1",
+   "view": "still",
+   "metaname": [
+    "Nike Air Force 1 '07 blanc",
+    "1727 1"
+   ]
+  },
+  {
+   "public_id": "01126425_2",
+   "view": "still",
+   "metaname": [
+    "Nike Air Force 1 '07 blanc",
+    "1727 2"
+   ]
+  },
+  {
+   "public_id": "01126425_3",
+   "view": "still",
+   "metaname": [
+    "Nike Air Force 1 '07 blanc",
+    "1727 3"
+   ]
+  },
+  {
+   "public_id": "01126425_4",
+   "view": "still",
+   "metaname": [
+    "Nike Air Force 1 '07 blanc",
+    "1727 4"
+   ]
+  },
+  {
+   "public_id": "01126425_5",
+   "view": "still",
+   "metaname": [
+    "Nike Air Force 1 '07 blanc",
+    "1727 5"
+   ]
+  },
+  {
+   "public_id": "01126425_6_UGC",
+   "view": "still",
+   "metaname": [
+    "Nike Air Force 1 '07 blanc",
+    "1727 6"
+   ]
+  }
+ ],
+ "variants": [
+  {
+   "id": 9345,
+   "isComposite": false,
+   "referenceKey": "0112642500000004",
+   "attributes": {
+    "ean": {
+     "id": 20009,
+     "key": "ean",
+     "label": "ean",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 20009,
+      "label": "ean",
+      "value": "0194500874886"
+     }
+    },
+    "size": {
+     "id": 1385,
+     "key": "size",
+     "label": "Taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 423,
+      "label": "38.5",
+      "value": "385"
+     }
+    },
+    "sizeOrderNo": {
+     "id": 1391,
+     "key": "sizeOrderNo",
+     "label": "Ordre de taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2086,
+      "label": "1",
+      "value": "1"
+     }
+    },
+    "gtin": {
+     "id": 1392,
+     "key": "gtin",
+     "label": "GTIN",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 1283677,
+      "label": "0194500874886",
+      "value": "0194500874886"
+     }
+    },
+    "sizeOriginal": {
+     "id": 1386,
+     "key": "sizeOriginal",
+     "label": "Taille originale",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2120,
+      "label": "212:38.5",
+      "value": "212385"
+     }
+    },
+    "sizeUk": {
+     "id": 1388,
+     "key": "sizeUk",
+     "label": "UK",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2189,
+      "label": "5.5",
+      "value": "55"
+     }
+    },
+    "sizeEu": {
+     "id": 1387,
+     "key": "sizeEu",
+     "label": "EU",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2122,
+      "label": "38.5",
+      "value": "385"
+     }
+    },
+    "variantCode": {
+     "id": 1384,
+     "key": "variantCode",
+     "label": "Code de variante",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 17340,
+      "label": "0112642500000004",
+      "value": "0112642500000004"
+     }
+    },
+    "sizeCm": {
+     "id": 1460,
+     "key": "sizeCm",
+     "label": "CM",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 341410,
+      "label": "24",
+      "value": "24"
+     }
+    },
+    "sizeUs": {
+     "id": 1389,
+     "key": "sizeUs",
+     "label": "US",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 302894,
+      "label": "6",
+      "value": "6"
+     }
+    }
+   },
+   "firstLiveAt": "2024-10-24T01:17:53+00:00",
+   "createdAt": "2024-04-02T10:00:19+00:00",
+   "updatedAt": "2026-10-15T01:15:58+00:00",
+   "stock": {
+    "supplierId": 1,
+    "warehouseId": 1,
+    "quantity": 0,
+    "isSellableWithoutStock": false,
+    "expectedAvailabilityAt": null
+   },
+   "price": {
+    "currencyCode": "EUR",
+    "withTax": 11999,
+    "withoutTax": 9999,
+    "beforeSaleWithTax": null,
+    "recommendedRetailPrice": null,
+    "tax": {
+     "vat": {
+      "amount": 2000,
+      "rate": 0.2
+     }
+    },
+    "appliedReductions": [],
+    "totalAppliedReductions": null,
+    "reductionsRelativeTo": null,
+    "customData": {},
+    "wasPrice": null,
+    "hasStrikeout": false,
+    "formatted": "119,99 €"
+   },
+   "customData": {},
+   "sizeMap": {
+    "size": {
+     "code": "size",
+     "label": "Taille",
+     "value": "38.5"
+    },
+    "sizeEu": {
+     "code": "sizeEu",
+     "label": "EU",
+     "value": "38.5"
+    },
+    "sizeUk": {
+     "code": "sizeUk",
+     "label": "UK",
+     "value": "5.5"
+    },
+    "sizeUs": {
+     "code": "sizeUs",
+     "label": "US",
+     "value": "6"
+    },
+    "sizeCm": {
+     "code": "sizeCm",
+     "label": "CM",
+     "value": "24"
+    }
+   }
+  },
+  {
+   "id": 9346,
+   "isComposite": false,
+   "referenceKey": "0112642500000005",
+   "attributes": {
+    "sizeUs": {
+     "id": 1389,
+     "key": "sizeUs",
+     "label": "US",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 302895,
+      "label": "6.5",
+      "value": "65"
+     }
+    },
+    "sizeCm": {
+     "id": 1460,
+     "key": "sizeCm",
+     "label": "CM",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 341411,
+      "label": "24.5",
+      "value": "245"
+     }
+    },
+    "size": {
+     "id": 1385,
+     "key": "size",
+     "label": "Taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 422,
+      "label": "39",
+      "value": "39"
+     }
+    },
+    "sizeUk": {
+     "id": 1388,
+     "key": "sizeUk",
+     "label": "UK",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2127,
+      "label": "6",
+      "value": "6"
+     }
+    },
+    "gtin": {
+     "id": 1392,
+     "key": "gtin",
+     "label": "GTIN",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 1283693,
+      "label": "0194500874893",
+      "value": "0194500874893"
+     }
+    },
+    "sizeOriginal": {
+     "id": 1386,
+     "key": "sizeOriginal",
+     "label": "Taille originale",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 1229775,
+      "label": "212:39.00",
+      "value": "2123900"
+     }
+    },
+    "variantCode": {
+     "id": 1384,
+     "key": "variantCode",
+     "label": "Code de variante",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 17341,
+      "label": "0112642500000005",
+      "value": "0112642500000005"
+     }
+    },
+    "sizeEu": {
+     "id": 1387,
+     "key": "sizeEu",
+     "label": "EU",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2190,
+      "label": "39",
+      "value": "39"
+     }
+    },
+    "ean": {
+     "id": 20009,
+     "key": "ean",
+     "label": "ean",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 20009,
+      "label": "ean",
+      "value": "0194500874893"
+     }
+    },
+    "sizeOrderNo": {
+     "id": 1391,
+     "key": "sizeOrderNo",
+     "label": "Ordre de taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2778,
+      "label": "2",
+      "value": "2"
+     }
+    }
+   },
+   "firstLiveAt": "2024-09-24T07:55:12+00:00",
+   "createdAt": "2024-04-02T10:00:19+00:00",
+   "updatedAt": "2026-10-15T01:34:38+00:00",
+   "stock": {
+    "supplierId": 1,
+    "warehouseId": 1,
+    "quantity": 0,
+    "isSellableWithoutStock": false,
+    "expectedAvailabilityAt": null
+   },
+   "price": {
+    "currencyCode": "EUR",
+    "withTax": 11999,
+    "withoutTax": 9999,
+    "beforeSaleWithTax": null,
+    "recommendedRetailPrice": null,
+    "tax": {
+     "vat": {
+      "amount": 2000,
+      "rate": 0.2
+     }
+    },
+    "appliedReductions": [],
+    "totalAppliedReductions": null,
+    "reductionsRelativeTo": null,
+    "customData": {},
+    "wasPrice": null,
+    "hasStrikeout": false,
+    "formatted": "119,99 €"
+   },
+   "customData": {},
+   "sizeMap": {
+    "size": {
+     "code": "size",
+     "label": "Taille",
+     "value": "39"
+    },
+    "sizeEu": {
+     "code": "sizeEu",
+     "label": "EU",
+     "value": "39"
+    },
+    "sizeUk": {
+     "code": "sizeUk",
+     "label": "UK",
+     "value": "6"
+    },
+    "sizeUs": {
+     "code": "sizeUs",
+     "label": "US",
+     "value": "6.5"
+    },
+    "sizeCm": {
+     "code": "sizeCm",
+     "label": "CM",
+     "value": "24.5"
+    }
+   }
+  },
+  {
+   "id": 9347,
+   "isComposite": false,
+   "referenceKey": "0112642500000006",
+   "attributes": {
+    "sizeEu": {
+     "id": 1387,
+     "key": "sizeEu",
+     "label": "EU",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2126,
+      "label": "40",
+      "value": "40"
+     }
+    },
+    "size": {
+     "id": 1385,
+     "key": "size",
+     "label": "Taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 401,
+      "label": "40",
+      "value": "40"
+     }
+    },
+    "sizeCm": {
+     "id": 1460,
+     "key": "sizeCm",
+     "label": "CM",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 341412,
+      "label": "25",
+      "value": "25"
+     }
+    },
+    "ean": {
+     "id": 20009,
+     "key": "ean",
+     "label": "ean",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 20009,
+      "label": "ean",
+      "value": "0194500874909"
+     }
+    },
+    "gtin": {
+     "id": 1392,
+     "key": "gtin",
+     "label": "GTIN",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 1283687,
+      "label": "0194500874909",
+      "value": "0194500874909"
+     }
+    },
+    "sizeOrderNo": {
+     "id": 1391,
+     "key": "sizeOrderNo",
+     "label": "Ordre de taille",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2779,
+      "label": "3",
+      "value": "3"
+     }
+    },
+    "sizeOriginal": {
+     "id": 1386,
+     "key": "sizeOriginal",
+     "label": "Taille originale",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 1229773,
+      "label": "212:40.00",
+      "value": "2124000"
+     }
+    },
+    "sizeUs": {
+     "id": 1389,
+     "key": "sizeUs",
+     "label": "US",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 302896,
+      "label": "7",
+      "value": "7"
+     }
+    },
+    "variantCode": {
+     "id": 1384,
+     "key": "variantCode",
+     "label": "Code de variante",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 17342,
+      "label": "0112642500000006",
+      "value": "0112642500000006"
+     }
+    },
+    "sizeUk": {
+     "id": 1388,
+     "key": "sizeUk",
+     "label": "UK",
+     "type": "",
+     "multiSelect": false,
+     "values": {
+      "id": 2127,
+      "label": "6",
+      "value": "6"
+     }
+    }
+   },
+   "firstLiveAt": "2024-05-23T14:37:47+00:00",
+   "createdAt": "2024-04-02T10:00:19+00:00",
+   "updatedAt": "2025-02-01T02:47:02+00:00",
+   "stock": {
+    "supplierId": 1,
+    "warehouseId": 1,
+    "quantity": 252,
+    "isSellableWithoutStock": false,
+    "expectedAvailabilityAt": null
+   },
+   "price": {
+    "currencyCode": "EUR",
+    "withTax": 11999,
+    "withoutTax": 9999,
+    "beforeSaleWithTax": null,
+    "recommendedRetailPrice": null,
+    "tax": {
+     "vat": {
+      "amount": 2000,
+      "rate": 0.2
+     }
+    },
+    "appliedReductions": [],
+    "totalAppliedReductions": null,
+    "reductionsRelativeTo": null,
+    "customData": {},
+    "wasPrice": null,
+    "hasStrikeout": false,
+    "formatted": "119,99 €"
+   },
+   "customData": {},
+   "sizeMap": {
+    "size": {
+     "code": "size",
+     "label": "Taille",
+     "value": "40"
+    },
+    "sizeEu": {
+     "code": "sizeEu",
+     "label": "EU",
+     "value": "40"
+    },
+    "sizeUk": {
+     "code": "sizeUk",
+     "label": "UK",
+     "value": "6"
+    },
+    "sizeUs": {
+     "code": "sizeUs",
+     "label": "US",
+     "value": "7"
+    },
+    "sizeCm": {
+     "code": "sizeCm",
+     "label": "CM",
+     "value": "25"
+    }
+   }
+  }
+ ],
+ "priceRange": {
+  "min": {
+   "currencyCode": "EUR",
+   "withTax": 11999,
+   "withoutTax": 9999,
+   "beforeSaleWithTax": null,
+   "recommendedRetailPrice": null,
+   "tax": {
+    "vat": {
+     "amount": 2000,
+     "rate": 0.2
+    }
+   },
+   "appliedReductions": [],
+   "totalAppliedReductions": null,
+   "reductionsRelativeTo": null
+  },
+  "max": {
+   "currencyCode": "EUR",
+   "withTax": 11999,
+   "withoutTax": 9999,
+   "beforeSaleWithTax": null,
+   "recommendedRetailPrice": null,
+   "tax": {
+    "vat": {
+     "amount": 2000,
+     "rate": 0.2
+    }
+   },
+   "appliedReductions": [],
+   "totalAppliedReductions": null,
+   "reductionsRelativeTo": null
+  }
+ },
+ "reductionRange": {
+  "min": {
+   "currencyCode": "EUR",
+   "withTax": 11999,
+   "withoutTax": 9999,
+   "beforeSaleWithTax": null,
+   "recommendedRetailPrice": null,
+   "tax": {
+    "vat": {
+     "amount": 2000,
+     "rate": 0.2
+    }
+   },
+   "appliedReductions": [],
+   "totalAppliedReductions": null,
+   "reductionsRelativeTo": null
+  },
+  "max": {
+   "currencyCode": "EUR",
+   "withTax": 11999,
+   "withoutTax": 9999,
+   "beforeSaleWithTax": null,
+   "recommendedRetailPrice": null,
+   "tax": {
+    "vat": {
+     "amount": 2000,
+     "rate": 0.2
+    }
+   },
+   "appliedReductions": [],
+   "totalAppliedReductions": null,
+   "reductionsRelativeTo": null
+  }
+ },
+ "lowestPriorPrice": {
+  "formatted": null,
+  "withTax": null,
+  "relativeDifferenceToPrice": null
+ },
+ "siblings": [
+  {
+   "id": 834,
+   "isSoldOut": false,
+   "referenceKey": "01901155",
+   "attributes": {
+    "productTypeAssortment": {
+     "label": "Catégorie principale",
+     "multiSelect": false,
+     "values": {
+      "id": 1201168,
+      "label": "Chaussures",
+      "value": "shoes"
+     }
+    },
+    "manufacturerColor": {
+     "label": "Couleur du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 1227963,
+      "label": "white/black",
+      "value": "whiteblack_1_2"
+     }
+    },
+    "outOfOnlinePeriod": {
+     "label": "Hors période en ligne",
+     "multiSelect": false,
+     "values": {
+      "id": 337130,
+      "label": "false",
+      "value": "false"
+     }
+    },
+    "updateStatus": {
+     "label": "Mise à jour du statut",
+     "multiSelect": false,
+     "values": {
+      "id": 1224466,
+      "label": "akeneoExport",
+      "value": "akeneoexport"
+     }
+    },
+    "heelType": {
+     "label": "Heel",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 359068,
+       "label": "talon plat",
+       "value": "flat"
+      }
+     ]
+    },
+    "manufacturerProductCode": {
+     "label": "Manufacturer number",
+     "multiSelect": false,
+     "values": {
+      "id": 1461875,
+      "label": "CT2302-100",
+      "value": "ct2302100"
+     }
+    },
+    "fastening": {
+     "label": "Fastening",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 359053,
+       "label": "Lacets",
+       "value": "laces"
+      }
+     ]
+    },
+    "lifecycleStatus": {
+     "label": "Lifecycle Status",
+     "multiSelect": false,
+     "values": {
+      "id": 1225248,
+      "label": "Approved",
+      "value": "approved"
+     }
+    },
+    "discountExclusionGroup": {
+     "label": "Discount exclusion groups",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1197646,
+       "label": "Shopping Week",
+       "value": "shopping_week"
+      }
+     ]
+    },
+    "productTypeHierarchyCode": {
+     "label": "Product Type Hierarchy Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1200217,
+      "label": "shoes|sneakers|basketball_sneakers",
+      "value": "shoessneakersbasketball_sneakers"
+     }
+    },
+    "priceAvailableFor": {
+     "label": "Price Available For",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 806566,
+       "label": "SPL",
+       "value": "spl"
+      },
+      {
+       "id": 806567,
+       "label": "SNL",
+       "value": "snl"
+      },
+      {
+       "id": 806568,
+       "label": "SDE",
+       "value": "sde"
+      },
+      {
+       "id": 806569,
+       "label": "SAT",
+       "value": "sat"
+      },
+      {
+       "id": 806570,
+       "label": "SFR",
+       "value": "sfr"
+      },
+      {
+       "id": 806571,
+       "label": "SCH",
+       "value": "sch"
+      },
+      {
+       "id": 806572,
+       "label": "SES",
+       "value": "ses"
+      },
+      {
+       "id": 806573,
+       "label": "SPT",
+       "value": "spt"
+      },
+      {
+       "id": 806574,
+       "label": "SBE",
+       "value": "sbe"
+      },
+      {
+       "id": 806575,
+       "label": "SHR",
+       "value": "shr"
+      },
+      {
+       "id": 806576,
+       "label": "SIT",
+       "value": "sit"
+      }
+     ]
+    },
+    "articleNo": {
+     "label": "Numéro d'article",
+     "multiSelect": false,
+     "values": {
+      "id": 441,
+      "label": "1080376",
+      "value": "1080376"
+     }
+    },
+    "brand": {
+     "label": "Marque",
+     "multiSelect": false,
+     "values": {
+      "id": 392,
+      "label": "Nike",
+      "value": "nike_1"
+     }
+    },
+    "productTypeCode": {
+     "label": "Product Type Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1283847,
+      "label": "basketball_sneakers",
+      "value": "basketball_sneakers"
+     }
+    },
+    "colorOrderNo": {
+     "label": "Numéro de commande de la couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 2773,
+      "label": "1",
+      "value": "1"
+     }
+    },
+    "brandUrl": {
+     "label": "URL du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 372520,
+      "label": "https://www.nike.com/",
+      "value": "httpswwwnikecom"
+     }
+    },
+    "genders": {
+     "label": "Sexe",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1200718,
+       "label": "Hommes",
+       "value": "men"
+      }
+     ]
+    },
+    "productName": {
+     "label": "Name",
+     "multiSelect": false,
+     "values": {
+      "id": 1461859,
+      "label": "Air Force 1",
+      "value": "air_force_1"
+     }
+    },
+    "sneakerCut": {
+     "label": "Coupe sneakers",
+     "multiSelect": false,
+     "values": {
+      "id": 359062,
+      "label": "Low-Cut",
+      "value": "lowcut"
+     }
+    },
+    "functionality": {
+     "label": "Fonctionnalité",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224479,
+       "label": "résistant",
+       "value": "durable_1"
+      },
+      {
+       "id": 1232007,
+       "label": "stabilisant",
+       "value": "stabilizing"
+      }
+     ]
+    },
+    "color": {
+     "label": "Couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 165,
+      "label": "blanc",
+      "value": "weiss"
+     }
+    },
+    "colorSpace": {
+     "label": "Famille de couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 1300,
+      "label": "blanc",
+      "value": "white"
+     }
+    },
+    "targetGroup": {
+     "label": "Sexe",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 318717,
+       "label": "Hommes",
+       "value": "men"
+      }
+     ]
+    },
+    "innerMaterial": {
+     "label": "Matériau intérieur",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224529,
+       "label": "textile",
+       "value": "textile_1"
+      }
+     ]
+    },
+    "surfaceTexture": {
+     "label": "Texture de la surface",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1231991,
+       "label": "Aspect cuir",
+       "value": "leatherlook_1"
+      }
+     ]
+    },
+    "category": {
+     "label": "Master Categories (AG)",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1,
+       "label": "Base",
+       "value": "1"
+      },
+      {
+       "id": 4,
+       "label": "Base|Shoe",
+       "value": "4"
+      },
+      {
+       "id": 27,
+       "label": "Base|Shoe|Sneaker",
+       "value": "22"
+      }
+     ]
+    },
+    "buyingBrandId": {
+     "label": "WWS Brand ID",
+     "multiSelect": false,
+     "values": {
+      "id": 1225137,
+      "label": "nike",
+      "value": "nike"
+     }
+    },
+    "outerMaterial": {
+     "label": "Matériau extérieur",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224531,
+       "label": "synthétique",
+       "value": "synthetic_1"
+      },
+      {
+       "id": 1283107,
+       "label": "cuir enduit",
+       "value": "coated_leather_1"
+      }
+     ]
+    },
+    "outerSole": {
+     "label": "Outsole material",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224492,
+       "label": "caoutchouc",
+       "value": "rubber"
+      }
+     ]
+    },
+    "affiliateRevenueModel": {
+     "label": "Modèle de revenus des affiliés",
+     "multiSelect": false,
+     "values": {
+      "id": 1212655,
+      "label": "Standard",
+      "value": "standard"
+     }
+    },
+    "productTypeSubAssortment": {
+     "label": "Catégorie",
+     "multiSelect": false,
+     "values": {
+      "id": 1224488,
+      "label": "sneakers",
+      "value": "sneakers"
+     }
+    },
+    "isHotRelease": {
+     "label": "Hot release",
+     "multiSelect": false,
+     "values": {
+      "id": 1198854,
+      "label": "false",
+      "value": "false"
+     }
+    },
+    "name": {
+     "label": "Name",
+     "multiSelect": false,
+     "values": {
+      "id": 20005,
+      "label": "Air Force 1",
+      "value": "name"
+     }
+    },
+    "phasesOfLife": {
+     "label": "Catégorie d'âge",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 89,
+       "label": "Adultes",
+       "value": "erwachsene"
+      }
+     ]
+    },
+    "parentBrand": {
+     "label": "Marque",
+     "multiSelect": false,
+     "values": {
+      "id": 358774,
+      "label": "Nike  ",
+      "value": "nike_"
+     }
+    },
+    "season": {
+     "label": "Saison",
+     "multiSelect": false,
+     "values": {
+      "id": 1224462,
+      "label": "toute l’année",
+      "value": "all_year_1_2"
+     }
+    },
+    "secondaryColors": {
+     "label": "Couleurs secondaires",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1307,
+       "label": "noir",
+       "value": "black"
+      }
+     ]
+    },
+    "productCode": {
+     "label": "Code produit",
+     "multiSelect": false,
+     "values": {
+      "id": 9542,
+      "label": "01901155",
+      "value": "01901155"
+     }
+    },
+    "marketingTrend": {
+     "label": "Tendance marketing",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 838549,
+       "label": "Shopping Week",
+       "value": "shopping_week"
+      },
+      {
+       "id": 908652,
+       "label": "Looks de Jour de Match",
+       "value": "matchday_fits"
+      },
+      {
+       "id": 925763,
+       "label": "Clean & Classic Fits",
+       "value": "clean_classic_fits"
+      }
+     ]
+    },
+    "description": {
+     "label": "Description",
+     "multiSelect": false,
+     "values": {
+      "id": 20006,
+      "label": "",
+      "value": "description"
+     }
+    },
+    "productType": {
+     "label": "Type de produit",
+     "multiSelect": false,
+     "values": {
+      "id": 1213681,
+      "label": "Sneaker de basketball",
+      "value": "basketball_sneakers"
+     }
+    },
+    "articleNoSearch": {
+     "label": "Searchable Article Number",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 380844,
+       "label": "1080376",
+       "value": "1080376"
+      }
+     ]
+    },
+    "fullLegalCompanyName": {
+     "label": "Nom du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 365538,
+      "label": "Nike EHQ",
+      "value": "nike_ehq"
+     }
+    },
+    "year": {
+     "label": "Année",
+     "multiSelect": false,
+     "values": {
+      "id": 113,
+      "label": "2027",
+      "value": "2027"
+     }
+    },
+    "stockLevels": {
+     "label": "Stock Level",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224475,
+       "label": "Buffalo - aucun stock",
+       "value": "buffalo_no_stock"
+      },
+      {
+       "id": 1227783,
+       "label": "solebox - aucun stock",
+       "value": "solebox_no_stock"
+      },
+      {
+       "id": 1230007,
+       "label": "SNIPES (SDE) - stock élevé",
+       "value": "snipes_sde_high_stock"
+      },
+      {
+       "id": 1232172,
+       "label": "SNIPES (SCH) - stock élevé",
+       "value": "snipes_sch_high_stock"
+      },
+      {
+       "id": 2233719,
+       "label": "SDE (BOSS) - stock élevé",
+       "value": "sde_boss_high_stock"
+      }
+     ]
+    },
+    "isExclusive": {
+     "label": "Exclusivité",
+     "multiSelect": false,
+     "values": {
+      "id": 1227775,
+      "label": "false",
+      "value": "false"
+     }
+    },
+    "hasPhotoSample": {
+     "label": "Has Photo Sample",
+     "multiSelect": false,
+     "values": {
+      "id": 1224497,
+      "label": "true",
+      "value": "true"
+     }
+    },
+    "extrasOutsole": {
+     "label": "Semelle extérieure",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 359054,
+       "label": "Durable",
+       "value": "durable"
+      },
+      {
+       "id": 359055,
+       "label": "Flexible",
+       "value": "flexible"
+      },
+      {
+       "id": 359056,
+       "label": "Haute traction",
+       "value": "high_traction"
+      },
+      {
+       "id": 359058,
+       "label": "Absorbant les chocs",
+       "value": "shock_absorbing"
+      },
+      {
+       "id": 359059,
+       "label": "Résistant à l’abrasion",
+       "value": "abrasion_resistant"
+      },
+      {
+       "id": 1232006,
+       "label": "Antidérapant",
+       "value": "nonslip_1"
+      }
+     ]
+    },
+    "waitingForOnlinePeriodStatusUpdate": {
+     "label": "En attente de la mise à jour du statut de la période en ligne",
+     "multiSelect": false,
+     "values": {
+      "id": 337132,
+      "label": "false",
+      "value": "false"
+     }
+    },
+    "salesGrouping": {
+     "label": "Favorite Styles",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1200382,
+       "label": "Nike Air Force 1",
+       "value": "nike_air_force_1_1"
+      }
+     ]
+    },
+    "extrasInsole": {
+     "label": "Semelle intérieure",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 359060,
+       "label": "Respirant",
+       "value": "breathable"
+      },
+      {
+       "id": 359061,
+       "label": "Absorbant les chocs",
+       "value": "shock_absorbing"
+      }
+     ]
+    }
+   },
+   "images": [
+    {
+     "public_id": "01901155_1",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 blanc",
+      "834 1"
+     ]
+    },
+    {
+     "public_id": "01901155_2",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 blanc",
+      "834 2"
+     ]
+    },
+    {
+     "public_id": "01901155_3",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 blanc",
+      "834 3"
+     ]
+    },
+    {
+     "public_id": "01901155_4",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 blanc",
+      "834 4"
+     ]
+    },
+    {
+     "public_id": "01901155_5",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 blanc",
+      "834 5"
+     ]
+    }
+   ],
+   "url": "/p/nike-air-force-1-blanc-834"
+  },
+  {
+   "id": 1727,
+   "isSoldOut": false,
+   "referenceKey": "01126425",
+   "attributes": {
+    "surfaceTexture": {
+     "label": "Texture de la surface",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1231991,
+       "label": "Aspect cuir",
+       "value": "leatherlook_1"
+      }
+     ]
+    },
+    "salesGrouping": {
+     "label": "Favorite Styles",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1200382,
+       "label": "Nike Air Force 1",
+       "value": "nike_air_force_1_1"
+      }
+     ]
+    },
+    "targetGroup": {
+     "label": "Sexe",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 318717,
+       "label": "Hommes",
+       "value": "men"
+      }
+     ]
+    },
+    "name": {
+     "label": "Name",
+     "multiSelect": false,
+     "values": {
+      "id": 20005,
+      "label": "Air Force 1 '07",
+      "value": "name"
+     }
+    },
+    "colorSpace": {
+     "label": "Famille de couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 1300,
+      "label": "blanc",
+      "value": "white"
+     }
+    },
+    "functionality": {
+     "label": "Fonctionnalité",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224479,
+       "label": "résistant",
+       "value": "durable_1"
+      },
+      {
+       "id": 1224505,
+       "label": "respirant",
+       "value": "breathable_1"
+      }
+     ]
+    },
+    "brand": {
+     "label": "Marque",
+     "multiSelect": false,
+     "values": {
+      "id": 392,
+      "label": "Nike",
+      "value": "nike_1"
+     }
+    },
+    "description": {
+     "label": "Description",
+     "multiSelect": false,
+     "values": {
+      "id": 20006,
+      "label": "",
+      "value": "description"
+     }
+    },
+    "productTypeSubAssortment": {
+     "label": "Catégorie",
+     "multiSelect": false,
+     "values": {
+      "id": 1224488,
+      "label": "sneakers",
+      "value": "sneakers"
+     }
+    },
+    "articleNoSearch": {
+     "label": "Searchable Article Number",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 380661,
+       "label": "1000413",
+       "value": "1000413"
+      }
+     ]
+    },
+    "outOfOnlinePeriod": {
+     "label": "Hors période en ligne",
+     "multiSelect": false,
+     "values": {
+      "id": 337130,
+      "label": "false",
+      "value": "false",
+      "useKey": true
+     }
+    },
+    "colorOrderNo": {
+     "label": "Numéro de commande de la couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 2773,
+      "label": "1",
+      "value": "1"
+     }
+    },
+    "priceAvailableFor": {
+     "label": "Price Available For",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 806566,
+       "label": "SPL",
+       "value": "spl"
+      },
+      {
+       "id": 806567,
+       "label": "SNL",
+       "value": "snl"
+      },
+      {
+       "id": 806568,
+       "label": "SDE",
+       "value": "sde"
+      },
+      {
+       "id": 806569,
+       "label": "SAT",
+       "value": "sat"
+      },
+      {
+       "id": 806570,
+       "label": "SFR",
+       "value": "sfr"
+      },
+      {
+       "id": 806571,
+       "label": "SCH",
+       "value": "sch"
+      },
+      {
+       "id": 806572,
+       "label": "SES",
+       "value": "ses"
+      },
+      {
+       "id": 806573,
+       "label": "SPT",
+       "value": "spt"
+      },
+      {
+       "id": 806574,
+       "label": "SBE",
+       "value": "sbe"
+      },
+      {
+       "id": 806575,
+       "label": "SHR",
+       "value": "shr"
+      },
+      {
+       "id": 806576,
+       "label": "SIT",
+       "value": "sit"
+      }
+     ]
+    },
+    "discountExclusionGroup": {
+     "label": "Discount exclusion groups",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1197646,
+       "label": "Shopping Week",
+       "value": "shopping_week"
+      }
+     ]
+    },
+    "hasPhotoSample": {
+     "label": "Has Photo Sample",
+     "multiSelect": false,
+     "values": {
+      "id": 1224497,
+      "label": "true",
+      "value": "true",
+      "useKey": true
+     }
+    },
+    "sneakerCut": {
+     "label": "Coupe sneakers",
+     "multiSelect": false,
+     "values": {
+      "id": 359062,
+      "label": "Low-Cut",
+      "value": "lowcut"
+     }
+    },
+    "season": {
+     "label": "Saison",
+     "multiSelect": false,
+     "values": {
+      "id": 1224462,
+      "label": "toute l’année",
+      "value": "all_year_1_2"
+     }
+    },
+    "productTypeAssortment": {
+     "label": "Catégorie principale",
+     "multiSelect": false,
+     "values": {
+      "id": 1201168,
+      "label": "Chaussures",
+      "value": "shoes"
+     }
+    },
+    "productName": {
+     "label": "Name",
+     "multiSelect": false,
+     "values": {
+      "id": 1283545,
+      "label": "Air Force 1 '07",
+      "value": "air_force_1_07_"
+     }
+    },
+    "productTypeHierarchyCode": {
+     "label": "Product Type Hierarchy Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1200214,
+      "label": "shoes|sneakers|fashion_sneakers",
+      "value": "shoessneakersfashion_sneakers"
+     }
+    },
+    "productCode": {
+     "label": "Code produit",
+     "multiSelect": false,
+     "values": {
+      "id": 17337,
+      "label": "01126425",
+      "value": "01126425"
+     }
+    },
+    "genders": {
+     "label": "Sexe",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1200718,
+       "label": "Hommes",
+       "value": "men"
+      }
+     ]
+    },
+    "innerMaterial": {
+     "label": "Matériau intérieur",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224529,
+       "label": "textile",
+       "value": "textile_1"
+      }
+     ]
+    },
+    "manufacturerProductCode": {
+     "label": "Manufacturer number",
+     "multiSelect": false,
+     "values": {
+      "id": 1283673,
+      "label": "CW2288-111",
+      "value": "cw2288111"
+     }
+    },
+    "extrasOutsole": {
+     "label": "Semelle extérieure",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 359054,
+       "label": "Durable",
+       "value": "durable"
+      },
+      {
+       "id": 359056,
+       "label": "Haute traction",
+       "value": "high_traction"
+      },
+      {
+       "id": 359058,
+       "label": "Absorbant les chocs",
+       "value": "shock_absorbing"
+      },
+      {
+       "id": 359059,
+       "label": "Résistant à l’abrasion",
+       "value": "abrasion_resistant"
+      },
+      {
+       "id": 1232006,
+       "label": "Antidérapant",
+       "value": "nonslip_1"
+      }
+     ]
+    },
+    "productType": {
+     "label": "Type de produit",
+     "multiSelect": false,
+     "values": {
+      "id": 1213715,
+      "label": "Sneaker de mode",
+      "value": "fashion_sneakers"
+     }
+    },
+    "lifecycleStatus": {
+     "label": "Lifecycle Status",
+     "multiSelect": false,
+     "values": {
+      "id": 1225248,
+      "label": "Approved",
+      "value": "approved"
+     }
+    },
+    "productTypeCode": {
+     "label": "Product Type Code",
+     "multiSelect": false,
+     "values": {
+      "id": 1224490,
+      "label": "fashion_sneakers",
+      "value": "fashion_sneakers"
+     }
+    },
+    "outerMaterial": {
+     "label": "Matériau extérieur",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224495,
+       "label": "cuir",
+       "value": "leather_1"
+      }
+     ]
+    },
+    "outerSole": {
+     "label": "Outsole material",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224492,
+       "label": "caoutchouc",
+       "value": "rubber"
+      }
+     ]
+    },
+    "fastening": {
+     "label": "Fastening",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 359053,
+       "label": "Lacets",
+       "value": "laces"
+      }
+     ]
+    },
+    "phasesOfLife": {
+     "label": "Catégorie d'âge",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 89,
+       "label": "Adultes",
+       "value": "erwachsene"
+      }
+     ]
+    },
+    "extrasInsole": {
+     "label": "Semelle intérieure",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 359060,
+       "label": "Respirant",
+       "value": "breathable"
+      },
+      {
+       "id": 359061,
+       "label": "Absorbant les chocs",
+       "value": "shock_absorbing"
+      },
+      {
+       "id": 360152,
+       "label": "Rembourrages confortables",
+       "value": "comfortable_padding"
+      }
+     ]
+    },
+    "waitingForOnlinePeriodStatusUpdate": {
+     "label": "En attente de la mise à jour du statut de la période en ligne",
+     "multiSelect": false,
+     "values": {
+      "id": 337132,
+      "label": "false",
+      "value": "false",
+      "useKey": true
+     }
+    },
+    "isExclusive": {
+     "label": "Exclusivité",
+     "multiSelect": false,
+     "values": {
+      "id": 1227775,
+      "label": "false",
+      "value": "false",
+      "useKey": true
+     }
+    },
+    "articleNo": {
+     "label": "Numéro d'article",
+     "multiSelect": false,
+     "values": {
+      "id": 17338,
+      "label": "1000413",
+      "value": "1000413"
+     }
+    },
+    "updateStatus": {
+     "label": "Mise à jour du statut",
+     "multiSelect": false,
+     "values": {
+      "id": 1224466,
+      "label": "akeneoExport",
+      "value": "akeneoexport"
+     }
+    },
+    "manufacturerColor": {
+     "label": "Couleur du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 1283672,
+      "label": "white/white",
+      "value": "whitewhite"
+     }
+    },
+    "affiliateRevenueModel": {
+     "label": "Modèle de revenus des affiliés",
+     "multiSelect": false,
+     "values": {
+      "id": 1212655,
+      "label": "Standard",
+      "value": "standard"
+     }
+    },
+    "buyingBrandId": {
+     "label": "WWS Brand ID",
+     "multiSelect": false,
+     "values": {
+      "id": 1225137,
+      "label": "nike",
+      "value": "nike"
+     }
+    },
+    "parentBrand": {
+     "label": "Marque",
+     "multiSelect": false,
+     "values": {
+      "id": 358774,
+      "label": "Nike  ",
+      "value": "nike_"
+     }
+    },
+    "isHotRelease": {
+     "label": "Hot release",
+     "multiSelect": false,
+     "values": {
+      "id": 1198854,
+      "label": "false",
+      "value": "false",
+      "useKey": true
+     }
+    },
+    "category": {
+     "label": "Master Categories (AG)",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1,
+       "label": "Base",
+       "value": "1"
+      },
+      {
+       "id": 4,
+       "label": "Base|Shoe",
+       "value": "4"
+      },
+      {
+       "id": 27,
+       "label": "Base|Shoe|Sneaker",
+       "value": "22"
+      }
+     ]
+    },
+    "year": {
+     "label": "Année",
+     "multiSelect": false,
+     "values": {
+      "id": 113,
+      "label": "2027",
+      "value": "2027"
+     }
+    },
+    "stockLevels": {
+     "label": "Stock Level",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 1224475,
+       "label": "Buffalo - aucun stock",
+       "value": "buffalo_no_stock"
+      },
+      {
+       "id": 1227783,
+       "label": "solebox - aucun stock",
+       "value": "solebox_no_stock"
+      },
+      {
+       "id": 1230007,
+       "label": "SNIPES (SDE) - stock élevé",
+       "value": "snipes_sde_high_stock"
+      },
+      {
+       "id": 1232172,
+       "label": "SNIPES (SCH) - stock élevé",
+       "value": "snipes_sch_high_stock"
+      },
+      {
+       "id": 2233719,
+       "label": "SDE (BOSS) - stock élevé",
+       "value": "sde_boss_high_stock"
+      }
+     ]
+    },
+    "fullLegalCompanyName": {
+     "label": "Nom du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 365538,
+      "label": "Nike EHQ",
+      "value": "nike_ehq"
+     }
+    },
+    "brandUrl": {
+     "label": "URL du fabricant",
+     "multiSelect": false,
+     "values": {
+      "id": 372520,
+      "label": "https://www.nike.com/",
+      "value": "httpswwwnikecom"
+     }
+    },
+    "color": {
+     "label": "Couleur",
+     "multiSelect": false,
+     "values": {
+      "id": 165,
+      "label": "blanc",
+      "value": "weiss"
+     }
+    },
+    "marketingTrend": {
+     "label": "Tendance marketing",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 335406,
+       "label": "White Sneakers",
+       "value": "whitesneaker"
+      },
+      {
+       "id": 335526,
+       "label": "Styles d'automne",
+       "value": "autumnstyles"
+      },
+      {
+       "id": 335527,
+       "label": "Streetwear",
+       "value": "streetwear"
+      },
+      {
+       "id": 336207,
+       "label": "Dance",
+       "value": "dance"
+      },
+      {
+       "id": 345394,
+       "label": "Cadeaux",
+       "value": "gifts"
+      },
+      {
+       "id": 345396,
+       "label": "Essentiels de printemps",
+       "value": "spring_essentials"
+      },
+      {
+       "id": 908652,
+       "label": "Looks de Jour de Match",
+       "value": "matchday_fits"
+      },
+      {
+       "id": 925763,
+       "label": "Clean & Classic Fits",
+       "value": "clean_classic_fits"
+      },
+      {
+       "id": 949978,
+       "label": "Les essentiels du quotidien",
+       "value": "daily_essentials"
+      },
+      {
+       "id": 949979,
+       "label": "Looks pour le premier jour",
+       "value": "first_day_outfits"
+      }
+     ]
+    },
+    "rawManufacturerAddress": {
+     "label": "translate.manufacturer",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 999999991,
+       "label": "Nike EHQ",
+       "value": "Nike EHQ"
+      },
+      {
+       "id": 999999992,
+       "label": " Colosseum 1  , Hilversum , 1213 HJ  Netherlands",
+       "value": " Colosseum 1  , Hilversum , 1213 HJ  Netherlands"
+      },
+      {
+       "id": 999999993,
+       "label": "https://www.nike.com/",
+       "value": "https://www.nike.com/"
+      }
+     ]
+    },
+    "manufacturerAddress": {
+     "label": "translate.manufacturer",
+     "multiSelect": true,
+     "values": [
+      {
+       "id": 999999991,
+       "label": "Nike EHQ",
+       "value": "Nike EHQ"
+      },
+      {
+       "id": 999999992,
+       "label": " Colosseum 1 ",
+       "value": " Colosseum 1 "
+      },
+      {
+       "id": 999999993,
+       "label": "1213 HJ Hilversum",
+       "value": "1213 HJ Hilversum"
+      },
+      {
+       "id": 999999994,
+       "label": " Netherlands",
+       "value": " Netherlands"
+      },
+      {
+       "id": 999999995,
+       "label": "https://www.nike.com/",
+       "value": "https://www.nike.com/"
+      }
+     ]
+    }
+   },
+   "images": [
+    {
+     "public_id": "01126425_1",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 '07 blanc",
+      "1727 1"
+     ]
+    },
+    {
+     "public_id": "01126425_2",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 '07 blanc",
+      "1727 2"
+     ]
+    },
+    {
+     "public_id": "01126425_3",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 '07 blanc",
+      "1727 3"
+     ]
+    },
+    {
+     "public_id": "01126425_4",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 '07 blanc",
+      "1727 4"
+     ]
+    },
+    {
+     "public_id": "01126425_5",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 '07 blanc",
+      "1727 5"
+     ]
+    },
+    {
+     "public_id": "01126425_6_UGC",
+     "view": "still",
+     "metaname": [
+      "Nike Air Force 1 '07 blanc",
+      "1727 6"
+     ]
+    }
+   ],
+   "url": "/p/nike-air-force-1-07-blanc-1727"
+  }
+ ],
+ "pricePromotionInfo": {
+  "is_any_price_promotion_key_in_sale": false,
+  "are_all_price_promotion_keys_in_sale": false,
+  "quantity_of_price_promotions_keys": 0
+ },
+ "categories": [
+  3,
+  6,
+  51,
+  77,
+  86
+ ],
+ "customData": {},
+ "sellableTimeframe": {
+  "sellableFrom": null,
+  "sellableTo": null
+ },
+ "shopID": "1042",
+ "canParseManufacturerAddress": true,
+ "genderSwitch": [],
+ "breadcrumbs": [
+  {
+   "categoryId": 6,
+   "categoryName": "Hommes",
+   "categorySlug": "hommes",
+   "categoryUrl": "/hommes",
+   "categoryHidden": false,
+   "categoryProperties": [],
+   "countryLevelCustomData": {
+    "sortingKey": "relevance"
+   }
+  },
+  {
+   "categoryId": 77,
+   "categoryName": "Chaussures",
+   "categorySlug": "chaussures",
+   "categoryUrl": "/hommes/chaussures",
+   "categoryHidden": false,
+   "categoryProperties": [],
+   "countryLevelCustomData": {
+    "sortingKey": "relevance"
+   }
+  },
+  {
+   "categoryId": 280,
+   "categoryName": "Lifestyle",
+   "categorySlug": "lifestyle",
+   "categoryUrl": "/hommes/chaussures/lifestyle",
+   "categoryHidden": false,
+   "categoryProperties": [],
+   "countryLevelCustomData": {
+    "isPrimaryCategory": true,
+    "sortingKey": "relevance"
+   }
+  }
+ ],
+ "url": "/p/nike-air-force-1-07-blanc-1727",
+ "canonical": "/p/nike-air-force-1-07-blanc-1727",
+ "stock": 9464,
+ "displayName": "Air Force 1 '07",
+ "highestStock": 1767,
+ "sizes": [
+  {
+   "code": "sizeEu",
+   "label": "EU",
+   "value": "38.5"
+  },
+  {
+   "code": "sizeUk",
+   "label": "UK",
+   "value": "5.5"
+  },
+  {
+   "code": "sizeUs",
+   "label": "US",
+   "value": "6"
+  },
+  {
+   "code": "sizeCm",
+   "label": "CM",
+   "value": "24"
+  }
+ ],
+ "tags": [],
+ "formattedPrice": "119,99 €",
+ "hasStartingPrice": false,
+ "hasStrikeout": false,
+ "wasPrice": null,
+ "highestRetailPrice": "0,00 €",
+ "relativeDiscount": null,
+ "relativeDiscountFormatted": null,
+ "flat": false,
+ "is30DaysBestPriceCase3": false,
+ "is30DaysBestPriceCase4": false
+}

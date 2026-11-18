@@ -1,0 +1,347 @@
+{
+ "loaderData": {
+  "0-0-3": {
+   "pagination": {
+    "currentPage": 0,
+    "pageSize": 48,
+    "sort": "relevance-descending",
+    "totalPages": 35,
+    "totalResults": 1649
+   },
+   "currentQuery": {
+    "url": "/search?q=%3Arelevance%3Acollection_id%3Amen-shoes",
+    "query": {
+     "value": ":relevance:collection_id:men-shoes"
+    },
+    "sort": "relevance"
+   },
+   "sorts": [
+    {
+     "code": "relevance",
+     "name": "Résultats initiaux",
+     "selected": true
+    },
+    {
+     "code": "name-asc",
+     "name": "Alphabétique",
+     "selected": false
+    },
+    {
+     "code": "rating-desc",
+     "name": "Note du client",
+     "selected": false
+    },
+    {
+     "code": "newArrivals",
+     "name": "Nouveautés",
+     "selected": false
+    },
+    {
+     "code": "price-asc",
+     "name": "Prix (ordre croissant)",
+     "selected": false
+    },
+    {
+     "code": "price-desc",
+     "name": "Prix (ordre décroissant)",
+     "selected": false
+    },
+    {
+     "code": "brand-asc",
+     "name": "Marques (de A à Z)",
+     "selected": false
+    }
+   ],
+   "products": [
+    {
+     "badges": {
+      "isDiscountsExcluded": true,
+      "isPromoted": false,
+      "isNewProduct": false,
+      "isSale": false
+     },
+     "baseOptions": [
+      {
+       "selected": {
+        "mapEnable": false,
+        "style": "Black-Black-Black"
+       }
+      }
+     ],
+     "baseProduct": "314206535404",
+     "images": [
+      {
+       "format": "large",
+       "url": "https://images.footlocker.com/is/image/FLEU/314206535404",
+       "altText": "314206535404_large"
+      }
+     ],
+     "isSaleProduct": false,
+     "isNewProduct": false,
+     "isBannerOnly": true,
+     "memberOnlyProduct": false,
+     "launchProduct": false,
+     "name": "Nike Air Max Tuned 1 - Homme Chaussures",
+     "originalPrice": {
+      "value": 189.99,
+      "formattedValue": "€ 189,99"
+     },
+     "price": {
+      "value": 189.99,
+      "formattedValue": "€ 189,99"
+     },
+     "reviewRatings": {
+      "reviews": 4431,
+      "rating": 4
+     },
+     "sku": "314206535404",
+     "imageSku": "314206535404",
+     "variantOptions": [
+      {
+       "imageSku": "314206116304",
+       "images": [
+        {
+         "altText": "314206116304_small",
+         "format": "small",
+         "url": "https://images.footlocker.com/is/image/FLEU/314206116304?wid=100&hei=100&fmt=png-alpha"
+        }
+       ],
+       "newArrivalDate": "2026-02-26T00:00:00.000Z",
+       "color": "White-White-Black",
+       "price": {
+        "salePrice": 189.99,
+        "formattedSalePrice": "€ 189,99",
+        "formattedListPrice": "€ 189,99",
+        "listPrice": 189.99
+       },
+       "review": {
+        "totalReviews": 4091,
+        "averageRating": 4
+       },
+       "name": "Nike Air Max Tuned 1 - Homme Chaussures",
+       "flagsAndRestrictions": {
+        "isMemberOnlySale": false,
+        "hasShippingRestrictions": false,
+        "saleProduct": false,
+        "freeShipping": true,
+        "defaultStyle": false,
+        "excludedFromDiscount": true,
+        "isBannerOnly": true,
+        "isOnlineOnly": false,
+        "mapEnabled": false,
+        "recaptchaOn": false,
+        "shipToAndFromStore": false,
+        "newProduct": false
+       },
+       "media": {},
+       "sellable": true,
+       "sku": "314206116304"
+      },
+      {
+       "imageSku": "314217089904",
+       "images": [
+        {
+         "altText": "314217089904_small",
+         "format": "small",
+         "url": "https://images.footlocker.com/is/image/FLEU/314217089904?wid=100&hei=100&fmt=png-alpha"
+        }
+       ],
+       "newArrivalDate": "2026-03-06T00:00:00.000Z",
+       "color": "Black-Hyper Pink-Black",
+       "price": {
+        "salePrice": 189.99,
+        "formattedSalePrice": "€ 189,99",
+        "formattedListPrice": "€ 189,99",
+        "listPrice": 189.99
+       },
+       "review": {
+        "totalReviews": 3979,
+        "averageRating": 4
+       },
+       "name": "Nike Air Max Tuned 1 - Homme Chaussures",
+       "flagsAndRestrictions": {
+        "isMemberOnlySale": false,
+        "hasShippingRestrictions": false,
+        "saleProduct": false,
+        "freeShipping": true,
+        "defaultStyle": false,
+        "excludedFromDiscount": false,
+        "isBannerOnly": false,
+        "isOnlineOnly": false,
+        "mapEnabled": false,
+        "recaptchaOn": false,
+        "shipToAndFromStore": false,
+        "newProduct": false
+       },
+       "media": {},
+       "sellable": true,
+       "sku": "314217089904"
+      }
+     ],
+     "variantsCount": 20,
+     "media": {},
+     "isSponsoredProduct": false,
+     "newProduct": false,
+     "saleProduct": false
+    },
+    {
+     "badges": {
+      "isDiscountsExcluded": true,
+      "isPromoted": false,
+      "isNewProduct": true,
+      "isSale": false
+     },
+     "baseOptions": [
+      {
+       "selected": {
+        "mapEnable": false,
+        "style": "Dk Smoke Grey-Chrome Yellow-Black"
+       }
+      }
+     ],
+     "baseProduct": "314219147304",
+     "images": [
+      {
+       "format": "large",
+       "url": "https://images.footlocker.com/is/image/FLEU/314219147304",
+       "altText": "314219147304_large"
+      }
+     ],
+     "isSaleProduct": false,
+     "isNewProduct": true,
+     "isBannerOnly": false,
+     "memberOnlyProduct": false,
+     "launchProduct": false,
+     "name": "Nike Air Max Tuned 1 Bat - Homme Chaussures",
+     "originalPrice": {
+      "value": 189.99,
+      "formattedValue": "€ 189,99"
+     },
+     "price": {
+      "value": 189.99,
+      "formattedValue": "€ 189,99"
+     },
+     "reviewRatings": {
+      "reviews": 52,
+      "rating": 4
+     },
+     "sku": "314219147304",
+     "imageSku": "314219147304",
+     "media": {},
+     "isSponsoredProduct": false,
+     "newProduct": true,
+     "saleProduct": false,
+     "variantOptions": []
+    }
+   ],
+   "facets": [
+    {
+     "name": "Marque",
+     "multiSelect": true,
+     "values": [
+      {
+       "name": "adidas",
+       "count": 439,
+       "selected": false,
+       "hide": false,
+       "query": {
+        "url": "/search?q=%3Arelevance%3Acollection_id%3Amen-shoes%3Abrand%3Aadidas",
+        "query": {
+         "value": ":relevance:collection_id:men-shoes:brand:adidas",
+         "facetKeyValue": ":brand:adidas"
+        },
+        "sort": "relevance"
+       }
+      },
+      {
+       "name": "Asics",
+       "count": 45,
+       "selected": false,
+       "hide": false,
+       "query": {
+        "url": "/search?q=%3Arelevance%3Acollection_id%3Amen-shoes%3Abrand%3AAsics",
+        "query": {
+         "value": ":relevance:collection_id:men-shoes:brand:Asics",
+         "facetKeyValue": ":brand:Asics"
+        },
+        "sort": "relevance"
+       }
+      },
+      {
+       "name": "Banlieue",
+       "count": 5,
+       "selected": false,
+       "hide": false,
+       "query": {
+        "url": "/search?q=%3Arelevance%3Acollection_id%3Amen-shoes%3Abrand%3ABanlieue",
+        "query": {
+         "value": ":relevance:collection_id:men-shoes:brand:Banlieue",
+         "facetKeyValue": ":brand:Banlieue"
+        },
+        "sort": "relevance"
+       }
+      }
+     ],
+     "nodes": [],
+     "visible": true,
+     "category": false,
+     "priority": 9000,
+     "code": "brand"
+    },
+    {
+     "name": "Autre",
+     "multiSelect": true,
+     "values": [
+      {
+       "name": "Nouveautés",
+       "count": 108,
+       "selected": false,
+       "hide": false,
+       "query": {
+        "url": "/search?q=%3Arelevance%3Acollection_id%3Amen-shoes%3AnewArrival%3ATrue",
+        "query": {
+         "value": ":relevance:collection_id:men-shoes:newArrival:True",
+         "facetKeyValue": ":newArrival:True"
+        },
+        "sort": "relevance"
+       }
+      },
+      {
+       "name": "Seulement chez Foot Locker",
+       "count": 66,
+       "selected": false,
+       "hide": false,
+       "query": {
+        "url": "/search?q=%3Arelevance%3Acollection_id%3Amen-shoes%3AfootLockerOnly%3ATrue",
+        "query": {
+         "value": ":relevance:collection_id:men-shoes:footLockerOnly:True",
+         "facetKeyValue": ":footLockerOnly:True"
+        },
+        "sort": "relevance"
+       }
+      },
+      {
+       "name": "Promos",
+       "count": 824,
+       "selected": false,
+       "hide": false,
+       "query": {
+        "url": "/search?q=%3Arelevance%3Acollection_id%3Amen-shoes%3AsaleProduct%3ATrue",
+        "query": {
+         "value": ":relevance:collection_id:men-shoes:saleProduct:True",
+         "facetKeyValue": ":saleProduct:True"
+        },
+        "sort": "relevance"
+       }
+      }
+     ],
+     "nodes": [],
+     "visible": true,
+     "category": false,
+     "priority": 9000,
+     "code": "miscellaneous"
+    }
+   ]
+  }
+ }
+}

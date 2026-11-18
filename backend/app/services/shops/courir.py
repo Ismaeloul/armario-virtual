@@ -367,6 +367,9 @@ class CourirConnector:
     def reference(self, store_data: dict) -> str | None:
         return reference(store_data)
 
+    def maker_code(self, store_data: dict) -> str | None:
+        return str(store_data.get("model") or "") or None
+
     def search(self, query: str, limit: int = 12) -> list[ShopProduct]:
         kind, value = parse_query(query)
         if kind == "link":
