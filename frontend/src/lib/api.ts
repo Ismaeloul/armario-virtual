@@ -35,6 +35,8 @@ export type Garment = GarmentFields & {
   photo_back: Photo | null;
   photo_extra: Photo | null;
   photo_label: Photo | null;
+  /** Codex redibujó las fotos como «de tienda»; se puede volver a las de la cámara. */
+  photos_edited: boolean;
   in_laundry: boolean;
   favorite: boolean;
   /** Pedida en la tienda y aún sin llegar: no se propone ni se puede usar. */
@@ -333,7 +335,26 @@ export class ApiError extends Error {
   }
 }
 
+// Para ver las cargas (skeletons) con calma al probar: abrir la app una vez con `?lento=1` retrasa
+// cada petición de lectura; `?lento=0` lo quita. Solo afecta a ese navegador.
+const SLOW_KEY = "armario-lento";
+try {
+  const wanted = new URLSearchParams(window.location.search).get("lento");
+  if (wanted === "1") window.sessionStorage.setItem(SLOW_KEY, "1");
+  if (wanted === "0") window.sessionStorage.removeItem(SLOW_KEY);
+} catch {
+  /* sin almacenamiento: se queda en normal */
+}
+const slow = () => {
+  try {
+    return window.sessionStorage.getItem(SLOW_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  if ((!init?.method || init.method === "GET") && slow()) await new Promise((done) => setTimeout(done, 1500));
   const res = await fetch(BASE + path, init);
   if (!res.ok) {
     let detail = res.statusText;
@@ -419,6 +440,13 @@ export const api = {
   garment: (id: number) => request<Garment>(`/api/garments/${id}`),
   updateGarment: (id: number, changes: Partial<GarmentFields> & { favorite?: boolean; in_laundry?: boolean; on_order?: boolean }) =>
     request<Garment>(`/api/garments/${id}`, json("PATCH", changes)),
+  /** Codex redibuja una foto como foto de tienda. Tarda; no cambia la prenda hasta `studioApply`. */
+  studioPhoto: (id: number, view: "front" | "back" | "extra") =>
+    request<Photo>(`/api/garments/${id}/studio/photo/${view}`, { method: "POST" }),
+  studioApply: (id: number, photos: Partial<Record<"front" | "back" | "extra", string>>) =>
+    request<Garment>(`/api/garments/${id}/studio/apply`, json("POST", photos)),
+  studioRevert: (id: number) => request<Garment>(`/api/garments/${id}/studio/revert`, { method: "POST" }),
+  discardPhotos: (ids: string[]) => request<void>("/api/photos/discard", json("POST", { ids })),
   deleteGarment: (id: number) => request<void>(`/api/garments/${id}`, { method: "DELETE" }),
   wearGarment: (id: number) => request<Garment>(`/api/garments/${id}/wear`, json("POST", {})),
   /** Gira 90° a la derecha. Devuelve la foto con un id nuevo. */

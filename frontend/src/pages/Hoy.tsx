@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
+import { FadeImg, OutfitSkeleton, stagger } from "../components/Skeleton";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Catalog, type Today } from "../lib/api";
 
@@ -118,7 +119,7 @@ export default function Hoy() {
             </div>
           )}
 
-          {!failed && !today && <p className="mt-6 text-center text-sm text-text-3">{t.comun.cargando}</p>}
+          {!failed && !today && <OutfitSkeleton />}
 
           {/* Faltan prendas para poder proponer algo */}
           {today && !outfit && (
@@ -146,7 +147,11 @@ export default function Hoy() {
           {/* El outfit del día */}
           {today && outfit && (
             <>
-              <section className={`card flex flex-col p-5 transition-opacity ${busy ? "opacity-50" : ""}`}>
+              {/* La clave es la propuesta: al pedir otra, la tarjeta nueva vuelve a entrar animada. */}
+              <section
+                key={outfit.id}
+                className={`card flex animate-enter flex-col p-5 transition-opacity duration-300 ${busy ? "opacity-50" : ""}`}
+              >
                 <div className="flex items-center justify-between gap-2 pb-4">
                   <div className="min-w-0">
                     <span className="label-caps text-text-2">{t.hoy.tipoDia[outfit.day_kind] ?? ""}</span>
@@ -161,13 +166,14 @@ export default function Hoy() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {outfit.garments.map((g) => (
+                  {outfit.garments.map((g, i) => (
                     <Link
                       key={g.id}
                       to={`/prenda/${g.id}`}
-                      className="flex items-center gap-3.5 rounded-2xl border border-line bg-card-2 p-2.5 active:opacity-70"
+                      style={stagger(i + 1, 70)}
+                      className="flex animate-enter items-center gap-3.5 rounded-2xl border border-line bg-card-2 p-2.5 transition-transform active:scale-[0.98]"
                     >
-                      <img
+                      <FadeImg
                         src={mediaUrl(g.photo_front.thumb_url)}
                         alt=""
                         className="h-24 w-20 shrink-0 rounded-xl object-cover"

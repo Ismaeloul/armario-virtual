@@ -22,3 +22,6 @@ dist/
 Thumbs.db
 *.tar.gz
 .playwright-browsers/
+
+# Pruebas sueltas de edición de fotos
+pruebas-fotos/

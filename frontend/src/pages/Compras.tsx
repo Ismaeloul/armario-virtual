@@ -7,6 +7,7 @@ import { externalHref, photoAfterTap } from "../lib/links";
 import { CopyRow } from "../components/CopyButton";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
+import { CardSkeleton, ListSkeleton, stagger } from "../components/Skeleton";
 import { cap, t } from "../i18n/es";
 import {
   api,
@@ -177,7 +178,7 @@ export default function Compras() {
               </button>
             </div>
           )}
-          {!failed && (!state || !next) && <p className="mt-6 text-center text-sm text-text-3">{t.comun.cargando}</p>}
+          {!failed && (!state || !next) && (view === "gustados" ? <ListSkeleton /> : <CardSkeleton />)}
 
           {!failed && state && next && view === "descubrir" && (
             <Discover
@@ -1706,7 +1707,7 @@ function PhotoViewer({
       aria-modal="true"
       aria-label={item.name}
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim px-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex animate-fade items-center justify-center bg-scrim px-4 backdrop-blur-[2px]"
       style={{
         paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)",
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
@@ -1714,7 +1715,7 @@ function PhotoViewer({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="card relative h-full max-h-[46rem] w-full max-w-md overflow-hidden"
+        className="card relative h-full max-h-[46rem] w-full max-w-md animate-pop overflow-hidden"
       >
         {/* Un solo cuadro con dos alturas: la foto y, debajo, la ficha. Se pasa de una a otra deslizando. */}
         <div
@@ -2041,7 +2042,7 @@ function Liked({ onChanged }: { onChanged: () => void }) {
       </div>
     );
   }
-  if (!items) return <p className="mt-6 text-center text-sm text-text-3">{t.comun.cargando}</p>;
+  if (!items) return <ListSkeleton />;
   if (items.length === 0) {
     return <Notice icon="favorite" title={t.compras.gustados.vacioTitulo} text={t.compras.gustados.vacioTexto} />;
   }
@@ -2060,11 +2061,11 @@ function Liked({ onChanged }: { onChanged: () => void }) {
         />
       )}
       <ul className="flex flex-col gap-3">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const available = item.sizes.filter((s) => s.in_stock);
           const open = buying === item.id;
           return (
-            <li key={item.id} className="card flex flex-col gap-3 p-3.5">
+            <li key={item.id} style={stagger(index)} className="card flex animate-enter flex-col gap-3 p-3.5">
               {/* Tocar la tarjeta (no los botones ni el enlace) abre la foto en grande. */}
               <div className="flex cursor-pointer gap-3.5" onClick={() => setViewing(item)}>
                 {item.photos[0] && (
@@ -2096,9 +2097,9 @@ function Liked({ onChanged }: { onChanged: () => void }) {
               </div>
 
               {open ? (
-                <div className="flex flex-col gap-3 border-t border-control pt-3">
+                <div className="flex animate-enter flex-col gap-3 border-t border-control pt-3">
                   {buyBusy ? (
-                    <p className="text-xs text-text-2">{t.compras.gustados.analizandoTexto}</p>
+                    <p className="shimmer-text text-xs text-text-2">{t.compras.gustados.analizandoTexto}</p>
                   ) : available.length > 0 ? (
                     <>
                       <span className="label-caps text-text-2">{t.compras.gustados.talla}</span>
@@ -2138,7 +2139,11 @@ function Liked({ onChanged }: { onChanged: () => void }) {
                     onClick={() => buy(item, true)}
                   >
                     {!buyBusy && <Icon name="package_box" size={18} />}
-                    {buyBusy ? t.compras.gustados.analizando : t.compras.gustados.pedida}
+                    {buyBusy ? (
+                      <span className="shimmer-text">{t.compras.gustados.analizando}</span>
+                    ) : (
+                      t.compras.gustados.pedida
+                    )}
                   </PrimaryButton>
                   {!buyBusy && (
                     <SecondaryButton disabled={available.length > 0 && !size} onClick={() => buy(item, false)}>
@@ -2271,7 +2276,7 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
     <div
       // Arriba y del alto de su contenido: en el móvil el teclado no tapa el campo, y en pantallas
       // grandes no queda una hoja medio vacía pegada abajo.
-      className="fixed inset-0 z-50 flex items-start justify-center bg-scrim px-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex animate-fade items-start justify-center bg-scrim px-4 backdrop-blur-[2px]"
       style={{
         paddingTop: "calc(env(safe-area-inset-top, 0px) + 4.5rem)",
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
@@ -2284,7 +2289,7 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
         role="dialog"
         aria-modal="true"
         aria-label={t.compras.buscador.titulo}
-        className="flex max-h-full w-full max-w-md flex-col rounded-3xl border border-line bg-bg shadow-[0_10px_30px_rgb(0_0_0/0.18)]"
+        className="flex max-h-full w-full max-w-md animate-enter flex-col rounded-3xl border border-line bg-bg shadow-[0_10px_30px_rgb(0_0_0/0.18)]"
       >
         <div className="flex items-center justify-between gap-2 py-3 pr-2 pl-5">
           <h2 className="font-display text-lg font-semibold tracking-tight">{t.compras.buscador.titulo}</h2>
@@ -2501,7 +2506,7 @@ function SearchResult({
       ) : choosing ? (
         <div className="flex flex-col gap-3 border-t border-control pt-3">
           {busy === "tengo" ? (
-            <p role="status" className="text-xs text-text-2">
+            <p role="status" className="shimmer-text text-xs text-text-2">
               {t.compras.gustados.analizandoTexto}
             </p>
           ) : (
@@ -2530,7 +2535,11 @@ function SearchResult({
             </>
           )}
           <PrimaryButton disabled={busy !== null || size === null} onClick={have}>
-            {busy === "tengo" ? t.compras.gustados.analizando : t.compras.gustados.confirmar}
+            {busy === "tengo" ? (
+              <span className="shimmer-text">{t.compras.gustados.analizando}</span>
+            ) : (
+              t.compras.gustados.confirmar
+            )}
           </PrimaryButton>
           {busy === null && (
             <button type="button" onClick={() => setChoosing(false)} className="h-11 text-xs font-medium text-text-2 underline">
@@ -2702,7 +2711,7 @@ function StoresPanel({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-scrim backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex animate-fade items-end justify-center bg-scrim backdrop-blur-[2px]"
       style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 2.5rem)" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -2712,7 +2721,7 @@ function StoresPanel({
         role="dialog"
         aria-modal="true"
         aria-label={t.compras.panel.titulo}
-        className="flex max-h-full w-full max-w-md flex-col rounded-t-3xl border border-line bg-bg"
+        className="flex max-h-full w-full max-w-md animate-sheet flex-col rounded-t-3xl border border-line bg-bg"
       >
         <div className="flex items-center justify-between gap-2 py-3 pr-2 pl-5">
           <h2 className="font-display text-lg font-semibold tracking-tight">{t.compras.panel.titulo}</h2>

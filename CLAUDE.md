@@ -94,7 +94,22 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.5** (18-11-2026): prendas «pedidas». En Me gustan, al comprar se elige
+- **Publicada en el Umbrel: 0.4.6** (18-11-2026): animaciones y fotos de tienda con Codex.
+  Animaciones (`theme/tokens.css`, `components/Skeleton.tsx`): skeletons con destello en vez de
+  «Cargando…», fundido al cambiar de pantalla, Ficha y lavadora entran por la derecha, tarjetas escalonadas,
+  fotos que aparecen al cargar, pastilla deslizante en `Segmented`, diálogos y paneles animados y destello
+  en los textos «Analizando…» (`shimmer-text`). Al usuario le gustaron tal cual. `Screen` solo anima la
+  opacidad: un transform ahí descoloca lo `fixed` de dentro. `?lento=1` retrasa las cargas 1,5 s para
+  ver los skeletons (`?lento=0` lo quita).
+  «Editar foto con Codex» en la Ficha (TEMPORAL, para probar con las dos prendas reales; después se
+  quitará y las fotos nuevas se editarán solas al añadirlas): `services/ai/studio.py` lanza `codex exec`
+  con todas las fotos de la prenda, diciendo cuál es la delantera y cuál la trasera (sin eso dibujó la
+  capucha de delante como si fuera la espalda), y recoge la imagen de `CODEX_HOME/generated_images/`.
+  Unos 40 s por foto. Se enseña antes y después; las de la cámara se guardan en `garments.photos_camera`
+  y se puede volver. Codex redibuja, no recorta: puede cambiar detalles. Probado en Windows; SIN probar
+  en el Umbrel. Bandas del iPhone al cambiar de tema (`lib/theme.ts`: fondo escrito a mano, etiqueta
+  theme-color nueva y cabecera y barra ocultas un fotograma): sin probar en un iPhone.
+- **Antes: 0.4.5** (18-11-2026): prendas «pedidas». En Me gustan, al comprar se elige
   «La he pedido, aún no ha llegado» o «Ya la tengo en casa». Lo pedido entra en el armario con la
   etiqueta «Pedida» (`garments.on_order`, `ordered_at`): Hoy no lo propone y no se puede apuntar un uso,
   pero en Gustos SÍ sale para valorar (decisión del usuario: entrenar ya con lo que está por llegar).

@@ -50,6 +50,10 @@ class Garment(Base):
     photo_label: Mapped[str | None] = mapped_column(String(32), nullable=True)
     photo_label_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
+    # Si Codex redibujó las fotos como «de tienda»: las de la cámara, para poder volver a ellas.
+    # {"front": id, "back": id, "extra": id} con las vistas que se cambiaron.
+    photos_camera: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
     in_laundry: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     laundry_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     favorite: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -49,6 +49,7 @@ _NEW_COLUMNS = {
         "store_url": "TEXT",
         "on_order": "BOOLEAN",
         "ordered_at": "DATETIME",
+        "photos_camera": "JSON",
     },
     "wear_log": {"outfit_id": "INTEGER"},
     "ratings": {"culprit_ids": "JSON"},

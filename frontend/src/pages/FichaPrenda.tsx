@@ -6,6 +6,8 @@ import { PrimaryButton, RotateButton, Switch } from "../components/Controls";
 import { CopyRow } from "../components/CopyButton";
 import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
+import { DetailSkeleton, FadeImg } from "../components/Skeleton";
+import { StudioPhotos } from "../components/StudioPhotos";
 import { cap, t } from "../i18n/es";
 import { ApiError, api, mediaUrl, type Catalog, type Garment } from "../lib/api";
 
@@ -106,7 +108,7 @@ export default function FichaPrenda() {
       <>
         <BackHeader title={t.ficha.cabecera} />
         <Screen withNav={false}>
-          <p className="mt-10 text-center text-sm text-text-3">{t.comun.cargando}</p>
+          <DetailSkeleton />
         </Screen>
       </>
     );
@@ -168,10 +170,10 @@ export default function FichaPrenda() {
     <>
       <BackHeader title={t.ficha.cabecera} />
       <Screen withNav={false}>
-        <div className="flex flex-col gap-4">
+        <div className="flex animate-slide flex-col gap-4">
           {/* Foto: delante / detrás */}
           <div className="relative overflow-hidden rounded-xl border border-line bg-card-2">
-            <img src={mediaUrl(photo.url)} alt={garment.name} className="aspect-[3/4] w-full object-contain" />
+            <FadeImg key={photo.id} src={mediaUrl(photo.url)} alt={garment.name} className="aspect-[3/4] w-full object-contain" />
             <RotateButton
               className="absolute right-3 top-3"
               disabled={rotating}
@@ -243,6 +245,11 @@ export default function FichaPrenda() {
             {garment.details && <p className="mt-1 text-sm text-text-2">{garment.details}</p>}
             {garment.notes && <p className="mt-1 text-sm text-text-3">{garment.notes}</p>}
           </div>
+
+          {/* Temporal, para probarlo: solo en prendas con fotos hechas con el móvil (no las de Compras). */}
+          {(!garment.store_name || garment.photos_edited) && (
+            <StudioPhotos garment={garment} onChange={setGarment} />
+          )}
 
           {/* Pedida y aún sin llegar: en vez de la lavadora, el aviso y «Ya me ha llegado». */}
           {garment.on_order && (

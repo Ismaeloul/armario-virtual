@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
+import { FadeImg, OutfitSkeleton, stagger } from "../components/Skeleton";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Catalog, type Taste } from "../lib/api";
 
@@ -78,7 +79,7 @@ export default function Gustos() {
               </button>
             </div>
           )}
-          {!failed && !state && <p className="mt-6 text-center text-sm text-text-3">{t.comun.cargando}</p>}
+          {!failed && !state && <OutfitSkeleton />}
 
           {state && !combo && (
             <div className="card flex flex-col items-center gap-3 p-8 text-center">
@@ -101,7 +102,11 @@ export default function Gustos() {
 
           {state && combo && (
             <>
-              <section className={`card flex flex-col p-5 transition-opacity ${busy ? "opacity-50" : ""}`}>
+              {/* La clave es la combinación: al valorar, la siguiente entra animada. */}
+              <section
+                key={combo.garments.map((g) => g.id).join("-")}
+                className={`card flex animate-enter flex-col p-5 transition-opacity duration-300 ${busy ? "opacity-50" : ""}`}
+              >
                 <div className="flex items-center justify-between gap-2 pb-4">
                   <h3 className="font-display text-lg font-semibold">
                     {asking ? t.gustos.porQue : t.gustos.pregunta}
@@ -113,7 +118,7 @@ export default function Gustos() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {combo.garments.map((g) => {
+                  {combo.garments.map((g, i) => {
                     const marked = culprits.includes(g.id);
                     return (
                       <button
@@ -124,11 +129,12 @@ export default function Gustos() {
                         onClick={() =>
                           setCulprits((list) => (marked ? list.filter((id) => id !== g.id) : [...list, g.id]))
                         }
-                        className={`flex items-center gap-3.5 rounded-2xl border p-2.5 text-left ${
+                        style={stagger(i + 1, 70)}
+                        className={`flex animate-enter items-center gap-3.5 rounded-2xl border p-2.5 text-left transition-colors duration-200 ${
                           marked ? "border-danger bg-danger/10" : "border-line bg-card-2"
                         }`}
                       >
-                        <img
+                        <FadeImg
                           src={mediaUrl(g.photo_front.thumb_url)}
                           alt=""
                           className="h-24 w-20 shrink-0 rounded-xl object-cover"

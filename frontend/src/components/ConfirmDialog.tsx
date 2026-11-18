@@ -77,7 +77,7 @@ export function ConfirmDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex animate-fade items-center justify-center bg-scrim backdrop-blur-[2px]"
       style={{
         paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)",
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)",
@@ -94,7 +94,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={text ? textId : undefined}
-        className="card flex w-full max-w-sm flex-col gap-4 p-5"
+        className="card flex w-full max-w-sm animate-pop flex-col gap-4 p-5"
       >
         <div className="flex flex-col gap-1.5">
           <h2 id={titleId} className="font-display text-lg font-semibold leading-snug tracking-tight">

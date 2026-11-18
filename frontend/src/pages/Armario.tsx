@@ -4,6 +4,7 @@ import { Segmented } from "../components/Controls";
 import { Icon } from "../components/Icon";
 import { BackHeader, BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
+import { FadeImg, GridSkeleton, stagger } from "../components/Skeleton";
 import { api, mediaUrl, type Catalog, type Garment } from "../lib/api";
 
 /** El catálogo. Con `laundryOnly`, el mismo listado pero solo con lo que está en la lavadora. */
@@ -55,7 +56,7 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
           </div>
         )}
 
-        {!failed && garments === null && <p className="mt-10 text-center text-sm text-text-3">{t.comun.cargando}</p>}
+        {!failed && (garments === null || !catalog) && <GridSkeleton cards={laundryOnly ? 2 : 6} />}
 
         {!failed && garments && catalog && garments.length === 0 && laundryOnly && (
           <p className="mt-10 text-center text-sm text-text-3">{t.armario.lavadora.vacio}</p>
@@ -79,7 +80,7 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
         )}
 
         {!failed && garments && catalog && garments.length > 0 && (
-          <>
+          <div className={laundryOnly ? "animate-slide" : "animate-enter"}>
             <section>
               <span className="label-caps text-text-2">
                 {laundryOnly ? t.armario.lavadora.etiqueta : t.armario.etiqueta}
@@ -141,11 +142,16 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
             {visible.length === 0 ? (
               <p className="mt-10 text-center text-sm text-text-3">{t.armario.sinResultados}</p>
             ) : (
-              <section className="mt-4 grid grid-cols-2 gap-3.5">
-                {visible.map((g) => (
-                  <Link key={g.id} to={`/prenda/${g.id}`} className="card flex flex-col p-2.5 active:scale-[0.99]">
+              <section key={`${season}-${category}`} className="mt-4 grid grid-cols-2 gap-3.5">
+                {visible.map((g, i) => (
+                  <Link
+                    key={g.id}
+                    to={`/prenda/${g.id}`}
+                    style={stagger(i)}
+                    className="card flex animate-enter flex-col p-2.5 transition-transform active:scale-[0.97]"
+                  >
                     <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-card-2">
-                      <img
+                      <FadeImg
                         src={mediaUrl(g.photo_front.thumb_url)}
                         alt={g.name}
                         loading="lazy"
@@ -179,7 +185,7 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
                 ))}
               </section>
             )}
-          </>
+          </div>
         )}
       </Screen>
 

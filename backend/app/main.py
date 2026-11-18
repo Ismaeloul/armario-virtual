@@ -24,6 +24,10 @@ def referenced_photos() -> set[str]:
             for photo in row
             if photo
         }
+        # Ni las de la cámara que se guardan al cambiarlas por las «de tienda».
+        referenced.update(
+            photo for camera in db.scalars(select(Garment.photos_camera)) for photo in (camera or {}).values() if photo
+        )
         # Las fotos de las propuestas de Compras tampoco son huérfanas.
         referenced.update(photo for photos in db.scalars(select(ShopItem.photos)) for photo in photos or [])
     return referenced

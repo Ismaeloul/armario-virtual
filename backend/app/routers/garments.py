@@ -1,12 +1,13 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from pydantic import BaseModel, Field
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from .. import catalog
 from ..db import get_db
-from ..models import Garment, WearLog, now_utc
+from ..models import Garment, ShopItem, WearLog, now_utc
 from ..services.ai import codex_models
 from ..schemas import (
     AnalyzeResponse,
@@ -20,7 +21,8 @@ from ..schemas import (
     WearIn,
 )
 from ..services import ai, outfits, storage
-from ..services.ai.base import build_prompt
+from ..services.ai import studio
+from ..services.ai.base import AnalysisError, build_prompt
 from .settings import read_settings
 
 router = APIRouter(prefix="/api", tags=["prendas"])
@@ -64,6 +66,7 @@ def _to_out(g: Garment, stats: dict[int, tuple[int, date | None]]) -> GarmentOut
         photo_back=storage.to_schema(g.photo_back) if g.photo_back else None,
         photo_extra=storage.to_schema(g.photo_extra) if g.photo_extra else None,
         photo_label=storage.to_schema(g.photo_label) if g.photo_label else None,
+        photos_edited=bool(g.photos_camera),
         in_laundry=g.in_laundry,
         laundry_since=g.laundry_since,
         favorite=g.favorite,
@@ -339,7 +342,8 @@ def update_garment(garment_id: int, body: GarmentUpdate, db: Session = Depends(g
 @router.delete("/garments/{garment_id}", status_code=204)
 def delete_garment(garment_id: int, db: Session = Depends(get_db)):
     garment = _get_or_404(db, garment_id)
-    photos = (garment.photo_front, garment.photo_back, garment.photo_extra, garment.photo_label)
+    photos = (garment.photo_front, garment.photo_back, garment.photo_extra, garment.photo_label,
+              *(garment.photos_camera or {}).values())
     db.delete(garment)
     db.commit()
     for photo_id in photos:
@@ -390,6 +394,113 @@ def rotate_photo(photo_id: str, db: Session = Depends(get_db)):
             garment.photo_back_original = storage.original_name(new_id)
     db.commit()
     return storage.to_schema(new_id)
+
+
+# ---------- Fotos «de tienda» con Codex (opción temporal de la Ficha, para probarlo)
+
+_VIEWS = ("front", "back", "extra")
+
+
+class StudioPhotos(BaseModel):
+    """Qué foto nueva va en cada vista (ids devueltos por `/studio/photo/{view}`)."""
+
+    front: str | None = Field(default=None, max_length=32)
+    back: str | None = Field(default=None, max_length=32)
+    extra: str | None = Field(default=None, max_length=32)
+
+
+class DiscardIn(BaseModel):
+    ids: list[str] = Field(max_length=6)
+
+
+def _set_photo(garment: Garment, view: str, photo_id: str) -> None:
+    setattr(garment, f"photo_{view}", photo_id)
+    setattr(garment, f"photo_{view}_original", storage.original_name(photo_id))
+
+
+@router.post("/garments/{garment_id}/studio/photo/{view}", response_model=Photo)
+def studio_photo(garment_id: int, view: str, db: Session = Depends(get_db)):
+    """Codex redibuja una de las fotos como foto de producto. No cambia la prenda: devuelve la foto
+    nueva para enseñarla junto a la original; se usa con `/studio/apply` o se tira con `/photos/discard`."""
+    garment = _get_or_404(db, garment_id)
+    if view not in _VIEWS or not getattr(garment, f"photo_{view}"):
+        raise HTTPException(404, "Esa prenda no tiene esa foto")
+    kind = "calzado" if garment.category == "calzado" else "ropa"
+    # Las otras vistas van de referencia: así sabe cuál es la delantera y cuál la trasera.
+    others = [
+        (other, storage.photo_path(getattr(garment, f"photo_{other}")))
+        for other in _VIEWS
+        if other != view and getattr(garment, f"photo_{other}")
+    ]
+    target = storage.photo_path(getattr(garment, f"photo_{view}"))
+    db.close()  # Codex tarda: no se deja la conexión abierta mientras tanto
+    try:
+        data = studio.product_photo(target, view, kind, others)
+        return storage.to_schema(storage.save_upload(data, "codex.png"))
+    except AnalysisError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    except storage.InvalidPhoto as exc:
+        raise HTTPException(502, "Codex devolvió una imagen que no se puede leer") from exc
+
+
+@router.post("/garments/{garment_id}/studio/apply", response_model=GarmentOut)
+def studio_apply(garment_id: int, body: StudioPhotos, db: Session = Depends(get_db)):
+    """Pone las fotos nuevas en la prenda y guarda las de la cámara para poder volver."""
+    garment = _get_or_404(db, garment_id)
+    chosen = {view: photo_id for view, photo_id in body.model_dump().items() if photo_id}
+    if not chosen:
+        raise HTTPException(422, "No hay ninguna foto que poner")
+    for view, photo_id in chosen.items():
+        if not getattr(garment, f"photo_{view}"):
+            raise HTTPException(404, "Esa prenda no tiene esa foto")
+        try:
+            found = storage.exists(photo_id)
+        except storage.InvalidPhoto:
+            found = False
+        if not found:
+            raise HTTPException(404, "La foto editada ya no existe; vuelve a generarla")
+    camera = dict(garment.photos_camera or {})
+    for view, photo_id in chosen.items():
+        current = getattr(garment, f"photo_{view}")
+        if view in camera:
+            storage.delete(current)  # ya era una editada: se sustituye, la de la cámara sigue guardada
+        else:
+            camera[view] = current
+        _set_photo(garment, view, photo_id)
+    garment.photos_camera = camera
+    db.commit()
+    return _to_out(garment, _wear_stats(db, [garment.id]))
+
+
+@router.post("/garments/{garment_id}/studio/revert", response_model=GarmentOut)
+def studio_revert(garment_id: int, db: Session = Depends(get_db)):
+    """Vuelve a las fotos de la cámara y borra las editadas."""
+    garment = _get_or_404(db, garment_id)
+    for view, photo_id in (garment.photos_camera or {}).items():
+        if view in _VIEWS and photo_id and storage.exists(photo_id):
+            edited = getattr(garment, f"photo_{view}")
+            _set_photo(garment, view, photo_id)
+            storage.delete(edited)
+    garment.photos_camera = None
+    db.commit()
+    return _to_out(garment, _wear_stats(db, [garment.id]))
+
+
+@router.post("/photos/discard", status_code=204)
+def discard_photos(body: DiscardIn, db: Session = Depends(get_db)):
+    """Tira fotos generadas que al final no se usan. Nunca borra una que tenga dueño."""
+    owned = set()
+    for row in db.execute(select(Garment.photo_front, Garment.photo_back, Garment.photo_extra,
+                                 Garment.photo_label, Garment.photos_camera)):
+        owned.update(p for p in row[:4] if p)
+        owned.update(p for p in (row[4] or {}).values() if p)
+    owned.update(p for photos in db.scalars(select(ShopItem.photos)) for p in photos or [])
+    for photo_id in body.ids:
+        try:
+            if photo_id not in owned and storage.exists(photo_id):
+                storage.delete(photo_id)
+        except storage.InvalidPhoto:
+            continue
 
 
 @router.post("/laundry/clear")

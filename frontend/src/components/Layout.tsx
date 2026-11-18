@@ -77,8 +77,11 @@ export function BottomNav() {
 
 /** Marco de pantalla: columna de ancho móvil, con hueco para cabecera y barra inferior. */
 export function Screen({ children, withNav = true }: { children: ReactNode; withNav?: boolean }) {
+  // Cada pantalla aparece con un fundido al entrar. Solo opacidad: un transform aquí descolocaría lo
+  // `fixed` que haya dentro; el movimiento lo pone el contenido (animate-enter, animate-slide).
   return (
-    <div className="mx-auto min-h-full max-w-md">
+    // overflow-x-clip: lo que entra deslizando desde un lado no ensancha la página mientras llega.
+    <div className="mx-auto min-h-full max-w-md animate-fade overflow-x-clip">
       <main
         className="px-5"
         style={{

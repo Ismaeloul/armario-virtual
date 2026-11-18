@@ -12,16 +12,27 @@ export function Segmented<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
+  const index = Math.max(0, options.findIndex((o) => o.value === value));
+  const count = options.length;
   return (
-    <div className="flex gap-1 rounded-xl border border-line bg-control p-1">
+    <div className="relative flex gap-1 rounded-xl border border-line bg-control p-1">
+      {/* La pastilla de la opción elegida: se desliza de una a otra. (0.25rem = el hueco entre botones.) */}
+      <span
+        aria-hidden
+        className="absolute inset-y-1 left-1 rounded-lg bg-card shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{
+          width: `calc((100% - 0.5rem - ${count - 1} * 0.25rem) / ${count})`,
+          transform: `translateX(calc(${index} * (100% + 0.25rem)))`,
+        }}
+      />
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           aria-pressed={o.value === value}
           onClick={() => onChange(o.value)}
-          className={`flex min-h-10 flex-1 items-center justify-center rounded-lg px-1 py-1.5 text-xs font-medium transition-colors ${
-            o.value === value ? "bg-card text-text shadow-sm" : "text-text-2"
+          className={`relative flex min-h-10 min-w-0 flex-1 basis-0 items-center justify-center rounded-lg px-1 py-1.5 text-xs font-medium transition-colors duration-300 ${
+            o.value === value ? "text-text" : "text-text-2"
           }`}
         >
           {o.label}

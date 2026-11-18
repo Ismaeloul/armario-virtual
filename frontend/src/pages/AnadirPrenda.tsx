@@ -326,7 +326,7 @@ export default function AnadirPrenda() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex h-3 w-3 rounded-full bg-primary" />
             </span>
-            <h3 className="font-display text-lg font-semibold">{t.nueva.analizando}</h3>
+            <h3 className="shimmer-text font-display text-lg font-semibold">{t.nueva.analizando}</h3>
             <p className="text-sm text-text-2">{t.nueva.analizandoTexto}</p>
           </div>
         )}

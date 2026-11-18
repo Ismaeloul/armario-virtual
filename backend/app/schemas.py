@@ -129,6 +129,7 @@ class GarmentOut(BaseModel):
     photo_back: Photo | None
     photo_extra: Photo | None
     photo_label: Photo | None
+    photos_edited: bool = False  # Codex las redibujó como «de tienda» (se puede volver a las de la cámara)
     in_laundry: bool
     laundry_since: datetime | None
     favorite: bool

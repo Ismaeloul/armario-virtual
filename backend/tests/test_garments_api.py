@@ -271,3 +271,44 @@ def test_imagen_con_demasiados_pixeles_da_422(client, monkeypatch, photo_bytes):
     response = client.post("/api/garments/analyze", files={"front": ("f.jpg", photo_bytes, "image/jpeg")},
                            data={"skip_ai": "true"})
     assert response.status_code == 422
+
+
+def test_fotos_de_tienda_con_codex_se_aplican_y_se_puede_volver(client, photo_bytes, monkeypatch):
+    from app.services import storage
+    from app.services.ai import studio
+
+    seen = []
+
+    def fake(target, view, kind, others):
+        seen.append((view, kind, [name for name, _ in others]))
+        return photo_bytes
+
+    monkeypatch.setattr(studio, "product_photo", fake)
+    front = client.post("/api/garments/analyze", files={"front": ("a.jpg", photo_bytes, "image/jpeg"),
+                                                         "back": ("b.jpg", photo_bytes, "image/jpeg")}).json()
+    garment = client.post("/api/garments", json={
+        "name": "Sudadera", "type": "sudadera", "color_primary": {"name": "verde", "hex": "#0a5a3c"},
+        "colors_secondary": [], "pattern": "liso", "style": "casual", "season": "invierno", "details": "",
+        "notes": "", "photo_front": front["photo_front"]["id"], "photo_back": front["photo_back"]["id"],
+    }).json()
+    assert garment["photos_edited"] is False
+
+    nueva = client.post(f"/api/garments/{garment['id']}/studio/photo/front")
+    assert nueva.status_code == 200 and seen == [("front", "ropa", ["back"])]  # la trasera va de referencia
+    assert client.post(f"/api/garments/{garment['id']}/studio/photo/extra").status_code == 404  # no tiene
+    # Generar no cambia la prenda.
+    assert client.get(f"/api/garments/{garment['id']}").json()["photo_front"]["id"] == garment["photo_front"]["id"]
+
+    # Una que se descarta se borra; una con dueño, no.
+    otra = client.post(f"/api/garments/{garment['id']}/studio/photo/back").json()
+    client.post("/api/photos/discard", json={"ids": [otra["id"], garment["photo_front"]["id"]]})
+    assert not storage.exists(otra["id"]) and storage.exists(garment["photo_front"]["id"])
+
+    editada = client.post(f"/api/garments/{garment['id']}/studio/apply", json={"front": nueva.json()["id"]}).json()
+    assert editada["photos_edited"] is True and editada["photo_front"]["id"] == nueva.json()["id"]
+    assert editada["photo_back"]["id"] == garment["photo_back"]["id"]
+    assert storage.exists(garment["photo_front"]["id"])  # la de la cámara se guarda
+
+    vuelta = client.post(f"/api/garments/{garment['id']}/studio/revert").json()
+    assert vuelta["photos_edited"] is False and vuelta["photo_front"]["id"] == garment["photo_front"]["id"]
+    assert not storage.exists(nueva.json()["id"])
