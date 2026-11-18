@@ -85,7 +85,7 @@ _COLOR_WORDS = [
      r"blanc casse|creme|cream|ivoire|ivory|coquille|\bsail\b|vanille|vanilla", "crudo"),
     (r"marino|navy|azul oscuro|azul noche|tinta|marine|bleu nuit|bleu fonce|midnight", "azul marino"),
     (r"azul claro|azul cielo|azul palido|azul hielo|celeste|bleu clair|bleu ciel|bleu pale|light blue|sky blue|"
-     r"baby blue|\bciel\b", "celeste"),
+     r"baby blue|\bciel\b|\bglace\b", "celeste"),
     (r"oliva|khaki|kaki|caqui|militar|musgo|olive", "verde oliva"),
     (r"burdeos|burgundy|granate|vino|berenjena|bordeaux|maroon|\bwine\b|aubergine", "burdeos"),
     (r"marron|chocolate|conac|tabaco|cuero|tostado|caramelo|camel|taupe|topo|moka|cafe|castano|avellana|cobre|"
@@ -96,7 +96,7 @@ _COLOR_WORDS = [
     (r"negro|black|noir", "negro"),
     (r"blanco|white|blanc", "blanco"),
     (r"azul|indigo|anil|petroleo|denim|cobalto|turquesa|bleu|blue|turquoise|royal", "azul"),
-    (r"verde|verdos|botella|menta|esmeralda|\bvert|green|\bmint|menthe|sapin", "verde"),
+    (r"verde|verdos|botella|bouteille|menta|esmeralda|\bvert|green|\bmint|menthe|sapin", "verde"),
     (r"rojo|rojiz|coral|rouge|\bred\b|corail", "rojo"),
     (r"amarillo|mostaza|vainilla|lima|ocre|jaune|yellow|moutarde|\bor\b|\bdore|gold", "amarillo"),
     (r"naranja|teja|terracota|ladrillo|oxido|calabaza|orange|rouille|brique", "naranja"),

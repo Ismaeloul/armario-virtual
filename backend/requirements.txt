@@ -8,3 +8,7 @@ pillow-heif>=0.16
 anthropic>=0.40
 httpx>=0.27
 tzdata>=2024.1  # zonas horarias para outfits.local_today() aunque la imagen no traiga /usr/share/zoneinfo
+# Opcional: solo para Pull&Bear y Bershka (Chromium de verdad, ver services/shops/browser.py). La app
+# arranca y funciona sin él: esas dos tiendas salen «No disponible». La versión va fijada porque cada
+# versión de Playwright usa su propia revisión de Chromium (`python -m playwright install chromium`).
+playwright==1.65.2

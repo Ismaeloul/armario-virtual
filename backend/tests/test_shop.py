@@ -690,11 +690,13 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
     monkeypatch.setitem(shops.CONNECTORS, "zara", connector)
 
     state = client.get("/api/shop/state").json()
-    # Las tres tiendas reales arrancan desactivadas, cada una con su día de consulta.
+    # Las tiendas reales arrancan desactivadas, cada una con su día de consulta.
     assert [(s["key"], s["name"], s["enabled"], s["weekday"]) for s in state["stores"]] == [
         ("zara", "Zara", False, 4), ("courir", "Courir", False, 1), ("jdsports", "JD Sports", False, 2),
+        ("pullandbear", "Pull&Bear", False, 0), ("bershka", "Bershka", False, 3),
     ]
-    assert [s["weekday_after_release"] for s in state["stores"]] == [False, False, False]  # el falso no lo dice
+    assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 5  # el falso no lo dice
+    assert [s["browser"] for s in state["stores"]] == [False, False, False, True, True]
     assert all(c["enabled"] for c in state["stores"][0]["categories"])
     assert state["running"] is False and state["pending"] == 0
     assert state["stores"][0]["weekday"] == 4 and state["stores"][0]["next_check"] is None

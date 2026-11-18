@@ -151,6 +151,7 @@ export const t = {
       diaSinDato: (dia: string) => `Se consulta los ${dia} (no se sabe qué día saca novedades la tienda).`,
       proxima: (cuando: string) => `Próxima consulta: ${cuando}`,
       desactivadaTexto: "Desactivada: no se consulta.",
+      conNavegador: "Se lee con navegador: cada consulta tarda unos minutos más.",
       categorias: "Qué te interesa",
       consultar: "Consultar ahora",
       consultando: "Consultando…",

@@ -1,0 +1,284 @@
+{
+ "products": [
+  {
+   "id": 247653723,
+   "type": "BundleBean",
+   "name": "Baskets multipèces volume",
+   "productType": "Footwear",
+   "bundleProductSummaries": [
+    {
+     "id": 247649555,
+     "type": "ProductBean",
+     "name": "Baskets multipèces volume",
+     "productType": "Footwear",
+     "detail": {
+      "description": "",
+      "longDescription": "Fermeture par lacets. STARFIT®. Semelle technique souple en mousse de latex, conçue pour offrir plus de confort.",
+      "reference": "12400964-V2027",
+      "displayReference": "2400/964",
+      "colors": [
+       {
+        "id": "001",
+        "longDescription": "Fermeture par lacets. STARFIT®. Semelle technique souple en mousse de latex, conçue pour offrir plus de confort.",
+        "reference": "C12400964001-V2027",
+        "name": "Blanc",
+        "sizes": [
+         {
+          "sku": 247649562,
+          "name": "39",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 247649563,
+          "name": "40",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 247649560,
+          "name": "41",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 247649561,
+          "name": "42",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 247649558,
+          "name": "43",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 247649559,
+          "name": "44",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 247649556,
+          "name": "45",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 247649557,
+          "name": "46",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         }
+        ]
+       }
+      ],
+      "xmedia": [
+       {
+        "colorCode": "001",
+        "xmediaItems": [
+         {
+          "set": 0,
+          "medias": [
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/71fb/939a/560442e2b439/a381f1d99320/12400964001-p/12400964001-p.jpg?ts=1793796058529",
+            "extraInfo": {
+             "originalName": "p1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/df18/f889/e86846e4a72e/0887a6a3ce79/12400964001-z/12400964001-z.jpg?ts=1793796059075",
+            "extraInfo": {
+             "originalName": "z1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/0040/a532/bf7c41afb8d4/da288752d507/12400964001-a1t/12400964001-a1t.jpg?ts=1793796058764",
+            "extraInfo": {
+             "originalName": "a1t"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/2e94/d812/5ca24fe399ef/f1796172b0a4/12400964001-a11o/12400964001-a11o.jpg?ts=1793796059018",
+            "extraInfo": {
+             "originalName": "a11o"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/cf35/befa/2a1e461e842b/494e89312a02/12400964001-a5o/12400964001-a5o.jpg?ts=1793796058524",
+            "extraInfo": {
+             "originalName": "a5o"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/2b50/729b/16b446129153/e22b3e579bde/12400964001-a2d/12400964001-a2d.jpg?ts=1793796058671",
+            "extraInfo": {
+             "originalName": "a2d"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/84f7/96c4/96ac49f0bcdc/6ec912306e70/12400964001-a4o/12400964001-a4o.jpg?ts=1793796058380",
+            "extraInfo": {
+             "originalName": "a4o"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/4671/81bd/7dc640028846/67f700ed87d4/12400964001-v1/12400964001-v1.jpg?ts=1793796056352",
+            "extraInfo": {
+             "originalName": "v1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/ebc0/4525/f0b847d5b7d6/ccc0fc26b0f7/12400964001-a3o/12400964001-a3o.jpg?ts=1793796057698",
+            "extraInfo": {
+             "originalName": "a3o"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/fcd5/8a27/8fbf47bda63a/4c7dde0554e1/12400964001-a6o/12400964001-a6o.jpg?ts=1793796058440",
+            "extraInfo": {
+             "originalName": "a6o"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.bershka.net/assets/public/8b88/b3a4/f9bc44a88792/88a532e54b20/12400964001-b1o/12400964001-b1o.jpg?ts=1794496303835",
+            "extraInfo": {
+             "originalName": "b1o"
+            }
+           },
+           {
+            "clazz": 16,
+            "url": "https://static.bershka.net/assets/public/0247/8025/efed4d05b010/70c9759dc392/",
+            "extraInfo": {
+             "originalName": "u1"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "compositionDetail": {
+       "parts": [
+        {
+         "id": "5",
+         "description": "TIGE",
+         "areas": [],
+         "components": [
+          {
+           "id": 3300,
+           "material": "polyuréthane",
+           "percentage": "85%"
+          },
+          {
+           "id": 3278,
+           "material": "polyester",
+           "percentage": "15%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        },
+        {
+         "id": "6",
+         "description": "DOUBLURE",
+         "areas": [],
+         "components": [
+          {
+           "id": 3278,
+           "material": "polyester",
+           "percentage": "100%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        },
+        {
+         "id": "4",
+         "description": "SEMELLE",
+         "areas": [],
+         "components": [
+          {
+           "id": 4598,
+           "material": "sbs",
+           "percentage": "100%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        },
+        {
+         "id": "8",
+         "description": "SEMELLE INTÉRIEURE",
+         "areas": [],
+         "components": [
+          {
+           "id": 3278,
+           "material": "polyester",
+           "percentage": "100%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        },
+        {
+         "id": "9",
+         "description": "LANGUETTE",
+         "areas": [],
+         "components": [
+          {
+           "id": 3278,
+           "material": "polyester",
+           "percentage": "70%"
+          },
+          {
+           "id": 3300,
+           "material": "polyuréthane",
+           "percentage": "30%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        }
+       ],
+       "exceptions": []
+      }
+     },
+     "sectionNameEN": "MEN",
+     "familyName": "Baskets",
+     "subFamilyName": "Baskets",
+     "productUrl": "baskets-multipieces-volume-l12400964",
+     "productUrlParam": "247649555"
+    }
+   ]
+  }
+ ]
+}

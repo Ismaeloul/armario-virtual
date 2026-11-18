@@ -1,0 +1,739 @@
+{
+ "id": 226924068,
+ "type": "ProductBean",
+ "name": "Sweat à capuche",
+ "productType": "Clothing",
+ "detail": {
+  "description": "",
+  "longDescription": "",
+  "reference": "02438190-I2026",
+  "displayReference": "2438/190",
+  "colors": [
+   {
+    "id": "250",
+    "longDescription": "",
+    "reference": "C02438190250-I2026",
+    "name": "Blanc",
+    "sizes": [
+     {
+      "sku": 226924085,
+      "name": "XS",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666705,
+      "name": "XS",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924089,
+      "name": "S",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666707,
+      "name": "S",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924087,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666706,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924093,
+      "name": "L",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666709,
+      "name": "L",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924091,
+      "name": "XL",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666708,
+      "name": "XL",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     }
+    ]
+   },
+   {
+    "id": "529",
+    "longDescription": "",
+    "reference": "C02438190529-I2026",
+    "name": "Vert",
+    "sizes": [
+     {
+      "sku": 226924086,
+      "name": "XS",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666695,
+      "name": "XS",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "COMING_SOON"
+     },
+     {
+      "sku": 226924090,
+      "name": "S",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666697,
+      "name": "S",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "COMING_SOON"
+     },
+     {
+      "sku": 226924088,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666696,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "COMING_SOON"
+     },
+     {
+      "sku": 226924094,
+      "name": "L",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666699,
+      "name": "L",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "COMING_SOON"
+     },
+     {
+      "sku": 226924092,
+      "name": "XL",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666698,
+      "name": "XL",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "COMING_SOON"
+     }
+    ]
+   },
+   {
+    "id": "800",
+    "longDescription": "",
+    "reference": "C02438190800-I2026",
+    "name": "Noir",
+    "sizes": [
+     {
+      "sku": 226924075,
+      "name": "XS",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666690,
+      "name": "XS",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924074,
+      "name": "S",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666689,
+      "name": "S",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924080,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666693,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924078,
+      "name": "L",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666692,
+      "name": "L",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924083,
+      "name": "XL",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666694,
+      "name": "XL",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     }
+    ]
+   },
+   {
+    "id": "812",
+    "longDescription": "",
+    "reference": "C02438190812-I2026",
+    "name": "Gris",
+    "sizes": [
+     {
+      "sku": 226924070,
+      "name": "XS",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666686,
+      "name": "XS",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924069,
+      "name": "S",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666685,
+      "name": "S",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924072,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666688,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 242119704,
+      "name": "M",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924071,
+      "name": "L",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666687,
+      "name": "L",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     },
+     {
+      "sku": 226924076,
+      "name": "XL",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SHOW"
+     },
+     {
+      "sku": 235666691,
+      "name": "XL",
+      "isBuyable": true,
+      "price": "2599",
+      "oldPrice": null,
+      "visibilityValue": "SOLD_OUT"
+     }
+    ]
+   }
+  ],
+  "xmedia": [
+   {
+    "colorCode": "250",
+    "xmediaItems": [
+     {
+      "set": 0,
+      "medias": [
+       {
+        "clazz": 2,
+        "url": "https://static.bershka.net/assets/public/ec1e/777f/a5e949ccbe74/9f2745a7ddb3/02438478250-r/02438478250-r.jpg?ts=1779972280312",
+        "extraInfo": {
+         "originalName": "r1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/ef9c/f4c1/5dd34a7fadde/b71c6fa42d8f/02438478250-b/02438478250-b.jpg?ts=1779972282227",
+        "extraInfo": {
+         "originalName": "b1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/8cdd/e3ac/e57b4e4e9926/9cd4458bf644/02438478250-s/02438478250-s.jpg?ts=1779972284442",
+        "extraInfo": {
+         "originalName": "s1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/8483/e754/d46045bbb6f4/577a70651bde/02438478250-a4o/02438478250-a4o.jpg?ts=1779972284496",
+        "extraInfo": {
+         "originalName": "a4o"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/75ee/b3f9/54044d0ca347/93ad7b619070/02438478250-a1t/02438478250-a1t.jpg?ts=1785939700522",
+        "extraInfo": {
+         "originalName": "a1t"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/f85c/e445/8e72499992fd/49ab3af66804/02438478250-a3o/02438478250-a3o.jpg?ts=1785939698243",
+        "extraInfo": {
+         "originalName": "a3o"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/3871/5bdd/c2d7474e820c/510111885ae2/02438478250-p/02438478250-p.jpg?ts=1785939700227",
+        "extraInfo": {
+         "originalName": "p1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/2b0e/3b42/f3d64cecb792/032eb74ece2e/02438478250-a2d/02438478250-a2d.jpg?ts=1785939700334",
+        "extraInfo": {
+         "originalName": "a2d"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "colorCode": "529",
+    "xmediaItems": [
+     {
+      "set": 0,
+      "medias": [
+       {
+        "clazz": 2,
+        "url": "https://static.bershka.net/assets/public/7fc2/c332/9e0a48a7990a/be006713d29f/02438478529-r/02438478529-r.jpg?ts=1779972279207",
+        "extraInfo": {
+         "originalName": "r1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/9b36/bc9c/fb6a429f9153/e452f4b14a91/02438478529-b/02438478529-b.jpg?ts=1779972278766",
+        "extraInfo": {
+         "originalName": "b1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/75a4/5d2b/3e7f4d06bcb9/bbf6c4ff16c2/02438478529-s/02438478529-s.jpg?ts=1779972279810",
+        "extraInfo": {
+         "originalName": "s1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/931a/abb4/1b914d41ac21/834de1e0272e/02438478529-a4o/02438478529-a4o.jpg?ts=1779972279289",
+        "extraInfo": {
+         "originalName": "a4o"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/2d8d/3ec7/f1a74ae89eb3/12e839819636/02438478529-a1t/02438478529-a1t.jpg?ts=1786001024770",
+        "extraInfo": {
+         "originalName": "a1t"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/2f9b/76da/2fd745148b52/6d78809facf9/02438478529-a2d/02438478529-a2d.jpg?ts=1786001025088",
+        "extraInfo": {
+         "originalName": "a2d"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/4929/65f2/b02444d3b210/f80ab88ae422/02438478529-a5o/02438478529-a5o.jpg?ts=1786001024673",
+        "extraInfo": {
+         "originalName": "a5o"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/3fc0/97f3/7f20498593b3/11e1b77ff7dc/02438478529-p/02438478529-p.jpg?ts=1786001024364",
+        "extraInfo": {
+         "originalName": "p1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/34b4/9634/72024139bd36/1edd248e1e3d/02438478529-a3o/02438478529-a3o.jpg?ts=1786001023862",
+        "extraInfo": {
+         "originalName": "a3o"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "colorCode": "800",
+    "xmediaItems": [
+     {
+      "set": 0,
+      "medias": [
+       {
+        "clazz": 2,
+        "url": "https://static.bershka.net/assets/public/da38/d6cf/557d4cd2805a/a08aeb07d0e9/02438190800-r/02438190800-r.jpg?ts=1779972280709",
+        "extraInfo": {
+         "originalName": "r1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/9050/482b/6a274cf1bd7d/63358322d2f5/02438190800-b/02438190800-b.jpg?ts=1779972284945",
+        "extraInfo": {
+         "originalName": "b1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/b56c/98e4/3e1c4718ac22/0583b5636fcc/02438190800-a4o/02438190800-a4o.jpg?ts=1779972285035",
+        "extraInfo": {
+         "originalName": "a4o"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/35bf/eebc/fb8743b0ada3/d152e53ea578/02438190800-s/02438190800-s.jpg?ts=1779972285553",
+        "extraInfo": {
+         "originalName": "s1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/5fd8/e292/676449e98863/296e309b37aa/02438190800-a1t/02438190800-a1t.jpg?ts=1785939697903",
+        "extraInfo": {
+         "originalName": "a1t"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/c9c4/e9f8/8d1048dc9094/d794cc2edaab/02438190800-a2d/02438190800-a2d.jpg?ts=1785939699819",
+        "extraInfo": {
+         "originalName": "a2d"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/4c11/1719/ab6f4753be6a/82cbe777ca85/02438190800-p/02438190800-p.jpg?ts=1785939697840",
+        "extraInfo": {
+         "originalName": "p1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/6b17/963c/30814b6ea886/39600bb477bc/02438190800-a3o/02438190800-a3o.jpg?ts=1785939700236",
+        "extraInfo": {
+         "originalName": "a3o"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/1df9/1428/843c4bf2b95a/6bbee630a0fd/02438190800-a5o/02438190800-a5o.jpg?ts=1785939697124",
+        "extraInfo": {
+         "originalName": "a5o"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "colorCode": "812",
+    "xmediaItems": [
+     {
+      "set": 0,
+      "medias": [
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/6fdb/1c0e/6bd2416aa647/b68679fc202e/02438190812-a4o/02438190812-a4o.jpg?ts=1785153970408",
+        "extraInfo": {
+         "originalName": "a4o"
+        }
+       },
+       {
+        "clazz": 2,
+        "url": "https://static.bershka.net/assets/public/f925/b87b/de484baa9b74/ef421109add7/02438190812-r/02438190812-r.jpg?ts=1785153969375",
+        "extraInfo": {
+         "originalName": "r1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/d097/f8e5/97484371b9f7/bae289b9ff9a/02438190812-s/02438190812-s.jpg?ts=1785153971447",
+        "extraInfo": {
+         "originalName": "s1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/9d6b/f333/0e1b47d3a1e9/edd6ce5ce4da/02438190812-b/02438190812-b.jpg?ts=1785153970504",
+        "extraInfo": {
+         "originalName": "b1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/434d/cfff/7e3c4937a896/f7a7501b5f09/02438190812-a1t/02438190812-a1t.jpg?ts=1785939695987",
+        "extraInfo": {
+         "originalName": "a1t"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/f4d9/0fe9/621142fa83c3/c972bb664cbb/02438190812-a2d/02438190812-a2d.jpg?ts=1785939697716",
+        "extraInfo": {
+         "originalName": "a2d"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/6f51/605b/19004ce88d4a/0b10d7280f66/02438190812-a3o/02438190812-a3o.jpg?ts=1785939697919",
+        "extraInfo": {
+         "originalName": "a3o"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/af1f/c402/1ccc432c96fb/9182ac570129/02438190812-p/02438190812-p.jpg?ts=1785939697691",
+        "extraInfo": {
+         "originalName": "p1"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/d64c/e83d/5e0740429342/74bc0e61ea02/02438190812-a6o/02438190812-a6o.jpg?ts=1785939697217",
+        "extraInfo": {
+         "originalName": "a6o"
+        }
+       },
+       {
+        "clazz": 1,
+        "url": "https://static.bershka.net/assets/public/7009/d6d2/0ec149edb8af/7b8f640e8b0e/02438190812-a5o/02438190812-a5o.jpg?ts=1785939696037",
+        "extraInfo": {
+         "originalName": "a5o"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "compositionDetail": {
+   "parts": [
+    {
+     "id": "1",
+     "description": "EXTÉRIEUR",
+     "areas": [
+      {
+       "id": "1",
+       "description": "TISSU PRINCIPAL",
+       "percentageArea": "85%",
+       "components": [
+        {
+         "id": 254,
+         "material": "coton",
+         "percentage": "70%"
+        },
+        {
+         "id": 256,
+         "material": "polyester",
+         "percentage": "30%"
+        }
+       ]
+      },
+      {
+       "id": "12",
+       "description": "TISSU SECONDAIRE",
+       "percentageArea": "15%",
+       "components": [
+        {
+         "id": 254,
+         "material": "coton",
+         "percentage": "96%"
+        },
+        {
+         "id": 267,
+         "material": "élasthanne",
+         "percentage": "4%"
+        }
+       ]
+      }
+     ],
+     "components": [],
+     "microcontents": [],
+     "reinforcements": []
+    },
+    {
+     "id": "2",
+     "description": "DOUBLURE",
+     "areas": [],
+     "components": [
+      {
+       "id": 254,
+       "material": "coton",
+       "percentage": "70%"
+      },
+      {
+       "id": 256,
+       "material": "polyester",
+       "percentage": "30%"
+      }
+     ],
+     "microcontents": [],
+     "reinforcements": []
+    }
+   ],
+   "exceptions": []
+  }
+ },
+ "sectionNameEN": "MEN",
+ "familyName": "Tricot",
+ "subFamilyName": "Tricot",
+ "productUrl": "sweat-a-capuche-l02438190"
+}

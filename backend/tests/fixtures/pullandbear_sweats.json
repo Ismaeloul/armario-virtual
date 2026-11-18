@@ -1,0 +1,1772 @@
+{
+ "products": [
+  {
+   "id": 773993626,
+   "type": "BundleBean",
+   "name": "Sweat capuche Subaru",
+   "productType": "Clothing",
+   "bundleProductSummaries": [
+    {
+     "id": 773992767,
+     "type": "ProductBean",
+     "name": "Sweat capuche Subaru",
+     "productType": "Clothing",
+     "detail": {
+      "description": "",
+      "longDescription": "Sweat à manches longues avec capuche, sous licence Subaru, avec graphique contrastant, poche kangourou sur le devant et confectionné en mélange de coton.",
+      "reference": "03501500-V2027",
+      "displayReference": "3501/500",
+      "colors": [
+       {
+        "id": "803",
+        "longDescription": "Sweat à manches longues avec capuche, sous licence Subaru, avec graphique contrastant, poche kangourou sur le devant et confectionné en mélange de coton.",
+        "reference": "C03501500803-V2027",
+        "name": "Gris vigoré",
+        "sizes": [
+         {
+          "sku": 773992771,
+          "name": "XS",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773992772,
+          "name": "S",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773992769,
+          "name": "M",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773992770,
+          "name": "L",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773992768,
+          "name": "XL",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         }
+        ]
+       }
+      ],
+      "xmedia": [
+       {
+        "colorCode": "803",
+        "xmediaItems": [
+         {
+          "set": 0,
+          "medias": [
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/eb2b/1ecf/b1c4490488db/87a23a8c1005/03501500803-Z/03501500803-Z.jpg?ts=1793903349362",
+            "extraInfo": {
+             "originalName": "z1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/d007/2c52/959545a7a239/9da7298bda9a/03501500803-A18M/03501500803-A18M.jpg?ts=1793903349360",
+            "extraInfo": {
+             "originalName": "a18m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/c5b8/8c1b/906c46c38881/655e2d2428b7/03501500803-A20M/03501500803-A20M.jpg?ts=1793903351185",
+            "extraInfo": {
+             "originalName": "a20m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4e7e/84d6/5186485ba67d/e32696994901/03501500803-C/03501500803-C.jpg?ts=1793903350891",
+            "extraInfo": {
+             "originalName": "c1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/d8af/f4c5/b57e45b8aef9/f77fe04183aa/03501500803-A8M/03501500803-A8M.jpg?ts=1793903351154",
+            "extraInfo": {
+             "originalName": "a8m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2131/9cd9/8236450f972e/ba2938c79250/03501500803-A6M/03501500803-A6M.jpg?ts=1793903351722",
+            "extraInfo": {
+             "originalName": "a6m"
+            }
+           },
+           {
+            "clazz": 2,
+            "url": "https://static.pullandbear.net/assets/public/1778/8b5e/d602411fb05d/0f159a98d51c/COLOR_803/COLOR_803.jpg?ts=1741606854260",
+            "extraInfo": {
+             "originalName": "r1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/0786/51bf/fa43450ab528/161be51c5ded/03501500803-K2/03501500803-K2.jpg?ts=1794304118705",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4724/02d1/b634453a86b4/7c6505211049/03501500803-K3/03501500803-K3.jpg?ts=1794304118390",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/afec/68ad/efc9445d81c4/9bf4045b662d/03501500803-K1/03501500803-K1.jpg?ts=1794304119274",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/76c2/6888/8ae94564a190/398f23ed6f0e/03501500803-x2/03501500803-x2.jpg?ts=1794561617768",
+            "extraInfo": {
+             "originalName": "x2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/ea95/22e6/1d014ac099da/4acc9bf39884/03501500803-K2/03501500803-K2.jpg?ts=1794561618949",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/a071/41c2/9d1447699475/5bb65dabfc94/03501500803-M/03501500803-M.jpg?ts=1794561619119",
+            "extraInfo": {
+             "originalName": "m1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/0f27/0c29/96914fdaaae3/d6a71e42f7d2/03501500803-K1/03501500803-K1.jpg?ts=1794561619657",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/69f2/a492/d924488e9dac/38e3506e213c/03501500803-K3/03501500803-K3.jpg?ts=1794561619699",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/88d7/b2f4/2099404782ad/7faaf41d038b/03501500803-A3M/03501500803-A3M.jpg?ts=1794561619800",
+            "extraInfo": {
+             "originalName": "a3m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4b97/e7ad/50d347ac8839/ad19732c7ebc/03501500803-A2M/03501500803-A2M.jpg?ts=1794561618969",
+            "extraInfo": {
+             "originalName": "a2m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/7d5c/34b0/ba50465eb231/9b56af6e29d2/03501500803-x3/03501500803-x3.jpg?ts=1794561617432",
+            "extraInfo": {
+             "originalName": "x3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4d70/bae2/1de9425ca03f/bce21d0a1f3c/03501500803-x1/03501500803-x1.jpg?ts=1794561617550",
+            "extraInfo": {
+             "originalName": "x1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/35e2/41fb/1323449bb8fb/bcff25885e63/03501500803001-A7M/03501500803001-A7M.jpg?ts=1794559984576",
+            "extraInfo": {
+             "originalName": "a7m"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "compositionDetail": {
+       "parts": [
+        {
+         "id": "1",
+         "description": "EXTÉRIEUR",
+         "areas": [
+          {
+           "id": "1",
+           "description": "TISSU PRINCIPAL",
+           "percentageArea": "90%",
+           "components": [
+            {
+             "id": 2440,
+             "material": "coton",
+             "percentage": "65%"
+            },
+            {
+             "id": 2442,
+             "material": "polyester",
+             "percentage": "35%"
+            }
+           ]
+          },
+          {
+           "id": "12",
+           "description": "TISSU SECONDAIRE",
+           "percentageArea": "10%",
+           "components": [
+            {
+             "id": 2440,
+             "material": "coton",
+             "percentage": "96%"
+            },
+            {
+             "id": 2453,
+             "material": "élasthanne",
+             "percentage": "4%"
+            }
+           ]
+          }
+         ],
+         "components": [],
+         "microcontents": [],
+         "reinforcements": []
+        },
+        {
+         "id": "2",
+         "description": "DOUBLURE",
+         "areas": [],
+         "components": [
+          {
+           "id": 2440,
+           "material": "coton",
+           "percentage": "65%"
+          },
+          {
+           "id": 2442,
+           "material": "polyester",
+           "percentage": "35%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        }
+       ],
+       "exceptions": []
+      }
+     },
+     "sectionNameEN": "MEN",
+     "familyName": "SWEAT ",
+     "subFamilyName": "SWEATS",
+     "productUrl": "sweat-capuche-subaru-l03501500",
+     "productUrlParam": "773992767"
+    }
+   ]
+  },
+  {
+   "id": 775846918,
+   "type": "BundleBean",
+   "name": "Sweat capuche Subaru",
+   "productType": "Clothing",
+   "bundleProductSummaries": [
+    {
+     "id": 773993320,
+     "type": "ProductBean",
+     "name": "Sweat capuche Subaru",
+     "productType": "Clothing",
+     "detail": {
+      "description": "",
+      "longDescription": "Sweat à manches longues avec capuche, sous licence Subaru, avec imprimé contrastant, poche kangourou sur le devant et confectionné en mélange de coton.",
+      "reference": "03501501-V2027",
+      "displayReference": "3501/501",
+      "colors": [
+       {
+        "id": "422",
+        "longDescription": "Sweat à manches longues avec capuche, sous licence Subaru, avec imprimé contrastant, poche kangourou sur le devant et confectionné en mélange de coton.",
+        "reference": "C0350150142201-V2027",
+        "name": "Bleu marine sombre",
+        "sizes": [
+         {
+          "sku": 773993324,
+          "name": "XS",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773993325,
+          "name": "S",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773993322,
+          "name": "M",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773993323,
+          "name": "L",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773993321,
+          "name": "XL",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         }
+        ]
+       }
+      ],
+      "xmedia": [
+       {
+        "colorCode": "422",
+        "xmediaItems": [
+         {
+          "set": 0,
+          "medias": [
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/74da/9ead/f30d4166931c/996ba16282be/03501501422-A18M/03501501422-A18M.jpg?ts=1793903349664",
+            "extraInfo": {
+             "originalName": "a18m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4699/d316/8904474a9234/3cf70e340763/03501501422-Z/03501501422-Z.jpg?ts=1793903349018",
+            "extraInfo": {
+             "originalName": "z1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/73e7/9aca/73314be78331/5e455424e5b9/03501501422-A20M/03501501422-A20M.jpg?ts=1793903349644",
+            "extraInfo": {
+             "originalName": "a20m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/b3f7/e729/edba4e31a3ea/d16942573793/03501501422-C/03501501422-C.jpg?ts=1793903350237",
+            "extraInfo": {
+             "originalName": "c1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/eab7/3456/01e440c4989f/664a25e090c3/03501501422-A8M/03501501422-A8M.jpg?ts=1793903349709",
+            "extraInfo": {
+             "originalName": "a8m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/62ce/8086/95964397a1e8/42e63eb1beb5/03501501422-A6M/03501501422-A6M.jpg?ts=1793903350954",
+            "extraInfo": {
+             "originalName": "a6m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/5d3e/e0a0/5ae748aba531/4753c4d40cef/03501501422-K3/03501501422-K3.jpg?ts=1794304114240",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 2,
+            "url": "https://static.pullandbear.net/assets/public/ef40/6d2e/b7c24781be5c/faa8a6b787ca/COLOR_422/COLOR_422.jpg?ts=1741606756587",
+            "extraInfo": {
+             "originalName": "r1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/a68c/83d6/301f48f68942/a30d3f5e2cf0/03501501422-K1/03501501422-K1.jpg?ts=1794304115529",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2316/2fda/a2014dd9a21c/c82f30856502/03501501422-K2/03501501422-K2.jpg?ts=1794304115843",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/943e/9530/f61245acb3bd/a35929e60cb5/03501501422-K4/03501501422-K4.jpg?ts=1794304116190",
+            "extraInfo": {
+             "originalName": "k4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/5bfc/96ca/1a0443af915f/4c75e1884ef0/03501501422-K1/03501501422-K1.jpg?ts=1794500253845",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/1c07/5a84/6e004508a586/3e0e510b7eb2/03501501422-x3/03501501422-x3.jpg?ts=1794500252190",
+            "extraInfo": {
+             "originalName": "x3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2e6b/372b/3bbd49b6b94c/7b626e7fdcf5/03501501422-K4/03501501422-K4.jpg?ts=1794500254385",
+            "extraInfo": {
+             "originalName": "k4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/9f49/ea1c/ce7b495c94c1/f6755884f6f6/03501501422-x2/03501501422-x2.jpg?ts=1794500251806",
+            "extraInfo": {
+             "originalName": "x2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/5973/f22a/f49747d9a466/11caba080ca8/03501501422-x4/03501501422-x4.jpg?ts=1794500256680",
+            "extraInfo": {
+             "originalName": "x4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/6520/5632/7d78436e8c87/f42e73f5ec56/03501501422-A3M/03501501422-A3M.jpg?ts=1794500254804",
+            "extraInfo": {
+             "originalName": "a3m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/d486/af19/b9de45439aff/a4d1308fed8d/03501501422-K3/03501501422-K3.jpg?ts=1794500259491",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/baf8/4f14/bc3f42be9d2f/9f91487c7532/03501501422-A5M/03501501422-A5M.jpg?ts=1794500256117",
+            "extraInfo": {
+             "originalName": "a5m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/b8b0/2f97/52e24be1a66b/2e9e50cda815/03501501422-A15M/03501501422-A15M.jpg?ts=1794500255986",
+            "extraInfo": {
+             "originalName": "a15m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/771c/4486/f71242f98cfe/577f05175888/03501501422-A2M/03501501422-A2M.jpg?ts=1794500260464",
+            "extraInfo": {
+             "originalName": "a2m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/ab9f/5442/629e45789aad/9dda2a9fe14b/03501501422-M/03501501422-M.jpg?ts=1794500256492",
+            "extraInfo": {
+             "originalName": "m1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/1b59/c0eb/c5c048a0a7bd/26c864aed333/03501501422-A4M/03501501422-A4M.jpg?ts=1794500260090",
+            "extraInfo": {
+             "originalName": "a4m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/e1b2/e15f/a0b741bea075/b5f361e4237c/03501501422-x5/03501501422-x5.jpg?ts=1794500257841",
+            "extraInfo": {
+             "originalName": "x5"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/e5cc/f524/3df147729657/5ca74effaff5/03501501422-x1/03501501422-x1.jpg?ts=1794500256355",
+            "extraInfo": {
+             "originalName": "x1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/6462/5403/05ed40188c77/879ef28831f5/03501501422-K2/03501501422-K2.jpg?ts=1794500257013",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/23e0/4e59/041940c29df9/07e54ae5b5a9/03501501422001-A12M/03501501422001-A12M.jpg?ts=1794559943523",
+            "extraInfo": {
+             "originalName": "a12m"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "compositionDetail": {
+       "parts": [
+        {
+         "id": "1",
+         "description": "EXTÉRIEUR",
+         "areas": [
+          {
+           "id": "1",
+           "description": "TISSU PRINCIPAL",
+           "percentageArea": "90%",
+           "components": [
+            {
+             "id": 2440,
+             "material": "coton",
+             "percentage": "80%"
+            },
+            {
+             "id": 2442,
+             "material": "polyester",
+             "percentage": "20%"
+            }
+           ]
+          },
+          {
+           "id": "12",
+           "description": "TISSU SECONDAIRE",
+           "percentageArea": "10%",
+           "components": [
+            {
+             "id": 2440,
+             "material": "coton",
+             "percentage": "96%"
+            },
+            {
+             "id": 2453,
+             "material": "élasthanne",
+             "percentage": "4%"
+            }
+           ]
+          }
+         ],
+         "components": [],
+         "microcontents": [],
+         "reinforcements": []
+        },
+        {
+         "id": "2",
+         "description": "DOUBLURE",
+         "areas": [],
+         "components": [
+          {
+           "id": 2440,
+           "material": "coton",
+           "percentage": "80%"
+          },
+          {
+           "id": 2442,
+           "material": "polyester",
+           "percentage": "20%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        }
+       ],
+       "exceptions": []
+      }
+     },
+     "sectionNameEN": "MEN",
+     "familyName": "SWEAT ",
+     "subFamilyName": "SWEATS",
+     "productUrl": "sweat-capuche-subaru-l03501501",
+     "productUrlParam": "773993320"
+    }
+   ]
+  },
+  {
+   "id": 773993696,
+   "type": "BundleBean",
+   "name": "Sweat capuche Subaru",
+   "productType": "Clothing",
+   "bundleProductSummaries": [
+    {
+     "id": 773993320,
+     "type": "ProductBean",
+     "name": "Sweat capuche Subaru",
+     "productType": "Clothing",
+     "detail": {
+      "description": "",
+      "longDescription": "Sweat à manches longues avec capuche, sous licence Subaru, avec imprimé contrastant, poche kangourou sur le devant et confectionné en mélange de coton.",
+      "reference": "03501501-V2027",
+      "displayReference": "3501/501",
+      "colors": [
+       {
+        "id": "422",
+        "longDescription": "Sweat à manches longues avec capuche, sous licence Subaru, avec imprimé contrastant, poche kangourou sur le devant et confectionné en mélange de coton.",
+        "reference": "C03501501422-V2027",
+        "name": "Bleu marine sombre",
+        "sizes": [
+         {
+          "sku": 773993324,
+          "name": "XS",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773993325,
+          "name": "S",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773993322,
+          "name": "M",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773993323,
+          "name": "L",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 773993321,
+          "name": "XL",
+          "isBuyable": true,
+          "price": "3999",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         }
+        ]
+       }
+      ],
+      "xmedia": [
+       {
+        "colorCode": "422",
+        "xmediaItems": [
+         {
+          "set": 0,
+          "medias": [
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/74da/9ead/f30d4166931c/996ba16282be/03501501422-A18M/03501501422-A18M.jpg?ts=1793903349664",
+            "extraInfo": {
+             "originalName": "a18m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4699/d316/8904474a9234/3cf70e340763/03501501422-Z/03501501422-Z.jpg?ts=1793903349018",
+            "extraInfo": {
+             "originalName": "z1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/73e7/9aca/73314be78331/5e455424e5b9/03501501422-A20M/03501501422-A20M.jpg?ts=1793903349644",
+            "extraInfo": {
+             "originalName": "a20m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/b3f7/e729/edba4e31a3ea/d16942573793/03501501422-C/03501501422-C.jpg?ts=1793903350237",
+            "extraInfo": {
+             "originalName": "c1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/eab7/3456/01e440c4989f/664a25e090c3/03501501422-A8M/03501501422-A8M.jpg?ts=1793903349709",
+            "extraInfo": {
+             "originalName": "a8m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/62ce/8086/95964397a1e8/42e63eb1beb5/03501501422-A6M/03501501422-A6M.jpg?ts=1793903350954",
+            "extraInfo": {
+             "originalName": "a6m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/5d3e/e0a0/5ae748aba531/4753c4d40cef/03501501422-K3/03501501422-K3.jpg?ts=1794304114240",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 2,
+            "url": "https://static.pullandbear.net/assets/public/ef40/6d2e/b7c24781be5c/faa8a6b787ca/COLOR_422/COLOR_422.jpg?ts=1741606756587",
+            "extraInfo": {
+             "originalName": "r1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/a68c/83d6/301f48f68942/a30d3f5e2cf0/03501501422-K1/03501501422-K1.jpg?ts=1794304115529",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2316/2fda/a2014dd9a21c/c82f30856502/03501501422-K2/03501501422-K2.jpg?ts=1794304115843",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/943e/9530/f61245acb3bd/a35929e60cb5/03501501422-K4/03501501422-K4.jpg?ts=1794304116190",
+            "extraInfo": {
+             "originalName": "k4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/5bfc/96ca/1a0443af915f/4c75e1884ef0/03501501422-K1/03501501422-K1.jpg?ts=1794500253845",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/1c07/5a84/6e004508a586/3e0e510b7eb2/03501501422-x3/03501501422-x3.jpg?ts=1794500252190",
+            "extraInfo": {
+             "originalName": "x3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2e6b/372b/3bbd49b6b94c/7b626e7fdcf5/03501501422-K4/03501501422-K4.jpg?ts=1794500254385",
+            "extraInfo": {
+             "originalName": "k4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/9f49/ea1c/ce7b495c94c1/f6755884f6f6/03501501422-x2/03501501422-x2.jpg?ts=1794500251806",
+            "extraInfo": {
+             "originalName": "x2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/5973/f22a/f49747d9a466/11caba080ca8/03501501422-x4/03501501422-x4.jpg?ts=1794500256680",
+            "extraInfo": {
+             "originalName": "x4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/6520/5632/7d78436e8c87/f42e73f5ec56/03501501422-A3M/03501501422-A3M.jpg?ts=1794500254804",
+            "extraInfo": {
+             "originalName": "a3m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/d486/af19/b9de45439aff/a4d1308fed8d/03501501422-K3/03501501422-K3.jpg?ts=1794500259491",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/baf8/4f14/bc3f42be9d2f/9f91487c7532/03501501422-A5M/03501501422-A5M.jpg?ts=1794500256117",
+            "extraInfo": {
+             "originalName": "a5m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/b8b0/2f97/52e24be1a66b/2e9e50cda815/03501501422-A15M/03501501422-A15M.jpg?ts=1794500255986",
+            "extraInfo": {
+             "originalName": "a15m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/771c/4486/f71242f98cfe/577f05175888/03501501422-A2M/03501501422-A2M.jpg?ts=1794500260464",
+            "extraInfo": {
+             "originalName": "a2m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/ab9f/5442/629e45789aad/9dda2a9fe14b/03501501422-M/03501501422-M.jpg?ts=1794500256492",
+            "extraInfo": {
+             "originalName": "m1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/1b59/c0eb/c5c048a0a7bd/26c864aed333/03501501422-A4M/03501501422-A4M.jpg?ts=1794500260090",
+            "extraInfo": {
+             "originalName": "a4m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/e1b2/e15f/a0b741bea075/b5f361e4237c/03501501422-x5/03501501422-x5.jpg?ts=1794500257841",
+            "extraInfo": {
+             "originalName": "x5"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/e5cc/f524/3df147729657/5ca74effaff5/03501501422-x1/03501501422-x1.jpg?ts=1794500256355",
+            "extraInfo": {
+             "originalName": "x1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/6462/5403/05ed40188c77/879ef28831f5/03501501422-K2/03501501422-K2.jpg?ts=1794500257013",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/23e0/4e59/041940c29df9/07e54ae5b5a9/03501501422001-A12M/03501501422001-A12M.jpg?ts=1794559943523",
+            "extraInfo": {
+             "originalName": "a12m"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "compositionDetail": {
+       "parts": [
+        {
+         "id": "1",
+         "description": "EXTÉRIEUR",
+         "areas": [
+          {
+           "id": "1",
+           "description": "TISSU PRINCIPAL",
+           "percentageArea": "90%",
+           "components": [
+            {
+             "id": 2440,
+             "material": "coton",
+             "percentage": "80%"
+            },
+            {
+             "id": 2442,
+             "material": "polyester",
+             "percentage": "20%"
+            }
+           ]
+          },
+          {
+           "id": "12",
+           "description": "TISSU SECONDAIRE",
+           "percentageArea": "10%",
+           "components": [
+            {
+             "id": 2440,
+             "material": "coton",
+             "percentage": "96%"
+            },
+            {
+             "id": 2453,
+             "material": "élasthanne",
+             "percentage": "4%"
+            }
+           ]
+          }
+         ],
+         "components": [],
+         "microcontents": [],
+         "reinforcements": []
+        },
+        {
+         "id": "2",
+         "description": "DOUBLURE",
+         "areas": [],
+         "components": [
+          {
+           "id": 2440,
+           "material": "coton",
+           "percentage": "80%"
+          },
+          {
+           "id": 2442,
+           "material": "polyester",
+           "percentage": "20%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        }
+       ],
+       "exceptions": []
+      }
+     },
+     "sectionNameEN": "MEN",
+     "familyName": "SWEAT ",
+     "subFamilyName": "SWEATS",
+     "productUrl": "sweat-capuche-subaru-l03501501",
+     "productUrlParam": "773993320"
+    }
+   ]
+  },
+  {
+   "id": 763995187,
+   "type": "BundleBean",
+   "name": "Sweat à capuche STWD",
+   "productType": "Clothing",
+   "bundleProductSummaries": [
+    {
+     "id": 763994346,
+     "type": "ProductBean",
+     "name": "Sweat à capuche STWD",
+     "productType": "Clothing",
+     "detail": {
+      "description": "",
+      "longDescription": "Sweat à manches longues avec capuche, motif STWD et poche kangourou sur le devant.",
+      "reference": "07551528-I2026",
+      "displayReference": "7551/528",
+      "colors": [
+       {
+        "id": "401",
+        "longDescription": "Sweat à manches longues avec capuche, motif STWD et poche kangourou sur le devant.",
+        "reference": "C07551528401-I2026",
+        "name": "Bleu marine",
+        "sizes": [
+         {
+          "sku": 763994355,
+          "name": "XS",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 763994353,
+          "name": "S",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 763994354,
+          "name": "M",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 763994350,
+          "name": "L",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 763994352,
+          "name": "XL",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         }
+        ]
+       },
+       {
+        "id": "501",
+        "longDescription": "Sweat à manches longues avec capuche, motif STWD et poche kangourou sur le devant.",
+        "reference": "C07551528501-I2026",
+        "name": "Bouteille",
+        "sizes": [
+         {
+          "sku": 766947414,
+          "name": "XS",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 766947415,
+          "name": "S",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 766947412,
+          "name": "M",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 766947413,
+          "name": "L",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 766947411,
+          "name": "XL",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         }
+        ]
+       },
+       {
+        "id": "805",
+        "longDescription": "Sweat à manches longues avec capuche, motif STWD et poche avant type kangourou.",
+        "reference": "C07551528805-I2026",
+        "name": "Glace",
+        "sizes": [
+         {
+          "sku": 763994349,
+          "name": "XS",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 763994351,
+          "name": "S",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 763994347,
+          "name": "M",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 763994348,
+          "name": "L",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         },
+         {
+          "sku": 763994356,
+          "name": "XL",
+          "isBuyable": true,
+          "price": "3599",
+          "oldPrice": null,
+          "visibilityValue": "SHOW"
+         }
+        ]
+       }
+      ],
+      "xmedia": [
+       {
+        "colorCode": "401",
+        "xmediaItems": [
+         {
+          "set": 0,
+          "medias": [
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2dc6/bf17/87434d30ad55/09b2855bba9b/07551528401-A20M/07551528401-A20M.jpg?ts=1789648400775",
+            "extraInfo": {
+             "originalName": "a20m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/479e/f28b/03ca4b85aaba/ce5b1a77f4ee/07551528401-Z/07551528401-Z.jpg?ts=1789648400314",
+            "extraInfo": {
+             "originalName": "z1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/934a/154d/fe6c44698786/3a6da97d45a1/07551528401-A6M/07551528401-A6M.jpg?ts=1789648400622",
+            "extraInfo": {
+             "originalName": "a6m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/35e0/65fe/03234e87b7ef/1efcaddb7cd8/07551528401-C/07551528401-C.jpg?ts=1789648400379",
+            "extraInfo": {
+             "originalName": "c1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/5fef/eada/38dd4031b04c/ff7076a6161c/07551528401-A8M/07551528401-A8M.jpg?ts=1789648401007",
+            "extraInfo": {
+             "originalName": "a8m"
+            }
+           },
+           {
+            "clazz": 2,
+            "url": "https://static.pullandbear.net/assets/public/7473/9a2a/1bac48578c61/0d708eb3a6c0/COLOR_401/COLOR_401.jpg?ts=1741606748090",
+            "extraInfo": {
+             "originalName": "r1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/697a/ac1d/d92a4a03b805/7ca17dc2fc50/07551528401-x2/07551528401-x2.jpg?ts=1794304104809",
+            "extraInfo": {
+             "originalName": "x2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/cca6/2d56/cdcc43e48ef1/8ab824775817/07551528401-x4/07551528401-x4.jpg?ts=1794304105114",
+            "extraInfo": {
+             "originalName": "x4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/0e71/74b7/e29f489883a4/c1321527ff24/07551528401-x3/07551528401-x3.jpg?ts=1794304105579",
+            "extraInfo": {
+             "originalName": "x3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/25e1/2bd5/a9984b76aac5/ae0acb8eaf8d/07551528401-x1/07551528401-x1.jpg?ts=1794304105286",
+            "extraInfo": {
+             "originalName": "x1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/0d36/25da/b85c41e9ab80/4408540ae0de/07551528401-x5/07551528401-x5.jpg?ts=1794304107341",
+            "extraInfo": {
+             "originalName": "x5"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4c8a/b122/2ff94a76a2fc/c2f340c404d2/07551528401-M/07551528401-M.jpg?ts=1794304109586",
+            "extraInfo": {
+             "originalName": "m1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/44fc/ca74/1eb640ae9959/5f688ea7c52f/07551528401-ULT3/07551528401-ULT3.jpg?ts=1794304105688",
+            "extraInfo": {
+             "originalName": "ult3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/10f0/30f2/b2f0426e9a64/4b6b91c770d2/07551528401-K1/07551528401-K1.jpg?ts=1794304109753",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/8016/6be4/3e3346659c29/5ab7f97ac0d9/07551528401-K4/07551528401-K4.jpg?ts=1794304109721",
+            "extraInfo": {
+             "originalName": "k4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/7113/beb4/ffd446a68a95/6aba15e2496b/07551528401-K2/07551528401-K2.jpg?ts=1794304109795",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/6537/ce02/cd8b4198a3a8/0fa36942e174/07551528401-A2M/07551528401-A2M.jpg?ts=1794304106038",
+            "extraInfo": {
+             "originalName": "a2m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/64d9/eb9a/8b8a4b78980d/a89e10953371/07551528401-A3M/07551528401-A3M.jpg?ts=1794304110113",
+            "extraInfo": {
+             "originalName": "a3m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/865a/709d/a48c47239a58/a660a243a1b7/07551528401-K3/07551528401-K3.jpg?ts=1794304109100",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/35a9/5770/804848eebb01/809efda50c4c/07551528401-A5M/07551528401-A5M.jpg?ts=1794304110209",
+            "extraInfo": {
+             "originalName": "a5m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/e852/eabb/67c4415ca0b9/99a200689e6a/07551528401-ULT2/07551528401-ULT2.jpg?ts=1794304112045",
+            "extraInfo": {
+             "originalName": "ult2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/75f0/7f17/c04e410a9e51/1ceb6b5a9948/07551528401-A4M/07551528401-A4M.jpg?ts=1794304109734",
+            "extraInfo": {
+             "originalName": "a4m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2b11/5b07/b0804f09b6c9/380fbb5e02fd/07551528401-ULT1/07551528401-ULT1.jpg?ts=1794304111806",
+            "extraInfo": {
+             "originalName": "ult1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/e1e2/968b/613d475382fd/f8b99e9ecf98/07551528401002-A7M/07551528401002-A7M.jpg?ts=1794561308984",
+            "extraInfo": {
+             "originalName": "a7m"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "colorCode": "501",
+        "xmediaItems": [
+         {
+          "set": 0,
+          "medias": [
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/a72f/cdc7/44b84ec28053/b7b28d44ae14/07551928501-C/07551928501-C.jpg?ts=1793274552894",
+            "extraInfo": {
+             "originalName": "c1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/90a6/f8fc/7ed340de8819/d81c5e987cc9/07551928501-Z/07551928501-Z.jpg?ts=1793274553590",
+            "extraInfo": {
+             "originalName": "z1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/b75d/2f0d/c38140aaa619/74b62d47c345/07551928501-A8M/07551928501-A8M.jpg?ts=1793274553735",
+            "extraInfo": {
+             "originalName": "a8m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/91c3/8822/16d049a68c8e/5d8d08a6a8a7/07551928501-A20M/07551928501-A20M.jpg?ts=1793274553154",
+            "extraInfo": {
+             "originalName": "a20m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/077b/f335/275c44c78c40/da1a7adf8dbc/07551928501-A6M/07551928501-A6M.jpg?ts=1793274552349",
+            "extraInfo": {
+             "originalName": "a6m"
+            }
+           },
+           {
+            "clazz": 2,
+            "url": "https://static.pullandbear.net/assets/public/cce4/f795/ad4446d99e12/b39593f88d6c/COLOR_501/COLOR_501.jpg?ts=1741606771697",
+            "extraInfo": {
+             "originalName": "r1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/add6/6651/38ad43d8adcf/a4c43dc96511/07551928501-ULT1/07551928501-ULT1.jpg?ts=1794497500130",
+            "extraInfo": {
+             "originalName": "ult1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/9ecc/89df/a7b44e049c8e/d1af32933709/07551928501-x3/07551928501-x3.jpg?ts=1794497499539",
+            "extraInfo": {
+             "originalName": "x3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2295/2293/161943448039/9f2a3f890fc6/07551928501-ULT2/07551928501-ULT2.jpg?ts=1794497500006",
+            "extraInfo": {
+             "originalName": "ult2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/d653/4898/c19543dc9e77/1fe3cf3af797/07551928501-K2/07551928501-K2.jpg?ts=1794497500585",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/0031/fd80/e4e649e5b5ad/05b23c281799/07551928501-K4/07551928501-K4.jpg?ts=1794497501264",
+            "extraInfo": {
+             "originalName": "k4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/c325/45d9/a749499bb957/9a628598d363/07551928501-x1/07551928501-x1.jpg?ts=1794497499500",
+            "extraInfo": {
+             "originalName": "x1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/1d12/6ce0/3f494a14916e/6dec77e82d23/07551928501-A5M/07551928501-A5M.jpg?ts=1794497500468",
+            "extraInfo": {
+             "originalName": "a5m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/1bf5/531a/791b452ca377/cb19a969ccfa/07551928501-A2M/07551928501-A2M.jpg?ts=1794497500483",
+            "extraInfo": {
+             "originalName": "a2m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/feaf/97a2/2ed2461b8a3e/44e814ccb8eb/07551928501-M/07551928501-M.jpg?ts=1794497500909",
+            "extraInfo": {
+             "originalName": "m1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/10fc/4838/a698483989c7/25a1fcdbdf87/07551928501-x4/07551928501-x4.jpg?ts=1794497499968",
+            "extraInfo": {
+             "originalName": "x4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/e765/7318/c34e46f1840c/3c94ad818cc6/07551928501-A3M/07551928501-A3M.jpg?ts=1794497503589",
+            "extraInfo": {
+             "originalName": "a3m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/2350/85ce/7a2149088397/ec9f4222e461/07551928501-x5/07551928501-x5.jpg?ts=1794497498797",
+            "extraInfo": {
+             "originalName": "x5"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/fe0b/9315/9c624448baab/0313b3895bdb/07551928501-K1/07551928501-K1.jpg?ts=1794497502785",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/1021/6743/99e941e08259/22866a6035fe/07551928501-x2/07551928501-x2.jpg?ts=1794497500078",
+            "extraInfo": {
+             "originalName": "x2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4b3b/73b5/9c9940a09360/0be440f4cd94/07551928501-K3/07551928501-K3.jpg?ts=1794497501309",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4a7e/06c9/e7584055b0b1/547822ac7601/07551928501-A4M/07551928501-A4M.jpg?ts=1794497501183",
+            "extraInfo": {
+             "originalName": "a4m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/428a/6fa4/7d834455904c/6fd762e3557d/07551928501001-A7M/07551928501001-A7M.jpg?ts=1794561182251",
+            "extraInfo": {
+             "originalName": "a7m"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "colorCode": "805",
+        "xmediaItems": [
+         {
+          "set": 0,
+          "medias": [
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/e598/2154/9d984cb5bef8/d661bf49a181/07551528805-Z/07551528805-Z.jpg?ts=1790233201076",
+            "extraInfo": {
+             "originalName": "z1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/c317/89aa/47a04cd8b9dd/2af017c87eec/07551528805-A8M/07551528805-A8M.jpg?ts=1790233200119",
+            "extraInfo": {
+             "originalName": "a8m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/c022/5b7a/8bcd4272a3ba/89b31d1d2600/07551528805-C/07551528805-C.jpg?ts=1790233200913",
+            "extraInfo": {
+             "originalName": "c1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/5383/fac6/398d477f860b/91f27c549026/07551528805-A6M/07551528805-A6M.jpg?ts=1790233200015",
+            "extraInfo": {
+             "originalName": "a6m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4616/f8e4/7363471e862f/9ad6e8d43a6e/07551528805-A20M/07551528805-A20M.jpg?ts=1790233200549",
+            "extraInfo": {
+             "originalName": "a20m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/dae4/83d0/9c4c422fa875/0c4722dd95fd/07551528805-K1/07551528805-K1.jpg?ts=1794497490203",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/d7fa/0111/fc174c2f8992/8216b85ba99e/07551528805-K2/07551528805-K2.jpg?ts=1794497490336",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4b45/909c/6d0f420b8ffd/da6cc8e5dedb/07551528805-K3/07551528805-K3.jpg?ts=1794497490586",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           },
+           {
+            "clazz": 2,
+            "url": "https://static.pullandbear.net/assets/public/da6c/8670/d00144e8bd24/e69590fa4099/COLOR_805/COLOR_805.jpg?ts=1741606855633",
+            "extraInfo": {
+             "originalName": "r1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/3104/b944/015f4809b5de/adc293fe4a21/07551528805-K4/07551528805-K4.jpg?ts=1794497490309",
+            "extraInfo": {
+             "originalName": "k4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4d5a/ac1e/18a54434852f/ea298089528a/07551528805001-A7M/07551528805001-A7M.jpg?ts=1794561411129",
+            "extraInfo": {
+             "originalName": "a7m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/44e4/8990/a4654d449689/f65fa8e58ffb/07551528805-x2/07551528805-x2.jpg?ts=1794906590270",
+            "extraInfo": {
+             "originalName": "x2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/03da/3ce0/a8194486a29b/ff840e59e0f8/07551528805-x1/07551528805-x1.jpg?ts=1794906593531",
+            "extraInfo": {
+             "originalName": "x1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/4f56/fcb4/a9214f9287c0/d0bd0c7d993d/07551528805-x3/07551528805-x3.jpg?ts=1794906593268",
+            "extraInfo": {
+             "originalName": "x3"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/99de/55f3/f2d2441cab68/4141e51efe7c/07551528805-x4/07551528805-x4.jpg?ts=1794906591959",
+            "extraInfo": {
+             "originalName": "x4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/3737/a5e7/6aff44369c51/60b9a279254e/07551528805-M/07551528805-M.jpg?ts=1794906593919",
+            "extraInfo": {
+             "originalName": "m1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/c2a9/c770/3a4643e79d9e/1ff364ecdd33/07551528805-K1/07551528805-K1.jpg?ts=1794906593370",
+            "extraInfo": {
+             "originalName": "k1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/8d0b/529c/fa5140ceb286/f730705289ea/07551528805-K4/07551528805-K4.jpg?ts=1794906595218",
+            "extraInfo": {
+             "originalName": "k4"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/ae44/deac/1d194c178d63/29ffda63414b/07551528805-A2M/07551528805-A2M.jpg?ts=1794906593718",
+            "extraInfo": {
+             "originalName": "a2m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/13d1/3765/caeb44699f26/6ebafa660367/07551528805-A4M/07551528805-A4M.jpg?ts=1794906593601",
+            "extraInfo": {
+             "originalName": "a4m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/176e/ca97/dde046c29ad2/8ec7b7969705/07551528805-A5M/07551528805-A5M.jpg?ts=1794906595133",
+            "extraInfo": {
+             "originalName": "a5m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/7ec0/1803/3246441882d8/b71d646f9f02/07551528805-ULT2/07551528805-ULT2.jpg?ts=1794906597592",
+            "extraInfo": {
+             "originalName": "ult2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/0dae/2621/98744a008b10/908725841b3e/07551528805-A3M/07551528805-A3M.jpg?ts=1794906594347",
+            "extraInfo": {
+             "originalName": "a3m"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/6b3f/1901/77c54519be29/ea81d77e7723/07551528805-x5/07551528805-x5.jpg?ts=1794906593710",
+            "extraInfo": {
+             "originalName": "x5"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/6e0a/2c1f/e4d94fb89b19/8e45da1c27c4/07551528805-ULT1/07551528805-ULT1.jpg?ts=1794906594044",
+            "extraInfo": {
+             "originalName": "ult1"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/b79a/ef6f/97664f249f45/efc8838e9ba1/07551528805-K2/07551528805-K2.jpg?ts=1794906594061",
+            "extraInfo": {
+             "originalName": "k2"
+            }
+           },
+           {
+            "clazz": 1,
+            "url": "https://static.pullandbear.net/assets/public/b177/6ab7/a9fa448c9905/ed7e665d5feb/07551528805-K3/07551528805-K3.jpg?ts=1794906594044",
+            "extraInfo": {
+             "originalName": "k3"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "compositionDetail": {
+       "parts": [
+        {
+         "id": "1",
+         "description": "EXTÉRIEUR",
+         "areas": [
+          {
+           "id": "1",
+           "description": "TISSU PRINCIPAL",
+           "percentageArea": "80%",
+           "components": [
+            {
+             "id": 2440,
+             "material": "coton",
+             "percentage": "80%"
+            },
+            {
+             "id": 2442,
+             "material": "polyester",
+             "percentage": "20%"
+            }
+           ]
+          },
+          {
+           "id": "12",
+           "description": "TISSU SECONDAIRE",
+           "percentageArea": "20%",
+           "components": [
+            {
+             "id": 2440,
+             "material": "coton",
+             "percentage": "97%"
+            },
+            {
+             "id": 2453,
+             "material": "élasthanne",
+             "percentage": "3%"
+            }
+           ]
+          }
+         ],
+         "components": [],
+         "microcontents": [],
+         "reinforcements": []
+        },
+        {
+         "id": "2",
+         "description": "DOUBLURE",
+         "areas": [],
+         "components": [
+          {
+           "id": 2440,
+           "material": "coton",
+           "percentage": "80%"
+          },
+          {
+           "id": 2442,
+           "material": "polyester",
+           "percentage": "20%"
+          }
+         ],
+         "microcontents": [],
+         "reinforcements": []
+        }
+       ],
+       "exceptions": []
+      }
+     },
+     "sectionNameEN": "MEN",
+     "familyName": "SWEAT ",
+     "subFamilyName": "SWEATS",
+     "productUrl": "sweat-a-capuche-stwd-l07551528",
+     "productUrlParam": "763994346"
+    }
+   ]
+  }
+ ]
+}

@@ -16,6 +16,16 @@ class ShopError(Exception):
     así que va en claro: «HTTP 403», «tiempo agotado», «la respuesta no era la esperada»."""
 
 
+class BlockedError(ShopError):
+    """La tienda ha bloqueado el acceso o pide un captcha. No se rodea ni se insiste: se para con esa
+    tienda y no se le vuelve a preguntar hasta el día siguiente. El mensaje va en claro para el panel."""
+
+
+class BrowserUnavailable(ShopError):
+    """El navegador de este equipo no está o no arranca (falta Chromium, falta la pantalla virtual…).
+    La tienda no se ha llegado a tocar: no es un bloqueo."""
+
+
 class SearchError(ShopError):
     """El buscador no puede dar nada con lo que se le ha pedido (la referencia no existe, no tiene
     forma de referencia…). No es un fallo de la tienda, y el mensaje ya va escrito para el usuario."""
@@ -85,6 +95,9 @@ class ShopConnector(Protocol):
     categories: dict[str, str]  # slug de la tienda -> nombre para el usuario
     # Día de la semana en que se consulta (lunes = 0): el siguiente al que la tienda saca novedades.
     refresh_weekday: int
+    # Opcional: True si la tienda solo se deja leer con un navegador de verdad (Pull&Bear, Bershka).
+    # Esas solo hablan con la tienda en el hilo de las consultas (ver shops/browser.py).
+    # needs_browser: bool
 
     def list_category(self, slug: str) -> list[ShopProduct]:
         """Los productos de una categoría. Lanza ShopError si la tienda no responde bien."""

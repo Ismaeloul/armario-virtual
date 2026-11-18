@@ -48,6 +48,16 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   página. Límite acordado con el usuario: solo «trucos legales»; nada de parches que oculten el navegador ni de
   resolver o rodear captchas: si una tienda pone captcha o bloquea, sale como «Falló» con el motivo en Tiendas.
   Se dejan leer sin navegador (sondeo): Nike, Jack & Jones, Jules, Courir; JD Sports solo las 72 primeras por sección.
+  Hecho el 18-11-2026 (en `main`, sin publicar): tiendas de Francia. Con conector normal: Zara (ahora la
+  francesa), Courir (martes) y JD Sports (miércoles; solo ~350-400 zapatillas, se pide con `curl` porque httpx
+  recibe 403; sin probar en Linux). Con navegador (`services/shops/browser.py`, Playwright + Chromium de serie con
+  ventana, Xvfb en Linux; `inditex.py`): Pull&Bear (lunes) y Bershka (jueves), que escuchan el JSON que pide la
+  propia página. Probado en Windows sin bloqueos; SIN probar en Docker/Umbrel (en el PC del usuario no hay Docker:
+  virtualización desactivada). El panel Tiendas distingue «el navegador no arranca» de «la tienda ha bloqueado».
+  En local los navegadores van en `.playwright-browsers/` (fuera de git): desde `AppData` no se dejan ejecutar
+  en este entorno («spawn UNKNOWN»). Las zapatillas guardan la marca y el algoritmo la aprende. Los nombres,
+  colores y composición se traducen al español con Codex en lote (`services/ai/translate.py`), con modelo y
+  esfuerzo propios en Ajustes (el usuario quiere Luna en bajo para traducir y Terra en alto para las fotos).
   Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
   va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se

@@ -799,41 +799,135 @@ function ColorDots({
   onPick: (productRef: string) => void;
   className?: string;
 }) {
+  const row = useRef<HTMLDivElement>(null);
+  const mouse = useRef<{ id: number; x: number; left: number; moved: boolean } | null>(null);
+  const [more, setMore] = useState(false); // quedan colores a la derecha: se insinúan con un degradado
+  const chosenRef = pending ?? colors?.find((c) => c.current)?.product_ref ?? null;
+
+  const measure = () => {
+    const el = row.current;
+    if (el) setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  };
+  useLayoutEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [colors]);
+
+  // Con ratón: la rueda (vertical u horizontal) desliza la fila. Va con `passive: false` para que la
+  // página no se mueva a la vez; si la fila cabe entera, la rueda es de la página.
+  useEffect(() => {
+    const el = row.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth) return;
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (!delta) return;
+      e.preventDefault();
+      el.scrollLeft += delta;
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [colors]);
+
+  // El color elegido (o el que se está trayendo), siempre a la vista. Sin `scrollIntoView`: ese mueve
+  // también la página, y aquí solo se quiere mover la fila.
+  useEffect(() => {
+    const el = row.current;
+    const dot = el?.querySelector<HTMLElement>(`[data-ref="${CSS.escape(chosenRef ?? "")}"]`);
+    if (!el || !dot) return;
+    const start = dot.offsetLeft - el.offsetLeft;
+    const end = start + dot.offsetWidth;
+    if (start < el.scrollLeft) el.scrollTo({ left: start - 8, behavior: "smooth" });
+    else if (end > el.scrollLeft + el.clientWidth) el.scrollTo({ left: end - el.clientWidth + 8, behavior: "smooth" });
+  }, [chosenRef]);
+
   if (!colors || colors.length < 2) return null;
   return (
-    <div
-      role="group"
-      aria-label={t.compras.colores.titulo}
-      // Tocar un color no empieza a arrastrar la tarjeta ni cuenta como toque en lo que haya debajo.
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-      className={`flex max-w-full min-w-0 items-center overflow-x-auto ${className}`}
-    >
-      {colors.map((c) => {
-        const chosen = pending ? pending === c.product_ref : c.current;
-        return (
-          <button
-            key={c.product_ref}
-            type="button"
-            aria-label={t.compras.colores.color(c.name)}
-            title={c.name}
-            aria-pressed={chosen}
-            aria-busy={pending === c.product_ref || undefined}
-            disabled={disabled || pending !== null}
-            onClick={() => !c.current && onPick(c.product_ref)}
-            className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full"
-          >
-            <span
-              className={`h-6 w-6 rounded-full border border-text/20 transition-shadow duration-200 ${
-                chosen ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : ""
-              } ${pending === c.product_ref ? "animate-pulse" : ""}`}
-              style={{ backgroundColor: c.hex }}
-            />
-          </button>
-        );
-      })}
+    <div className={`relative flex max-w-full min-w-0 overflow-hidden ${className}`}>
+      <div
+        ref={row}
+        role="group"
+        aria-label={t.compras.colores.titulo}
+        // Un gesto que empieza en la fila es de la fila: ni arrastra la tarjeta ni cuenta como toque en la
+        // foto. Con el dedo desliza el navegador (`pan-x`); con el ratón, arrastrando o con la rueda.
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          if (e.pointerType === "mouse" && e.button === 0)
+            mouse.current = { id: e.pointerId, x: e.clientX, left: e.currentTarget.scrollLeft, moved: false };
+        }}
+        onPointerMove={(e) => {
+          e.stopPropagation();
+          const m = mouse.current;
+          if (!m || m.id !== e.pointerId) return;
+          const dx = e.clientX - m.x;
+          if (!m.moved && Math.abs(dx) < 4) return;
+          if (!m.moved) e.currentTarget.setPointerCapture(e.pointerId);
+          m.moved = true;
+          e.currentTarget.scrollLeft = m.left - dx;
+        }}
+        onPointerUp={(e) => {
+          e.stopPropagation();
+          if (mouse.current?.id === e.pointerId && !mouse.current.moved) mouse.current = null;
+        }}
+        onPointerCancel={() => (mouse.current = null)}
+        onClickCapture={(e) => {
+          // Soltar un arrastre con el ratón no elige el color que quedó debajo.
+          if (mouse.current?.moved) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          mouse.current = null;
+        }}
+        onClick={(e) => e.stopPropagation()}
+        onScroll={measure}
+        className="flex min-w-0 items-center overflow-x-auto overscroll-x-contain"
+        style={{ touchAction: "pan-x", scrollbarWidth: "none" }}
+      >
+        {colors.map((c) => {
+          const chosen = pending ? pending === c.product_ref : c.current;
+          return (
+            <button
+              key={c.product_ref}
+              data-ref={c.product_ref}
+              type="button"
+              aria-label={t.compras.colores.color(c.name)}
+              title={c.name}
+              aria-pressed={chosen}
+              aria-busy={pending === c.product_ref || undefined}
+              disabled={disabled || pending !== null}
+              onClick={() => !c.current && onPick(c.product_ref)}
+              className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full"
+            >
+              <span
+                className={`h-6 w-6 rounded-full border transition-shadow duration-200 ${
+                  // Los muy claros (blanco, crudo) se pierden en la pastilla: borde más marcado.
+                  isLightHex(c.hex) ? "border-text/45" : "border-text/20"
+                } ${chosen ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : ""} ${
+                  pending === c.product_ref ? "animate-pulse" : ""
+                }`}
+                style={{ backgroundColor: c.hex }}
+              />
+            </button>
+          );
+        })}
+      </div>
+      {more && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-7 rounded-r-full bg-linear-to-l from-card to-transparent"
+        />
+      )}
     </div>
   );
+}
+
+/** ¿Es un tono muy claro («#f5f0e6»)? Para darle al circulito un borde que se vea. */
+function isLightHex(hex: string): boolean {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex ?? "");
+  if (!m) return false;
+  const [r, g, b] = m.slice(1).map((x) => parseInt(x, 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b > 215;
 }
 
 /** Alto que queda desde donde empieza el elemento hasta la barra inferior, para encajar la vista en una pantalla. */
@@ -2166,6 +2260,7 @@ function StoresPanel({
                       </p>
                     </>
                   )}
+                  {store.unavailable && <p className="font-semibold text-danger">{store.unavailable}</p>}
                   {status.error && (
                     <p className="rounded-lg bg-card-2 px-3 py-2 font-mono text-[11px] break-words text-text">
                       <span className="font-sans font-semibold">{t.compras.panel.error}: </span>
@@ -2177,6 +2272,7 @@ function StoresPanel({
                       ? t.compras.panel.dia(t.compras.dias[store.weekday] ?? "")
                       : t.compras.panel.diaSinDato(t.compras.dias[store.weekday] ?? "")}
                   </p>
+                  {store.browser && <p className="text-text-3">{t.compras.panel.conNavegador}</p>}
                   <p>
                     {store.enabled && store.next_check
                       ? t.compras.panel.proxima(dayLabel(store.next_check))
@@ -2205,7 +2301,7 @@ function StoresPanel({
                 </div>
 
                 <PrimaryButton
-                  disabled={busy || state.running || !store.enabled}
+                  disabled={busy || state.running || !store.enabled || store.unavailable !== null}
                   onClick={() => act(api.shopRefresh(store.key), t.compras.panel.errorConsultar)}
                 >
                   <Icon name="refresh" size={20} />

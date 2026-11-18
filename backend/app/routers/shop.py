@@ -50,7 +50,7 @@ class ShopItemOut(BaseModel):
     name_original: str | None  # el nombre como lo escribe la tienda, si se enseña traducido
     price_cents: int
     url: str
-    store_color: str
+    store_color: str  # en español: traducido o, mientras llega, el de nuestra paleta
     type: str
     category: str
     color: str
@@ -132,6 +132,9 @@ class ShopStoreOut(BaseModel):
     weekday_after_release: bool
     status: ShopStatusOut
     next_check: date | None  # cuándo se consultará sola (None si está desactivada)
+    browser: bool  # se lee con un navegador de verdad (Pull&Bear, Bershka): tarda más
+    # Por qué no se puede consultar en este equipo («No disponible: falta el navegador»); None si se puede.
+    unavailable: str | None
 
 
 class ShopMoreOut(BaseModel):
@@ -215,7 +218,7 @@ def _to_out(item: ShopItem) -> ShopItemOut:
         name_original=item.name if item.name_es and item.name_es != item.name else None,
         price_cents=item.price_cents,
         url=item.url,
-        store_color=item.store_color_es or item.store_color,
+        store_color=shopping.shown_color(item),
         type=item.type,
         category=item.category,
         color=item.color,
@@ -276,6 +279,8 @@ def _state(db: Session) -> ShopState:
                     error=status.get("error"),
                 ),
                 next_check=shopping.next_check(db, key) if key in enabled else None,
+                browser=shops.needs_browser(key),
+                unavailable=shops.unavailable(key),
                 categories=[
                     ShopCategoryOut(slug=slug, label=label, enabled=slug in active)
                     for slug, label in connector.categories.items()

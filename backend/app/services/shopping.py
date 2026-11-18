@@ -46,7 +46,7 @@ from ..models import Garment, Setting, ShopItem, now_utc
 from . import ai, outfits, shops, storage, style_rules
 from .ai.base import build_prompt
 from .ai import codex_models
-from .shops import NotThisStore, SearchError, ShopError
+from .shops import BlockedError, BrowserUnavailable, NotThisStore, SearchError, ShopError
 from .shops.estimate import brand_family, estimate_color, norm
 
 log = logging.getLogger("armario.compras")
@@ -291,6 +291,21 @@ def next_check(db: Session, store: str, today: date | None = None) -> date:
     if ok_day and ok_day >= check_day(store, today):
         return check_day(store, today) + timedelta(days=7)
     return today + timedelta(days=1) if _parse_day(status.get("day")) == today else today
+
+
+def blocked_today(db: Session, store: str, today: date | None = None) -> str | None:
+    """Si la tienda bloqueó hoy (el acceso o con un captcha), el motivo; si no, None. Hasta mañana no
+    se le vuelve a preguntar, ni con «Consultar ahora» ni con «Ver más»."""
+    today = today or outfits.local_today()
+    status = store_status(db, store) or {}
+    if status.get("blocked_day") == today.isoformat():
+        return str(status.get("error") or shops.browser.BLOCKED_TEXT).split(": ", 1)[-1]
+    return shops.browser.blocked(store)
+
+
+def reachable(db: Session, store: str, today: date | None = None) -> bool:
+    """¿Se le puede pedir algo hoy a la tienda? No si le falta el navegador o si ha bloqueado hoy."""
+    return not shops.unavailable(store) and not blocked_today(db, store, today)
 
 
 # ---------- Lo aprendido en la pestaña
@@ -803,16 +818,32 @@ def colors_of(item: ShopItem) -> list[dict] | None:
         return None
     if len(item.siblings) < 2:
         return []
+    foreign = _foreign(item.store, item.url)
     return [
         {
             "product_ref": sibling["product_ref"],
-            "name": sibling.get("name") or "",
+            "name": color_name(sibling.get("name"), sibling.get("name_es"), foreign),
             # Sin tono de la tienda, el de nuestra paleta que mejor le va al nombre.
             "hex": sibling.get("hex") or catalog.COLOR_HEX[estimate_color(sibling.get("name"))],
             "current": sibling["product_ref"] == item.product_ref,
         }
         for sibling in sorted(item.siblings, key=lambda sibling: sibling["product_ref"])
     ]
+
+
+def color_name(store_color: str | None, translated: str | None, foreign: bool, palette: str | None = None) -> str:
+    """El nombre de un color para enseñarlo: el traducido si lo hay; si la tienda no está en español y
+    aún no ha llegado la traducción, el de nuestra paleta («negro»), nunca el original («Noir»)."""
+    if translated:
+        return translated
+    if foreign and store_color:
+        return palette or estimate_color(store_color)
+    return store_color or ""
+
+
+def shown_color(item: ShopItem) -> str:
+    """El color de un producto como se enseña (tarjeta, visor, Me gustan)."""
+    return color_name(item.store_color, item.store_color_es, _foreign(item.store, item.url), item.color)
 
 
 def _detail_color(row: ShopItem, detail) -> None:
@@ -832,10 +863,18 @@ def _apply_detail(row: ShopItem, detail) -> None:
     """Lo que la ficha dice además de fotos y tallas: en qué colores existe y de qué está hecha."""
     # Siempre en el mismo orden (la tienda pone primero el color que se le pide): si no, al cambiar de
     # color los circulitos bailarían de sitio.
-    row.siblings = sorted(
-        (dict(sibling) for sibling in detail.siblings or [] if sibling.get("product_ref")),
-        key=lambda sibling: sibling["product_ref"],
-    )
+    # El nombre traducido de cada color se conserva mientras la tienda lo siga llamando igual.
+    translated = {s["product_ref"]: s for s in row.siblings or [] if s.get("name_es")}
+    siblings = []
+    for sibling in detail.siblings or []:
+        if not sibling.get("product_ref"):
+            continue
+        sibling = dict(sibling)
+        before = translated.get(sibling["product_ref"])
+        if before and before.get("name") == sibling.get("name"):
+            sibling["name_es"] = before["name_es"]
+        siblings.append(sibling)
+    row.siblings = sorted(siblings, key=lambda sibling: sibling["product_ref"])
     row.composition = " ".join((detail.composition or "").split())[:COMPOSITION_MAX] or None
 
 
@@ -1017,7 +1056,7 @@ def candidates_left(db: Session, today: date | None = None, store: str | None = 
     """Los candidatos que «Ver más» aún puede traer: de las tiendas activadas (o de una), de una categoría
     si se filtra, de temporada y sin haber fallado ya esta semana al pedir su ficha."""
     today = today or outfits.local_today()
-    stores = [s for s in enabled_stores(db) if store in (None, s)]
+    stores = [s for s in enabled_stores(db) if store in (None, s) and reachable(db, s, today)]
     stmt = select(ShopItem).where(
         ShopItem.status == CANDIDATE, ShopItem.store.in_(stores), ShopItem.last_checked_at.is_(None)
     )
@@ -1036,9 +1075,12 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
     # La misma prenda no se enseña dos veces en dos colores: lo que ya se ve en esta tanda (pendiente,
     # apartado o recién decidido) y sus colores hermanos no entran como propuesta aparte.
     shown, family = _shown_this_round(db)
+    stopped: set[str] = set()  # tiendas que han bloqueado o cuyo navegador no arranca: ni una petición más
     for _value, _reasons, row in ranked:
         if len(scores) >= limit or attempts >= limit * 2:
             break
+        if row.store in stopped:
+            continue
         if row.product_ref in family:
             row.last_checked_at = now_utc()  # esta semana ya no se intenta: sale como color de otra
             db.commit()
@@ -1067,9 +1109,13 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
         except Exception as exc:
             if not isinstance(exc, ShopError):
                 log.exception("Compras: error inesperado con %s", row.product_ref)
-            failed(row.name, exc)
             row.last_checked_at = None  # un fallo de red no dice nada del producto: se podrá reintentar
             db.commit()
+            if isinstance(exc, (BlockedError, BrowserUnavailable)):
+                stopped.add(row.store)
+                failed(shops.CONNECTORS[row.store].name, exc)
+            else:
+                failed(row.name, exc)
             continue
         row.status, row.batch, row.photos = NEW, today, photos
         _detail_color(row, detail)
@@ -1134,6 +1180,18 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
     _save_status(db, store, {**previous, "day": today.isoformat()})
     db.commit()
 
+    # Sin navegador en este equipo, o si la tienda ha bloqueado hoy, ni se intenta.
+    why = shops.unavailable(store) or blocked_today(db, store, today)
+    if why:
+        message = f"{connector.name}: {why}"
+        result.update(error=message, errors=[message], failed=1)
+        if previous.get("blocked_day") == today.isoformat() or shops.browser.blocked(store):
+            result["blocked_day"] = today.isoformat()
+        _save_status(db, store, result)
+        db.commit()
+        log.info("Compras: %s no se consulta: %s", store, why)
+        return result
+
     # Lo que ya se enseñó alguna vez (sea cual sea su estado) no vuelve; los candidatos se renuevan.
     shown = set(db.scalars(select(ShopItem.product_ref).where(ShopItem.status != CANDIDATE)))
     old = {
@@ -1145,10 +1203,17 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
     # 1. Listados: una petición por categoría. Solo datos del listado, sin fotos ni detalle.
     active = active_categories(db, store)
     listed: set[str] = set()
+    stopped = False  # la tienda ha bloqueado o el navegador no arranca: se para con ella
     for slug in active:
         label = connector.categories.get(slug, slug)
         try:
             products = connector.list_category(slug)
+        except (BlockedError, BrowserUnavailable) as exc:
+            failed(connector.name, exc)
+            if isinstance(exc, BlockedError):
+                result["blocked_day"] = today.isoformat()
+            stopped = True
+            break
         except Exception as exc:  # ni la tienda ni un conector roto pueden tumbar la tanda
             if not isinstance(exc, ShopError):
                 log.exception("Compras: error inesperado en %s/%s", store, slug)
@@ -1187,9 +1252,16 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
         result["added"] = len(_promote(db, context, _ranked(context, in_season, limit * 2), limit, today, failed))
 
     # 4. Los «me gusta» de esta tienda: ¿siguen ahí y queda alguna talla?
-    for item in db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.status == LIKED)):
+    stopped = stopped or bool(shops.browser.blocked(store))
+    liked = [] if stopped else list(db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.status == LIKED)))
+    for item in liked:
         try:
             detail = connector.detail(item.store_data)
+        except (BlockedError, BrowserUnavailable) as exc:
+            failed(connector.name, exc)
+            if isinstance(exc, BlockedError):
+                result["blocked_day"] = today.isoformat()
+            break
         except Exception as exc:
             if not isinstance(exc, ShopError):
                 log.exception("Compras: error inesperado al comprobar %s", item.product_ref)
@@ -1204,10 +1276,18 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
             item.sizes, item.in_stock = detail.sizes, True
             item.price_cents = detail.price_cents or item.price_cents
             _apply_detail(item, detail)  # de paso, los colores: los guardados antes de apuntarlos se ponen al día
+            _detail_color(item, detail)  # y lo que la ficha sepa para volver a pedirla (Pull&Bear, Bershka)
         db.commit()
 
     if result["ok"]:
         result["ok_day"] = today.isoformat()
+    if shops.browser.blocked(store):
+        result["blocked_day"] = today.isoformat()
+    # Un bloqueo o un navegador que no arranca va primero: es lo que hay que ver en el panel.
+    first = next((e for e in errors if e.startswith(f"{connector.name}: ")), None)
+    if first:
+        errors.remove(first)
+        errors.insert(0, first)
     result["error"] = errors[0] if errors else None
     result["errors"] = errors[:20]
     _save_status(db, store, result)
@@ -1264,6 +1344,14 @@ def more(db: Session, store: str | None = None, category: str | None = None, lim
     context = Context.load(db)
     ranked = _ranked(context, candidates_left(db, today, store, category), limit * 2)
     scores = _promote(db, context, ranked, limit, today, _failure_log(result))
+    for key, connector in shops.CONNECTORS.items():
+        why = shops.browser.blocked(key)
+        status = store_status(db, key) or {}
+        if why and status.get("blocked_day") != today.isoformat():
+            # Ha bloqueado en este «Ver más»: que el panel lo diga y que hoy no se insista.
+            message = f"{connector.name}: {why}"
+            _save_status(db, key, {**status, "blocked_day": today.isoformat(), "error": message,
+                                   "errors": [message, *(status.get("errors") or [])][:20]})
     if scores:
         result["added"] = len(scores)
         result["mean"] = round(sum(scores) / len(scores), 1)
@@ -1631,6 +1719,8 @@ def translate_items(db: Session, ids: list[int] | None = None) -> int:
     if not items:
         return 0
     texts = [t for item in items for t in (item.name, item.store_color, item.composition) if t]
+    # Los nombres de los otros colores (los circulitos), en el mismo lote.
+    texts += [s["name"] for item in items for s in item.siblings or [] if s.get("name") and not s.get("name_es")]
     done = translate.translate(texts)
     if not done:
         return 0
@@ -1646,6 +1736,11 @@ def translate_items(db: Session, ids: list[int] | None = None) -> int:
         item.name_es = name[:160]
         item.store_color_es = done.get(key(item.store_color), item.store_color_es or None) if item.store_color else None
         item.composition_es = done.get(key(item.composition)) if item.composition else None
+        if item.siblings:
+            item.siblings = [
+                {**s, "name_es": done[key(s["name"])]} if not s.get("name_es") and done.get(key(s.get("name"))) else s
+                for s in item.siblings
+            ]
         item.translated = True
         count += 1
     db.commit()
@@ -1698,7 +1793,8 @@ def _run_locked(job) -> None:
     Después, aparte y sin cerrojo, traduce lo nuevo: las propuestas salen ya, en el idioma de la
     tienda, y pasan al español en cuanto llega la traducción."""
     try:
-        with SessionLocal() as db:
+        # El navegador (Pull&Bear, Bershka) solo puede abrirse aquí dentro y se cierra al acabar.
+        with SessionLocal() as db, shops.browser.session():
             job(db)
     except Exception:
         log.exception("Compras: la tanda falló")
