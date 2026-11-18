@@ -47,6 +47,8 @@ _NEW_COLUMNS = {
         "reference": "VARCHAR(40)",
         "store_name": "VARCHAR(40)",
         "store_url": "TEXT",
+        "on_order": "BOOLEAN",
+        "ordered_at": "DATETIME",
     },
     "wear_log": {"outfit_id": "INTEGER"},
     "ratings": {"culprit_ids": "JSON"},

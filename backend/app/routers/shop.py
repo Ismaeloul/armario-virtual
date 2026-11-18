@@ -267,6 +267,7 @@ class Filter:
 
 class BoughtIn(BaseModel):
     size: str | None = Field(default=None, max_length=20)
+    ordered: bool = False  # «La he pedido»: entra en el armario como pendiente de llegar
 
 
 class BoughtOut(BaseModel):
@@ -628,7 +629,8 @@ def remove(item_id: int, db: Session = Depends(get_db)):
 @router.post("/items/{item_id}/bought", response_model=BoughtOut)
 def bought(item_id: int, body: BoughtIn, db: Session = Depends(get_db)):
     """«La he comprado» o, desde el buscador, «Ya la tengo»: analiza las fotos guardadas y pasa la
-    prenda al armario con la talla elegida."""
+    prenda al armario con la talla elegida. Con `ordered`, entra como pedida: no se propone hasta
+    que se marque como recibida en la Ficha."""
     item = _get_or_404(db, item_id)
     if item.status == shopping.BOUGHT and item.garment_id:  # doble toque: la prenda ya está creada
         return BoughtOut(garment_id=item.garment_id, analyzed=item.ai_draft is not None)
@@ -636,7 +638,7 @@ def bought(item_id: int, body: BoughtIn, db: Session = Depends(get_db)):
         raise HTTPException(409, "Este producto ya no está disponible")
     size = (body.size or "").strip() or None
     try:
-        garment, analyzed = shopping.buy(db, item, size, read_settings(db).ai_provider)
+        garment, analyzed = shopping.buy(db, item, size, read_settings(db).ai_provider, ordered=body.ordered)
     except shopping.CannotBuy as exc:
         raise HTTPException(409, str(exc)) from exc
     return BoughtOut(garment_id=garment.id, analyzed=analyzed)

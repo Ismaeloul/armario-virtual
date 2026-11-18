@@ -94,7 +94,15 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.4** (18-11-2026): Nike con navegador, la tarjeta de debajo ya no cambia al
+- **Publicada en el Umbrel: 0.4.5** (18-11-2026): prendas «pedidas». En Me gustan, al comprar se elige
+  «La he pedido, aún no ha llegado» o «Ya la tengo en casa». Lo pedido entra en el armario con la
+  etiqueta «Pedida» (`garments.on_order`, `ordered_at`): Hoy no lo propone y no se puede apuntar un uso,
+  pero en Gustos SÍ sale para valorar (decisión del usuario: entrenar ya con lo que está por llegar).
+  En la Ficha, «Ya me ha llegado» lo deja como una prenda más; la talla se cambia en «Editar detalles».
+  La foto de la Ficha se ve entera (`object-contain`; la etiqueta salía ampliada). El aviso «N prendas
+  en la lavadora» del Armario abre `/armario/lavadora`, el mismo listado solo con lo que se lava (antes
+  llevaba a Ajustes); en el Armario siguen saliendo todas.
+- **Antes: 0.4.4** (18-11-2026): Nike con navegador, la tarjeta de debajo ya no cambia al
   llegar propuestas nuevas y «Ver más de <tienda>» / «Buscar más en <tienda>» con el filtro de una tienda.
 - **Antes: 0.4.3** (18-11-2026): las 20 tiendas, el catálogo completo de noche, la pila de
   tarjetas, la barra de progreso real y los colores apagados. Nada de eso probado antes en el Umbrel.

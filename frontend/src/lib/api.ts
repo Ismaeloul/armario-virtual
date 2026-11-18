@@ -37,6 +37,9 @@ export type Garment = GarmentFields & {
   photo_label: Photo | null;
   in_laundry: boolean;
   favorite: boolean;
+  /** Pedida en la tienda y aún sin llegar: no se propone ni se puede usar. */
+  on_order: boolean;
+  ordered_at: string | null;
   ai_provider: string | null;
   wear_count: number;
   last_worn_on: string | null;
@@ -402,15 +405,19 @@ export const api = {
     request<ShopLookupItem>(`/api/shop/items/${id}/color`, json("POST", { product_ref: productRef })),
   shopMatches: (id: number) => request<ShopMatches>(`/api/shop/items/${id}/matches`),
   shopRemove: (id: number) => request<void>(`/api/shop/items/${id}`, { method: "DELETE" }),
-  shopBought: (id: number, size: string | null) =>
-    request<{ garment_id: number; analyzed: boolean }>(`/api/shop/items/${id}/bought`, json("POST", { size })),
+  /** `ordered`: «La he pedido», entra en el armario como pendiente de llegar. */
+  shopBought: (id: number, size: string | null, ordered = false) =>
+    request<{ garment_id: number; analyzed: boolean }>(
+      `/api/shop/items/${id}/bought`,
+      json("POST", { size, ordered }),
+    ),
   today: () => request<Today>("/api/today"),
   todayNext: (action: "otra" | "pasar") => request<Today>("/api/today/next", json("POST", { action })),
   todayChoose: () => request<Today>("/api/today/choose", { method: "POST" }),
   todayUnchoose: () => request<Today>("/api/today/unchoose", { method: "POST" }),
   garments: () => request<Garment[]>("/api/garments"),
   garment: (id: number) => request<Garment>(`/api/garments/${id}`),
-  updateGarment: (id: number, changes: Partial<GarmentFields> & { favorite?: boolean; in_laundry?: boolean }) =>
+  updateGarment: (id: number, changes: Partial<GarmentFields> & { favorite?: boolean; in_laundry?: boolean; on_order?: boolean }) =>
     request<Garment>(`/api/garments/${id}`, json("PATCH", changes)),
   deleteGarment: (id: number) => request<void>(`/api/garments/${id}`, { method: "DELETE" }),
   wearGarment: (id: number) => request<Garment>(`/api/garments/${id}/wear`, json("POST", {})),

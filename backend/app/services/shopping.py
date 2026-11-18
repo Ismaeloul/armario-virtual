@@ -1042,8 +1042,13 @@ def _apply_detail(row: ShopItem, detail) -> None:
     row.composition = " ".join((detail.composition or "").split())[:COMPOSITION_MAX] or None
 
 
-def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) -> tuple[Garment, bool]:
+def buy(
+    db: Session, item: ShopItem, size: str | None, preferred_provider: str, ordered: bool = False
+) -> tuple[Garment, bool]:
     """Pasa el producto al armario con las fotos de la tienda. Devuelve la prenda y si la analizó la IA.
+
+    Con `ordered` la prenda entra como pedida (aún no ha llegado): Hoy y Gustos no la proponen hasta
+    que se marque como recibida.
 
     Es el único momento en que se usa la IA: el mismo análisis que al añadir una prenda a mano. Si falla,
     la prenda se crea igualmente con los campos estimados sin IA.
@@ -1102,6 +1107,8 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
         reference=store_reference(item),
         store_name=store_name[:40],
         store_url=item.url or None,
+        on_order=ordered,
+        ordered_at=now_utc() if ordered else None,
         photo_front=front,
         photo_back=back,
         photo_extra=extra,

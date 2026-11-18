@@ -67,6 +67,8 @@ def _to_out(g: Garment, stats: dict[int, tuple[int, date | None]]) -> GarmentOut
         in_laundry=g.in_laundry,
         laundry_since=g.laundry_since,
         favorite=g.favorite,
+        on_order=bool(g.on_order),
+        ordered_at=g.ordered_at,
         ai_provider=g.ai_provider,
         ai_model=g.ai_model,
         ai_confidence=g.ai_confidence,
@@ -320,9 +322,11 @@ def update_garment(garment_id: int, body: GarmentUpdate, db: Session = Depends(g
         garment.category = catalog.category_of(body.type)
     if "in_laundry" in changes and body.in_laundry is not None:
         garment.laundry_since = now_utc() if body.in_laundry else None
+    if "on_order" in changes and body.on_order is not None:
+        garment.ordered_at = (garment.ordered_at or now_utc()) if body.on_order else None
 
     not_nullable = {"name", "type", "color_primary", "pattern", "style", "season", "details", "notes",
-                    "colors_secondary", "favorite", "in_laundry", "hood"}
+                    "colors_secondary", "favorite", "in_laundry", "hood", "on_order"}
     for key, value in changes.items():
         if value is None and key in not_nullable:
             continue
@@ -347,6 +351,8 @@ def delete_garment(garment_id: int, db: Session = Depends(get_db)):
 def wear_garment(garment_id: int, body: WearIn | None = None, db: Session = Depends(get_db)):
     """Registra un uso (lo usará la Fase 2 para no repetir outfits)."""
     garment = _get_or_404(db, garment_id)
+    if garment.on_order:
+        raise HTTPException(409, "Esta prenda aún no ha llegado")
     db.add(WearLog(garment_id=garment.id, worn_on=(body.worn_on if body and body.worn_on else outfits.local_today())))
     db.commit()
     return _to_out(garment, _wear_stats(db, [garment.id]))

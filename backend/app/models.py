@@ -53,6 +53,10 @@ class Garment(Base):
     in_laundry: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     laundry_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     favorite: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Pedida en la tienda y aún sin llegar: está en el armario, pero no se propone ni se puede usar
+    # hasta que se marque como recibida. (None en las prendas anteriores a la columna = no.)
+    on_order: Mapped[bool | None] = mapped_column(Boolean, default=False, nullable=True)
+    ordered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     ai_provider: Mapped[str | None] = mapped_column(String(20), nullable=True)
     ai_model: Mapped[str | None] = mapped_column(String(60), nullable=True)  # modelo y esfuerzo usados

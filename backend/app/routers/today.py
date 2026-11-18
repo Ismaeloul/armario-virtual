@@ -92,16 +92,20 @@ def _current(db: Session, today: date) -> Outfit | None:
 
 
 def _still_valid(db: Session, outfit: Outfit) -> bool:
-    """Una propuesta deja de valer si alguna prenda se borró o se metió en la lavadora."""
+    """Una propuesta deja de valer si alguna prenda se borró, se metió en la lavadora o resulta que
+    aún no ha llegado."""
     garments = list(db.scalars(select(Garment).where(Garment.id.in_(outfit.garment_ids))))
-    return len(garments) == len(outfit.garment_ids) and not any(g.in_laundry for g in garments)
+    return len(garments) == len(outfit.garment_ids) and not any(g.in_laundry or g.on_order for g in garments)
 
 
 def _generate(
     db: Session, today: date, forecast: weather.Weather | None, replaced: Outfit | None = None
 ) -> tuple[Outfit | None, list[str], list[str]]:
     """Propone y guarda un outfit. `replaced` es la propuesta que el usuario acaba de pedir cambiar."""
-    available = list(db.scalars(select(Garment).where(Garment.in_laundry.is_(False))))
+    # Ni lo que está en la lavadora ni lo pedido que aún no ha llegado.
+    available = list(
+        db.scalars(select(Garment).where(Garment.in_laundry.is_(False), Garment.on_order.is_not(True)))
+    )
     categories = {g.category for g in available}
     missing = [c for c in ("parte_superior", "parte_inferior") if c not in categories]
     if missing:
@@ -162,7 +166,7 @@ def _response(db: Session, today: date, forecast, city: str, outfit: Outfit | No
             notes.append("sin_calzado")
         has_layer = db.scalar(
             select(func.count()).select_from(Garment).where(
-                Garment.category == "capa_exterior", Garment.in_laundry.is_(False)
+                Garment.category == "capa_exterior", Garment.in_laundry.is_(False), Garment.on_order.is_not(True)
             )
         )
         if "capa_exterior" not in categories and not has_layer and outfits.wants_layer(

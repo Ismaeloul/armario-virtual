@@ -114,7 +114,7 @@ export default function FichaPrenda() {
 
   // Cambios inmediatos (favorita, lavadora, uso): se pinta ya y se confirma con el servidor.
   // Si falla, se deshacen solo las claves cambiadas, sin pisar otros cambios hechos mientras tanto.
-  const patch = (changes: { favorite?: boolean; in_laundry?: boolean }) => {
+  const patch = (changes: { favorite?: boolean; in_laundry?: boolean; on_order?: boolean }) => {
     const previous: typeof changes = {};
     for (const key of Object.keys(changes) as (keyof typeof changes)[]) previous[key] = garment[key];
     setPatchError(false);
@@ -171,7 +171,7 @@ export default function FichaPrenda() {
         <div className="flex flex-col gap-4">
           {/* Foto: delante / detrás */}
           <div className="relative overflow-hidden rounded-xl border border-line bg-card-2">
-            <img src={mediaUrl(photo.url)} alt={garment.name} className="aspect-[3/4] w-full object-cover" />
+            <img src={mediaUrl(photo.url)} alt={garment.name} className="aspect-[3/4] w-full object-contain" />
             <RotateButton
               className="absolute right-3 top-3"
               disabled={rotating}
@@ -187,12 +187,16 @@ export default function FichaPrenda() {
               }}
             />
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-line bg-card/90 px-2.5 py-1 backdrop-blur-md">
-              {garment.in_laundry ? (
+              {garment.on_order ? (
+                <Icon name="package_box" size={13} className="text-primary" />
+              ) : garment.in_laundry ? (
                 <Icon name="laundry" size={13} className="text-primary" />
               ) : (
                 <span className="h-2 w-2 rounded-full bg-primary" />
               )}
-              <span className="label-caps">{garment.in_laundry ? t.ficha.enLavadora : t.ficha.disponible}</span>
+              <span className="label-caps">
+                {garment.on_order ? t.ficha.pedida : garment.in_laundry ? t.ficha.enLavadora : t.ficha.disponible}
+              </span>
             </div>
             {views.length > 1 && (
               <div className="absolute bottom-3 left-3 right-3 flex justify-center">
@@ -240,8 +244,34 @@ export default function FichaPrenda() {
             {garment.notes && <p className="mt-1 text-sm text-text-3">{garment.notes}</p>}
           </div>
 
-          {/* Lavadora */}
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-line bg-card-2 p-4">
+          {/* Pedida y aún sin llegar: en vez de la lavadora, el aviso y «Ya me ha llegado». */}
+          {garment.on_order && (
+            <div className="flex flex-col gap-3 rounded-xl border border-line bg-card-2 p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-chip text-on-chip">
+                  <Icon name="package_box" size={22} />
+                </span>
+                <div>
+                  <p className="font-display text-lg font-semibold leading-6">{t.ficha.pedidaTitulo}</p>
+                  <p className="mt-0.5 text-xs text-text-2">
+                    {garment.ordered_at && `${t.ficha.pedidaDesde(
+                        new Date(garment.ordered_at).toLocaleDateString("es-ES", { day: "numeric", month: "long" }),
+                      )} `}
+                    {t.ficha.pedidaTexto}
+                  </p>
+                </div>
+              </div>
+              <PrimaryButton onClick={() => patch({ on_order: false })}>
+                <Icon name="check_circle" size={20} />
+                {t.ficha.recibida}
+              </PrimaryButton>
+            </div>
+          )}
+          <div
+            className={`flex items-center justify-between gap-4 rounded-xl border border-line bg-card-2 p-4 ${
+              garment.on_order ? "hidden" : ""
+            }`}
+          >
             <div className="flex items-start gap-3">
               <span
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
@@ -350,9 +380,9 @@ export default function FichaPrenda() {
               type="button"
               disabled={wearing || worn}
               onClick={wear}
-              className={`flex h-11 items-center justify-center gap-1.5 rounded-xl border border-line text-xs font-medium active:scale-[0.98] ${
-                worn ? "bg-chip text-on-chip" : "bg-control disabled:opacity-40"
-              }`}
+              className={`h-11 items-center justify-center gap-1.5 rounded-xl border border-line text-xs font-medium active:scale-[0.98] ${
+                garment.on_order ? "hidden" : "flex"
+              } ${worn ? "bg-chip text-on-chip" : "bg-control disabled:opacity-40"}`}
             >
               <Icon name="check_circle" size={18} />
               {worn ? t.ficha.registrado : t.ficha.ponerHoy}

@@ -2017,11 +2017,12 @@ function Liked({ onChanged }: { onChanged: () => void }) {
     setBuyError(null);
   };
 
-  const buy = (item: ShopItem) => {
+  // `ordered`: la ha pedido y aún no ha llegado (entra en el armario como «Pedida»).
+  const buy = (item: ShopItem, ordered: boolean) => {
     setBuyBusy(true);
     setBuyError(null);
     api
-      .shopBought(item.id, size?.trim() || null)
+      .shopBought(item.id, size?.trim() || null, ordered)
       .then((result) => navigate(`/prenda/${result.garment_id}`))
       .catch((e) => {
         setBuyError(e instanceof ApiError && e.status < 500 ? e.message : t.compras.gustados.errorComprar);
@@ -2131,9 +2132,20 @@ function Liked({ onChanged }: { onChanged: () => void }) {
                       {buyError}
                     </p>
                   )}
-                  <PrimaryButton disabled={buyBusy || (available.length > 0 && !size)} onClick={() => buy(item)}>
-                    {buyBusy ? t.compras.gustados.analizando : t.compras.gustados.confirmar}
+                  {!buyBusy && <p className="text-xs text-text-2">{t.compras.gustados.pedidaTexto}</p>}
+                  <PrimaryButton
+                    disabled={buyBusy || (available.length > 0 && !size)}
+                    onClick={() => buy(item, true)}
+                  >
+                    {!buyBusy && <Icon name="package_box" size={18} />}
+                    {buyBusy ? t.compras.gustados.analizando : t.compras.gustados.pedida}
                   </PrimaryButton>
+                  {!buyBusy && (
+                    <SecondaryButton disabled={available.length > 0 && !size} onClick={() => buy(item, false)}>
+                      <Icon name="check_circle" size={18} />
+                      {t.compras.gustados.recibida}
+                    </SecondaryButton>
+                  )}
                   {!buyBusy && (
                     <button
                       type="button"

@@ -31,6 +31,7 @@ import favorite from "@tabler/icons/outline/heart.svg?raw";
 import history from "@tabler/icons/outline/history.svg?raw";
 import location from "@tabler/icons/outline/map-pin.svg?raw";
 import palette from "@tabler/icons/outline/palette.svg?raw";
+import package_box from "@tabler/icons/outline/package.svg?raw";
 import edit from "@tabler/icons/outline/pencil.svg?raw";
 import add from "@tabler/icons/outline/plus.svg?raw";
 import refresh from "@tabler/icons/outline/refresh.svg?raw";
@@ -93,6 +94,7 @@ const ICONS = {
   location,
   notifications,
   open_in_new,
+  package_box,
   palette,
   photo_camera,
   rain,

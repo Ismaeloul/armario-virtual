@@ -93,6 +93,7 @@ class GarmentUpdate(BaseModel):
     reference: str | None = Field(default=None, max_length=40)
     favorite: bool | None = None
     in_laundry: bool | None = None
+    on_order: bool | None = None  # False = «Ya me ha llegado»
 
 
 class Photo(BaseModel):
@@ -131,6 +132,8 @@ class GarmentOut(BaseModel):
     in_laundry: bool
     laundry_since: datetime | None
     favorite: bool
+    on_order: bool = False  # pedida, pendiente de llegar: no se propone
+    ordered_at: datetime | None = None
     ai_provider: str | None
     ai_model: str | None = None
     ai_confidence: float | None

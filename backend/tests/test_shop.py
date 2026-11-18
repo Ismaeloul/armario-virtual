@@ -807,6 +807,7 @@ def test_la_he_comprado_analiza_las_fotos_y_crea_la_prenda(client, tienda, analy
     assert codex.calls == 1 and len(codex.images) == 2  # las dos fotos guardadas de la tienda
 
     garment = client.get(f"/api/garments/{bought.json()['garment_id']}").json()
+    assert garment["on_order"] is False  # «Ya la tengo en casa»: disponible desde ya
     assert garment["name"] == "Bomber negra" and garment["ai_provider"] == "codex"  # lo que dijo la IA
     assert (garment["brand"], garment["size"]) == ("Zara", "M")
     assert garment["photo_front"]["id"] == item["photos"][0]["id"]  # las mismas fotos, ahora de la prenda
@@ -825,6 +826,23 @@ def test_la_he_comprado_analiza_las_fotos_y_crea_la_prenda(client, tienda, analy
     # Al borrar la prenda se van sus fotos, como con cualquier otra.
     assert client.delete(f"/api/garments/{garment['id']}").status_code == 204
     assert not storage.exists(garment["photo_front"]["id"])
+
+
+def test_la_he_pedido_entra_en_el_armario_como_pendiente_de_llegar(client, tienda, analyzers):
+    tienda(camisas=[product("a", "sobrecamisa", "negro")])
+    _refresh()
+    item = client.get("/api/shop/next").json()["item"]
+    client.post(f"/api/shop/items/{item['id']}/like")
+    analyzers(FakeAnalyzer("codex", json.dumps(VALID_DRAFT)), FakeAnalyzer("claude"))
+
+    bought = client.post(f"/api/shop/items/{item['id']}/bought", json={"size": "M", "ordered": True})
+    assert bought.status_code == 200
+    garment = client.get(f"/api/garments/{bought.json()['garment_id']}").json()
+    assert garment["on_order"] is True and garment["ordered_at"] and garment["size"] == "M"
+    assert _items()[0].status == "comprado" and client.get("/api/shop/liked").json() == []
+
+    llegada = client.patch(f"/api/garments/{garment['id']}", json={"on_order": False}).json()
+    assert llegada["on_order"] is False and llegada["ordered_at"] is None
 
 
 def test_la_he_comprado_con_la_ia_caida_crea_la_prenda_con_lo_estimado(client, tienda, analyzers):

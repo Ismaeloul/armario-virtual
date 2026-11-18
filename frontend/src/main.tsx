@@ -25,6 +25,7 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route path="/" element={<Hoy />} />
         <Route path="/armario" element={<Armario />} />
+        <Route path="/armario/lavadora" element={<Armario laundryOnly />} />
         <Route path="/nueva" element={<AnadirPrenda />} />
         <Route path="/prenda/:id" element={<FichaPrenda />} />
         <Route path="/prenda/:id/editar" element={<EditarPrenda />} />

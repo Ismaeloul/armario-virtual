@@ -153,6 +153,8 @@ def _pick(garments: list[Garment], rated: set[frozenset[int]], learned: taste.Ta
 
 
 def _state(db: Session) -> TasteOut:
+    # Lo pedido que aún no ha llegado también se valora (decisión del usuario): así se entrena ya con
+    # la ropa que está por llegar. Solo Hoy la deja fuera.
     garments = list(db.scalars(select(Garment)))
     ratings = [r for r in db.scalars(select(Rating)) if r.source == "gustos"]
     rated_sets = {frozenset(r.garment_ids) for r in ratings}

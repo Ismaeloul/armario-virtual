@@ -68,12 +68,21 @@ export function PrimaryButton({
   );
 }
 
-export function SecondaryButton({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
+export function SecondaryButton({
+  children,
+  disabled,
+  onClick,
+}: {
+  children: ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
-      className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-line bg-control text-xs font-medium text-text transition-transform active:scale-[0.98]"
+      className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-line bg-control text-xs font-medium text-text transition-transform active:scale-[0.98] disabled:opacity-40"
     >
       {children}
     </button>

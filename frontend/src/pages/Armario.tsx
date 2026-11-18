@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Segmented } from "../components/Controls";
 import { Icon } from "../components/Icon";
-import { BottomNav, MainHeader, Screen } from "../components/Layout";
+import { BackHeader, BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Catalog, type Garment } from "../lib/api";
 
-export default function Armario() {
-  const [garments, setGarments] = useState<Garment[] | null>(null);
+/** El catálogo. Con `laundryOnly`, el mismo listado pero solo con lo que está en la lavadora. */
+export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean }) {
+  const [all, setGarments] = useState<Garment[] | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [failed, setFailed] = useState(false);
   const [season, setSeason] = useState("todas");
@@ -24,6 +25,11 @@ export default function Armario() {
   };
   useEffect(load, []);
 
+  const garments = useMemo(
+    () => (all && laundryOnly ? all.filter((g) => g.in_laundry) : all),
+    [all, laundryOnly],
+  );
+
   const visible = useMemo(
     () =>
       (garments ?? []).filter(
@@ -37,7 +43,7 @@ export default function Armario() {
 
   return (
     <>
-      <MainHeader title={t.app} brand />
+      {laundryOnly ? <BackHeader title={t.armario.lavadora.cabecera} /> : <MainHeader title={t.app} brand />}
       <Screen>
         {failed && (
           <div className="card mt-6 flex flex-col items-center gap-3 p-6 text-center">
@@ -51,7 +57,11 @@ export default function Armario() {
 
         {!failed && garments === null && <p className="mt-10 text-center text-sm text-text-3">{t.comun.cargando}</p>}
 
-        {!failed && garments && catalog && garments.length === 0 && (
+        {!failed && garments && catalog && garments.length === 0 && laundryOnly && (
+          <p className="mt-10 text-center text-sm text-text-3">{t.armario.lavadora.vacio}</p>
+        )}
+
+        {!failed && garments && catalog && garments.length === 0 && !laundryOnly && (
           <div className="card mt-10 flex flex-col items-center gap-3 p-8 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-card-2 text-primary">
               <Icon name="checkroom" size={28} />
@@ -71,11 +81,15 @@ export default function Armario() {
         {!failed && garments && catalog && garments.length > 0 && (
           <>
             <section>
-              <span className="label-caps text-text-2">{t.armario.etiqueta}</span>
+              <span className="label-caps text-text-2">
+                {laundryOnly ? t.armario.lavadora.etiqueta : t.armario.etiqueta}
+              </span>
               <h2 className="mt-0.5 font-display text-[32px] font-semibold leading-[38px] tracking-tight">
-                {t.armario.titulo}
+                {laundryOnly ? t.armario.lavadora.titulo : t.armario.titulo}
               </h2>
-              <p className="mt-0.5 text-sm text-text-2">{t.armario.prendas(garments.length)}</p>
+              <p className="mt-0.5 text-sm text-text-2">
+                {laundryOnly ? t.armario.enLavadoTexto : t.armario.prendas(garments.length)}
+              </p>
             </section>
 
             <div className="mt-4">
@@ -109,8 +123,8 @@ export default function Armario() {
               )}
             </div>
 
-            {laundry > 0 && (
-              <Link to="/ajustes" className="mt-4 flex items-center gap-2.5 rounded-xl border border-line bg-chip/40 p-3">
+            {laundry > 0 && !laundryOnly && (
+              <Link to="/armario/lavadora" className="mt-4 flex items-center gap-2.5 rounded-xl border border-line bg-chip/40 p-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-chip text-on-chip">
                   <Icon name="laundry" size={18} />
                 </div>
@@ -137,7 +151,12 @@ export default function Armario() {
                         loading="lazy"
                         className="h-full w-full object-cover"
                       />
-                      {g.in_laundry && (
+                      {g.on_order ? (
+                        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full border border-line bg-card/90 px-2 py-0.5 backdrop-blur-md">
+                          <Icon name="package_box" size={13} className="text-primary" />
+                          <span className="label-caps tracking-tight">{t.armario.pedida}</span>
+                        </div>
+                      ) : g.in_laundry && (
                         <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full border border-line bg-card/90 px-2 py-0.5 backdrop-blur-md">
                           <Icon name="laundry" size={13} className="text-primary" />
                           <span className="label-caps tracking-tight">{t.armario.lavando}</span>
@@ -165,7 +184,7 @@ export default function Armario() {
       </Screen>
 
       {/* Botón flotante "+": solo en Armario, encima de la barra inferior. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md">
+      <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md ${laundryOnly ? "hidden" : ""}`}>
         <Link
           to="/nueva"
           aria-label={t.armario.anadir}

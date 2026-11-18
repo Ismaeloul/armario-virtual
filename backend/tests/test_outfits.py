@@ -279,6 +279,27 @@ def test_no_propone_lo_que_esta_en_la_lavadora(client, sin_tiempo, photo_bytes):
     assert camisa["id"] not in [g["id"] for g in client.get("/api/today").json()["outfit"]["garments"]]
 
 
+def test_no_propone_lo_pedido_hasta_que_llega(client, sin_tiempo, photo_bytes):
+    prendas = _armario(client, photo_bytes)
+    camiseta = prendas[0]
+    pedida = client.patch(f"/api/garments/{camiseta['id']}", json={"on_order": True}).json()
+    assert pedida["on_order"] is True and pedida["ordered_at"]
+    for _ in range(4):
+        hoy = client.post("/api/today/next", json={"action": "otra"}).json()
+        assert camiseta["id"] not in [g["id"] for g in hoy["outfit"]["garments"]]
+    # En Gustos sí cuenta (se entrena con lo que está por llegar), pero no se puede apuntar un uso.
+    vistas = set()
+    for _ in range(40):
+        vistas |= {g["id"] for g in client.get("/api/taste/next").json()["combo"]["garments"]}
+    assert camiseta["id"] in vistas
+    assert client.post(f"/api/garments/{camiseta['id']}/wear", json={}).status_code == 409
+
+    # «Ya me ha llegado»: vuelve a ser una prenda más.
+    recibida = client.patch(f"/api/garments/{camiseta['id']}", json={"on_order": False}).json()
+    assert recibida["on_order"] is False and recibida["ordered_at"] is None
+    assert client.post(f"/api/garments/{camiseta['id']}/wear", json={}).status_code == 200
+
+
 def test_sin_dato_del_tiempo_propone_igual(client, sin_tiempo, photo_bytes):
     sin_tiempo(None)
     _armario(client, photo_bytes)
