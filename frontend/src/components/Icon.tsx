@@ -6,21 +6,25 @@
 import tune from "@tabler/icons/outline/adjustments-horizontal.svg?raw";
 import undo from "@tabler/icons/outline/arrow-back-up.svg?raw";
 import error from "@tabler/icons/outline/alert-circle.svg?raw";
+import barcode from "@tabler/icons/outline/barcode.svg?raw";
 import notifications from "@tabler/icons/outline/bell.svg?raw";
 import bookmark_add from "@tabler/icons/outline/bookmark.svg?raw";
 import store from "@tabler/icons/outline/building-store.svg?raw";
 import calendar from "@tabler/icons/outline/calendar.svg?raw";
 import add_a_photo from "@tabler/icons/outline/camera-plus.svg?raw";
 import photo_camera from "@tabler/icons/outline/camera.svg?raw";
+import check from "@tabler/icons/outline/check.svg?raw";
 import done_all from "@tabler/icons/outline/checks.svg?raw";
 import arrow_back from "@tabler/icons/outline/chevron-left.svg?raw";
 import chevron_right from "@tabler/icons/outline/chevron-right.svg?raw";
+import expand_less from "@tabler/icons/outline/chevron-up.svg?raw";
 import check_circle from "@tabler/icons/outline/circle-check.svg?raw";
 import schedule from "@tabler/icons/outline/clock.svg?raw";
 import rain from "@tabler/icons/outline/cloud-rain.svg?raw";
 import cloud from "@tabler/icons/outline/cloud.svg?raw";
 import style from "@tabler/icons/outline/color-swatch.svg?raw";
 import contrast from "@tabler/icons/outline/contrast.svg?raw";
+import content_copy from "@tabler/icons/outline/copy.svg?raw";
 import open_in_new from "@tabler/icons/outline/external-link.svg?raw";
 import weather from "@tabler/icons/outline/haze.svg?raw"; // Tabler no tiene «sol con nube»
 import favorite from "@tabler/icons/outline/heart.svg?raw";
@@ -63,21 +67,25 @@ const ICONS = {
   add_a_photo,
   arrow_back,
   auto_awesome,
+  barcode,
   bookmark_add,
   calendar,
   cart,
   cart_fill,
+  check,
   check_circle,
   checkroom,
   checkroom_fill,
   chevron_right,
   close,
   cloud,
+  content_copy,
   contrast,
   delete_icon,
   done_all,
   edit,
   error,
+  expand_less,
   favorite,
   favorite_fill,
   history,

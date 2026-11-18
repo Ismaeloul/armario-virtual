@@ -21,11 +21,16 @@ export type GarmentFields = {
   brand: string | null;
   size: string | null;
   notes: string;
+  /** La referencia de la prenda en su tienda («3918/300/800»). La pone Compras o se escribe a mano. */
+  reference: string | null;
 };
 
 export type Garment = GarmentFields & {
   id: number;
   category: string;
+  /** De qué tienda vino y su página, si entró por Compras. */
+  store_name: string | null;
+  store_url: string | null;
   photo_front: Photo;
   photo_back: Photo | null;
   photo_extra: Photo | null;
@@ -128,12 +133,17 @@ export type Taste = {
 
 export type ShopReason = { text: string; kind: "pro" | "contra" };
 export type ShopSize = { name: string; in_stock: boolean };
+/** Uno de los colores en los que existe un producto. Cada color es un producto aparte. */
+export type ShopColor = { product_ref: string; name: string; hex: string; current: boolean };
 
 /** Un producto de una tienda propuesto en Compras. */
 export type ShopItem = {
   id: number;
   store: string;
   store_name: string;
+  product_ref: string;
+  /** La referencia de la tienda, legible («3918/300/800»). */
+  reference: string | null;
   name: string;
   price_cents: number;
   url: string;
@@ -149,6 +159,20 @@ export type ShopItem = {
   liked_at: string | null;
   expires_at: string | null;
   expires_soon: boolean;
+  /** De qué está hecha, si la tienda lo dice. */
+  composition: string | null;
+  /** Los colores entre los que se puede elegir (vacío si solo hay uno). null = aún no se sabe (shopColors). */
+  colors: ShopColor[] | null;
+};
+
+/** «Combina con…»: las prendas del armario que mejor van con un producto, por parte del cuerpo. */
+export type ShopMatches = {
+  /** Prendas que hay en el armario (0 = vacío). */
+  wardrobe: number;
+  groups: {
+    category: string;
+    garments: { id: number; name: string; type: string; photo: Photo; affinity: number }[];
+  }[];
 };
 
 /** Un resultado del buscador por referencia: el producto y si ya estaba guardado. */
@@ -278,6 +302,12 @@ export const api = {
   shopLiked: () => request<ShopItem[]>("/api/shop/liked"),
   /** El buscador: una referencia, un enlace de producto o texto. Tarda unos segundos (habla con la tienda). */
   shopLookup: (query: string) => request<ShopLookupItem[]>("/api/shop/lookup", json("POST", { query })),
+  /** Rellena los colores de un item que aún no los sabe (pregunta a la tienda una sola vez). */
+  shopColors: (id: number) => request<ShopLookupItem>(`/api/shop/items/${id}/colors`, { method: "POST" }),
+  /** Elegir otro color: devuelve el item de ese color. Si no se tenía, tarda unos segundos (lo trae de la tienda). */
+  shopColor: (id: number, productRef: string) =>
+    request<ShopLookupItem>(`/api/shop/items/${id}/color`, json("POST", { product_ref: productRef })),
+  shopMatches: (id: number) => request<ShopMatches>(`/api/shop/items/${id}/matches`),
   shopRemove: (id: number) => request<void>(`/api/shop/items/${id}`, { method: "DELETE" }),
   shopBought: (id: number, size: string | null) =>
     request<{ garment_id: number; analyzed: boolean }>(`/api/shop/items/${id}/bought`, json("POST", { size })),

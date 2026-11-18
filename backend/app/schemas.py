@@ -49,8 +49,9 @@ class GarmentFields(BaseModel):
     brand: str | None = Field(default=None, max_length=80)
     size: str | None = Field(default=None, max_length=20)
     notes: str = Field(default="", max_length=500)
+    reference: str | None = Field(default=None, max_length=40)  # la de la tienda; la IA no la rellena
 
-    _strip = field_validator("brand", "size", mode="before")(_clean_optional)
+    _strip = field_validator("brand", "size", "reference", mode="before")(_clean_optional)
 
 
 class GarmentDraft(GarmentFields):
@@ -89,6 +90,7 @@ class GarmentUpdate(BaseModel):
     brand: str | None = Field(default=None, max_length=80)
     size: str | None = Field(default=None, max_length=20)
     notes: str | None = Field(default=None, max_length=500)
+    reference: str | None = Field(default=None, max_length=40)
     favorite: bool | None = None
     in_laundry: bool | None = None
 
@@ -119,6 +121,9 @@ class GarmentOut(BaseModel):
     brand: str | None
     size: str | None
     notes: str
+    reference: str | None = None
+    store_name: str | None = None  # de qué tienda vino, si entró por Compras
+    store_url: str | None = None
     photo_front: Photo
     photo_back: Photo | None
     photo_extra: Photo | None

@@ -31,6 +31,11 @@ class Garment(Base):
     brand: Mapped[str | None] = mapped_column(String(80), nullable=True)
     size: Mapped[str | None] = mapped_column(String(20), nullable=True)
     notes: Mapped[str] = mapped_column(Text, default="")
+    # La referencia de la prenda en su tienda («3918/300/800»). La pone Compras al comprarla y también
+    # se puede escribir a mano. La tienda y el enlace solo los pone Compras.
+    reference: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    store_name: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    store_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Identificadores de foto (ver services/storage.py). Las *_original guardan el archivo
     # tal como se subió, para cuando se quite el fondo.
@@ -143,7 +148,8 @@ class ShopItem(Base):
     score: Mapped[float] = mapped_column(Float, default=0.0)
     reasons: Mapped[list] = mapped_column(JSON, default=list)  # [{"text": …, "kind": "pro" | "contra"}]
     # candidato (en el catálogo, sin enseñar) · nuevo · gustado · descartado · comprado · caducado ·
-    # buscado (traído por el buscador de referencias y aún sin guardar: no sale en Descubrir)
+    # buscado (traído por el buscador de referencias y aún sin guardar: no sale en Descubrir) ·
+    # variante (otro color de una propuesta, apartado al elegir color en Descubrir: ni sale ni cuenta)
     status: Mapped[str] = mapped_column(String(20), index=True)
     batch: Mapped[date] = mapped_column(Date, index=True)  # la tanda en la que llegó
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
@@ -160,6 +166,10 @@ class ShopItem(Base):
     sizes: Mapped[list] = mapped_column(JSON, default=list)  # [{"name": "M", "in_stock": true}]
     garment_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # si se compró
     ai_draft: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # lo que dijo la IA al comprarla
+    # Los colores en los que existe (este incluido), como los da el conector (ShopDetail.siblings).
+    # None = todavía no se sabe: se rellena la próxima vez que se pida su ficha.
+    siblings: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    composition: Mapped[str | None] = mapped_column(Text, nullable=True)  # de qué está hecha, si la tienda lo dice
 
 
 class Setting(Base):

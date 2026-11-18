@@ -235,6 +235,84 @@ def photo_url(media: dict) -> str:
     return f"{MEDIA}/assets/public/{path}/{media['name']}.jpg?w={PHOTO_WIDTH}"
 
 
+def reference(store_data: dict) -> str | None:
+    """«3918/300/800»: modelo, calidad y color, como en la etiqueta y en la web. Sin el color si no
+    se conoce (o no es uno de los de tres cifras)."""
+    seo_id = str(store_data.get("seo_id") or "")
+    if not seo_id.isdigit() or len(seo_id) < 7:
+        return None
+    parts = [seo_id[:-3].lstrip("0") or "0", seo_id[-3:]]
+    color_id = str(store_data.get("color_id") or "")
+    if re.fullmatch(r"\d{3}", color_id):
+        parts.append(color_id)
+    return "/".join(parts)
+
+
+def _product_photos(color: dict) -> list[str]:
+    """Las fotos de producto (sin modelo) de un color, en orden. Sin la -e1 no hay ninguna que enseñar."""
+    numbered: dict[int, dict] = {}
+    for media in color.get("xmedia") or []:
+        match = _PRODUCT_PHOTO.search(media.get("name") or "")
+        if match and media.get("type", "image") == "image" and media.get("path"):
+            numbered.setdefault(int(match.group(1)), media)
+    return [photo_url(numbered[n]) for n in sorted(numbered)][:MAX_PHOTOS] if 1 in numbered else []
+
+
+def _hex(color: dict) -> str | None:
+    code = color.get("hexCode")
+    return code.lower() if isinstance(code, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", code) else None
+
+
+def parse_siblings(data: dict, store_data: dict) -> list[dict]:
+    """Todos los colores de la ficha que tienen foto de producto, con lo necesario para pedir cada uno."""
+    product = data.get("product") or {}
+    seo = product.get("seo") or {}
+    seo_id = str(store_data.get("seo_id") or seo.get("seoProductId") or "")
+    keyword = store_data.get("keyword") or "-".join(str(seo.get("keyword") or "").split())
+    siblings: list[dict] = []
+    for color in (product.get("detail") or {}).get("colors") or []:
+        if not isinstance(color, dict) or not _product_photos(color):
+            continue
+        discern_id = color.get("productId") or store_data.get("discern_id")
+        color_id = str(color.get("id") or discern_id)
+        ref = f"zara:{seo_id}-{color_id}"
+        if not seo_id or not keyword or any(other["product_ref"] == ref for other in siblings):
+            continue
+        siblings.append({
+            "product_ref": ref,
+            "name": (color.get("name") or "").strip(),
+            "hex": _hex(color),
+            "price_cents": color.get("price") if isinstance(color.get("price"), int) else None,
+            "url": product_url(keyword, seo_id, discern_id),
+            "store_data": {"keyword": keyword, "seo_id": seo_id, "discern_id": discern_id, "color_id": color_id},
+        })
+    return siblings
+
+
+def _full_composition(data: dict) -> str:
+    """La composición entera, por partes: «Exterior: 55% poliéster, 45% lana · Forro: 100% poliéster»."""
+    composition = ((data.get("product") or {}).get("detail") or {}).get("detailedComposition") or {}
+    parts: list[str] = []
+    for part in composition.get("parts") or []:
+        if not isinstance(part, dict):
+            continue
+        components: list[str] = []
+        # Algunas partes traen los tejidos dentro de «areas» (el cuerpo y las mangas, por ejemplo).
+        groups = [part] + [area for area in part.get("areas") or [] if isinstance(area, dict)]
+        for group in groups:
+            for component in group.get("components") or []:
+                if not isinstance(component, dict):
+                    continue
+                material = str(component.get("material") or "").strip().lower()
+                text = f"{str(component.get('percentage') or '').strip()} {material}".strip()
+                if material and text not in components:
+                    components.append(text)
+        if components:
+            label = sentence_case(str(part.get("description") or "").strip())
+            parts.append(f"{label}: {', '.join(components)}" if label else ", ".join(components))
+    return " · ".join(parts)[:300]
+
+
 def _composition(data: dict) -> str:
     """Los tejidos que son al menos la mitad de la prenda («100% lino»): la descripción no siempre los
     nombra, y el lino o la lana dicen de qué temporada es."""
@@ -258,13 +336,8 @@ def parse_detail(data: dict, store_data: dict) -> ShopDetail | None:
         (c for c in colors if str(c.get("productId")) == str(store_data.get("discern_id"))),
         next((c for c in colors if str(c.get("id")) == str(store_data.get("color_id"))), colors[0]),
     )
-    numbered: dict[int, dict] = {}
-    for media in color.get("xmedia") or []:
-        match = _PRODUCT_PHOTO.search(media.get("name") or "")
-        if match and media.get("type", "image") == "image" and media.get("path"):
-            numbered.setdefault(int(match.group(1)), media)
     # Sin la foto -e1 no hay foto de producto que enseñar: quien llama lo descarta.
-    photos = [photo_url(numbered[n]) for n in sorted(numbered)][:MAX_PHOTOS] if 1 in numbered else []
+    photos = _product_photos(color)
 
     sizes, names = [], set()
     for size in color.get("sizes") or []:
@@ -273,15 +346,16 @@ def parse_detail(data: dict, store_data: dict) -> ShopDetail | None:
             names.add(size_name)
             sizes.append({"name": size_name, "in_stock": size.get("availability") in _AVAILABLE})
     price = color.get("price")
-    hex_code = color.get("hexCode")
-    seo = (data.get("product") or {}).get("seo") or {}
+    seo =(data.get("product") or {}).get("seo") or {}
     description = (color.get("description") or color.get("rawDescription") or seo.get("description") or "").strip()
     return ShopDetail(
         price_cents=price if isinstance(price, int) and price > 0 else None,
         sizes=sizes,
         photo_urls=photos,
         description=" ".join(part for part in (description, _composition(data)) if part),
-        color_hex=hex_code.lower() if isinstance(hex_code, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", hex_code) else None,
+        color_hex=_hex(color),
+        composition=_full_composition(data),
+        siblings=parse_siblings(data, store_data),
     )
 
 
@@ -404,6 +478,9 @@ class ZaraConnector:
         self._pages = {k: v for k, v in self._pages.items() if now - v[0] < PAGE_CACHE_SECONDS}
         self._pages[wanted.seo_id] = (now, data)
         return products
+
+    def reference(self, store_data: dict) -> str | None:
+        return reference(store_data)
 
     def detail(self, store_data: dict) -> ShopDetail | None:
         cached = self._pages.get(str(store_data.get("seo_id")))

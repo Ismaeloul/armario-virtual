@@ -52,6 +52,7 @@ class FakeConnector:
         self.details: dict[str, ShopDetail] = {}
         self.calls: list[tuple[str, str]] = []
         self.found: dict[str, list[ShopProduct] | Exception] = {}  # lo que da el buscador con cada texto
+        self.family: dict[str, list[dict]] = {}  # producto -> los colores en los que existe (ver `_colores`)
 
     def list_category(self, slug):
         self.calls.append(("lista", slug))
@@ -70,7 +71,11 @@ class FakeConnector:
             photo_urls=[f"https://fotos.test/{ref}-e1.jpg", f"https://fotos.test/{ref}-e2.jpg"],
             description="Manga larga.",
             color_hex="#101010",
+            siblings=self.family.get(ref),
         )
+
+    def reference(self, store_data):
+        return store_data.get("reference")
 
     def download(self, url):
         self.calls.append(("foto", url))
@@ -1549,3 +1554,342 @@ def test_la_columna_del_buscador_se_anade_a_una_base_de_datos_anterior():
         database.engine = original
     with old.begin() as conn:
         assert "prev_status" in {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(shop_items)")}
+
+
+# ---------- Los datos de la prenda, «Combina con…» y los colores
+
+
+def _colores(connector: FakeConnector, *colores: tuple[str, str, str | None]) -> None:
+    """Dice a la tienda falsa que esos productos son el mismo en varios colores: (ref, nombre, tono)."""
+    siblings = [
+        {"product_ref": f"zara:{ref}", "name": name, "hex": tone, "url": f"https://tienda.test/{ref}",
+         "store_data": {"ref": ref}}
+        for ref, name, tone in colores
+    ]
+    for ref, _name, _tone in colores:
+        connector.family[ref] = siblings
+
+
+def test_la_ficha_de_zara_da_la_referencia_los_colores_con_foto_y_la_composicion():
+    data = _fixture("zara_producto.json")
+    negro = zara.parse_product_page(data, zara.ZaraQuery(seo_id="03918300", color_id="800"), 12)[0]
+    # La referencia, como en la etiqueta: modelo/calidad y, si se conoce, el color.
+    assert zara.reference(negro.store_data) == "3918/300/800"
+    assert zara.reference({"seo_id": "03918300"}) == "3918/300"
+    assert zara.reference({"seo_id": "03918300", "color_id": "548232268"}) == "3918/300"  # eso no es un color
+    assert zara.reference({}) is None and zara.ZaraConnector(pause=0).reference(negro.store_data) == "3918/300/800"
+
+    detail = zara.parse_detail(data, negro.store_data)
+    assert [(s["product_ref"], s["name"], s["hex"]) for s in detail.siblings] == [
+        ("zara:03918300-505", "Khaki", "#564a31"), ("zara:03918300-800", "Negro", "#242524"),
+    ]
+    # Cada color lleva lo necesario para pedir su ficha: sale con sus fotos, su enlace y su referencia.
+    khaki = detail.siblings[0]
+    assert khaki["url"].endswith("-p03918300.html?v1=548232269") and khaki["price_cents"] == 3995
+    assert "03918309505-e1" in zara.parse_detail(data, khaki["store_data"]).photo_urls[0]
+    assert zara.reference(khaki["store_data"]) == "3918/300/505"
+    assert detail.composition == ""  # esta ficha no la trae
+
+    # Un color sin foto de producto (-e1) no se ofrece.
+    colors = data["product"]["detail"]["colors"]
+    colors[0]["xmedia"] = [m for m in colors[0]["xmedia"] if not m["name"].endswith("-e1")]
+    assert [s["name"] for s in zara.parse_detail(data, negro.store_data).siblings] == ["Negro"]
+
+    data["product"]["detail"]["detailedComposition"] = {"parts": [
+        {"description": "EXTERIOR", "components": [
+            {"material": "poliéster", "percentage": "55%"}, {"material": "lana", "percentage": "45%"}]},
+        {"description": "FORRO", "areas": [{"components": [{"material": "poliéster", "percentage": "100%"}]}]},
+    ]}
+    assert zara.parse_detail(data, negro.store_data).composition == (
+        "Exterior: 55% poliéster, 45% lana · Forro: 100% poliéster"
+    )
+
+
+def test_lo_comprado_guarda_referencia_tienda_y_enlace_y_la_referencia_se_edita_a_mano(
+    client, tienda, analyzers, photo_bytes
+):
+    cazadora = product("a", "chaqueta", "negro")
+    cazadora.store_data["reference"] = "3918/300/800"
+    connector = tienda(camisas=[cazadora])
+    connector.details["a"] = ShopDetail(
+        price_cents=None, sizes=[{"name": "M", "in_stock": True}], photo_urls=["https://fotos.test/a-e1.jpg"],
+        composition="Exterior: 55% poliéster, 45% lana",
+    )
+    _refresh()
+    item = client.get("/api/shop/next").json()["item"]
+    # Lo que enseña la ficha del visor: la referencia legible y la composición, si la tienda la da.
+    assert (item["reference"], item["composition"]) == ("3918/300/800", "Exterior: 55% poliéster, 45% lana")
+    assert item["product_ref"] == "zara:a" and item["colors"] == []  # solo existe en un color
+    analyzers(FakeAnalyzer("codex", json.dumps(VALID_DRAFT)), FakeAnalyzer("claude"))
+
+    bought = client.post(f"/api/shop/items/{item['id']}/bought", json={"size": "M"}).json()
+    garment = client.get(f"/api/garments/{bought['garment_id']}").json()
+    assert (garment["reference"], garment["store_name"], garment["store_url"]) == (
+        "3918/300/800", "Zara", "https://tienda.test/a",
+    )
+    assert not any("price" in key or "precio" in key for key in garment)  # el precio no pasa a la prenda
+
+    # La referencia se puede corregir y borrar a mano; la tienda y el enlace no se tocan.
+    edited = client.patch(f"/api/garments/{garment['id']}", json={"reference": "3918/300"}).json()
+    assert (edited["reference"], edited["store_name"]) == ("3918/300", "Zara")
+    assert client.patch(f"/api/garments/{garment['id']}", json={"reference": None}).json()["reference"] is None
+    assert client.patch(f"/api/garments/{garment['id']}", json={"reference": "x" * 41}).status_code == 422
+
+    # Y cualquier prenda fotografiada puede llevar la suya; sin tienda ni enlace.
+    propia = _garment(client, photo_bytes, reference="  0391 8300 800 ")
+    assert (propia["reference"], propia["store_name"], propia["store_url"]) == ("0391 8300 800", None, None)
+    assert _garment(client, photo_bytes)["reference"] is None
+
+    # Con una tienda que no sabe dar referencias, no hay referencia (y no pasa nada).
+    connector.reference = None
+    with SessionLocal() as db:
+        assert shopping.store_reference(db.get(ShopItem, item["id"])) is None
+
+
+def test_las_columnas_de_tienda_y_de_colores_se_anaden_a_una_base_de_datos_anterior():
+    from sqlalchemy import create_engine
+
+    from app import db as database
+
+    old = create_engine("sqlite://")
+    with old.begin() as conn:
+        conn.exec_driver_sql("CREATE TABLE garments (id INTEGER PRIMARY KEY, name VARCHAR(120))")
+        conn.exec_driver_sql("CREATE TABLE shop_items (id INTEGER PRIMARY KEY, status VARCHAR(20))")
+    original, database.engine = database.engine, old
+    try:
+        database._add_missing_columns()
+    finally:
+        database.engine = original
+    with old.begin() as conn:
+        assert {"reference", "store_name", "store_url"} <= {
+            row[1] for row in conn.exec_driver_sql("PRAGMA table_info(garments)")
+        }
+        assert {"siblings", "composition"} <= {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(shop_items)")}
+
+
+def _prenda(client, photo_bytes, name, type, color, season="todo_el_ano", **extra) -> int:
+    return _garment(
+        client, photo_bytes, name=name, type=type, color_primary={"name": color, "hex": catalog.COLOR_HEX[color]},
+        season=season, details=extra.pop("details", ""), **extra,
+    )["id"]
+
+
+def test_combina_con_ensena_las_mejores_prendas_de_las_otras_partes_del_cuerpo(client, tienda, photo_bytes):
+    connector = tienda()
+    connector.found["sudadera"] = [product(
+        "s", "sudadera", "gris", name="Sudadera cremallera", details="sudadera con cremallera", season="invierno",
+    )]
+    item = client.post("/api/shop/lookup", json={"query": "sudadera"}).json()[0]
+    url = f"/api/shop/items/{item['id']}/matches"
+    assert item["status"] == "buscado"  # vale para cualquier estado, también recién buscado
+    assert client.get(url).json() == {"wardrobe": 0, "groups": []}  # armario vacío: se dice
+
+    vaqueros = [_prenda(client, photo_bytes, f"Vaquero {n}", "vaquero", "azul") for n in range(4)]
+    favorito = vaqueros[3]
+    client.patch(f"/api/garments/{favorito}", json={"favorite": True})
+    zapatillas = _prenda(client, photo_bytes, "Zapatillas blancas", "zapatillas", "blanco")
+    abrigo = _prenda(client, photo_bytes, "Abrigo negro", "abrigo", "negro", "invierno")
+    cazadora = _prenda(client, photo_bytes, "Cazadora negra", "chaqueta", "negro", "invierno")
+    bermuda = _prenda(client, photo_bytes, "Bermuda azul", "pantalón corto", "azul", "verano")
+    chino = _prenda(client, photo_bytes, "Chino beige", "chino", "beige")  # con gris, por debajo de lo corriente
+    _prenda(client, photo_bytes, "Otra sudadera", "sudadera", "negro", "invierno")  # misma parte del cuerpo
+
+    found = client.get(url).json()
+    assert found["wardrobe"] == 10
+    groups = {group["category"]: group["garments"] for group in found["groups"]}
+    # Solo las otras partes del cuerpo, en el orden de siempre, y como mucho tres por grupo.
+    assert list(groups) == ["capa_exterior", "parte_inferior", "calzado"]
+    assert [g["id"] for g in groups["calzado"]] == [zapatillas] and groups["calzado"][0]["name"] == "Zapatillas blancas"
+    assert client.get(groups["calzado"][0]["photo"]["thumb_url"]).status_code == 200
+    # A igual nota, primero la favorita; la cuarta se queda fuera.
+    assert [g["id"] for g in groups["parte_inferior"]] == [favorito, vaqueros[0], vaqueros[1]]
+    # Reglas duras: sobre una sudadera con cremallera entera no va una cazadora (un abrigo sí), y no
+    # se mezcla invierno con verano.
+    assert [g["id"] for g in groups["capa_exterior"]] == [abrigo]
+    shown = {g["id"] for garments in groups.values() for g in garments}
+    assert cazadora not in shown and bermuda not in shown and chino not in shown
+
+    # Es la misma afinidad de Hoy y Gustos, y lo que no llega a una combinación corriente no sale.
+    with SessionLocal() as db:
+        row = db.get(ShopItem, item["id"])
+        pair = [shopping.candidate_item(row), shopping.wardrobe_item(db.get(Garment, zapatillas))]
+        assert groups["calzado"][0]["affinity"] == outfits.combo_affinity(pair) >= shopping.MATCH_MIN
+        pair[1] = shopping.wardrobe_item(db.get(Garment, chino))
+        assert outfits.combo_affinity(pair) < shopping.MATCH_MIN
+    assert all(g["affinity"] >= shopping.MATCH_MIN for garments in groups.values() for g in garments)
+    assert client.get("/api/shop/items/999/matches").status_code == 404
+
+    # «De verano» es lo mismo que en Hoy: con un abrigo de invierno no sale una camiseta, aunque esté
+    # marcada «todo el año»; una camisa sí.
+    connector.found["abrigo"] = [product("ab", "abrigo", "negro", name="Abrigo lana", season="invierno")]
+    coat = client.post("/api/shop/lookup", json={"query": "abrigo"}).json()[0]
+    camiseta = _prenda(client, photo_bytes, "Camiseta blanca", "camiseta", "blanco")
+    camisa = _prenda(client, photo_bytes, "Camisa blanca", "camisa", "blanco")
+    tops = next(
+        group["garments"] for group in client.get(f"/api/shop/items/{coat['id']}/matches").json()["groups"]
+        if group["category"] == "parte_superior"
+    )
+    assert camisa in [g["id"] for g in tops] and camiseta not in [g["id"] for g in tops]
+    for garment in (camiseta, camisa):
+        client.delete(f"/api/garments/{garment}")
+
+    # Si nada combina, la lista sale vacía con el armario lleno: también se dice.
+    with SessionLocal() as db:
+        row = db.get(ShopItem, item["id"])
+        row.season = "verano"
+        for garment in db.scalars(select(Garment)):
+            garment.season = "invierno"
+        db.commit()
+    assert client.get(url).json() == {"wardrobe": 10, "groups": []}
+
+
+def test_en_descubrir_se_elige_el_color_y_la_decision_es_sobre_el_que_se_ve(client, tienda):
+    # La misma cazadora está en el catálogo en dos colores, y existe en un tercero que el listado no trae.
+    connector = tienda(camisas=[
+        product("blanca", "chaqueta", "blanco", name="Cazadora lana"),
+        product("negra", "chaqueta", "negro", name="Cazadora lana"),
+        product("camisa"),
+    ])
+    _colores(connector, ("blanca", "Blanco roto", "#f0ede4"), ("negra", "Negro", None), ("verde", "Verde", "#3f7d4f"))
+    _refresh()
+
+    # La misma prenda no sale dos veces en dos colores: de la cazadora, una sola propuesta.
+    nuevos = {i.product_ref for i in _items("nuevo")}
+    assert len(nuevos) == 2 and "zara:camisa" in nuevos and len(nuevos & {"zara:blanca", "zara:negra"}) == 1
+    primero = (nuevos - {"zara:camisa"}).pop()
+    with SessionLocal() as db:  # se enseña primero la cazadora
+        db.scalars(select(ShopItem).where(ShopItem.product_ref == primero)).one().score = 99.0
+        db.commit()
+    item = client.get("/api/shop/next").json()["item"]
+    assert item["product_ref"] == primero
+    assert [(c["product_ref"], c["name"], c["hex"], c["current"]) for c in item["colors"]] == [
+        ("zara:blanca", "Blanco roto", "#f0ede4", primero == "zara:blanca"),
+        ("zara:negra", "Negro", catalog.COLOR_HEX["negro"], primero == "zara:negra"),  # sin tono: el de la paleta
+        ("zara:verde", "Verde", "#3f7d4f", False),
+    ]
+
+    # Se elige el verde: se baja en ese momento y pasa a ser la propuesta; el otro se aparta.
+    connector.calls.clear()
+    verde = client.post(f"/api/shop/items/{item['id']}/color", json={"product_ref": "zara:verde"})
+    assert verde.status_code == 200 and connector.asked("detalle") == ["verde"] and len(connector.asked("foto")) == 2
+    verde = verde.json()
+    assert (verde["status"], verde["store_color"], verde["color"], verde["name"]) == (
+        "nuevo", "Verde", "verde", "Cazadora lana",
+    )
+    assert verde["url"] == "https://tienda.test/verde" and len(verde["photos"]) == 2 and verde["sizes"]
+    assert [c["current"] for c in verde["colors"]] == [False, False, True] and verde["saved"] is None
+    assert _status(primero) == "variante"
+    siguiente = client.get("/api/shop/next").json()
+    assert siguiente["remaining"] == 2 and siguiente["item"]["product_ref"] in ("zara:verde", "zara:camisa")
+
+    # Volver al color de antes es inmediato: ya se tenía.
+    connector.calls.clear()
+    vuelta = client.post(f"/api/shop/items/{verde['id']}/color", json={"product_ref": primero}).json()
+    assert (vuelta["id"], vuelta["status"], connector.calls) == (item["id"], "nuevo", [])
+    assert _status("zara:verde") == "variante"
+    client.post(f"/api/shop/items/{item['id']}/color", json={"product_ref": "zara:verde"})
+    assert connector.calls == [] and (_status("zara:verde"), _status(primero)) == ("nuevo", "variante")
+
+    # El «me gusta» es al color que se ve. El apartado no cuenta como descartado ni vuelve a salir.
+    after = client.post(f"/api/shop/items/{verde['id']}/like").json()
+    assert after["item"]["product_ref"] == "zara:camisa" and after["remaining"] == 1 and after["can_undo"] is True
+    assert [i["product_ref"] for i in client.get("/api/shop/liked").json()] == ["zara:verde"]
+    assert set(_taste().colors) == {"verde"} and _status(primero) == "variante"
+    # «Ver más» tampoco trae el otro color del catálogo como propuesta aparte, ni gasta peticiones en él.
+    connector.calls.clear()
+    assert _more()["added"] == 0 and connector.asked("detalle") == []
+    assert len(_items("candidato")) == 1 and client.get("/api/shop/next").json()["more"] == 0
+
+    # «Volver» devuelve el verde, que es el que se valoró.
+    assert client.post("/api/shop/undo").json()["item"]["product_ref"] == "zara:verde"
+    client.post(f"/api/shop/items/{verde['id']}/dislike")
+    assert set(_taste().colors) == {"verde"}  # el descarte es del verde; del apartado no se dice nada
+
+    # Con la siguiente consulta, el color apartado se va con su tanda, sin fotos y sin contar.
+    connector.products["camisas"] = []
+    _refresh(INVIERNO + timedelta(days=7))
+    apartado = next(i for i in _items() if i.product_ref == primero)
+    assert (apartado.status, apartado.photos, apartado.liked_at) == ("caducado", [], None)
+    assert set(_taste().colors) == {"verde"}
+
+
+def test_un_color_elegido_fuera_de_descubrir_llega_como_buscado_y_se_puede_guardar(client, tienda):
+    connector = tienda(camisas=[product("blanca", "chaqueta", "blanco", name="Cazadora lana")])
+    _colores(connector, ("blanca", "Blanco roto", "#f0ede4"), ("negra", "Negro", "#111111"), ("gris", "Gris", "#888888"))
+    _refresh()
+    blanca = client.get("/api/shop/next").json()["item"]
+    client.post(f"/api/shop/items/{blanca['id']}/like")
+    color = f"/api/shop/items/{blanca['id']}/color"
+
+    # Desde «Me gustan» se mira el negro: no cambia nada de lo guardado ni enseña nada.
+    negra = client.post(color, json={"product_ref": "zara:negra"}).json()
+    assert (negra["status"], negra["saved"], negra["store_color"]) == ("buscado", None, "Negro")
+    assert negra["price_cents"] == blanca["price_cents"] and negra["reasons"]
+    assert [i["product_ref"] for i in client.get("/api/shop/liked").json()] == ["zara:blanca"]
+    assert set(_taste().colors) == {"blanco"} and client.get("/api/shop/next").json()["item"] is None
+    # Pedir el mismo color (o el que ya se ve) no vuelve a bajar nada; el guardado se devuelve tal cual.
+    connector.calls.clear()
+    assert client.post(color, json={"product_ref": "zara:negra"}).json()["id"] == negra["id"]
+    assert client.post(color, json={"product_ref": "zara:blanca"}).json()["id"] == blanca["id"]
+    mismo = client.post(f"/api/shop/items/{negra['id']}/color", json={"product_ref": "zara:blanca"}).json()
+    assert (mismo["id"], mismo["status"], mismo["saved"], connector.calls) == (blanca["id"], "gustado", "gustado", [])
+
+    # «Me gusta» al negro guarda el negro, además del blanco.
+    assert client.post(f"/api/shop/items/{negra['id']}/like").status_code == 200
+    assert {i["product_ref"] for i in client.get("/api/shop/liked").json()} == {"zara:blanca", "zara:negra"}
+
+    # Lo que no se puede: un color que no es de esta prenda, uno que ya no está y la tienda caída.
+    assert client.post(color, json={"product_ref": "zara:otra"}).status_code == 404
+    connector.gone.add("gris")
+    assert client.post(color, json={"product_ref": "zara:gris"}).status_code == 404
+    connector.gone.clear()
+    connector.details["gris"] = ShopDetail(price_cents=None, sizes=[], photo_urls=[])  # sin foto de producto
+    assert client.post(color, json={"product_ref": "zara:gris"}).status_code == 404
+    connector.details["gris"] = ShopDetail(
+        price_cents=4995, sizes=[{"name": "L", "in_stock": True}], photo_urls=["https://fotos.test/gris-e1.jpg"],
+    )
+    connector.download = lambda url: (_ for _ in ()).throw(ShopError("HTTP 403 al bajar la foto"))
+    caida = client.post(color, json={"product_ref": "zara:gris"})
+    assert caida.status_code == 503 and "Zara no responde" in caida.json()["detail"] and _status("zara:gris") is None
+    assert client.post("/api/shop/items/999/color", json={"product_ref": "zara:gris"}).status_code == 404
+
+    # Un color buscado con el que no se hace nada se limpia solo, como cualquier «buscado».
+    del connector.download
+    gris = client.post(color, json={"product_ref": "zara:gris"}).json()
+    assert (gris["status"], gris["price_cents"], gris["sizes"]) == ("buscado", 4995, [{"name": "L", "in_stock": True}])
+    with SessionLocal() as db:
+        assert shopping.clean_lookups(db, now=now_utc() + timedelta(hours=25)) == 1
+    assert _status("zara:gris") is None and not storage.exists(gris["photos"][0]["id"])
+
+
+def test_los_colores_de_lo_guardado_antes_se_rellenan_la_primera_vez_que_se_piden(client, tienda):
+    connector = tienda(camisas=[product("blanca", "chaqueta", "blanco")])
+    _refresh()
+    item = client.get("/api/shop/next").json()["item"]
+    with SessionLocal() as db:  # como los guardados antes de este cambio: sin saber sus colores
+        db.get(ShopItem, item["id"]).siblings = None
+        db.commit()
+    assert client.get("/api/shop/next").json()["item"]["colors"] is None
+
+    # Si la tienda falla, se queda sin saber y se puede volver a intentar.
+    _colores(connector, ("blanca", "Blanco", "#ffffff"), ("negra", "Negro", "#111111"))
+    connector.calls.clear()
+    connector.detail = lambda store_data: (_ for _ in ()).throw(ShopError("HTTP 403"))
+    assert client.post(f"/api/shop/items/{item['id']}/colors").json()["colors"] is None
+    del connector.detail
+
+    filled = client.post(f"/api/shop/items/{item['id']}/colors").json()
+    assert [c["name"] for c in filled["colors"]] == ["Blanco", "Negro"] and connector.asked("detalle") == ["blanca"]
+    assert filled["status"] == "nuevo" and len(filled["photos"]) == 2  # no toca nada más
+    # Ya se saben: no se vuelve a preguntar a la tienda.
+    assert client.post(f"/api/shop/items/{item['id']}/colors").json()["colors"] == filled["colors"]
+    assert connector.asked("detalle") == ["blanca"]
+    assert client.get("/api/shop/next").json()["item"]["colors"] == filled["colors"]
+
+    # Los «me gusta» se ponen al día solos en la consulta semanal, que ya pide su ficha.
+    client.post(f"/api/shop/items/{item['id']}/like")
+    with SessionLocal() as db:
+        db.get(ShopItem, item["id"]).siblings = None
+        db.commit()
+    _refresh(INVIERNO + timedelta(days=7))
+    assert [c["name"] for c in client.get("/api/shop/liked").json()[0]["colors"]] == ["Blanco", "Negro"]

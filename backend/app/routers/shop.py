@@ -30,10 +30,21 @@ class ShopSize(BaseModel):
     in_stock: bool
 
 
+class ShopColorOut(BaseModel):
+    """Uno de los colores en los que existe un producto. Cada color es un producto aparte."""
+
+    product_ref: str  # con esto se pide ese color (`/items/{id}/color`)
+    name: str  # como lo llama la tienda («Blanco roto»)
+    hex: str
+    current: bool  # es el del item que se está viendo
+
+
 class ShopItemOut(BaseModel):
     id: int
     store: str
     store_name: str
+    product_ref: str
+    reference: str | None  # la de la tienda, legible («3918/300/800»)
     name: str
     price_cents: int
     url: str
@@ -49,10 +60,14 @@ class ShopItemOut(BaseModel):
     liked_at: datetime | None
     expires_at: datetime | None
     expires_soon: bool
+    composition: str | None  # de qué está hecha, si la tienda lo dice
+    # Los colores entre los que se puede elegir (vacío si solo hay uno). None = aún no se sabe: se
+    # rellenan pidiendo `/items/{id}/colors`.
+    colors: list[ShopColorOut] | None
 
 
 class ShopLookupOut(ShopItemOut):
-    """Un resultado del buscador por referencia."""
+    """Un resultado del buscador por referencia (o el item de un color recién elegido)."""
 
     saved: Literal["gustado", "comprado"] | None  # ya estaba en Me gustan o en el armario
     garment_id: int | None  # la prenda del armario, si ya estaba comprado
@@ -60,6 +75,32 @@ class ShopLookupOut(ShopItemOut):
 
 class LookupIn(BaseModel):
     query: str = Field(max_length=600)  # una referencia, un enlace de producto o texto libre
+
+
+class ColorIn(BaseModel):
+    product_ref: str = Field(min_length=1, max_length=80)  # el del color elegido (ShopColorOut.product_ref)
+
+
+class ShopMatchOut(BaseModel):
+    """Una prenda del armario con la que combina un producto de tienda."""
+
+    id: int
+    name: str
+    type: str
+    photo: Photo
+    affinity: int  # la misma afinidad de Hoy y Gustos, de la pareja producto + prenda
+
+
+class ShopMatchGroup(BaseModel):
+    category: str  # parte del cuerpo (nuestras categorías)
+    garments: list[ShopMatchOut]  # de mejor a peor
+
+
+class ShopMatchesOut(BaseModel):
+    """«Combina con…»: las prendas del armario que mejor van con un producto, por parte del cuerpo."""
+
+    wardrobe: int  # prendas que hay en el armario (0 = vacío)
+    groups: list[ShopMatchGroup]
 
 
 class ShopCategoryOut(BaseModel):
@@ -162,6 +203,8 @@ def _to_out(item: ShopItem) -> ShopItemOut:
         id=item.id,
         store=item.store,
         store_name=connector.name if connector else item.store.capitalize(),
+        product_ref=item.product_ref,
+        reference=shopping.store_reference(item),
         name=item.name,
         price_cents=item.price_cents,
         url=item.url,
@@ -177,7 +220,21 @@ def _to_out(item: ShopItem) -> ShopItemOut:
         liked_at=item.liked_at,
         expires_at=item.expires_at,
         expires_soon=item.status == shopping.LIKED and shopping.expires_soon(item),
+        composition=item.composition or None,
+        colors=shopping.colors_of(item),
     )
+
+
+def _lookup_out(db: Session, item: ShopItem) -> ShopLookupOut:
+    """Un item con si ya estaba guardado (en Me gustan o en el armario)."""
+    saved = shopping.already(db, item)
+    out = _to_out(item).model_dump()
+    if saved == shopping.BOUGHT:
+        # Sus fotos son ya las de la prenda del armario.
+        garment = db.get(Garment, item.garment_id)
+        ids = [garment.photo_front, garment.photo_back, garment.photo_extra]
+        out["photos"] = [storage.to_schema(photo_id) for photo_id in ids if photo_id]
+    return ShopLookupOut(**out, saved=saved, garment_id=item.garment_id if saved == shopping.BOUGHT else None)
 
 
 def _count(db: Session, status: str, stores: list[str] | None = None, category: str | None = None) -> int:
@@ -311,25 +368,58 @@ def lookup(body: LookupIn, db: Session = Depends(get_db)):
         items = shopping.lookup(db, body.query)
     except shopping.LookupFailed as exc:
         raise HTTPException(_LOOKUP_STATUS.get(exc.reason, 404), str(exc)) from exc
-    results = []
-    for item in items:
-        saved = shopping.already(db, item)
-        out = _to_out(item).model_dump()
-        if saved == shopping.BOUGHT:
-            # Sus fotos son ya las de la prenda del armario.
-            garment = db.get(Garment, item.garment_id)
-            ids = [garment.photo_front, garment.photo_back, garment.photo_extra]
-            out["photos"] = [storage.to_schema(photo_id) for photo_id in ids if photo_id]
-        results.append(ShopLookupOut(**out, saved=saved, garment_id=item.garment_id if saved == shopping.BOUGHT else None))
-    return results
+    return [_lookup_out(db, item) for item in items]
+
+
+_COLOR_STATUS = {"nada": 404, "tienda": 503}
+
+
+@router.post("/items/{item_id}/colors", response_model=ShopLookupOut)
+def colors(item_id: int, db: Session = Depends(get_db)):
+    """Los colores de un item guardado antes de que se apuntaran: pide su ficha a la tienda (una sola
+    vez) y lo devuelve con ellos. Si ya se sabían, no pide nada. Si la tienda falla, `colors` sigue
+    en null y se puede volver a intentar."""
+    return _lookup_out(db, shopping.ensure_colors(db, _get_or_404(db, item_id)))
+
+
+@router.post("/items/{item_id}/color", response_model=ShopLookupOut)
+def color(item_id: int, body: ColorIn, db: Session = Depends(get_db)):
+    """Elegir otro color: devuelve el item de ese color (con sus fotos, su precio y sus tallas). Si no
+    se tenía, lo trae de la tienda en ese momento (unos segundos). En Descubrir pasa a ser la
+    propuesta que se está viendo; en los demás sitios llega como «buscado», listo para «Me gusta»
+    (`/items/{id}/like`) o «Ya la tengo» (`/items/{id}/bought`)."""
+    try:
+        return _lookup_out(db, shopping.switch_color(db, _get_or_404(db, item_id), body.product_ref))
+    except shopping.ColorFailed as exc:
+        raise HTTPException(_COLOR_STATUS.get(exc.reason, 404), str(exc)) from exc
+
+
+@router.get("/items/{item_id}/matches", response_model=ShopMatchesOut)
+def matches(item_id: int, db: Session = Depends(get_db)):
+    """«Combina con…»: las prendas del armario con las que mejor va este producto, por parte del
+    cuerpo y solo de las otras partes. Vale para un item en cualquier estado."""
+    wardrobe, groups = shopping.matches(db, _get_or_404(db, item_id))
+    return ShopMatchesOut(
+        wardrobe=wardrobe,
+        groups=[
+            ShopMatchGroup(
+                category=category,
+                garments=[
+                    ShopMatchOut(id=g.id, name=g.name, type=g.type, photo=storage.to_schema(g.photo_front), affinity=affinity)
+                    for g, affinity in pairs
+                ],
+            )
+            for category, pairs in groups
+        ],
+    )
 
 
 @router.post("/items/{item_id}/like", response_model=ShopNext)
 def like(item_id: int, only: Filter = Depends(), db: Session = Depends(get_db)):
     """Me gusta: pasa a «Me gustan» y devuelve la siguiente propuesta. Vale también para un resultado
-    del buscador."""
+    del buscador y para un color elegido desde otro."""
     item = _get_or_404(db, item_id)
-    if item.status in (shopping.NEW, shopping.SEARCHED):
+    if item.status in (shopping.NEW, shopping.SEARCHED, shopping.VARIANT):
         shopping.like(db, item)
     elif item.status != shopping.LIKED:  # un doble toque no es un error
         raise HTTPException(409, "Este producto ya no está entre las propuestas")
@@ -392,7 +482,7 @@ def bought(item_id: int, body: BoughtIn, db: Session = Depends(get_db)):
     item = _get_or_404(db, item_id)
     if item.status == shopping.BOUGHT and item.garment_id:  # doble toque: la prenda ya está creada
         return BoughtOut(garment_id=item.garment_id, analyzed=item.ai_draft is not None)
-    if item.status not in (shopping.NEW, shopping.LIKED, shopping.SEARCHED):
+    if item.status not in (shopping.NEW, shopping.LIKED, shopping.SEARCHED, shopping.VARIANT):
         raise HTTPException(409, "Este producto ya no está disponible")
     size = (body.size or "").strip() or None
     try:

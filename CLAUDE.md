@@ -30,9 +30,13 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   buscador de Zara. Los resultados son `shop_items` en estado `buscado`, que se limpian a las 24 h.
   Descubrir cabe en una pantalla sin scroll, con botones flotantes redondos tipo Tinder (X, corazón y
   Volver) que animan la tarjeta; en Me gustan, tocar una prenda abre la foto en grande.
-  Pendiente (pedido el 18-11-2026, sin hacer): al abrir una prenda en Me gustan o en la Ficha del armario,
-  enseñar su referencia de tienda y los datos básicos (tienda, nombre, color, talla, precio, enlace, composición)
-  con botón de copiar; para las prendas compradas desde Compras hay que guardar esos datos en la prenda. El usuario lo quiere DENTRO del mismo visor de la foto: se desliza hacia arriba y debajo de la foto aparecen los datos (no otra pantalla ni otro modal).
+  Hecho el 18-11-2026: en el visor de la foto se desliza hacia arriba y sale la ficha (referencia tipo
+  8281/765/800, tienda, color, tallas, composición y enlace, todo copiable) y «Combina con…» (las prendas
+  del armario que mejor pegan, por parte del cuerpo; umbral `MATCH_MIN` 50). Selector de colores con
+  circulitos en Descubrir, Me gustan y el buscador: el me gusta vale para el color que se ve y el otro
+  queda como `variante`, que no se propone aparte en esa tanda. Las prendas del armario que vienen de
+  Compras guardan `reference`, `store_name` y `store_url` y la Ficha los enseña SIN precio; hay un campo
+  «Referencia» opcional al editar cualquier prenda. Sin probar con el dedo en un móvil real.
   Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
   va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se

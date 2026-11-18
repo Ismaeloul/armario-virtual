@@ -43,6 +43,7 @@ export default function EditarPrenda() {
           brand: g.brand,
           size: g.size,
           notes: g.notes,
+          reference: g.reference,
         }),
       )
       .catch((e) => setLoadError(e instanceof ApiError && e.status === 404 ? "missing" : "red"));

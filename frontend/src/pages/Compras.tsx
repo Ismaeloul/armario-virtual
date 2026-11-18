@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { inputClass, PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
+import { CopyRow, useCopy } from "../components/CopyButton";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
@@ -10,10 +11,12 @@ import {
   api,
   ApiError,
   mediaUrl,
+  type ShopColor,
   type ShopDiscardReason,
   type ShopFilter,
   type ShopItem,
   type ShopLookupItem,
+  type ShopMatches,
   type ShopNext,
   type ShopState,
   type ShopStore,
@@ -178,6 +181,8 @@ export default function Compras() {
                 // Los contadores (pendientes, me gustan) cambian con cada decisión.
                 api.shopState().then(setState).catch(() => undefined);
               }}
+              // Otro color de la misma prenda (o sus colores recién sabidos): cambia la tarjeta, no la cola.
+              onItem={(from, item) => setNext((n) => (n && n.item?.id === from ? { ...n, item } : n))}
               onOpenStores={() => setStoresOpen(true)}
             />
           )}
@@ -202,6 +207,7 @@ function Discover({
   onFilter,
   onState,
   onNext,
+  onItem,
   onOpenStores,
 }: {
   state: ShopState;
@@ -210,6 +216,7 @@ function Discover({
   onFilter: (f: ShopFilter) => void;
   onState: (s: ShopState) => void;
   onNext: (n: ShopNext) => void;
+  onItem: (from: number, item: ShopItem) => void;
   onOpenStores: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -237,9 +244,16 @@ function Discover({
 
   const enabled = state.stores.filter((s) => s.enabled);
   const item = next.item;
+  // Al elegir otro color cambia el item, pero la tarjeta es la misma: no debe entrar de nuevo ni
+  // perder su sitio. Aquí se apunta a qué tarjeta pertenece cada color.
+  const cards = useRef(new Map<number, number>());
+  const colors = useColors(item, (found, from) => {
+    if (found.id !== from.id) cards.current.set(found.id, cards.current.get(from.id) ?? from.id);
+    onItem(from.id, found);
+  });
 
   const decide = (liked: boolean) => {
-    if (!item || busy) return;
+    if (!item || busy || colors.pending) return;
     const id = item.id;
     sides.current.set(id, liked ? 1 : -1);
     setBusy(true);
@@ -264,7 +278,7 @@ function Discover({
 
   /** Botón de la X o del corazón: la tarjeta sale volando hacia su lado y luego se guarda la decisión. */
   const press = (liked: boolean) => {
-    if (!item || busy || fly) return;
+    if (!item || busy || fly || colors.pending) return;
     setFly(liked ? 1 : -1);
     flyTimer.current = window.setTimeout(() => decide(liked), FLY_MS);
   };
@@ -319,9 +333,9 @@ function Discover({
       .finally(() => setBusy(false));
   };
 
-  const alert = error && (
+  const alert = (error || colors.error) && (
     <p role="alert" className="text-center text-sm text-danger">
-      {error}
+      {error || colors.error}
     </p>
   );
 
@@ -401,9 +415,11 @@ function Discover({
               : t.compras.quedan(next.remaining)}
         </p>
         <SwipeCard
-          key={`${item.id}-${attempt}`}
+          key={`${cards.current.get(item.id) ?? item.id}-${attempt}`}
           item={item}
-          busy={busy}
+          busy={busy || colors.pending !== null}
+          pending={colors.pending}
+          onColor={colors.pick}
           fly={fly}
           enterFrom={back?.id === item.id ? back.side : 0}
           onDecide={decide}
@@ -414,7 +430,7 @@ function Discover({
           <button
             type="button"
             aria-label={t.compras.no}
-            disabled={busy}
+            disabled={busy || colors.pending !== null}
             onClick={() => press(false)}
             className={`${round} pointer-events-auto h-16 w-16 border border-line bg-card text-danger`}
           >
@@ -423,7 +439,7 @@ function Discover({
           <button
             type="button"
             aria-label={t.compras.si}
-            disabled={busy}
+            disabled={busy || colors.pending !== null}
             onClick={() => press(true)}
             className={`${round} pointer-events-auto h-16 w-16 bg-primary text-on-primary`}
           >
@@ -685,6 +701,120 @@ function StoreLink({ item }: { item: ShopItem }) {
   );
 }
 
+/** Los items de los que ya se han pedido los colores en esta sesión: a la tienda no se le insiste. */
+const colorsAsked = new Set<number>();
+
+/**
+ * Los colores de una prenda de tienda. Cada color es un item aparte: elegir uno devuelve ese item
+ * (`onItem`), que el servidor trae de la tienda si aún no lo tenía (unos segundos; `pending` dice cuál
+ * se está trayendo). `known` permite dar al momento los que ya están cargados (el buscador los trae todos).
+ * De paso, si el item se guardó antes de que se apuntaran sus colores (`colors: null`), los pide una vez.
+ */
+function useColors(
+  item: ShopItem | null,
+  onItem: (found: ShopLookupItem, from: ShopItem) => void,
+  known?: (productRef: string) => ShopLookupItem | undefined,
+) {
+  const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const current = useRef(item);
+  current.current = item;
+  const deliver = useRef(onItem);
+  deliver.current = onItem;
+
+  const id = item?.id ?? null;
+  const unknown = item !== null && item.colors === null;
+  useEffect(() => {
+    if (id === null || !unknown || colorsAsked.has(id)) return;
+    colorsAsked.add(id);
+    api
+      .shopColors(id)
+      .then((filled) => {
+        const now = current.current;
+        if (now && now.id === filled.id && filled.colors) deliver.current(filled, now);
+      })
+      .catch(() => undefined); // sin colores no pasa nada: la prenda se ve igual
+  }, [id, unknown]);
+  useEffect(() => setError(null), [id]);
+
+  const pick = (productRef: string) => {
+    const from = current.current;
+    if (!from || pending) return;
+    setError(null);
+    const have = known?.(productRef);
+    if (have) {
+      deliver.current(have, from);
+      return;
+    }
+    setPending(productRef);
+    api
+      .shopColor(from.id, productRef)
+      .then((found) => {
+        // Si mientras tanto se ha pasado a otra prenda, este color ya no viene a cuento.
+        if (current.current?.id === from.id) deliver.current(found, from);
+      })
+      .catch((e) =>
+        setError(e instanceof ApiError && [404, 503].includes(e.status) && e.message ? e.message : t.compras.colores.error),
+      )
+      .finally(() => setPending(null));
+  };
+  return { pending, error, pick };
+}
+
+/**
+ * Los colores en los que existe la prenda, como circulitos del color. Tocar uno enseña la prenda en
+ * ese color. Mientras llega, el circulito elegido late y lo demás se queda como está: sin parpadeo.
+ */
+function ColorDots({
+  colors,
+  pending,
+  disabled = false,
+  onPick,
+  className = "",
+}: {
+  colors: ShopColor[] | null;
+  pending: string | null;
+  disabled?: boolean;
+  onPick: (productRef: string) => void;
+  className?: string;
+}) {
+  if (!colors || colors.length < 2) return null;
+  return (
+    <div
+      role="group"
+      aria-label={t.compras.colores.titulo}
+      // Tocar un color no empieza a arrastrar la tarjeta ni cuenta como toque en lo que haya debajo.
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+      className={`flex max-w-full min-w-0 items-center overflow-x-auto ${className}`}
+    >
+      {colors.map((c) => {
+        const chosen = pending ? pending === c.product_ref : c.current;
+        return (
+          <button
+            key={c.product_ref}
+            type="button"
+            aria-label={t.compras.colores.color(c.name)}
+            title={c.name}
+            aria-pressed={chosen}
+            aria-busy={pending === c.product_ref || undefined}
+            disabled={disabled || pending !== null}
+            onClick={() => !c.current && onPick(c.product_ref)}
+            className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full"
+          >
+            <span
+              className={`h-6 w-6 rounded-full border border-text/20 transition-shadow duration-200 ${
+                chosen ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : ""
+              } ${pending === c.product_ref ? "animate-pulse" : ""}`}
+              style={{ backgroundColor: c.hex }}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Alto que queda desde donde empieza el elemento hasta la barra inferior, para encajar la vista en una pantalla. */
 function useFitHeight(shown: boolean) {
   const ref = useRef<HTMLDivElement>(null);
@@ -755,12 +885,16 @@ const FLY_MS = 220;
 function SwipeCard({
   item,
   busy,
+  pending,
+  onColor,
   fly,
   enterFrom,
   onDecide,
 }: {
   item: ShopItem;
   busy: boolean;
+  pending: string | null; // el color que se está trayendo, si se ha elegido otro
+  onColor: (productRef: string) => void;
   fly: -1 | 0 | 1; // un botón manda que salga volando hacia ese lado
   enterFrom: -1 | 0 | 1; // tras «Volver», el lado por el que se fue y por el que vuelve
   onDecide: (liked: boolean) => void;
@@ -787,7 +921,8 @@ function SwipeCard({
   // fundido cuando ya está cargada y se sabe su color: así no hay salto de bandas ni parpadeo.
   const [backdrop, setBackdrop] = useState<string | null>(lastBackdrop);
   const [loaded, setLoaded] = useState<string | null>(null);
-  const [photo, setPhoto] = useState(0);
+  // La foto que se ve, apuntada con su item: al cambiar de color se empieza otra vez por la primera.
+  const [at, setAt] = useState({ id: item.id, index: 0 });
   const timer = useRef(0);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -835,6 +970,7 @@ function SwipeCard({
   const shift = leaving ? leaving * 520 : entering ? entering * 520 : dx;
   const strength = Math.min(1, Math.abs(shift) / 90);
   const photos = item.photos;
+  const photo = at.id === item.id && at.index < photos.length ? at.index : 0;
 
   return (
     <div
@@ -857,42 +993,55 @@ function SwipeCard({
         opacity: leaving || entering ? 0 : undefined,
       }}
     >
-      <button
-        type="button"
-        aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : undefined}
-        disabled={photos.length < 2}
-        onClick={() => setPhoto((n) => (n + 1) % photos.length)}
-        className="relative block min-h-0 w-full flex-1 overflow-hidden bg-card-2 transition-colors duration-300"
-        style={backdrop ? { backgroundColor: backdrop } : undefined}
-      >
-        {photos[photo] && (
-          <img
-            src={mediaUrl(photos[photo].url)}
-            alt={item.name}
-            draggable={false}
-            onLoad={(e) => {
-              const color = cornerColor(e.currentTarget);
-              if (color) {
-                lastBackdrop = color;
-                setBackdrop(color);
-              }
-              setLoaded(photos[photo].url);
-            }}
-            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
-              loaded === photos[photo].url ? "opacity-100" : "opacity-0"
-            }`}
+      <div className="relative min-h-0 w-full flex-1">
+        <button
+          type="button"
+          aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : undefined}
+          disabled={photos.length < 2}
+          onClick={() => setAt({ id: item.id, index: (photo + 1) % photos.length })}
+          className="absolute inset-0 block h-full w-full overflow-hidden bg-card-2 transition-colors duration-300"
+          style={backdrop ? { backgroundColor: backdrop } : undefined}
+        >
+          {photos[photo] && (
+            <img
+              src={mediaUrl(photos[photo].url)}
+              alt={item.name}
+              draggable={false}
+              onLoad={(e) => {
+                const color = cornerColor(e.currentTarget);
+                if (color) {
+                  lastBackdrop = color;
+                  setBackdrop(color);
+                }
+                setLoaded(photos[photo].url);
+              }}
+              // Mientras llega otro color, la foto se queda, algo apagada; la nueva entra con el fundido de siempre.
+              className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
+                loaded === photos[photo].url ? (pending ? "opacity-60" : "opacity-100") : "opacity-0"
+              }`}
+            />
+          )}
+          {photos.length > 1 && (
+            <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
+              {photos.map((p, i) => (
+                <span key={p.id} className={`h-1.5 rounded-full ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
+                    i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
+                  }`} />
+              ))}
+            </span>
+          )}
+        </button>
+        {/* Los colores van sobre la foto, abajo: así no piden sitio y todo sigue cabiendo en una pantalla. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center px-3">
+          <ColorDots
+            colors={item.colors}
+            pending={pending}
+            disabled={busy && !pending}
+            onPick={onColor}
+            className="pointer-events-auto rounded-full border border-line bg-card/85 px-0.5 shadow-[0_2px_8px_rgb(0_0_0/0.12)] backdrop-blur-md"
           />
-        )}
-        {photos.length > 1 && (
-          <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
-            {photos.map((p, i) => (
-              <span key={p.id} className={`h-1.5 rounded-full ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
-                  i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
-                }`} />
-            ))}
-          </span>
-        )}
-      </button>
+        </div>
+      </div>
 
       {/* Sellos que aparecen al arrastrar */}
       <span
@@ -932,12 +1081,62 @@ function SwipeCard({
   );
 }
 
-/** La foto de una prenda guardada, en grande: solo la foto, el nombre, el precio y el enlace. */
-function PhotoViewer({ item, onClose }: { item: ShopItem; onClose: () => void }) {
-  const [photo, setPhoto] = useState(0);
+/** Las tallas en texto, para copiarlas: «S, M, L (agotadas: XL)». */
+function sizesText(item: ShopItem): string {
+  const left = item.sizes.filter((s) => s.in_stock).map((s) => s.name);
+  const gone = item.sizes.filter((s) => !s.in_stock).map((s) => s.name);
+  if (gone.length === 0) return left.join(", ");
+  const out = t.compras.visor.agotadas(gone.join(", "));
+  return left.length > 0 ? `${left.join(", ")} (${out})` : out;
+}
+
+/**
+ * Una prenda de tienda en grande. Arriba, la foto (tocarla pasa a la siguiente). Deslizando hacia
+ * arriba, en el mismo cuadro, su ficha: los datos de la tienda, cada uno con su botón de copiar, y
+ * las prendas del armario con las que combina. Si existe en más colores, aquí se elige cuál se ve.
+ */
+function PhotoViewer({
+  item: opened,
+  onClose,
+  onChange,
+  onSaved,
+  known,
+}: {
+  item: ShopItem;
+  onClose: () => void;
+  /** Lo que se ve ha cambiado: otro color, o el mismo ya guardado. */
+  onChange?: (item: ShopLookupItem) => void;
+  /** Se ha guardado en Me gustan desde aquí. */
+  onSaved?: () => void;
+  /** Los colores que ya están cargados (los trae el buscador), para enseñarlos al momento. */
+  known?: (productRef: string) => ShopLookupItem | undefined;
+}) {
+  const navigate = useNavigate();
+  const [item, setItem] = useState<ShopItem>(opened);
+  // La foto que se ve, apuntada con su item: al cambiar de color se empieza otra vez por la primera.
+  const [at, setAt] = useState({ id: opened.id, index: 0 });
   const [backdrop, setBackdrop] = useState<string | null>(lastBackdrop);
   const [loaded, setLoaded] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false); // ya se ha deslizado hasta la ficha: la pista sobra
+  const [matches, setMatches] = useState<ShopMatches | "error" | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [copiedAll, copyAll] = useCopy();
+  const scroller = useRef<HTMLDivElement>(null);
+  const press = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false); // para que un deslizamiento sobre la foto no cuente como toque
+  const notify = useRef(onChange);
+  notify.current = onChange;
+  const colors = useColors(
+    item,
+    (found) => {
+      setItem(found);
+      notify.current?.(found);
+    },
+    known,
+  );
   const photos = item.photos;
+  const photo = at.id === item.id && at.index < photos.length ? at.index : 0;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -949,6 +1148,53 @@ function PhotoViewer({ item, onClose }: { item: ShopItem; onClose: () => void })
       window.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
+
+  // Con qué combina: se mira en el armario (no en la tienda), así que se pide nada más abrir.
+  useEffect(() => {
+    let alive = true;
+    setMatches(null);
+    api
+      .shopMatches(item.id)
+      .then((found) => alive && setMatches(found))
+      .catch(() => alive && setMatches("error"));
+    return () => {
+      alive = false;
+    };
+  }, [item.id]);
+
+  const toData = () => {
+    const box = scroller.current;
+    box?.scrollTo({ top: box.clientHeight, behavior: "smooth" });
+  };
+
+  const save = () => {
+    setSaving(true);
+    setSaveError(false);
+    api
+      .shopLike(item.id)
+      .then(() => {
+        const saved: ShopLookupItem = { ...item, status: "gustado", saved: "gustado", garment_id: null };
+        setItem(saved);
+        notify.current?.(saved);
+        onSaved?.();
+      })
+      .catch(() => setSaveError(true))
+      .finally(() => setSaving(false));
+  };
+
+  // Los datos, en el orden en que se enseñan y se copian. Lo que la tienda no da, no sale.
+  const sizes = sizesText(item);
+  const facts: { key: string; label: string; value: string }[] = [
+    { key: "referencia", label: t.compras.visor.referencia, value: item.reference ?? "" },
+    { key: "tienda", label: t.compras.visor.tienda, value: item.store_name },
+    { key: "nombre", label: t.compras.visor.nombre, value: item.name },
+    { key: "color", label: t.compras.visor.color, value: item.store_color },
+    { key: "precio", label: t.compras.visor.precio, value: t.compras.precio(item.price_cents) },
+    { key: "tallas", label: t.compras.visor.tallas, value: sizes },
+    { key: "composicion", label: t.compras.visor.composicion, value: item.composition ?? "" },
+    { key: "enlace", label: t.compras.visor.enlace, value: item.url },
+  ].filter((fact) => fact.value);
+  const canSave = item.status === "buscado" || item.status === "variante";
 
   return (
     <div
@@ -964,45 +1210,221 @@ function PhotoViewer({ item, onClose }: { item: ShopItem; onClose: () => void })
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="card relative flex h-full max-h-[46rem] w-full max-w-md flex-col overflow-hidden"
+        className="card relative h-full max-h-[46rem] w-full max-w-md overflow-hidden"
       >
-        <button
-          type="button"
-          aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : undefined}
-          disabled={photos.length < 2}
-          onClick={() => setPhoto((n) => (n + 1) % photos.length)}
-          className="relative block min-h-0 w-full flex-1 overflow-hidden bg-card-2 transition-colors duration-300"
-          style={backdrop ? { backgroundColor: backdrop } : undefined}
+        {/* Un solo cuadro con dos alturas: la foto y, debajo, la ficha. Se pasa de una a otra deslizando. */}
+        <div
+          ref={scroller}
+          onScroll={(e) => e.currentTarget.scrollTop > 24 && setScrolled(true)}
+          className="h-full snap-y snap-proximity overflow-y-auto overscroll-contain"
         >
-          {photos[photo] && (
-            <img
-              key={photos[photo].id}
-              src={mediaUrl(photos[photo].url)}
-              alt={item.name}
-              draggable={false}
-              onLoad={(e) => {
-                const color = cornerColor(e.currentTarget);
-                if (color) setBackdrop(color);
-                setLoaded(photos[photo].url);
-              }}
-              className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
-                loaded === photos[photo].url ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          )}
-          {photos.length > 1 && (
-            <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
-              {photos.map((p, i) => (
-                <span
-                  key={p.id}
-                  className={`h-1.5 rounded-full ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
-                    i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
-                  }`}
-                />
-              ))}
-            </span>
-          )}
-        </button>
+          <section className="flex h-full snap-start flex-col">
+            <div className="relative min-h-0 w-full flex-1">
+              <button
+                type="button"
+                aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : item.name}
+                onPointerDown={(e) => {
+                  press.current = { x: e.clientX, y: e.clientY };
+                  swiped.current = false;
+                }}
+                onPointerUp={(e) => {
+                  const from = press.current;
+                  press.current = null;
+                  if (!from) return;
+                  const dy = e.clientY - from.y;
+                  if (Math.abs(dy) > SWIPE_START || Math.abs(e.clientX - from.x) > SWIPE_START) swiped.current = true;
+                  // Con el dedo, deslizar ya mueve el cuadro. Con ratón no: arrastrar hacia arriba lleva a la ficha.
+                  if (e.pointerType === "mouse" && dy < -40) toData();
+                }}
+                onClick={() => {
+                  if (swiped.current) {
+                    swiped.current = false;
+                    return;
+                  }
+                  if (photos.length > 1) setAt({ id: item.id, index: (photo + 1) % photos.length });
+                }}
+                className="absolute inset-0 block h-full w-full overflow-hidden bg-card-2 transition-colors duration-300"
+                style={backdrop ? { backgroundColor: backdrop } : undefined}
+              >
+                {photos[photo] && (
+                  <img
+                    src={mediaUrl(photos[photo].url)}
+                    alt={item.name}
+                    draggable={false}
+                    onLoad={(e) => {
+                      const color = cornerColor(e.currentTarget);
+                      if (color) setBackdrop(color);
+                      setLoaded(photos[photo].url);
+                    }}
+                    className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
+                      loaded === photos[photo].url ? (colors.pending ? "opacity-60" : "opacity-100") : "opacity-0"
+                    }`}
+                  />
+                )}
+                {photos.length > 1 && (
+                  <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
+                    {photos.map((p, i) => (
+                      <span
+                        key={p.id}
+                        className={`h-1.5 rounded-full ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
+                          i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
+                        }`}
+                      />
+                    ))}
+                  </span>
+                )}
+              </button>
+              {/* La pista de que debajo hay más. Se va en cuanto se desliza (o se toca: también baja). */}
+              <button
+                type="button"
+                tabIndex={scrolled ? -1 : 0}
+                aria-hidden={scrolled}
+                onClick={toData}
+                className={`absolute bottom-2.5 left-1/2 flex h-9 -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-card/85 pr-3.5 pl-2.5 text-[11px] font-medium whitespace-nowrap text-text-2 shadow-[0_2px_8px_rgb(0_0_0/0.12)] backdrop-blur-md transition-opacity duration-300 ${
+                  scrolled ? "pointer-events-none opacity-0" : "opacity-100"
+                }`}
+              >
+                <Icon name="expand_less" size={16} />
+                {t.compras.visor.pista}
+              </button>
+            </div>
+            <div className="flex shrink-0 flex-col gap-1 px-4 pt-3 pb-2">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="label-caps min-w-0 truncate text-text-2">
+                  {[item.store_name, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
+                </span>
+                <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
+              </div>
+              <h3 className="font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
+              <div className="flex items-center justify-between gap-2">
+                <div className="shrink-0">
+                  <StoreLink item={item} />
+                </div>
+                <ColorDots colors={item.colors} pending={colors.pending} onPick={colors.pick} className="-mr-1.5" />
+              </div>
+              {colors.error && (
+                <p role="alert" className="text-xs text-danger">
+                  {colors.error}
+                </p>
+              )}
+              {/* Un color que no está guardado (se ha elegido aquí, o viene del buscador) se puede guardar. */}
+              {canSave && (
+                <button
+                  type="button"
+                  disabled={saving || colors.pending !== null}
+                  onClick={save}
+                  className="mb-1 flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-line bg-control text-xs font-semibold text-text active:scale-[0.98] disabled:opacity-40"
+                >
+                  <Icon name="favorite" size={18} />
+                  {saving ? t.compras.visor.guardando : t.compras.visor.guardar}
+                </button>
+              )}
+              {saveError && (
+                <p role="alert" className="text-xs text-danger">
+                  {t.compras.errorAccion}
+                </p>
+              )}
+              {item.status === "gustado" && (item.id !== opened.id || opened.status !== "gustado") && (
+                <p className="flex items-center gap-1.5 pb-1 text-xs font-medium text-ok">
+                  <Icon name="favorite_fill" size={15} />
+                  {t.compras.buscador.enMeGustan}
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="flex min-h-full snap-start flex-col gap-2 px-4 pt-4 pb-5">
+            {/* El hueco de la derecha es para la X, que flota sobre el cuadro. */}
+            <h4 className="flex min-h-11 items-center pr-12 font-display text-lg font-semibold tracking-tight">
+              {t.compras.visor.datos}
+            </h4>
+            {facts.map((fact) =>
+              fact.key === "tallas" ? (
+                <CopyRow key={fact.key} label={fact.label} value={fact.value}>
+                  <ul className="flex flex-wrap gap-1.5 pt-0.5">
+                    {item.sizes.map((s) => (
+                      <li
+                        key={s.name}
+                        aria-label={s.in_stock ? undefined : t.compras.visor.agotada(s.name)}
+                        className={`rounded-md border px-2 py-0.5 text-xs font-medium ${
+                          s.in_stock ? "border-line bg-control text-text" : "border-line text-text-3 line-through"
+                        }`}
+                      >
+                        {s.name}
+                      </li>
+                    ))}
+                  </ul>
+                </CopyRow>
+              ) : fact.key === "enlace" ? (
+                <CopyRow
+                  key={fact.key}
+                  label={fact.label}
+                  value={fact.value}
+                  extra={
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={t.compras.visor.abrir}
+                      title={t.compras.visor.abrir}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-primary active:scale-90"
+                    >
+                      <Icon name="open_in_new" size={18} />
+                    </a>
+                  }
+                >
+                  <span className="truncate text-sm text-text">{item.url.replace(/^https?:\/\/(www\.)?/, "")}</span>
+                </CopyRow>
+              ) : (
+                <CopyRow key={fact.key} label={fact.label} value={fact.value} />
+              ),
+            )}
+            <SecondaryButton onClick={() => copyAll(facts.map((fact) => `${fact.label}: ${fact.value}`).join("\n"))}>
+              <Icon name={copiedAll ? "check" : "content_copy"} size={18} className={copiedAll ? "text-ok" : ""} />
+              {copiedAll ? t.comun.copiado : t.compras.visor.copiarTodo}
+            </SecondaryButton>
+
+            <h4 className="mt-3 font-display text-lg font-semibold tracking-tight">{t.compras.combina.titulo}</h4>
+            {matches === null ? (
+              <p className="text-sm text-text-3">{t.compras.combina.cargando}</p>
+            ) : matches === "error" ? (
+              <p role="alert" className="text-sm text-danger">
+                {t.compras.combina.error}
+              </p>
+            ) : matches.groups.length === 0 ? (
+              <p className="text-sm text-text-2">
+                {matches.wardrobe === 0 ? t.compras.combina.armarioVacio : t.compras.combina.nada}
+              </p>
+            ) : (
+              matches.groups.map((group) => (
+                <div key={group.category} className="flex flex-col gap-1.5 pb-1">
+                  <span className="label-caps text-text-2">
+                    {t.compras.filtros.categorias[group.category] ?? group.category}
+                  </span>
+                  <ul className="grid grid-cols-3 gap-2">
+                    {group.garments.map((garment) => (
+                      <li key={garment.id} className="min-w-0">
+                        <button
+                          type="button"
+                          aria-label={t.compras.combina.ver(garment.name)}
+                          onClick={() => navigate(`/prenda/${garment.id}`)}
+                          className="flex w-full flex-col gap-1 text-left active:opacity-70"
+                        >
+                          <img
+                            src={mediaUrl(garment.photo.thumb_url)}
+                            alt=""
+                            className="aspect-[3/4] w-full rounded-xl bg-card-2 object-cover"
+                          />
+                          <span className="line-clamp-2 text-xs leading-snug text-text">{garment.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            )}
+          </section>
+        </div>
         <button
           type="button"
           aria-label={t.compras.panel.cerrar}
@@ -1011,16 +1433,6 @@ function PhotoViewer({ item, onClose }: { item: ShopItem; onClose: () => void })
         >
           <Icon name="close" size={20} />
         </button>
-        <div className="flex shrink-0 flex-col gap-1 px-4 pt-3 pb-2">
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="label-caps min-w-0 truncate text-text-2">
-              {[item.store_name, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
-            </span>
-            <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
-          </div>
-          <h3 className="font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
-          <StoreLink item={item} />
-        </div>
       </div>
     </div>
   );
@@ -1100,7 +1512,17 @@ function Liked({ onChanged }: { onChanged: () => void }) {
 
   return (
     <>
-      {viewing && <PhotoViewer item={viewing} onClose={() => setViewing(null)} />}
+      {viewing && (
+        <PhotoViewer
+          item={viewing}
+          onClose={() => setViewing(null)}
+          // Desde el visor se puede guardar otro color: la lista se pone al día por detrás.
+          onSaved={() => {
+            load();
+            onChanged();
+          }}
+        />
+      )}
       <ul className="flex flex-col gap-3">
         {items.map((item) => {
           const available = item.sizes.filter((s) => s.in_stock);
@@ -1241,8 +1663,12 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Una tarjeta por producto. Si la búsqueda trae el mismo en varios colores, se enseña uno y los
+  // demás quedan a mano (`loaded`) para cambiar de color al momento, sin volver a la tienda.
   const [results, setResults] = useState<ShopLookupItem[] | null>(null);
-  const [viewing, setViewing] = useState<ShopItem | null>(null);
+  const loaded = useRef(new Map<string, ShopLookupItem>());
+  const known = useCallback((productRef: string) => loaded.current.get(productRef), []);
+  const [viewing, setViewing] = useState<number | null>(null); // qué tarjeta se ve en grande
   const viewingRef = useRef(false);
   viewingRef.current = viewing !== null;
   const input = useRef<HTMLInputElement>(null);
@@ -1269,14 +1695,25 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
     setResults(null);
     api
       .shopLookup(wanted)
-      .then(setResults)
+      .then((found) => {
+        const cards: ShopLookupItem[] = [];
+        loaded.current = new Map(found.map((item) => [item.product_ref, item]));
+        for (const item of found) {
+          // Otro color de algo que ya tiene tarjeta: no se enseña aparte, se elige en ella.
+          const repeated = cards.some((card) => card.colors?.some((c) => c.product_ref === item.product_ref));
+          if (!repeated) cards.push(item);
+        }
+        setResults(cards);
+      })
       .catch((e) => setError(lookupMessage(e)))
       .finally(() => setBusy(false));
   };
 
-  const update = (item: ShopLookupItem) => {
-    setResults((list) => list?.map((other) => (other.id === item.id ? item : other)) ?? null);
-    onChanged();
+  /** Lo que enseña una tarjeta ha cambiado: otro color, o el mismo ya guardado o comprado (`saved`). */
+  const update = (card: number, item: ShopLookupItem, saved = true) => {
+    loaded.current.set(item.product_ref, item);
+    setResults((list) => list?.map((other, i) => (i === card ? item : other)) ?? null);
+    if (saved) onChanged();
   };
 
   return createPortal(
@@ -1363,15 +1800,31 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
             <>
               <p className="label-caps text-text-2">{t.compras.buscador.resultados(results.length)}</p>
               <ul className="flex flex-col gap-3">
-                {results.map((item) => (
-                  <SearchResult key={item.id} item={item} onUpdate={update} onView={() => setViewing(item)} />
+                {results.map((item, card) => (
+                  <SearchResult
+                    key={card}
+                    item={item}
+                    known={known}
+                    onUpdate={(updated) => update(card, updated)}
+                    onColor={(updated) => update(card, updated, false)}
+                    onView={() => setViewing(card)}
+                  />
                 ))}
               </ul>
             </>
           )}
         </div>
       </div>
-      {viewing && <PhotoViewer item={viewing} onClose={() => setViewing(null)} />}
+      {viewing !== null && results?.[viewing] && (
+        <PhotoViewer
+          key={viewing}
+          item={results[viewing]}
+          known={known}
+          onClose={() => setViewing(null)}
+          onChange={(updated) => update(viewing, updated, false)}
+          onSaved={onChanged}
+        />
+      )}
     </div>,
     document.body,
   );
@@ -1380,11 +1833,16 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
 /** Un resultado del buscador: foto, nombre, color, precio y qué hacer con él. */
 function SearchResult({
   item,
+  known,
   onUpdate,
+  onColor,
   onView,
 }: {
   item: ShopLookupItem;
+  known: (productRef: string) => ShopLookupItem | undefined;
   onUpdate: (item: ShopLookupItem) => void;
+  /** Se ha elegido otro color: la tarjeta pasa a enseñar ese. */
+  onColor: (item: ShopLookupItem) => void;
   onView: () => void;
 }) {
   const navigate = useNavigate();
@@ -1393,6 +1851,13 @@ function SearchResult({
   // «Ya la tengo»: se está eligiendo talla. "" = sin talla.
   const [choosing, setChoosing] = useState(false);
   const [size, setSize] = useState<string | null>(null);
+  const colors = useColors(item, onColor, known);
+  // Otro color es otra prenda: la talla que se estuviera eligiendo ya no vale.
+  useEffect(() => {
+    setChoosing(false);
+    setSize(null);
+    setError(null);
+  }, [item.id]);
   // Lo que ya tiene en casa puede estar agotado en la tienda: de un resultado nuevo vale cualquier talla.
   const sizes = item.sizes.filter((s) => s.in_stock || item.status === "buscado").map((s) => s.name);
 
@@ -1449,9 +1914,17 @@ function SearchResult({
         </div>
       </div>
 
-      {error && (
+      <ColorDots
+        colors={item.colors}
+        pending={colors.pending}
+        disabled={busy !== null}
+        onPick={colors.pick}
+        className="-mx-1.5 -my-1.5"
+      />
+
+      {(error || colors.error) && (
         <p role="alert" className="text-sm text-danger">
-          {error}
+          {error || colors.error}
         </p>
       )}
 

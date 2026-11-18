@@ -44,12 +44,15 @@ _NEW_COLUMNS = {
         "hood": "BOOLEAN",
         "fit": "VARCHAR(20)",
         "thickness": "VARCHAR(20)",
+        "reference": "VARCHAR(40)",
+        "store_name": "VARCHAR(40)",
+        "store_url": "TEXT",
     },
     "wear_log": {"outfit_id": "INTEGER"},
     "ratings": {"culprit_ids": "JSON"},
     "shop_items": {
         "decided_at": "DATETIME", "can_undo": "BOOLEAN", "discard_reason": "VARCHAR(20)",
-        "prev_status": "VARCHAR(20)",
+        "prev_status": "VARCHAR(20)", "siblings": "JSON", "composition": "TEXT",
     },
 }
 

@@ -20,6 +20,7 @@ export const EMPTY_GARMENT: GarmentFields = {
   brand: null,
   size: null,
   notes: "",
+  reference: null,
 };
 
 /** Tarjeta con los atributos editables de una prenda. La usan Nueva prenda y Editar. */
@@ -264,6 +265,19 @@ export function GarmentForm({
           />
         </Field>
       </div>
+
+      <Field label={t.nueva.campos.referencia}>
+        <input
+          className={inputClass}
+          value={form.reference ?? ""}
+          maxLength={40}
+          placeholder={t.nueva.campos.referenciaEjemplo}
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          onChange={(e) => set("reference", e.target.value || null)}
+        />
+      </Field>
 
       <Field label={t.nueva.campos.notas}>
         <textarea

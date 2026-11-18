@@ -191,7 +191,8 @@ export default function AnadirPrenda() {
       setAnalysis(result);
       if (result.draft) {
         const { confidence: _c, color_primary_alt: _alt, ...fields } = result.draft;
-        setForm(fields);
+        // La referencia de la tienda no la sabe la IA.
+        setForm({ ...fields, reference: null });
         setStep("formulario");
       } else if (skipAi) {
         // Formulario limpio (sin restos de un intento anterior) y con un tipo acorde a lo elegido.

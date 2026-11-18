@@ -22,6 +22,11 @@ y la prenda pasa al armario. La app nunca compra ni guarda datos de pago: solo e
 Aparte está el buscador (`lookup`): el usuario da una referencia, un enlace o un texto, y lo que
 sale se guarda como «buscado» con sus fotos, listo para pasar a Me gustan o al armario. Un «buscado»
 no es una propuesta: no sale en Descubrir ni enseña nada hasta que se guarda o se compra.
+
+Un producto puede existir en varios colores, y cada color es un item aparte. Con la ficha se apuntan
+los colores hermanos (`siblings`); elegir otro (`switch_color`) trae ese item, y en Descubrir solo se
+enseña uno a la vez: el otro queda apartado («variante»). «Combina con…» (`matches`) dice con qué
+prendas del armario va mejor un producto, con la misma afinidad de Hoy y Gustos.
 """
 import json
 import logging
@@ -53,6 +58,18 @@ NEW, LIKED, DISCARDED, BOUGHT, EXPIRED = "nuevo", "gustado", "descartado", "comp
 # propuesta: no sale en Descubrir, no es candidato y no enseña nada. Si no se guarda ni se compra,
 # se limpia solo (`clean_lookups`).
 SEARCHED = "buscado"
+# «variante»: otro color de una propuesta de Descubrir, apartado al elegir color. De un producto solo
+# se enseña un color a la vez: el que no se está viendo ni sale como propuesta aparte, ni cuenta como
+# descartado, ni enseña nada. Guarda sus fotos (para volver a él al momento) hasta la consulta semanal.
+VARIANT = "variante"
+
+MATCH_PER_GROUP = 3  # prendas del armario que se enseñan por parte del cuerpo en «Combina con»
+# Afinidad mínima de la pareja para salir en «Combina con»: la de una combinación corriente. Es más
+# baja que GOOD_PAIR (la que cuenta para la nota) a propósito: con GOOD_PAIR, a una prenda normal le
+# salían grupos enteros vacíos (una sudadera gris sin ningún calzado), y aquí lo que se pide son las
+# mejores de cada parte del cuerpo, no solo las redondas. Lo que queda por debajo no se enseña.
+MATCH_MIN = 50
+COMPOSITION_MAX = 300
 
 LOOKUP_MAX = 12  # resultados del buscador, como mucho (un producto con muchos colores)
 LOOKUP_SECONDS = 40.0  # a partir de aquí no se piden más fichas: se enseña lo que haya
@@ -335,9 +352,10 @@ def load_shop_taste(db: Session) -> ShopTaste:
     learned = ShopTaste()
     counted = or_(ShopItem.status.in_((LIKED, DISCARDED, BOUGHT, EXPIRED)), ShopItem.prev_status.is_not(None))
     for item in db.scalars(select(ShopItem).where(counted)):
-        # Un «buscado» no enseña nada. Si ya existía (descartado, caducado…), sigue contando como lo
-        # que era: volver a buscar algo no borra lo que se dijo de ello.
-        status = item.prev_status if item.status == SEARCHED else item.status
+        # Un «buscado» no enseña nada, y un color apartado («variante») tampoco. Si ya existía
+        # (descartado, caducado…), sigue contando como lo que era: volver a buscar algo no borra lo
+        # que se dijo de ello.
+        status = item.prev_status if item.status in (SEARCHED, VARIANT) else item.status
         if status == BOUGHT:
             learned.learn(item, True, strength=BOUGHT_WEIGHT)
         elif status == LIKED:
@@ -633,8 +651,16 @@ def expire_old(db: Session, now: datetime | None = None) -> int:
     return expired
 
 
+def _retire_unseen(item: ShopItem) -> None:
+    """Se acabó su tanda sin que se valorase: caduca. Si antes de volver a traerlo ya se había dicho
+    algo de él (descartado, caducado…), vuelve a ser eso."""
+    _retire(item, item.prev_status or EXPIRED)
+    item.prev_status = None
+
+
 def like(db: Session, item: ShopItem) -> None:
-    """A «Me gustan», con su caducidad. Vale para una propuesta de Descubrir y para un «buscado»."""
+    """A «Me gustan», con su caducidad. Vale para una propuesta de Descubrir, para un «buscado» y para
+    un color visto desde otro (el «me gusta» es al color que se está viendo)."""
     now = now_utc()
     # «Volver» es cosa de Descubrir: lo que entra por el buscador no pasa por ahí.
     item.can_undo = item.status == NEW
@@ -725,6 +751,47 @@ class CannotBuy(Exception):
     pass
 
 
+def store_reference(item: ShopItem) -> str | None:
+    """La referencia como la escribe la tienda («3918/300/800»), o None si el conector no sabe darla."""
+    make = getattr(shops.CONNECTORS.get(item.store), "reference", None)
+    try:
+        value = make(item.store_data or {}) if make else None
+    except Exception:  # un `store_data` antiguo o raro no puede tumbar la ficha
+        return None
+    return str(value)[:40] if value else None
+
+
+def colors_of(item: ShopItem) -> list[dict] | None:
+    """Los colores entre los que se puede elegir, para la interfaz: [{"product_ref", "name", "hex",
+    "current"}]. Vacío si solo existe en uno; None si aún no se sabe (item guardado antes de que se
+    apuntaran: `ensure_colors` lo rellena)."""
+    if item.siblings is None:
+        return None
+    if len(item.siblings) < 2:
+        return []
+    return [
+        {
+            "product_ref": sibling["product_ref"],
+            "name": sibling.get("name") or "",
+            # Sin tono de la tienda, el de nuestra paleta que mejor le va al nombre.
+            "hex": sibling.get("hex") or catalog.COLOR_HEX[estimate_color(sibling.get("name"))],
+            "current": sibling["product_ref"] == item.product_ref,
+        }
+        for sibling in sorted(item.siblings, key=lambda sibling: sibling["product_ref"])
+    ]
+
+
+def _apply_detail(row: ShopItem, detail) -> None:
+    """Lo que la ficha dice además de fotos y tallas: en qué colores existe y de qué está hecha."""
+    # Siempre en el mismo orden (la tienda pone primero el color que se le pide): si no, al cambiar de
+    # color los circulitos bailarían de sitio.
+    row.siblings = sorted(
+        (dict(sibling) for sibling in detail.siblings or [] if sibling.get("product_ref")),
+        key=lambda sibling: sibling["product_ref"],
+    )
+    row.composition = " ".join((detail.composition or "").split())[:COMPOSITION_MAX] or None
+
+
 def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) -> tuple[Garment, bool]:
     """Pasa el producto al armario con las fotos de la tienda. Devuelve la prenda y si la analizó la IA.
 
@@ -735,7 +802,7 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
     if not photos:
         raise CannotBuy("Las fotos de este producto ya no están; no se puede pasar al armario")
     # De un «buscado» puede que ya tenga la prenda en casa: vale cualquier talla que exista, quede o no.
-    in_stock = [s["name"] for s in item.sizes or [] if s.get("in_stock") or item.status == SEARCHED]
+    in_stock = [s["name"] for s in item.sizes or [] if s.get("in_stock") or item.status in (SEARCHED, VARIANT)]
     if size and in_stock and size not in in_stock:
         raise CannotBuy("Esa talla no está entre las disponibles")
     front, back, extra = (photos + [None, None])[:3]
@@ -776,6 +843,10 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
         category=catalog.category_of(fields["type"]),
         brand=brand,
         size=size,
+        # De dónde vino, para poder buscarla o pedirla otra vez desde la Ficha.
+        reference=store_reference(item),
+        store_name=brand[:40],
+        store_url=item.url or None,
         photo_front=front,
         photo_back=back,
         photo_extra=extra,
@@ -907,9 +978,16 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
     """
     scores: list[float] = []
     attempts = 0
+    # La misma prenda no se enseña dos veces en dos colores: lo que ya se ve en esta tanda (pendiente,
+    # apartado o recién decidido) y sus colores hermanos no entran como propuesta aparte.
+    shown, family = _shown_this_round(db)
     for _value, _reasons, row in ranked:
         if len(scores) >= limit or attempts >= limit * 2:
             break
+        if row.product_ref in family:
+            row.last_checked_at = now_utc()  # esta semana ya no se intenta: sale como color de otra
+            db.commit()
+            continue
         attempts += 1
         connector = shops.CONNECTORS[row.store]
         try:
@@ -918,6 +996,10 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
             if detail is None or not detail.photo_urls or not detail.in_stock:
                 db.commit()
                 continue  # ya no existe, no tiene foto de producto o no queda ninguna talla
+            siblings = {s["product_ref"] for s in detail.siblings or [] if s.get("product_ref")} - {row.product_ref}
+            if siblings & shown:
+                db.commit()
+                continue  # es otro color de algo que ya se está enseñando (y de lo que no se sabían los colores)
             description = " ".join((detail.description or "").split())[:DESCRIPTION_MAX]
             if description and description not in (row.details or ""):
                 row.details = f"{row.details or ''} {description}".strip()
@@ -938,10 +1020,27 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
         row.price_cents = detail.price_cents or row.price_cents
         row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, True
         row.first_seen_at = now_utc()
+        _apply_detail(row, detail)
         row.score, row.reasons = context.score(row)  # con la descripción ya leída
         db.commit()
         scores.append(row.score)
+        shown.add(row.product_ref)
+        family |= siblings
     return scores
+
+
+def _shown_this_round(db: Session) -> tuple[set[str], set[str]]:
+    """Lo que se está enseñando en esta tanda (pendiente, apartado como otro color, o decidido y aún
+    deshacible) y sus colores hermanos: (sus referencias, las de sus hermanos)."""
+    rows = db.scalars(
+        select(ShopItem).where(or_(ShopItem.status.in_((NEW, VARIANT)), ShopItem.can_undo.is_(True)))
+    )
+    shown: set[str] = set()
+    family: set[str] = set()
+    for row in rows:
+        shown.add(row.product_ref)
+        family.update(s["product_ref"] for s in row.siblings or [] if s.get("product_ref"))
+    return shown, family - shown
 
 
 def _failure_log(result: dict):
@@ -1016,8 +1115,12 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
                 db.delete(row)
         stale = select(ShopItem).where(ShopItem.store == store, ShopItem.status == NEW, ShopItem.batch < today)
         for item in db.scalars(stale):
-            _retire(item, EXPIRED)
+            _retire_unseen(item)
             result["expired"] += 1
+        # Los colores apartados al elegir otro se van con su tanda, sin contar como nada.
+        aside = select(ShopItem).where(ShopItem.store == store, ShopItem.status == VARIANT, ShopItem.batch < today)
+        for item in db.scalars(aside):
+            _retire_unseen(item)
         _set(db, K_MORE, None)
         db.commit()
         _close_undo(db, store)
@@ -1044,6 +1147,7 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
         else:
             item.sizes, item.in_stock = detail.sizes, True
             item.price_cents = detail.price_cents or item.price_cents
+            _apply_detail(item, detail)  # de paso, los colores: los guardados antes de apuntarlos se ponen al día
         db.commit()
 
     if result["ok"]:
@@ -1223,6 +1327,173 @@ def _has_photos(item: ShopItem) -> bool:
     return bool(item.photos) and storage.exists(item.photos[0])
 
 
+def _store_fetched(db: Session, row: ShopItem | None, product, detail, photos: list[str], today: date,
+                   context: "Context") -> ShopItem:
+    """Guarda como «buscado» un producto del que se acaban de bajar la ficha y las fotos (lo trae el
+    buscador, o se ha elegido ese color desde otro). `row` es su fila, si ya existía."""
+    before = row.status if row is not None else None
+    row = _store_candidate(db, row, product, today)
+    _drop_photos(row)  # las que pudiera tener de antes
+    row.status, row.batch, row.photos = SEARCHED, today, photos
+    # Lo que ya se había valorado vuelve a su estado si no se hace nada con ello.
+    if before in (DISCARDED, EXPIRED, BOUGHT):
+        row.prev_status = before
+    row.can_undo = False
+    row.price_cents = detail.price_cents or row.price_cents
+    row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, detail.in_stock
+    if row.color == "multicolor" and detail.color_hex:
+        # El nombre del color no decía nada conocido («Bronce»): con la ficha ya se sabe el tono.
+        row.color = estimate_color(row.store_color, detail.color_hex)
+    row.first_seen_at = row.last_checked_at = now_utc()
+    description = " ".join((detail.description or "").split())[:DESCRIPTION_MAX]
+    if description and description not in (row.details or ""):
+        row.details = f"{row.details or ''} {description}".strip()
+    _apply_detail(row, detail)
+    row.score, row.reasons = context.score(row)
+    db.commit()
+    return row
+
+
+# ---------- Los colores de un producto
+
+
+class ColorFailed(Exception):
+    """No se puede enseñar ese color. El mensaje va tal cual a la pantalla. `reason`: «nada» (ese
+    color ya no existe) o «tienda» (la tienda no responde)."""
+
+    def __init__(self, message: str, reason: str = "nada"):
+        super().__init__(message)
+        self.reason = reason
+
+
+def ensure_colors(db: Session, item: ShopItem) -> ShopItem:
+    """Rellena los colores de un item guardado antes de que se apuntaran, pidiendo su ficha otra vez.
+
+    Se hace una sola vez y solo cuando hace falta: la primera vez que se enseña su tarjeta o se abre
+    su visor (y, para los «me gusta», en la consulta semanal, que ya pide esa ficha). Si la tienda
+    falla no pasa nada: se queda sin saber y se vuelve a intentar la próxima vez.
+    """
+    connector = shops.CONNECTORS.get(item.store)
+    if item.siblings is not None or connector is None or item.status == CANDIDATE:
+        return item
+    try:
+        detail = connector.detail(item.store_data)
+    except Exception as exc:
+        if not isinstance(exc, ShopError):
+            log.exception("Compras: error inesperado al pedir los colores de %s", item.product_ref)
+        return item
+    if detail is None:
+        item.siblings = []  # ya no está en la tienda: no hay nada entre lo que elegir
+    else:
+        _apply_detail(item, detail)
+        if detail.sizes:
+            item.sizes = detail.sizes
+        item.price_cents = detail.price_cents or item.price_cents
+    db.commit()
+    return item
+
+
+def _sibling_product(item: ShopItem, sibling: dict) -> shops.ShopProduct:
+    """Otro color de un producto, visto como producto: lo mismo que el que se conoce, con su color."""
+    name = sibling.get("name") or ""
+    return shops.ShopProduct(
+        store=item.store, product_ref=sibling["product_ref"], name=item.name,
+        price_cents=sibling.get("price_cents") or item.price_cents, url=sibling.get("url") or item.url,
+        store_color=name, section=item.section, type=item.type, category=item.category,
+        color=estimate_color(name, sibling.get("hex")), pattern=item.pattern, style=item.style,
+        season=item.season, details=item.details or "", store_data=dict(sibling.get("store_data") or {}),
+    )
+
+
+def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | None = None) -> ShopItem:
+    """Elegir otro color de un producto: devuelve el item de ese color, trayéndolo de la tienda (ficha
+    y fotos, unos segundos) si aún no se tenía.
+
+    El color nuevo llega como «buscado»: no es una propuesta ni enseña nada hasta que se le da «me
+    gusta» o se compra, y si no se hace nada con él se limpia solo. La excepción es Descubrir: ahí el
+    color elegido pasa a ser la propuesta y el que se estaba viendo se aparta («variante»), para que
+    la decisión sea sobre el color que se ve y la misma prenda no salga dos veces.
+    Lanza ColorFailed, con el mensaje ya escrito, si no se puede.
+    """
+    today = today or outfits.local_today()
+    if product_ref == item.product_ref:
+        return item
+    sibling = next((s for s in item.siblings or [] if s.get("product_ref") == product_ref), None)
+    if sibling is None:
+        raise ColorFailed("Ese color no está entre los de esta prenda")
+    target = db.scalars(select(ShopItem).where(ShopItem.product_ref == product_ref)).first()
+    ready = target is not None and (
+        already(db, target) or (target.status in (NEW, SEARCHED, VARIANT) and _has_photos(target))
+    )
+    if not ready:
+        connector = shops.CONNECTORS.get(item.store)
+        if connector is None:
+            raise ColorFailed("Esa tienda ya no está disponible", "tienda")
+        try:
+            detail = connector.detail(sibling.get("store_data") or {})
+            if detail is None or not detail.photo_urls:
+                raise ColorFailed("Ese color ya no está en la tienda")
+            photos = _save_photos(connector, detail.photo_urls)
+        except ColorFailed:
+            raise
+        except Exception as exc:
+            if not isinstance(exc, ShopError):
+                log.exception("Compras: error inesperado al traer el color %s", product_ref)
+                raise ColorFailed(f"No se pudo traer ese color de {connector.name}", "tienda") from exc
+            raise ColorFailed(f"{connector.name} no responde ahora ({exc})", "tienda") from exc
+        # Mientras se hablaba con la tienda ha podido cambiar algo (un «me gusta» a medio camino).
+        db.refresh(item)
+        target = db.scalars(select(ShopItem).where(ShopItem.product_ref == product_ref)).first()
+        target = _store_fetched(db, target, _sibling_product(item, sibling), detail, photos, today, Context.load(db))
+    if item.status == NEW and target.status in (NEW, SEARCHED, VARIANT):
+        target.status, target.batch, target.can_undo = NEW, item.batch, False
+        item.status = VARIANT
+        db.commit()
+    elif target.status == SEARCHED:
+        target.first_seen_at = now_utc()  # se ha vuelto a mirar: el plazo de limpieza empieza otra vez
+        db.commit()
+    return target
+
+
+def _seasons_clash(a: outfits.Item, b: outfits.Item) -> bool:
+    """¿Es una de invierno y la otra de verano? De verano es también lo que Hoy solo propone de mayo a
+    septiembre aunque esté marcado «todo el año»: una camiseta no es pareja para un abrigo."""
+    return (a.season == "invierno" and outfits.summer_only(b)) or (b.season == "invierno" and outfits.summer_only(a))
+
+
+def matches(db: Session, item: ShopItem) -> tuple[int, list[tuple[str, list[tuple[Garment, int]]]]]:
+    """«Combina con…»: las prendas del armario con las que mejor va un producto de tienda.
+
+    Devuelve cuántas prendas hay en el armario y, por cada parte del cuerpo que no es la suya, las
+    `MATCH_PER_GROUP` con mejor afinidad (prenda, afinidad), de mayor a menor. Es la misma cuenta que
+    hace `score` para «Combina con N de tus prendas»: la afinidad de la pareja con lo aprendido en
+    Gustos; aquí entra todo lo que llega a MATCH_MIN. Respeta las reglas del usuario: cazadora o
+    sobrecamisa sobre sudadera con cremallera entera, no; y no se mezcla verano con invierno, contando
+    como de verano lo mismo que en Hoy (pantalón corto, manga corta, camisetas y polos).
+    """
+    from ..routers.taste import load_taste  # aquí, para no atar el servicio a los routers al importar
+
+    garments = list(db.scalars(select(Garment)))
+    candidate = candidate_item(item)
+    taste = load_taste(db)
+    found: dict[str, list[tuple[Garment, int]]] = {}
+    for garment in garments:
+        piece = wardrobe_item(garment)
+        if piece.category == candidate.category or _seasons_clash(candidate, piece):
+            continue
+        if style_rules.zip_clash(candidate, piece) or style_rules.zip_clash(piece, candidate):
+            continue
+        affinity = outfits.combo_affinity([candidate, piece], taste)
+        if affinity >= MATCH_MIN:
+            found.setdefault(garment.category, []).append((garment, affinity))
+    groups = [
+        (category, sorted(found[category], key=lambda pair: (-pair[1], not pair[0].favorite, pair[0].id))[:MATCH_PER_GROUP])
+        for category in catalog.CATEGORIES
+        if category in found
+    ]
+    return len(garments), groups
+
+
 def _lookup(db: Session, query: str, today: date) -> list[ShopItem]:
     started = time.monotonic()
     clean_lookups(db)
@@ -1252,26 +1523,7 @@ def _lookup(db: Session, query: str, today: date) -> list[ShopItem]:
                 log.exception("Compras: error inesperado al buscar %s", product.product_ref)
                 down.append(f"No se pudo traer «{product.name}»: error inesperado")
             continue
-        before = row.status if row is not None else None
-        row = _store_candidate(db, row, product, today)
-        _drop_photos(row)  # las que pudiera tener de antes
-        row.status, row.batch, row.photos = SEARCHED, today, photos
-        # Lo que ya se había valorado vuelve a su estado si no se hace nada con ello.
-        if before in (DISCARDED, EXPIRED, BOUGHT):
-            row.prev_status = before
-        row.can_undo = False
-        row.price_cents = detail.price_cents or row.price_cents
-        row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, detail.in_stock
-        if row.color == "multicolor" and detail.color_hex:
-            # El nombre del color no decía nada conocido («Bronce»): con la ficha ya se sabe el tono.
-            row.color = estimate_color(row.store_color, detail.color_hex)
-        row.first_seen_at = row.last_checked_at = now_utc()
-        description = " ".join((detail.description or "").split())[:DESCRIPTION_MAX]
-        if description and description not in (row.details or ""):
-            row.details = f"{row.details or ''} {description}".strip()
-        row.score, row.reasons = context.score(row)
-        db.commit()
-        items.append(row)
+        items.append(_store_fetched(db, row, product, detail, photos, today, context))
     if not items:
         if down:
             raise LookupFailed(down[0], "tienda")

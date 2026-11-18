@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PrimaryButton, RotateButton, Switch } from "../components/Controls";
+import { CopyRow } from "../components/CopyButton";
 import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
@@ -299,6 +300,35 @@ export default function FichaPrenda() {
               </Row>
             )}
           </div>
+
+          {/* De dónde vino: la referencia (de Compras o escrita a mano), la tienda y su página. Sin precio. */}
+          {(garment.reference || garment.store_name || garment.store_url) && (
+            <div className="flex flex-col gap-2">
+              <h3 className="font-display text-lg font-semibold">{t.ficha.tienda.titulo}</h3>
+              {garment.reference && <CopyRow label={t.ficha.tienda.referencia} value={garment.reference} />}
+              {garment.store_name && <CopyRow label={t.ficha.tienda.tienda} value={garment.store_name} />}
+              {garment.store_url && (
+                <CopyRow
+                  label={t.ficha.tienda.enlace}
+                  value={garment.store_url}
+                  extra={
+                    <a
+                      href={garment.store_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={t.ficha.tienda.abrir}
+                      title={t.ficha.tienda.abrir}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-primary active:scale-90"
+                    >
+                      <Icon name="open_in_new" size={18} />
+                    </a>
+                  }
+                >
+                  <span className="truncate text-sm text-text">{garment.store_url.replace(/^https?:\/\/(www\.)?/, "")}</span>
+                </CopyRow>
+              )}
+            </div>
+          )}
 
           {/* Uso (se deriva del historial) */}
           <div className="flex flex-col gap-2">

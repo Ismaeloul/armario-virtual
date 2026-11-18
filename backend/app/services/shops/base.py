@@ -57,6 +57,12 @@ class ShopDetail:
     photo_urls: list[str]  # fotos de producto sin modelo: delante, detrás, otra vista (como mucho 3)
     description: str = ""
     color_hex: str | None = None
+    composition: str = ""  # de qué está hecha, como lo dice la tienda («Exterior: 55% poliéster, 45% lana»)
+    # Todos los colores en los que existe el producto, este incluido, y solo los que tienen foto de
+    # producto: [{"product_ref", "name", "hex" (o None), "url", "store_data"}]. Cada color es un
+    # producto aparte (su propio `product_ref`); `store_data` es lo que hace falta para pedir su ficha.
+    # None si el conector no lo sabe.
+    siblings: list[dict] | None = None
 
     @property
     def in_stock(self) -> bool:
@@ -78,6 +84,10 @@ class ShopConnector(Protocol):
 
     def download(self, url: str) -> bytes:
         """Los bytes de una foto. Lanza ShopError si falla."""
+
+    def reference(self, store_data: dict) -> str | None:
+        """La referencia del producto como la escribe la tienda («3918/300/800»), para enseñarla y
+        copiarla. Es opcional: con un conector sin `reference`, la app no enseña referencia."""
 
     def search(self, query: str, limit: int) -> list[ShopProduct]:
         """El buscador: lo que el usuario escribe en un solo campo (una referencia, un enlace de
