@@ -21,10 +21,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # Node solo hace falta para el lanzador del CLI de Codex (suscripción de ChatGPT).
 # curl: JD Sports responde 403 a httpx y 200 a curl (backend/app/services/shops/fetch.py).
+# libatomic1: lo necesita el Node que trae Playwright (sin él, `playwright install` falla en la imagen slim).
 # xvfb: la pantalla virtual donde se abre Chromium CON ventana (Pull&Bear y Bershka no dejan pasar a
 # un Chromium sin ventana). Se arranca solo mientras dura una consulta (services/shops/browser.py).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nodejs npm ca-certificates curl xvfb \
+    && apt-get install -y --no-install-recommends nodejs npm ca-certificates curl xvfb libatomic1 \
     && npm install -g @openai/codex --no-fund --no-audit \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /root/.npm
 
