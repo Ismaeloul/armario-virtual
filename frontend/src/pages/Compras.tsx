@@ -1242,9 +1242,10 @@ function PhotoViewer({
         <div
           ref={scroller}
           onScroll={(e) => e.currentTarget.scrollTop > 24 && setScrolled(true)}
-          className="h-full snap-y snap-proximity overflow-y-auto overscroll-contain"
+          // Scroll libre, sin imanes: si se baja un poco, se queda ahí (antes saltaba de vuelta a la foto).
+          className="h-full overflow-y-auto overscroll-contain"
         >
-          <section className="flex h-full snap-start flex-col">
+          <section className="flex h-full flex-col">
             <div className="relative min-h-0 w-full flex-1">
               <button
                 type="button"
@@ -1362,7 +1363,7 @@ function PhotoViewer({
             </div>
           </section>
 
-          <section className="flex min-h-full snap-start flex-col gap-2 px-4 pt-4 pb-5">
+          <section className="flex flex-col gap-2 px-4 pt-4 pb-5">
             {/* El hueco de la derecha es para la X, que flota sobre el cuadro. */}
             <h4 className="flex min-h-11 items-center pr-12 font-display text-lg font-semibold tracking-tight">
               {t.compras.visor.datos}
