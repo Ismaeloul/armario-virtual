@@ -58,7 +58,16 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   en este entorno («spawn UNKNOWN»). Las zapatillas guardan la marca y el algoritmo la aprende. Los nombres,
   colores y composición se traducen al español con Codex en lote (`services/ai/translate.py`), con modelo y
   esfuerzo propios en Ajustes (el usuario quiere Luna en bajo para traducir y Terra en alto para las fotos).
-  Tiendas nuevas acordadas con el usuario el 18-11-2026 (investigadas, SIN construir; notas y fixtures por
+  Construidas el 18-11-2026 las 15 tiendas acordadas (en `main`, sin publicar; 20 en total, 416 tests), todas
+  desactivadas: Massimo Dutti y Lefties (`inditex.py`), Nike, Jack & Jones, Carhartt WIP, Foot Locker (estas
+  cuatro sin navegador, sin probar en Linux: si dan 403 allí, pasar a `needs_browser = True`), Snipes, size?,
+  Jules y Bonobo (`sfra.py`), y Uniqlo, Mango, H&M, COS y Weekday (`listing.py`: solo se lee el listado, nunca
+  la ficha; H&M, COS, Uniqlo y Mango sin tallas, «Míralas en la tienda» y talla a mano al comprar; H&M con
+  tope de 8 páginas por sección). Las zapatillas iguales de varias tiendas salen una sola vez (`maker_code`,
+  «También en: …»; JD Sports no da ese código). Cada noche, como mucho 3 tiendas y 2 pesadas. Probadas de
+  verdad en Windows todas menos dos: Uniqlo dio «Access Denied» en la primera página (se paró ahí) y Mango
+  cargó pero el conector no encontró productos (retocado después, solo con tests). Nada probado en el Umbrel.
+  Tiendas nuevas acordadas con el usuario el 18-11-2026 (lista y motivos; notas y fixtures por
   tienda en el scratchpad de esa sesión, carpeta `tiendas/`): sin navegador Nike (solo zapatillas), Jack & Jones,
   Carhartt WIP y Foot Locker (por marcas y novedades; no pagina bien); con navegador Snipes, Size?, Jules, Bonobo,
   Massimo Dutti y Lefties (mismo `inditex.py`), Uniqlo, Mango y Weekday; y H&M y COS solo con el listado (la ficha

@@ -2,23 +2,23 @@
 
 Reparto de noches (18-11-2026). Cada tienda se consulta un día fijo a la semana (`refresh_weekday`), a la
 hora de la noche, y las de una misma noche van una detrás de otra, de madrugada (nadie usa el Umbrel a esa
-hora: que tarde una o dos horas no importa). Con quince tiendas (y cinco más en camino) cada noche lleva
-como mucho TRES tiendas y como mucho DOS «pesadas» (las de navegador con muchas secciones y una ficha por
-propuesta: las de Inditex, Jules y Bonobo). Las de zapatillas con navegador (JD Sports, Snipes, size?)
-son ligeras: una o dos secciones. Además, el bucle de la noche lo hace cumplir aunque coincidan más
-(recién activadas a la vez, una que falló y se repite): las que no caben pasan a la noche siguiente (ver
+hora: que tarde una o dos horas no importa). Con veinte tiendas, cada noche lleva como mucho TRES tiendas y
+como mucho DOS «pesadas» (las de navegador con muchas secciones o muchas páginas: las de Inditex, Jules,
+Bonobo, Uniqlo, Mango, H&M, COS y Weekday). Las de zapatillas con navegador (JD Sports, Snipes, size?) son
+ligeras: una o dos secciones. Además, el bucle de la noche lo hace cumplir aunque coincidan más (recién
+activadas a la vez, una que falló y se repite): las que no caben pasan a la noche siguiente (ver
 `shopping.tonight`; los topes, `ARMARIO_SHOP_STORES_PER_NIGHT` y `ARMARIO_SHOP_HEAVY_PER_NIGHT`).
 
-    Lun  Pull&Bear (pesada)       + Jack & Jones                  [+ Uniqlo]
-    Mar  Massimo Dutti (pesada)   + Courir                        [+ Mango]
+    Lun  Pull&Bear (pesada)       + Jack & Jones                  + Uniqlo (pesada)
+    Mar  Massimo Dutti (pesada)   + Courir                        + Mango (pesada)
     Mié  Jules (pesada)           + JD Sports + Carhartt WIP
-    Jue  Bershka (pesada)         + Nike                          [+ H&M]
+    Jue  Bershka (pesada)         + Nike                          + H&M (pesada)
     Vie  Zara (el día después de sus novedades) + Bonobo (pesada) + Foot Locker
-    Sáb  Lefties (pesada)         + Snipes                        [+ COS]
-    Dom  size?                                                    [+ Weekday] (y un sitio libre)
+    Sáb  Lefties (pesada)         + Snipes                        + COS (pesada)
+    Dom  size?                    + Weekday (pesada)              (y un sitio libre)
 
-Entre corchetes, el hueco pensado para las cinco que vienen (todas de navegador y pesadas): con ellas
-habrá veinte tiendas en 21 sitios y once pesadas en 14, sin pasar de los topes ninguna noche.
+Veinte tiendas en 21 sitios y once pesadas en 14, sin pasar de los topes ninguna noche. Uniqlo, Mango, H&M,
+COS y Weekday se leen solo por su listado, con navegador y sin abrir nunca una ficha (ver listing.py).
 """
 from . import browser, crawl
 from .base import BlockedError, BrowserUnavailable, NeedsBrowser, NotThisStore, SearchError, ShopConnector, ShopDetail
@@ -28,17 +28,22 @@ from .base import maker_key
 from .bershka import BershkaConnector
 from .bonobo import BonoboConnector
 from .carhartt import CarharttConnector
+from .cos import COSConnector
 from .courir import CourirConnector
 from .footlocker import FootLockerConnector
+from .hm import HMConnector
 from .jackjones import JackJonesConnector
 from .jdsports import JDSportsConnector
 from .jules import JulesConnector
 from .lefties import LeftiesConnector
+from .mango import MangoConnector
 from .massimodutti import MassimoDuttiConnector
 from .nike import NikeConnector
 from .pullandbear import PullAndBearConnector
 from .sizeofficial import SizeConnector
 from .snipes import SnipesConnector
+from .uniqlo import UniqloConnector
+from .weekday import WeekdayConnector
 from .zara import ZaraConnector
 from ... import catalog
 
@@ -62,6 +67,13 @@ CONNECTORS: dict[str, ShopConnector] = {
     "footlocker": FootLockerConnector(),
     "jules": JulesConnector(),  # navegador
     "bonobo": BonoboConnector(),  # navegador (también para las fotos)
+    # Solo por su listado, con navegador y sin abrir nunca una ficha (listing.py). H&M, COS, Uniqlo y Mango,
+    # sin tallas en el listado.
+    "uniqlo": UniqloConnector(),
+    "mango": MangoConnector(),
+    "hm": HMConnector(),
+    "cos": COSConnector(),
+    "weekday": WeekdayConnector(),
 }
 
 

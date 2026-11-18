@@ -1,0 +1,229 @@
+{
+ "pagination": {
+  "currentPage": 1,
+  "nextPageNum": 2,
+  "totalPages": 2,
+  "pageSize": 36
+ },
+ "totalHits": 38,
+ "rawProductList": [
+  {
+   "availability": {
+    "comingSoon": false,
+    "stockState": "Available"
+   },
+   "brandName": "H&M",
+   "external": false,
+   "hasVideo": false,
+   "id": "1338515005",
+   "images": [
+    {
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/7e/01/7e0155a2b607cb7d8bb2f673b8993dc9283585d2.jpg"
+    },
+    {
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/e2/58/e25833374f5bf3454f17862a5a97b90115b8d27b.jpg"
+    }
+   ],
+   "modelImage": "https://image.hm.com/assets/hm/3d/d1/3dd135668f4f4ca3891006d67d239efca7814664.jpg",
+   "modelImageInfo": {
+    "assetType": "DescriptiveStillLife",
+    "url": "https://image.hm.com/assets/hm/3d/d1/3dd135668f4f4ca3891006d67d239efca7814664.jpg"
+   },
+   "prices": [
+    {
+     "formattedPrice": "34,99 €",
+     "maxPrice": 34.99,
+     "minPrice": 34.99,
+     "price": 34.99,
+     "priceType": "whitePrice"
+    }
+   ],
+   "productImage": "https://image.hm.com/assets/hm/3d/d1/3dd135668f4f4ca3891006d67d239efca7814664.jpg",
+   "productImageInfo": {
+    "assetType": "DescriptiveStillLife",
+    "url": "https://image.hm.com/assets/hm/3d/d1/3dd135668f4f4ca3891006d67d239efca7814664.jpg"
+   },
+   "productMarkers": [],
+   "productName": "Sneakers",
+   "removed": false,
+   "showPriceMarker": false,
+   "swatches": [
+    {
+     "articleId": "1338515005",
+     "colorCode": "3A1A19",
+     "colorName": "Bordeaux",
+     "productImage": "https://image.hm.com/assets/hm/3d/d1/3dd135668f4f4ca3891006d67d239efca7814664.jpg",
+     "trackingId": "Ozg7IzsxMzM4NTE1MDA1OyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9lcy9zbmVha2VyczsjOy9tZW4vc2hvZXMvc25lYWtlcnM7Izs_e4",
+     "url": "/fr_fr/productpage.1338515005.html"
+    },
+    {
+     "articleId": "1338515002",
+     "colorCode": "FFFFFF",
+     "colorName": "Blanc",
+     "productImage": "https://image.hm.com/assets/hm/4a/57/4a574b4b206a04af9000ba9bbc370cc927cd886c.jpg",
+     "trackingId": "Ozg7IzsxMzM4NTE1MDAyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9lcy9zbmVha2VyczsjOy9tZW4vc2hvZXMvc25lYWtlcnM7Izs_e4",
+     "url": "/fr_fr/productpage.1338515002.html"
+    },
+    {
+     "articleId": "1338515004",
+     "colorCode": "272627",
+     "colorName": "Noir",
+     "productImage": "https://image.hm.com/assets/hm/5c/03/5c03375d7bdeb1195b98d6fb2c0b72ca983b4a38.jpg",
+     "trackingId": "Ozg7IzsxMzM4NTE1MDA0OyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9lcy9zbmVha2VyczsjOy9tZW4vc2hvZXMvc25lYWtlcnM7Izs_e4",
+     "url": "/fr_fr/productpage.1338515004.html"
+    }
+   ],
+   "trackingId": "Ozg7IzsxMzM4NTE1MDA1OyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9lcy9zbmVha2VyczsjOy9tZW4vc2hvZXMvc25lYWtlcnM7Izs_e4",
+   "url": "/fr_fr/productpage.1338515005.html",
+   "colorName": "Bordeaux",
+   "isPreShopping": false,
+   "isOnline": true,
+   "colors": "3A1A19",
+   "colourShades": "Bordeaux|Rouge rubis|Rouge foncé|Brun rouge foncé",
+   "isMultipack": false,
+   "sizes": [
+    {
+     "id": "005",
+     "label": "41",
+     "stock": 2
+    },
+    {
+     "id": "006",
+     "label": "42",
+     "stock": 2
+    },
+    {
+     "id": "007",
+     "label": "43",
+     "stock": 2
+    },
+    {
+     "id": "008",
+     "label": "44",
+     "stock": 2
+    },
+    {
+     "id": "009",
+     "label": "45",
+     "stock": 2
+    },
+    {
+     "id": "010",
+     "label": "46",
+     "stock": 2
+    }
+   ],
+   "newArrival": false,
+   "isLiquidPixelUrl": false,
+   "colorWithNames": "rouge_ff0000|multi_000000",
+   "mainCatCode": "men_shoes_sneakers"
+  },
+  {
+   "availability": {
+    "comingSoon": false,
+    "stockState": "Available"
+   },
+   "brandName": "H&M",
+   "external": false,
+   "hasVideo": false,
+   "id": "1359411001",
+   "images": [
+    {
+     "assetType": "DescriptiveDetail",
+     "url": "https://image.hm.com/assets/hm/78/c5/78c5612a3f2cc820ca938f170ebbfb7858b8c60f.jpg"
+    },
+    {
+     "assetType": "DescriptiveDetail",
+     "url": "https://image.hm.com/assets/hm/05/42/05423fddc373c517a0b69da33e76f9e2ba54e610.jpg"
+    }
+   ],
+   "modelImage": "https://image.hm.com/assets/hm/60/82/6082d088ec468f9727d15f0f093f15624e27f485.jpg",
+   "modelImageInfo": {
+    "assetType": "DescriptiveStillLife",
+    "url": "https://image.hm.com/assets/hm/60/82/6082d088ec468f9727d15f0f093f15624e27f485.jpg"
+   },
+   "prices": [
+    {
+     "formattedPrice": "59,99 €",
+     "maxPrice": 59.99,
+     "minPrice": 59.99,
+     "price": 59.99,
+     "priceType": "whitePrice"
+    }
+   ],
+   "productImage": "https://image.hm.com/assets/hm/60/82/6082d088ec468f9727d15f0f093f15624e27f485.jpg",
+   "productImageInfo": {
+    "assetType": "DescriptiveStillLife",
+    "url": "https://image.hm.com/assets/hm/60/82/6082d088ec468f9727d15f0f093f15624e27f485.jpg"
+   },
+   "productMarkers": [],
+   "productName": "Chunky trainers",
+   "removed": false,
+   "showPriceMarker": false,
+   "swatches": [
+    {
+     "articleId": "1359411001",
+     "colorCode": "272627",
+     "colorName": "Noir",
+     "productImage": "https://image.hm.com/assets/hm/60/82/6082d088ec468f9727d15f0f093f15624e27f485.jpg",
+     "trackingId": "Ozg7IzsxMzU5NDExMDAxOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9lcy9zbmVha2VyczsjOy9tZW4vc2hvZXMvc25lYWtlcnM7Izs_e4",
+     "url": "/fr_fr/productpage.1359411001.html"
+    },
+    {
+     "articleId": "1359411002",
+     "colorCode": "AEAFB3",
+     "colorName": "Gris clair",
+     "productImage": "https://image.hm.com/assets/hm/ef/fd/effd5cbf1ec2526a6e4c4e5d2716add87363dace.jpg",
+     "trackingId": "Ozg7IzsxMzU5NDExMDAyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9lcy9zbmVha2VyczsjOy9tZW4vc2hvZXMvc25lYWtlcnM7Izs_e4",
+     "url": "/fr_fr/productpage.1359411002.html"
+    }
+   ],
+   "trackingId": "Ozg7IzsxMzU5NDExMDAxOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9lcy9zbmVha2VyczsjOy9tZW4vc2hvZXMvc25lYWtlcnM7Izs_e4",
+   "url": "/fr_fr/productpage.1359411001.html",
+   "colorName": "Noir",
+   "isPreShopping": false,
+   "isOnline": true,
+   "colors": "272627",
+   "colourShades": "Charbon",
+   "isMultipack": false,
+   "sizes": [
+    {
+     "id": "005",
+     "label": "41",
+     "stock": 2
+    },
+    {
+     "id": "006",
+     "label": "42",
+     "stock": 2
+    },
+    {
+     "id": "007",
+     "label": "43",
+     "stock": 2
+    },
+    {
+     "id": "008",
+     "label": "44",
+     "stock": 2
+    },
+    {
+     "id": "009",
+     "label": "45",
+     "stock": 2
+    },
+    {
+     "id": "010",
+     "label": "46",
+     "stock": 2
+    }
+   ],
+   "newArrival": false,
+   "isLiquidPixelUrl": false,
+   "colorWithNames": "noir_000000",
+   "mainCatCode": "men_shoes_sneakers"
+  }
+ ]
+}

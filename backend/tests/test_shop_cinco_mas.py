@@ -373,16 +373,18 @@ def test_las_cinco_nuevas_nacen_desactivadas_con_su_clase_de_ropa_y_su_dia(clien
     assert [stores[k]["weekday"] for k in NUEVAS] == [5, 6, 4, 2, 4]
 
 
-def test_con_quince_tiendas_cada_noche_cabe_y_queda_sitio_para_las_cinco_que_vienen():
+def test_con_las_veinte_tiendas_cada_noche_cabe():
+    # Las quince de antes y las cinco últimas (Uniqlo, Mango, H&M, COS y Weekday) en sus huecos previstos.
     plan = shopping.week_plan()
-    assert sum(map(len, plan)) == len(shops.CONNECTORS) == 15
+    assert sum(map(len, plan)) == len(shops.CONNECTORS) == 20
     assert (config.SHOP_STORES_PER_NIGHT, config.SHOP_HEAVY_PER_NIGHT) == (3, 2)
-    room = 0
     for day in plan:
-        heavy = sum(map(shops.heavy, day))
-        assert len(day) <= 3 and heavy <= 2
-        room += min(3 - len(day), 2 - heavy)  # las que vienen (Uniqlo, Mango…) serán pesadas
-    assert room >= 5
+        assert len(day) <= 3 and sum(map(shops.heavy, day)) <= 2
+    assert [day for day in plan if {"uniqlo", "mango", "hm", "cos", "weekday"} & set(day)] == [
+        ["pullandbear", "jackjones", "uniqlo"], ["courir", "massimodutti", "mango"], ["bershka", "nike", "hm"],
+        ["lefties", "snipes", "cos"], ["size", "weekday"],
+    ]
+    assert sum(map(shops.heavy, shops.CONNECTORS)) == 11
 
 
 # ---------- La misma zapatilla en varias tiendas

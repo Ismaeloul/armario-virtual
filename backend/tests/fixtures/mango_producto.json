@@ -1,0 +1,230 @@
+{
+ "name": "Chemise slim fit en coton gratté",
+ "nameEn": "Brushed cotton slim fit shirt",
+ "model": "PERSEOE",
+ "genderId": "H",
+ "brandId": "he",
+ "collection": "PV2027",
+ "seller": "mango",
+ "reference": "47041489",
+ "url": "/fr/fr/p/homme/chemises/a-carreaux/chemise-slim-fit-en-coton-gratte/47041489",
+ "assetsDomain": "https://media.mango.com",
+ "families": [
+  {
+   "id": "120",
+   "label": "Chemises",
+   "labelEn": "Shirts",
+   "isMainFamily": true,
+   "hasSizeGuide": true,
+   "erpId": "258",
+   "originalCobolId": "258"
+  }
+ ],
+ "colors": [
+  {
+   "id": "56",
+   "label": "Bleu marine",
+   "bulletImg": "/is/image/punto/47041489-56-020",
+   "rgb": "51,56,64",
+   "sizes": [
+    {
+     "id": "19",
+     "label": "XS",
+     "shortDescription": "XS",
+     "plusSize": false
+    },
+    {
+     "id": "20",
+     "label": "S",
+     "shortDescription": "S",
+     "plusSize": false
+    },
+    {
+     "id": "21",
+     "label": "M",
+     "shortDescription": "M",
+     "plusSize": false
+    },
+    {
+     "id": "22",
+     "label": "L",
+     "shortDescription": "L",
+     "plusSize": false
+    },
+    {
+     "id": "23",
+     "label": "XL",
+     "shortDescription": "XL",
+     "plusSize": false
+    },
+    {
+     "id": "24",
+     "label": "XXL",
+     "shortDescription": "XXL",
+     "plusSize": false
+    }
+   ],
+   "looks": {
+    "00": {
+     "images": {
+      "B": {
+       "img": "/is/image/punto/47041489-56-900",
+       "alt": "Chemise à manches longues gris foncé chiné à col classique et fermeture boutonnée devant."
+      },
+      "O1": {
+       "img": "/is/image/punto/47041489-56-001",
+       "alt": "Chemise gris foncé à manches longues portée avec un pantalon noir."
+      },
+      "F": {
+       "img": "/is/image/punto/47041489-56-002",
+       "alt": "Chemise bleu foncé à manches longues, col et fermeture boutonnée, portée avec un pantalon noir."
+      },
+      "R": {
+       "img": "/is/image/punto/47041489-56-003",
+       "alt": "Chemise bleu foncé à manches longues, vue de dos."
+      }
+     }
+    }
+   },
+   "customizable": false
+  },
+  {
+   "id": "48",
+   "label": "Vert forêt",
+   "bulletImg": "/is/image/punto/47041489-48-020",
+   "rgb": "88,90,83",
+   "sizes": [
+    {
+     "id": "19",
+     "label": "XS",
+     "shortDescription": "XS",
+     "plusSize": false
+    },
+    {
+     "id": "20",
+     "label": "S",
+     "shortDescription": "S",
+     "plusSize": false
+    },
+    {
+     "id": "21",
+     "label": "M",
+     "shortDescription": "M",
+     "plusSize": false
+    },
+    {
+     "id": "22",
+     "label": "L",
+     "shortDescription": "L",
+     "plusSize": false
+    },
+    {
+     "id": "23",
+     "label": "XL",
+     "shortDescription": "XL",
+     "plusSize": false
+    },
+    {
+     "id": "24",
+     "label": "XXL",
+     "shortDescription": "XXL",
+     "plusSize": false
+    }
+   ],
+   "looks": {
+    "00": {
+     "images": {
+      "O1": {
+       "img": "/is/image/punto/47041489-48-001",
+       "alt": "Chemise à manches longues gris-vert foncé portée avec un pantalon gris foncé."
+      },
+      "B": {
+       "img": "/is/image/punto/47041489-48-900",
+       "alt": "Chemise vert foncé à manches longues, col classique et fermeture à boutons sur le devant."
+      },
+      "F": {
+       "img": "/is/image/punto/47041489-48-002",
+       "alt": "Chemise vert foncé à manches longues, col classique et patte de boutonnage sur le devant."
+      },
+      "R": {
+       "img": "/is/image/punto/47041489-48-003",
+       "alt": "Chemise verte à manches longues, vue de dos."
+      }
+     }
+    }
+   },
+   "customizable": false
+  },
+  {
+   "id": "30",
+   "label": "Marron",
+   "bulletImg": "/is/image/punto/47041489-30-020",
+   "rgb": "85,78,77",
+   "sizes": [
+    {
+     "id": "19",
+     "label": "XS",
+     "shortDescription": "XS",
+     "plusSize": false
+    },
+    {
+     "id": "20",
+     "label": "S",
+     "shortDescription": "S",
+     "plusSize": false
+    },
+    {
+     "id": "21",
+     "label": "M",
+     "shortDescription": "M",
+     "plusSize": false
+    },
+    {
+     "id": "22",
+     "label": "L",
+     "shortDescription": "L",
+     "plusSize": false
+    },
+    {
+     "id": "23",
+     "label": "XL",
+     "shortDescription": "XL",
+     "plusSize": false
+    },
+    {
+     "id": "24",
+     "label": "XXL",
+     "shortDescription": "XXL",
+     "plusSize": false
+    }
+   ],
+   "looks": {
+    "00": {
+     "images": {
+      "B": {
+       "img": "/is/image/punto/47041489-30-900",
+       "alt": "Chemise homme à manches longues gris à micro-motif avec col classique et patte de boutonnage sur le devant."
+      },
+      "O1": {
+       "img": "/is/image/punto/47041489-30-001",
+       "alt": "Chemise gris foncé à manches longues portée avec un pantalon foncé et une ceinture noire."
+      },
+      "F": {
+       "img": "/is/image/punto/47041489-30-002",
+       "alt": "Chemise à manches longues à motif gris foncé à col classique portée sur un t-shirt."
+      },
+      "R": {
+       "img": "/is/image/punto/47041489-30-003",
+       "alt": "Chemise à motifs gris foncé à col classique et revers aux manches, vue de dos."
+      }
+     }
+    }
+   },
+   "customizable": false
+  }
+ ],
+ "tags": [
+  "New Now",
+  "ESSENTIALS"
+ ]
+}

@@ -76,9 +76,17 @@ SHOP_RESERVE_LOW = int(os.environ.get("ARMARIO_SHOP_RESERVE_LOW", "15"))
 SHOP_COLOR_PREP = int(os.environ.get("ARMARIO_SHOP_COLOR_PREP", "4"))
 
 
+# Tiendas cuyo catálogo es demasiado grande para leerlo entero cada semana: por defecto solo las primeras
+# páginas de cada sección (ordenadas por novedad). H&M: unos 5.100 artículos de hombre en ~145 páginas de 36;
+# con ocho por sección se leen las novedades (~290 por sección). Se cambia con ARMARIO_SHOP_MAX_PAGES_HM.
+SHOP_STORE_PAGES = {"hm": 8}
+
+
 def shop_limit(store: str, kind: str) -> int:
     """Tope de seguridad de una tienda: «PAGES» (páginas por sección) o «PRODUCTS» (productos por sección)."""
     default = SHOP_MAX_PAGES if kind == "PAGES" else SHOP_MAX_PRODUCTS
+    if kind == "PAGES":
+        default = SHOP_STORE_PAGES.get(store, default)
     try:
         return max(1, int(os.environ.get(f"ARMARIO_SHOP_MAX_{kind}_{store.upper()}", default)))
     except ValueError:

@@ -962,6 +962,36 @@ function StoreLink({ item }: { item: ShopItem }) {
   );
 }
 
+/**
+ * La talla cuando la tienda no dice cuáles quedan (H&M, COS, Uniqlo, Mango, Nike): «Sin talla» o escrita a
+ * mano. `value`: "" = sin talla; cualquier otro texto, la escrita.
+ */
+function FreeSize({ value, onChange }: { value: string; onChange: (size: string) => void }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <button
+        type="button"
+        aria-pressed={value === ""}
+        onClick={() => onChange("")}
+        className={`min-h-11 min-w-11 rounded-xl border px-3 text-sm font-medium ${
+          value === "" ? "border-primary bg-primary text-on-primary" : "border-line bg-card-2 text-text-2"
+        }`}
+      >
+        {t.compras.buscador.sinTalla}
+      </button>
+      <input
+        type="text"
+        value={value}
+        maxLength={20}
+        onChange={(e) => onChange(e.target.value.trimStart())}
+        placeholder={t.compras.tallaEscrita}
+        aria-label={t.compras.tallaEscrita}
+        className={`${inputClass} h-11 min-w-0 flex-1`}
+      />
+    </div>
+  );
+}
+
 /** Los items de los que ya se han pedido los colores en esta sesión: a la tienda no se le insiste. */
 const colorsAsked = new Set<number>();
 
@@ -1638,7 +1668,8 @@ function PhotoViewer({
     { key: "original", label: t.compras.visor.nombreOriginal, value: item.name_original ?? "" },
     { key: "color", label: t.compras.visor.color, value: item.store_color },
     { key: "precio", label: t.compras.visor.precio, value: t.compras.precio(item.price_cents) },
-    { key: "tallas", label: t.compras.visor.tallas, value: sizes },
+    // Si la tienda no dice qué tallas quedan (H&M, COS, Uniqlo, Mango, Nike), se dice dónde mirarlas.
+    { key: "tallas", label: t.compras.visor.tallas, value: sizes || t.compras.visor.tallasEnTienda },
     { key: "composicion", label: t.compras.visor.composicion, value: item.composition ?? "" },
     { key: "enlace", label: t.compras.visor.enlace, value: item.url },
     // La misma zapatilla en otras tiendas: «Snipes 119,99 € · Foot Locker 120,00 €», cada una con su enlace.
@@ -1798,7 +1829,21 @@ function PhotoViewer({
               {t.compras.visor.datos}
             </h4>
             {facts.map((fact) =>
-              fact.key === "tallas" ? (
+              fact.key === "tallas" && item.sizes.length === 0 ? (
+                // Como las demás filas, pero sin copiar: lo que hay es un enlace a la tienda.
+                <div key={fact.key} className="flex flex-col gap-0.5 rounded-lg border border-line bg-card-2 py-2 pr-1 pl-3">
+                  <span className="label-caps text-text-2">{fact.label}</span>
+                  <a
+                    href={externalHref(item.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex min-h-9 w-fit items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-2 active:opacity-60"
+                  >
+                    {fact.value}
+                    <Icon name="open_in_new" size={15} />
+                  </a>
+                </div>
+              ) : fact.key === "tallas" ? (
                 <CopyRow key={fact.key} label={fact.label} value={fact.value}>
                   <ul className="flex flex-wrap gap-1.5 pt-0.5">
                     {item.sizes.map((s) => (
@@ -1948,7 +1993,8 @@ function Liked({ onChanged }: { onChanged: () => void }) {
   const startBuying = (item: ShopItem) => {
     const available = item.sizes.filter((s) => s.in_stock);
     setBuying(item.id);
-    setSize(available.length === 1 ? available[0].name : null);
+    // Sin tallas que elegir, va marcada «sin talla» (se puede escribir); con una sola, esa.
+    setSize(available.length === 0 ? "" : available.length === 1 ? available[0].name : null);
     setBuyError(null);
   };
 
@@ -1956,7 +2002,7 @@ function Liked({ onChanged }: { onChanged: () => void }) {
     setBuyBusy(true);
     setBuyError(null);
     api
-      .shopBought(item.id, size)
+      .shopBought(item.id, size?.trim() || null)
       .then((result) => navigate(`/prenda/${result.garment_id}`))
       .catch((e) => {
         setBuyError(e instanceof ApiError && e.status < 500 ? e.message : t.compras.gustados.errorComprar);
@@ -2055,7 +2101,11 @@ function Liked({ onChanged }: { onChanged: () => void }) {
                       </div>
                     </>
                   ) : (
-                    <p className="text-xs text-text-2">{t.compras.gustados.sinTallas}</p>
+                    <>
+                      <span className="label-caps text-text-2">{t.compras.gustados.talla}</span>
+                      <p className="-mt-1.5 text-xs text-text-2">{t.compras.gustados.sinTallas}</p>
+                      <FreeSize value={size ?? ""} onChange={setSize} />
+                    </>
                   )}
                   {buyError && (
                     <p role="alert" className="text-sm text-danger">
@@ -2345,7 +2395,7 @@ function SearchResult({
     setBusy("tengo");
     setError(null);
     api
-      .shopBought(item.id, size || null)
+      .shopBought(item.id, size?.trim() || null)
       .then((result) => {
         setChoosing(false);
         onUpdate({ ...item, status: "comprado", saved: "comprado", garment_id: result.garment_id });
@@ -2426,6 +2476,9 @@ function SearchResult({
           ) : (
             <>
               <span className="label-caps text-text-2">{t.compras.buscador.talla}</span>
+              {sizes.length === 0 ? (
+                <FreeSize value={size ?? ""} onChange={setSize} />
+              ) : (
               <div className="flex flex-wrap gap-1.5">
                 {sizes.map((name) => (
                   <button
@@ -2442,6 +2495,7 @@ function SearchResult({
                   {t.compras.buscador.sinTalla}
                 </button>
               </div>
+              )}
             </>
           )}
           <PrimaryButton disabled={busy !== null || size === null} onClick={have}>

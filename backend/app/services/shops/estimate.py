@@ -30,7 +30,10 @@ _NOT_A_GARMENT = re.compile(
     r"calecon|maillot de bain|gants?\b|portefeuille|lunettes|porte-cles|chapeau|bandana|claquette|tongs?\b|"
     r"chausson|pantoufle|socks?\b|beanie|backpack|bags?\b|"
     # En inglés (Carhartt WIP, Nike): gorras, cinturones, carteras, bañadores…
-    r"caps?\b|hats?\b|belts?\b|wallets?\b|keychains?|scarf|scarves|totes?\b|briefs\b|swim|underwear|gloves?\b)"
+    r"caps?\b|hats?\b|belts?\b|wallets?\b|keychains?|scarf|scarves|totes?\b|briefs\b|swim|underwear|gloves?\b|"
+    # H&M, COS, Weekday, Uniqlo y Mango: pijamas y ropa de estar en casa, lotes, bañadores, porta-tarjetas…
+    r"pyjamas?|ensemble d.interieur|loungewear|\blot de \d|\bpack de \d|multipack|short de bain|de bain\b|"
+    r"peignoir|noeud papillon|porte-?cartes?|chaussons?|collants?|bretelles)"
 )
 
 # Palabra del nombre -> tipo. Gana la que aparece antes en el nombre («POLO PUNTO» es un polo); si dos
@@ -38,15 +41,19 @@ _NOT_A_GARMENT = re.compile(
 # un chándal). En español, francés e inglés (Nike y Carhartt WIP nombran en inglés: «Hooded Jacket»).
 _TYPE_WORDS = [
     (r"sobrecamisas?|surchemises?|overshirts?|shirt[- ]?jac(?:ket)?s?|shackets?", "sobrecamisa"),
-    (r"camisetas?|t-?shirts?|tee-?shirts?|debardeurs?|tees?|tank[- ]?tops?|longsleeves?", "camiseta"),
+    (r"camisetas?|t-?shirts?|tee-?shirts?|debardeurs?|tees?|tank[- ]?tops?|longsleeves?|henleys?|hauts?",
+     "camiseta"),
     (r"camisas?|chemises?|shirts?", "camisa"),
     (r"polos?", "polo"),
     (r"sudaderas?|hoodies?|sweats?|sweat-?shirts?", "sudadera"),
-    (r"jersey|jerseis|cardigans?|sueter|pulls?|pull-?overs?|maille|sweaters?|jumpers?", "jersey"),
+    # «Gilet» a secas es una chaqueta de punto (Mango: «Gilets et pull-overs»); acolchado o de traje, chaqueta.
+    (r"jersey|jerseis|cardigans?|sueter|pulls?|pull-?overs?|maille|sweaters?|jumpers?|gilets?|col roule|"
+     r"knitwear|knits?", "jersey"),
     (r"abrigo|gabardina|trench|parkas?|anorak|plumifero|manteaux?|doudounes?|caban|coats?|overcoats?|"
-     r"puffers?|down jackets?", "abrigo"),
+     r"puffers?|down jackets?|pardessus", "abrigo"),
     (r"cazadora|chaqueta|bombers?|blazers?|americana|chaleco|vestes?|blousons?|jackets?|vests?|"
-     r"windbreakers?", "chaqueta"),
+     r"windbreakers?|gilets? (?:matelasses?|sans manches|doudounes?|de costume|de tailleur|rembourres?)",
+     "chaqueta"),
     (r"bermudas?|shorts?", "pantalón corto"),
     (r"jeans?|vaqueros?", "vaquero"),
     (r"joggers?|chandal|joggings?|survetements?|sweat ?pants?|track ?pants?|tracksuits?", "chándal"),
@@ -103,9 +110,9 @@ _COLOR_WORDS = [
     (r"burdeos|burgundy|granate|vino|berenjena|bordeaux|maroon|\bwine\b|aubergine|grenat", "burdeos"),
     (r"marron|chocolate|conac|tabaco|cuero|tostado|caramelo|camel|taupe|topo|moka|cafe|castano|avellana|cobre|"
      r"\bbrun|brown|chocolat|cognac|\btan\b|noisette|bronze|cuivre|\bmiel\b|wheat|tobacco|\bcuir\b|\bmocha\b|"
-     r"espresso|coffee|cardboard", "marrón"),
+     r"espresso|coffee|cardboard|\bargile\b|\bclay\b|\bfauve\b", "marrón"),
     (r"beige|arena|piedra|vison|nude|\bsable\b|\bsand\b|stone|\bpierre\b|sesame|\bputty\b|oatmeal|\bdesert\b|"
-     r"\bdune\b", "beige"),
+     r"\bdune\b|\bmastic\b|\bgrege\b|\bficelle\b", "beige"),
     (r"gris|antracita|plomo|plata|marengo|ceniza|humo|grafito|carbon|grey|gray|argent|silver|anthracite|"
      r"charcoal|graphite|\bash\b|plomb|acier|ardoise|slate|platinum|platine|cement", "gris"),
     (r"negro|black|noir", "negro"),
@@ -113,7 +120,7 @@ _COLOR_WORDS = [
     (r"azul|indigo|anil|petroleo|petrole|denim|cobalto|turquesa|bleu|blue|turquoise|royal|\bteal\b|\bbrut\b",
      "azul"),
     (r"verde|verdos|botella|bouteille|menta|esmeralda|\bvert|green|\bmint|menthe|sapin|\bsage\b|\bfir\b|\bleaf\b|\bforest\b|"
-     r"\bpine\b|\bmoss\b", "verde"),
+     r"\bpine\b|\bmoss\b|\bsauge\b", "verde"),
     (r"rojo|rojiz|coral|rouge|\bred\b|corail", "rojo"),
     (r"amarillo|mostaza|vainilla|lima|ocre|jaune|yellow|moutarde|\bor\b|\bdore|gold|\bvolt\b", "amarillo"),
     (r"naranja|teja|terracota|ladrillo|oxido|calabaza|orange|rouille|brique", "naranja"),
@@ -152,7 +159,7 @@ _DOUBTFUL = {
     "avellana", "noisette", "castano", "bone", "obsidian", "sage", "volt", "ash", "salt", "natural", "tobacco",
     "fir", "leaf", "forest", "pine", "moss", "mousse", "cuir", "petrole", "chalk", "linen", "phantom", "sesame",
     "putty", "oatmeal", "desert", "dune", "mocha", "espresso", "coffee", "cardboard", "platinum", "platine",
-    "cement", "teal", "brut", "plum", "naturel",
+    "cement", "teal", "brut", "plum", "naturel", "mastic", "grege", "ficelle", "argile", "clay", "fauve", "sauge",
 }
 
 # El color aún no se sabe: la tienda no lo dice en el listado (Courir) o lo dice con palabras que no

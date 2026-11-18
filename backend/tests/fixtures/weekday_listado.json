@@ -1,0 +1,440 @@
+{
+ "categoryPageId": "men > Shirts",
+ "pagination": {
+  "limit": 40,
+  "offset": 0,
+  "totalProducts": 32
+ },
+ "products": [
+  {
+   "available": true,
+   "categoryUri": "men/shirts/long-sleeve-shirts",
+   "id": "59018",
+   "categoryNames": [
+    "men > Shirts",
+    "men > Shirts > Long sleeve",
+    "men",
+    "men > View all",
+    "men > New Arrivals",
+    "men > Weekday"
+   ],
+   "threeForTwo": false,
+   "material": {
+    "fibreType": null
+   },
+   "pricing": {
+    "price": "49.99 EUR",
+    "priceAsNumber": 49.99,
+    "originalPrice": "49.99 EUR",
+    "originalPriceAsNumber": 49.99,
+    "priceBeforeDiscount": "49.99 EUR",
+    "priceBeforeDiscountAsNumber": 49.99,
+    "previousMarkdownPrice": "49.99 EUR",
+    "previousMarkdownPriceAsNumber": 49.99,
+    "isOnSale": false
+   },
+   "name": "Chemise carrée décontractée en popeline",
+   "brandName": "Weekday",
+   "comingSoon": false,
+   "url": "/fr-fr/p/men/shirts/long-sleeve-shirts/relaxed-boxy-poplin-shirt-checked-light-mole-1330797003",
+   "variantName": "Carreaux taupe clair",
+   "sku": "1330797003",
+   "productSku": "1330797",
+   "voucher": {
+    "voucherStart": "31 July 2026 00:01 AM GMT+0100",
+    "voucherStop": "3 August 2026 11:59 PM GMT+0100",
+    "voucherPercentage": null,
+    "voucherLabel": "deal",
+    "voucherEligibleMarkets": [
+     "at",
+     "dk",
+     "eu",
+     "fr",
+     "de",
+     "gb",
+     "nl",
+     "no",
+     "se",
+     "ch",
+     "ww"
+    ]
+   },
+   "media": {
+    "images": [
+     {
+      "url": "https://media.weekday.com/assets/003/cd/64/cd64020688965099d6c01a715032addfa1956ac2_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_1_hero",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": true
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/d1/60/d160422b3d385dfc7f2038d6a8ac7360894c7ffe_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "stilllife_c_1_hero",
+      "assetType": "StillMedia/DescriptiveStillLife",
+      "isHero": true
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/74/be/74be9fe197166148477d873c2788a1aa7297168d_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_1",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": false
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/6f/8b/6f8b117d2fd34071fa984bc8f3cea9e3a4879da1_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "detail_c_1",
+      "assetType": "StillMedia/DescriptiveDetail",
+      "isHero": false
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/61/f2/61f23b075a48c5158410a9ce292e6df7e3939d81_xxl-1.jpg",
+      "angleFacing": "7",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_7",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": false
+     }
+    ],
+    "swatch": {
+     "desc": "Beige",
+     "hex": "#F5F5DC",
+     "image": "https://media.weekday.com/assets/003/0f/03/0f03d8341cd5782194d85bf223c6b7a9b8d33b4b_xxl-1.jpg",
+     "modelWearSize": {
+      "modelHeight": null,
+      "modelSize": null
+     }
+    }
+   },
+   "sizeVariants": [
+    {
+     "label": "XS",
+     "inStock": "yes",
+     "sku": "1330797003001"
+    },
+    {
+     "label": "S",
+     "inStock": "yes",
+     "sku": "1330797003002"
+    },
+    {
+     "label": "M",
+     "inStock": "yes",
+     "sku": "1330797003003"
+    },
+    {
+     "label": "L",
+     "inStock": "yes",
+     "sku": "1330797003004"
+    },
+    {
+     "label": "XL",
+     "inStock": "yes",
+     "sku": "1330797003005"
+    }
+   ],
+   "colorVariants": [
+    {
+     "uri": "relaxed-boxy-poplin-shirt-checked-light-mole-1330797003",
+     "available": true,
+     "color": "#F5F5DC",
+     "image": "https://media.weekday.com/assets/003/0f/03/0f03d8341cd5782194d85bf223c6b7a9b8d33b4b_xxl-1.jpg",
+     "label": "Beige",
+     "url": "/fr-fr/p/men/shirts/long-sleeve-shirts/relaxed-boxy-poplin-shirt-checked-light-mole-1330797003"
+    },
+    {
+     "uri": "relaxed-boxy-poplin-shirt-striped-white-1330797004",
+     "available": true,
+     "color": "#FFFFFF",
+     "image": "https://media.weekday.com/assets/003/01/22/01221d80a598a11ebc322f293734e233627329a5_xxl-1.jpg",
+     "label": "Blanc",
+     "url": "/fr-fr/p/men/shirts/long-sleeve-shirts/relaxed-boxy-poplin-shirt-striped-white-1330797004"
+    },
+    {
+     "uri": "relaxed-boxy-poplin-shirt-checked-blue-1330797005",
+     "available": true,
+     "color": "#0000FF",
+     "image": "https://media.weekday.com/assets/003/7e/4c/7e4ce4f1bc1852432f357d244c4791595f48a92d_xxl-1.jpg",
+     "label": "Bleu",
+     "url": "/fr-fr/p/men/shirts/long-sleeve-shirts/relaxed-boxy-poplin-shirt-checked-blue-1330797005"
+    }
+   ],
+   "ticket": "Ozg7IzsxMzMwNzk3MDAzOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTs2OTsjOyM7L21lbi9zaGlydHM7IzsjOyM7",
+   "uri": "relaxed-boxy-poplin-shirt-checked-light-mole-1330797003"
+  },
+  {
+   "available": true,
+   "categoryUri": "men/shirts/long-sleeve-shirts",
+   "id": "61068",
+   "categoryNames": [
+    "men > View all",
+    "men > New Arrivals",
+    "men",
+    "men > Shirts > Long sleeve",
+    "men > Shirts",
+    "men > Weekday"
+   ],
+   "threeForTwo": false,
+   "material": {
+    "fibreType": null
+   },
+   "pricing": {
+    "price": "54.99 EUR",
+    "priceAsNumber": 54.99,
+    "originalPrice": "54.99 EUR",
+    "originalPriceAsNumber": 54.99,
+    "priceBeforeDiscount": "54.99 EUR",
+    "priceBeforeDiscountAsNumber": 54.99,
+    "previousMarkdownPrice": "54.99 EUR",
+    "previousMarkdownPriceAsNumber": 54.99,
+    "isOnSale": false
+   },
+   "name": "Chemise boxy décontractée en popeline",
+   "brandName": "Weekday",
+   "comingSoon": false,
+   "url": "/fr-fr/p/men/shirts/long-sleeve-shirts/relaxed-boxy-poplin-shirt-white-1363332001",
+   "variantName": "Blanc",
+   "sku": "1363332001",
+   "productSku": "1363332",
+   "voucher": {
+    "voucherStart": null,
+    "voucherStop": null,
+    "voucherPercentage": null,
+    "voucherLabel": null,
+    "voucherEligibleMarkets": []
+   },
+   "media": {
+    "images": [
+     {
+      "url": "https://media.weekday.com/assets/003/43/1f/431f370983aa0351231f3a04484e47c4fe6ac015_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_1_hero",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": true
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/dc/e3/dce3ed25ece0c2f4155d1c9115be073116a4bdc4_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_1",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": false
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/18/2f/182fef2da6e3532a77d64bc2c8f79f79e73558b1_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "stilllife_c_1",
+      "assetType": "StillMedia/DescriptiveStillLife",
+      "isHero": false
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/78/ef/78ef3ea3757a69870bd2fb99a5c75dcace38d866_xxl-1.jpg",
+      "angleFacing": "7",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_7",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": false
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/54/07/5407d07b6124ee6acfe8e446b42775cc79dd8070_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "detail_c_1",
+      "assetType": "StillMedia/DescriptiveDetail",
+      "isHero": false
+     }
+    ],
+    "swatch": {
+     "desc": "Blanc",
+     "hex": "#FFFFFF",
+     "image": "https://media.weekday.com/assets/003/c5/00/c500530af1c4c3f1c16917630f9c06e9273bcf40_xxl-1.jpg",
+     "modelWearSize": {
+      "modelHeight": null,
+      "modelSize": null
+     }
+    }
+   },
+   "sizeVariants": [
+    {
+     "label": "XS",
+     "inStock": "yes",
+     "sku": "1363332001001"
+    },
+    {
+     "label": "S",
+     "inStock": "yes",
+     "sku": "1363332001002"
+    },
+    {
+     "label": "M",
+     "inStock": "yes",
+     "sku": "1363332001003"
+    },
+    {
+     "label": "L",
+     "inStock": "yes",
+     "sku": "1363332001004"
+    },
+    {
+     "label": "XL",
+     "inStock": "yes",
+     "sku": "1363332001005"
+    }
+   ],
+   "colorVariants": [
+    {
+     "uri": "relaxed-boxy-poplin-shirt-white-1363332001",
+     "available": true,
+     "color": "#FFFFFF",
+     "image": "https://media.weekday.com/assets/003/c5/00/c500530af1c4c3f1c16917630f9c06e9273bcf40_xxl-1.jpg",
+     "label": "Blanc",
+     "url": "/fr-fr/p/men/shirts/long-sleeve-shirts/relaxed-boxy-poplin-shirt-white-1363332001"
+    }
+   ],
+   "ticket": "Ozg7IzsxMzYzMzMyMDAxOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7Mjs2OTsjOyM7L21lbi9zaGlydHM7IzsjOyM7",
+   "uri": "relaxed-boxy-poplin-shirt-white-1363332001"
+  },
+  {
+   "available": true,
+   "categoryUri": "men/shirts/long-sleeve-shirts",
+   "id": "59654",
+   "categoryNames": [
+    "men > Shirts > Long sleeve",
+    "men > Shirts",
+    "men > View all",
+    "men > New Arrivals",
+    "men",
+    "men > Weekday"
+   ],
+   "threeForTwo": false,
+   "material": {
+    "fibreType": null
+   },
+   "pricing": {
+    "price": "59.99 EUR",
+    "priceAsNumber": 59.99,
+    "originalPrice": "59.99 EUR",
+    "originalPriceAsNumber": 59.99,
+    "priceBeforeDiscount": "59.99 EUR",
+    "priceBeforeDiscountAsNumber": 59.99,
+    "previousMarkdownPrice": "59.99 EUR",
+    "previousMarkdownPriceAsNumber": 59.99,
+    "isOnSale": false
+   },
+   "name": "Chemise boutonnée en coton-viscose",
+   "brandName": "Weekday",
+   "comingSoon": false,
+   "url": "/fr-fr/p/men/shirts/long-sleeve-shirts/cotton-viscose-buttoned-shirt-striped-white-1355567001",
+   "variantName": "Blanc rayé",
+   "sku": "1355567001",
+   "productSku": "1355567",
+   "voucher": {
+    "voucherStart": null,
+    "voucherStop": null,
+    "voucherPercentage": null,
+    "voucherLabel": null,
+    "voucherEligibleMarkets": []
+   },
+   "media": {
+    "images": [
+     {
+      "url": "https://media.weekday.com/assets/003/c1/ed/c1edf4ef29c87d26739da37db11f4cafbe962d8f_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_1_hero",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": true
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/65/e1/65e1efd185fbe86be86bc77cf5b32b8a49970353_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "stilllife_c_1_hero",
+      "assetType": "StillMedia/DescriptiveStillLife",
+      "isHero": true
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/87/ba/87ba3b6bb00ee36a867dca34845f5d2987257515_xxl-1.jpg",
+      "angleFacing": "2",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_2",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": false
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/f3/36/f3365480ee338686c45094df5e6696107ee1cc82_xxl-1.jpg",
+      "angleFacing": "7",
+      "assetIdentifier": "c",
+      "assetTag": "lookbook_c_7",
+      "assetType": "StillMedia/Lookbook",
+      "isHero": false
+     },
+     {
+      "url": "https://media.weekday.com/assets/003/43/95/43954eab97db745c475836599ed3a59087ce89fb_xxl-1.jpg",
+      "angleFacing": "1",
+      "assetIdentifier": "c",
+      "assetTag": "detail_c_1",
+      "assetType": "StillMedia/DescriptiveDetail",
+      "isHero": false
+     }
+    ],
+    "swatch": {
+     "desc": "Blanc",
+     "hex": "#FFFFFF",
+     "image": "https://media.weekday.com/assets/003/b4/7e/b47e4ed5b072af01aaebe796532e1d2f9ac0eb65_xxl-1.jpg",
+     "modelWearSize": {
+      "modelHeight": null,
+      "modelSize": null
+     }
+    }
+   },
+   "sizeVariants": [
+    {
+     "label": "XS",
+     "inStock": "yes",
+     "sku": "1355567001001"
+    },
+    {
+     "label": "S",
+     "inStock": "yes",
+     "sku": "1355567001002"
+    },
+    {
+     "label": "M",
+     "inStock": "yes",
+     "sku": "1355567001003"
+    },
+    {
+     "label": "L",
+     "inStock": "yes",
+     "sku": "1355567001004"
+    },
+    {
+     "label": "XL",
+     "inStock": "yes",
+     "sku": "1355567001005"
+    }
+   ],
+   "colorVariants": [
+    {
+     "uri": "cotton-viscose-buttoned-shirt-striped-white-1355567001",
+     "available": true,
+     "color": "#FFFFFF",
+     "image": "https://media.weekday.com/assets/003/b4/7e/b47e4ed5b072af01aaebe796532e1d2f9ac0eb65_xxl-1.jpg",
+     "label": "Blanc",
+     "url": "/fr-fr/p/men/shirts/long-sleeve-shirts/cotton-viscose-buttoned-shirt-striped-white-1355567001"
+    }
+   ],
+   "ticket": "Ozg7IzsxMzU1NTY3MDAxOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7Mzs2OTsjOyM7L21lbi9zaGlydHM7IzsjOyM7",
+   "uri": "cotton-viscose-buttoned-shirt-striped-white-1355567001"
+  }
+ ]
+}

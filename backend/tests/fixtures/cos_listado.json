@@ -1,0 +1,650 @@
+{
+ "data": {
+  "fredhopper": {
+   "facets": [],
+   "responseId": "3e5dce6f-f2f8-42e3-a45e-ff79210aeed8"
+  },
+  "pagination": {
+   "limit": 32,
+   "offset": 0,
+   "totalProducts": 205
+  },
+  "products": [
+   {
+    "attributes": {
+     "centraProductId": 26138,
+     "weight": 0,
+     "weightUnit": "kg",
+     "articleSwatches": [
+      {
+       "name": "BLEU MARINE CHINÉ",
+       "displayItemId": 26138,
+       "available": true,
+       "hex": "#272930",
+       "image": "https://media.cos.com/assets/001/ec/57/ec57127c7c034bfad9c8c388ca1cc6c0fcc63a8c_xxl-1.jpg"
+      },
+      {
+       "name": "BRUN CHINÉ",
+       "displayItemId": 24981,
+       "available": true,
+       "hex": "#403C38",
+       "image": "https://media.cos.com/assets/001/cc/0d/cc0d26a9724af01122fdc54ac33c1afaa9039808_xxl-1.jpg"
+      }
+     ]
+    },
+    "comparativePrice": null,
+    "composition": [
+     {
+      "type": "Exterieur",
+      "materials": [
+       {
+        "material": "Laine RWS",
+        "percentage": 30,
+        "certificate": {
+         "certifiedId": "TE-00047206",
+         "certifiedmaterial": "Les produits certifiés selon la norme Responsible Wool Standard (RWS) contiennent de la laine provenant de fermes certifiées du point de vue du bien-être animal et de la gestion des terres.",
+         "markerpath": "ad/0d/ad0d5bba6ad9e97b32772beb5e0341f2c88e357e.jpg"
+        }
+       },
+       {
+        "material": "Alpaga RAS",
+        "percentage": 30,
+        "certificate": {
+         "certifiedId": "TE-00047206",
+         "certifiedmaterial": "Les produits certifiés selon la norme Responsible Alpaca Standard (RAS) contiennent de la fibre d'alpaga provenant de fermes certifiées du point de vue du bien-être animal et de la gestion des terres.",
+         "markerpath": "f5/d3/f5d324d28c30a20bc7a80ae9b2696e0b7d92e311.jpg"
+        }
+       }
+      ]
+     }
+    ],
+    "categories": [
+     "catalog01_men_menmenswear_menmenswearshirts_menmenswearshirtscasualshirts",
+     "catalog01_men_menmenswear_menmenswearshirts_menmenswearshirtsrelaxedfit",
+     "catalog01_men_menmenswear_menmenswearmwshirtsgm",
+     "catalog01_men_menmenswear_menmensweareucoords",
+     "catalog01_men_menmenswear_menmensweareuoccasionwear",
+     "catalog01_men_menfestive",
+     "catalog01_unisex_unisexeuunisexblackfridayexclusions"
+    ],
+    "details": {
+     "productType": "Shirt"
+    },
+    "gender": "Homme",
+    "id": 26138,
+    "isNew": true,
+    "isOnSale": false,
+    "isComingSoon": false,
+    "lowestPrice": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€129,00",
+     "value": 129
+    },
+    "media": [
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "1",
+       "mediaIsHeroText": "True"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/9b/7d/9b7d22a1eca1c8adeea43894db59acb776421efb_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "3",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/f7/02/f70283564d5f1353284a4aff9f7d8ce65d431130_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Environmental",
+       "angleFacing": "1",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/25/6a/256ac5ec8df90c602df56feb6e735f50fc4622f0_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/DescriptiveStillLife",
+       "angleFacing": "1",
+       "mediaIsHeroText": "True"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/fb/92/fb921adb462ed101e652bc1bca54804162fff279_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "1",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/a9/c4/a9c4d00be227e13a522a883ba9da36736ec35959_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Environmental",
+       "angleFacing": "1",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/f3/31/f3318fe14a843f9c42994cc82382ef0dd92e663f_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "7",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/a3/9e/a39ea2ffcd1064e907c08c8e93e6b6ce815df6db_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "2",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/44/09/4409c51317f2ba3b316044221adcb7bf9292e603_xxl-1.jpg"
+       }
+      }
+     }
+    ],
+    "launchDate": "2026-11-11T19:48:00.000Z",
+    "mainCategory": {
+     "uri": "men/menswear/shirts/casualshirts"
+    },
+    "name": "CHEMISE DÉCONTRACTÉE LAINE MÉLANGÉE",
+    "originalComparativePrice": null,
+    "parent": {
+     "sku": "1343689"
+    },
+    "price": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€129,00",
+     "value": 129
+    },
+    "priceBeforeDiscount": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€129,00",
+     "value": 129
+    },
+    "discountPercentage": null,
+    "salesMode": {
+     "quantity": "1",
+     "type": "Single"
+    },
+    "sku": "1343689003",
+    "uri": "relaxed-wool-blend-shirt-navy-mlange-1343689003",
+    "variant": {
+     "hex": "#272930",
+     "name": "NAVY MÉLANGE"
+    },
+    "variantsCount": 1,
+    "hasStock": true,
+    "primaryImage": {
+     "attributes": {
+      "altText": "",
+      "imageType": "StillMedia/Environmental",
+      "angleFacing": "1",
+      "mediaIsHeroText": "False"
+     },
+     "source": {
+      "standard": {
+       "url": "https://media.cos.com/assets/001/f3/31/f3318fe14a843f9c42994cc82382ef0dd92e663f_xxl-1.jpg"
+      }
+     }
+    },
+    "listPosition": 1
+   },
+   {
+    "attributes": {
+     "centraProductId": 24548,
+     "weight": 0,
+     "weightUnit": "kg",
+     "netWeight": "300.0",
+     "articleSwatches": [
+      {
+       "name": "BLEU / RAYÉ",
+       "displayItemId": 24548,
+       "available": true,
+       "hex": "#272930",
+       "image": "https://media.cos.com/assets/001/38/5a/385a0551bf2b3b0d03652f7983425e95d2bb51c3_xxl-1.jpg"
+      }
+     ]
+    },
+    "comparativePrice": null,
+    "categories": [
+     "catalog01_men_menmenswear_menmenswearshirts_menmenswearshirtsrelaxedfit",
+     "catalog01_men_menmenswear_menmenswearshirts_menmenswearshirtsformalshirts",
+     "catalog01_men_menmenswear_menmenswearshirts_menmenswearshirtscottonshirts",
+     "catalog01_men_menmenswear_menmenswearshirts_menmenswearshirtspatternedshirts",
+     "catalog01_men_menmenswear_menmenswearessentials",
+     "catalog01_men_menmenswear_menmenswearmwshirtsgm",
+     "catalog01_men_mensale_mensalemwsaleeu",
+     "catalog01_men_mensale_mensalemweubfshirts",
+     "catalog01_men_mentrendingnow_mentrendingnowbacktowork",
+     "catalog01_men_menusmwfandf2026master",
+     "catalog01_men_menusmwlaborday2026",
+     "catalog01_men_menusmwmemorialday",
+     "catalog01_men_mencamwfandf2026master",
+     "catalog01_men_mencamwlaborday2026",
+     "catalog01_men_menusmwpresday",
+     "catalog01_men_menusmwblackfriday"
+    ],
+    "details": {
+     "productType": "Shirt"
+    },
+    "gender": "Homme",
+    "id": 24548,
+    "isNew": false,
+    "isOnSale": false,
+    "isComingSoon": false,
+    "lowestPrice": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€69,00",
+     "value": 69
+    },
+    "media": [
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/DescriptiveStillLife",
+       "angleFacing": "1",
+       "mediaIsHeroText": "True"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/fb/1a/fb1a6d3d797f40f29994ec4ff2825cf9677b8d56_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Environmental",
+       "angleFacing": "1",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/ca/6f/ca6f7cb22557e6100f80ea002c07d3b71e9a35bf_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "2",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/2a/ff/2aff3a61a879b77839d53f3aa17c4c7991a8c3b7_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/DescriptiveDetail",
+       "angleFacing": "1",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/9b/af/9baf6722e06e72e2afad925081985c181902922d_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "3",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/43/cb/43cb4da14f49f4a7b063ee75b0a838b4cfcd09a3_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "3",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/79/00/7900784f410f211bca32201c9a4ab7a4ac3b7bbd_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "3",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/24/66/24669b46a776bdebd381125cf02c4147e78bd2aa_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "7",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/44/a4/44a4f8331cf27a25d404fda51d4557581fb69110_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "1",
+       "mediaIsHeroText": "True"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/00/06/0006dd3ff2b125ef107bf79b9c278afdbb477523_xxl-1.jpg"
+       }
+      }
+     }
+    ],
+    "launchDate": "2026-08-02T08:48:00.000Z",
+    "mainCategory": {
+     "uri": "men/menswear/shirts/cottonshirts"
+    },
+    "name": "CHEMISE RAYÉE DÉCONTRACTÉE",
+    "originalComparativePrice": null,
+    "parent": {
+     "sku": "1358972"
+    },
+    "price": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€69,00",
+     "value": 69
+    },
+    "priceBeforeDiscount": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€69,00",
+     "value": 69
+    },
+    "discountPercentage": null,
+    "salesMode": {
+     "quantity": "1",
+     "type": "Single"
+    },
+    "sku": "1358972002",
+    "uri": "relaxed-striped-cotton-shirt-blue-striped-1358972002",
+    "variant": {
+     "hex": "#272930",
+     "name": "BLUE / STRIPED"
+    },
+    "variantsCount": 0,
+    "hasStock": true,
+    "primaryImage": {
+     "attributes": {
+      "altText": "",
+      "imageType": "StillMedia/Lookbook",
+      "angleFacing": "1",
+      "mediaIsHeroText": "True"
+     },
+     "source": {
+      "standard": {
+       "url": "https://media.cos.com/assets/001/00/06/0006dd3ff2b125ef107bf79b9c278afdbb477523_xxl-1.jpg"
+      }
+     }
+    },
+    "listPosition": 2
+   },
+   {
+    "attributes": {
+     "centraProductId": 26105,
+     "weight": 0,
+     "weightUnit": "kg",
+     "articleSwatches": [
+      {
+       "name": "BLEU MARINE",
+       "displayItemId": 26105,
+       "available": true,
+       "hex": "#272930",
+       "image": "https://media.cos.com/assets/001/e0/0e/e00e3dda40afa5f59e9486a348a5c2627b440b89_xxl-1.jpg"
+      }
+     ]
+    },
+    "comparativePrice": null,
+    "composition": [
+     {
+      "type": "Doublure",
+      "materials": [
+       {
+        "material": "Lyocell TENCEL™",
+        "percentage": 100,
+        "description": "Le lyocell TENCEL™ est une fibre à base de bois régénérée, fabriquée à partir de pulpe de bois. Le procédé de production est en boucle fermée, puisque les produits chimiques sont réutilisés."
+       }
+      ]
+     }
+    ],
+    "categories": [
+     "catalog01_men_menmenswear_menmenswearshirts_menmenswearshirtscasualshirts",
+     "catalog01_men_menmenswear_menmenswearshirts_menmenswearshirtsrelaxedfit",
+     "catalog01_men_menmenswear_menmenswearmwshirtsgm",
+     "catalog01_unisex_unisexeuunisexblackfridayexclusions"
+    ],
+    "details": {
+     "productType": "Shirt"
+    },
+    "gender": "Homme",
+    "id": 26105,
+    "isNew": true,
+    "isOnSale": false,
+    "isComingSoon": false,
+    "lowestPrice": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€89,00",
+     "value": 89
+    },
+    "media": [
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "3",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/73/9e/739e8bd95b6bcb874a5655c5322d7396dbe1d7a1_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "1",
+       "mediaIsHeroText": "True"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/6e/4d/6e4dcb5f4427e0b499cfa11afb1ed46510b877de_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "1",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/7a/61/7a615af4d1bfbf2f6871b932229661abecfa564d_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "2",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/a4/ab/a4ab242c8e03a5088169e3cf5bb3ee4ad5de3c98_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/DescriptiveStillLife",
+       "angleFacing": "1",
+       "mediaIsHeroText": "True"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/dd/51/dd51db52afaf8a14ba9425e7c1f691b359f53f62_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/Lookbook",
+       "angleFacing": "7",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/e5/32/e532112f5d40fd182629a4bc6dff5372bf017dfe_xxl-1.jpg"
+       }
+      }
+     },
+     {
+      "attributes": {
+       "altText": "",
+       "imageType": "StillMedia/DescriptiveDetail",
+       "angleFacing": "1",
+       "mediaIsHeroText": "False"
+      },
+      "source": {
+       "standard": {
+        "url": "https://media.cos.com/assets/001/47/d6/47d60505dec304aa78b914332ed117c2ac1ffa03_xxl-1.jpg"
+       }
+      }
+     }
+    ],
+    "launchDate": "2026-11-14T14:30:00.000Z",
+    "mainCategory": {
+     "uri": "men/menswear/shirts/casualshirts"
+    },
+    "name": "CHEMISE EN JERSEY INTERLOCK FLUIDE",
+    "originalComparativePrice": null,
+    "parent": {
+     "sku": "1373685"
+    },
+    "price": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€89,00",
+     "value": 89
+    },
+    "priceBeforeDiscount": {
+     "currencyCode": "EUR",
+     "currency": "EUR",
+     "formattedValue": "€89,00",
+     "value": 89
+    },
+    "discountPercentage": null,
+    "salesMode": {
+     "quantity": "1",
+     "type": "Single"
+    },
+    "sku": "1373685001",
+    "uri": "fluid-interlock-jersey-shirt-navy-1373685001",
+    "variant": {
+     "hex": "#272930",
+     "name": "NAVY"
+    },
+    "variantsCount": 0,
+    "hasStock": true,
+    "primaryImage": {
+     "attributes": {
+      "altText": "",
+      "imageType": "StillMedia/Lookbook",
+      "angleFacing": "1",
+      "mediaIsHeroText": "True"
+     },
+     "source": {
+      "standard": {
+       "url": "https://media.cos.com/assets/001/6e/4d/6e4dcb5f4427e0b499cfa11afb1ed46510b877de_xxl-1.jpg"
+      }
+     }
+    },
+    "listPosition": 3
+   }
+  ],
+  "language": "fr"
+ },
+ "statusCode": 200
+}

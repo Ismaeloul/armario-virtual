@@ -704,17 +704,20 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
         ("massimodutti", "Massimo Dutti", False, 1), ("lefties", "Lefties", False, 5), ("nike", "Nike", False, 3),
         ("jackjones", "Jack & Jones", False, 0), ("carhartt", "Carhartt WIP", False, 2),
         ("snipes", "Snipes", False, 5), ("size", "size?", False, 6), ("footlocker", "Foot Locker", False, 4),
-        ("jules", "Jules", False, 2), ("bonobo", "Bonobo", False, 4),
+        ("jules", "Jules", False, 2), ("bonobo", "Bonobo", False, 4), ("uniqlo", "Uniqlo", False, 0),
+        ("mango", "Mango", False, 1), ("hm", "H&M", False, 3), ("cos", "COS", False, 5),
+        ("weekday", "Weekday", False, 6),
     ]
-    assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 15  # el falso no lo dice
+    assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 20  # el falso no lo dice
     assert [s["browser"] for s in state["stores"]] == [False, False, True, True, True, True, True, False, False, False,
-                                                       True, True, False, True, True]
+                                                       True, True, False, True, True] + [True] * 5
     assert [s["key"] for s in state["stores"] if s["heavy"]] == [
-        "pullandbear", "bershka", "massimodutti", "lefties", "jules", "bonobo"]
+        "pullandbear", "bershka", "massimodutti", "lefties", "jules", "bonobo", "uniqlo", "mango", "hm", "cos",
+        "weekday"]
     # El reparto de la semana, de lunes a domingo, y su tope por noche.
     assert state["week"] == [
-        ["pullandbear", "jackjones"], ["courir", "massimodutti"], ["jdsports", "carhartt", "jules"],
-        ["bershka", "nike"], ["zara", "footlocker", "bonobo"], ["lefties", "snipes"], ["size"],
+        ["pullandbear", "jackjones", "uniqlo"], ["courir", "massimodutti", "mango"], ["jdsports", "carhartt", "jules"],
+        ["bershka", "nike", "hm"], ["zara", "footlocker", "bonobo"], ["lefties", "snipes", "cos"], ["size", "weekday"],
     ]
     assert (state["per_night"], state["heavy_per_night"]) == (3, 2)
     assert all(c["enabled"] for c in state["stores"][0]["categories"])

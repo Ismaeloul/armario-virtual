@@ -360,7 +360,7 @@ def test_si_coinciden_mas_la_noche_hace_las_que_caben_y_las_demas_esperan(client
         night = datetime.combine(shopping.local_now().date() + timedelta(days=1), datetime.min.time()).replace(
             hour=3, minute=40)
         ran: list[list[str]] = []
-        for _ in range(7):
+        for _ in range(8):
             picked = shopping.tonight(db, night)
             assert len(picked) <= config.SHOP_STORES_PER_NIGHT
             assert sum(map(shops.heavy, picked)) <= config.SHOP_HEAVY_PER_NIGHT
@@ -374,7 +374,7 @@ def test_si_coinciden_mas_la_noche_hace_las_que_caben_y_las_demas_esperan(client
             night += timedelta(days=1)
     # Primero las que más esperan; a igualdad, el orden del panel (y sin pasar de dos pesadas).
     assert ran[0] == ["zara", "courir", "jdsports"]
-    # En una semana han salido todas (y alguna, otra vez en su día de siempre).
+    # En ocho noches han salido todas: veinte tiendas a tres por noche, y alguna repite en su día de siempre.
     assert {s for night_ in ran for s in night_} == set(shops.CONNECTORS)
 
 

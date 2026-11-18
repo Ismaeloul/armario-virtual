@@ -1,0 +1,925 @@
+{
+ "pagination": {
+  "currentPage": 1,
+  "nextPageNum": 2,
+  "totalPages": 35,
+  "pageSize": 36
+ },
+ "totalHits": 1247,
+ "rawProductList": [
+  {
+   "availability": {
+    "comingSoon": false,
+    "stockState": "Available"
+   },
+   "brandName": "H&M",
+   "external": false,
+   "hasVideo": false,
+   "id": "1357440002",
+   "images": [
+    {
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/0e/be/0ebe963c0d3f0e56a4eff4d0e0dadf53ebe502da.jpg"
+    },
+    {
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/d0/34/d034daa8250f8be42c034fe54e54ba865a9fe30b.jpg"
+    },
+    {
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/b7/8b/b78ba3f4deb51c1fd1a0d5afa9490bac93c54a07.jpg"
+    },
+    {
+     "assetType": "DescriptiveDetail",
+     "url": "https://image.hm.com/assets/hm/c4/3d/c43d433109fa71c22195a0b2d6b7b832bfe81654.jpg"
+    }
+   ],
+   "modelImage": "https://image.hm.com/assets/hm/64/5a/645a6b826f3a232fe9a74b976240815eed0da1a9.jpg",
+   "modelImageInfo": {
+    "assetType": "Lookbook",
+    "url": "https://image.hm.com/assets/hm/64/5a/645a6b826f3a232fe9a74b976240815eed0da1a9.jpg"
+   },
+   "prices": [
+    {
+     "formattedPrice": "34,99 €",
+     "maxPrice": 34.99,
+     "minPrice": 34.99,
+     "price": 34.99,
+     "priceType": "whitePrice"
+    }
+   ],
+   "productImage": "https://image.hm.com/assets/hm/bf/ba/bfba0160a3bc85ec55c9ac87e25073196b51eaa8.jpg",
+   "productImageInfo": {
+    "assetType": "DescriptiveStillLife",
+    "url": "https://image.hm.com/assets/hm/bf/ba/bfba0160a3bc85ec55c9ac87e25073196b51eaa8.jpg"
+   },
+   "productMarkers": [],
+   "productName": "Ensemble d'intérieur gaufré 2 pièces",
+   "removed": false,
+   "showPriceMarker": false,
+   "swatches": [
+    {
+     "articleId": "1357440002",
+     "colorCode": "AFAFAF",
+     "colorName": "Gris clair chiné",
+     "productImage": "https://image.hm.com/assets/hm/bf/ba/bfba0160a3bc85ec55c9ac87e25073196b51eaa8.jpg",
+     "trackingId": "Ozg7IzsxMzU3NDQwMDAyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.1357440002.html"
+    },
+    {
+     "articleId": "1357440003",
+     "colorCode": "3A1A19",
+     "colorName": "Bordeaux",
+     "productImage": "https://image.hm.com/assets/hm/cb/13/cb131f3cfd5424296a48d70fef6d86846273cd7e.jpg",
+     "trackingId": "Ozg7IzsxMzU3NDQwMDAzOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.1357440003.html"
+    },
+    {
+     "articleId": "1357440001",
+     "colorCode": "272627",
+     "colorName": "Noir",
+     "productImage": "https://image.hm.com/assets/hm/df/9b/df9bcdc2f6117df1fd0186c2f127cc62cdda4b89.jpg",
+     "trackingId": "Ozg7IzsxMzU3NDQwMDAxOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.1357440001.html"
+    }
+   ],
+   "trackingId": "Ozg7IzsxMzU3NDQwMDAyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+   "url": "/fr_fr/productpage.1357440002.html",
+   "colorName": "Gris clair chiné",
+   "isPreShopping": false,
+   "isOnline": true,
+   "colors": "AFAFAF",
+   "colourShades": "Ton pierre|Gris foncé",
+   "isMultipack": false,
+   "sizes": [
+    {
+     "id": "001",
+     "label": "XS",
+     "stock": 0
+    },
+    {
+     "id": "002",
+     "label": "S",
+     "stock": 2
+    },
+    {
+     "id": "003",
+     "label": "M",
+     "stock": 2
+    },
+    {
+     "id": "004",
+     "label": "L",
+     "stock": 2
+    },
+    {
+     "id": "005",
+     "label": "XL",
+     "stock": 2
+    },
+    {
+     "id": "006",
+     "label": "XXL",
+     "stock": 2
+    }
+   ],
+   "newArrival": false,
+   "isLiquidPixelUrl": false,
+   "colorWithNames": "gris_808080",
+   "mainCatCode": "men_trousers_drawstring"
+  },
+  {
+   "availability": {
+    "comingSoon": false,
+    "stockState": "Available"
+   },
+   "brandName": "H&M",
+   "comparativePrice": 6.66,
+   "external": false,
+   "hasVideo": false,
+   "id": "0945531083",
+   "images": [
+    {
+     "altText": "Un t-shirt en jersey de coton bleu est prÃ©sentÃ© en gros plan, mettant lâaccent sur son col rond bord-cÃ´te avec surpiqÃ»res Ã  double aiguille. Une Ã©tiquette noire de la marque est visible Ã  lâintÃ©rieur de lâencolure dos, portant le texte Â« H&M REGULAR Â».",
+     "assetType": "DescriptiveDetail",
+     "url": "https://image.hm.com/assets/hm/c1/f1/c1f1a9c293ed7af97b3f9b28501816f2c99b72ce.jpg"
+    }
+   ],
+   "modelImage": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg",
+   "modelImageInfo": {
+    "altText": "Trois t-shirts en jersey de coton coupe regular, en bleu, blanc et noir, sont suspendus dans une disposition superposÃ©e, de face. Le t-shirt bleu au premier plan met en valeur un col rond cÃ´telÃ©, des manches courtes et un ourlet droit, tandis que les t-shirts blanc et noir se superposent en arriÃ¨re-plan.",
+    "assetType": "DescriptiveStillLife",
+    "url": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg"
+   },
+   "prices": [
+    {
+     "formattedPrice": "19,99 €",
+     "maxPrice": 19.99,
+     "minPrice": 19.99,
+     "price": 19.99,
+     "priceType": "whitePrice"
+    }
+   ],
+   "productImage": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg",
+   "productImageInfo": {
+    "altText": "Trois t-shirts en jersey de coton coupe regular, en bleu, blanc et noir, sont suspendus dans une disposition superposÃ©e, de face. Le t-shirt bleu au premier plan met en valeur un col rond cÃ´telÃ©, des manches courtes et un ourlet droit, tandis que les t-shirts blanc et noir se superposent en arriÃ¨re-plan.",
+    "assetType": "DescriptiveStillLife",
+    "url": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg"
+   },
+   "productMarkers": [],
+   "productName": "Lot de 3 T-shirts Regular Fit",
+   "removed": false,
+   "showPriceMarker": false,
+   "swatches": [
+    {
+     "articleId": "0945531083",
+     "colorCode": "4B5C7A",
+     "colorName": "Bleu ancien/noir/blanc",
+     "productImage": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg",
+     "trackingId": "Ozg7IzswOTQ1NTMxMDgzOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.0945531083.html"
+    },
+    {
+     "articleId": "0945531001",
+     "colorCode": "FFFFFF",
+     "colorName": "Blanc",
+     "productImage": "https://image.hm.com/assets/hm/65/86/6586560871845dd06b093e3777ddfb71f78ff84b.jpg",
+     "trackingId": "Ozg7IzswOTQ1NTMxMDAxOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.0945531001.html"
+    },
+    {
+     "articleId": "0945531012",
+     "colorCode": "272628",
+     "colorName": "Noir",
+     "productImage": "https://image.hm.com/assets/hm/19/10/19108b8f7717f2afbeb05c645a5fe6640b961445.jpg",
+     "trackingId": "Ozg7IzswOTQ1NTMxMDEyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.0945531012.html"
+    },
+    {
+     "articleId": "0945531072",
+     "colorCode": "AFAFAF",
+     "colorName": "Gris chiné/noir/blanc",
+     "productImage": "https://image.hm.com/assets/hm/fa/13/fa13d0033c182d947a1d20c76cae762ace2a29b2.jpg",
+     "trackingId": "Ozg7IzswOTQ1NTMxMDcyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.0945531072.html"
+    },
+    {
+     "articleId": "0945531079",
+     "colorCode": "BFAED2",
+     "colorName": "Lilas",
+     "productImage": "https://image.hm.com/assets/hm/55/9b/559bac0cf0e1a4c25563022be45bb253e778dd0d.jpg",
+     "trackingId": "Ozg7IzswOTQ1NTMxMDc5OyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.0945531079.html"
+    },
+    {
+     "articleId": "0945531082",
+     "colorCode": "3A1A19",
+     "colorName": "Bleu marine/bordeaux",
+     "productImage": "https://image.hm.com/assets/hm/fc/63/fc6330a220fe0d154a5521827f29c070ece150d9.jpg",
+     "trackingId": "Ozg7IzswOTQ1NTMxMDgyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.0945531082.html"
+    },
+    {
+     "articleId": "0945531080",
+     "colorCode": "3C514C",
+     "colorName": "Bleu marine/vert foncé",
+     "productImage": "https://image.hm.com/assets/hm/79/d8/79d87abc4f4cfd801527c22a36a77966eb31746f.jpg",
+     "trackingId": "Ozg7IzswOTQ1NTMxMDgwOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.0945531080.html"
+    },
+    {
+     "articleId": "0945531073",
+     "colorCode": "38484C",
+     "colorName": "Bleu canard/marron/gris clair",
+     "productImage": "https://image.hm.com/assets/hm/28/be/28bea480630f2e4c2b5ecf0a471c2d4ebcf09a75.jpg",
+     "trackingId": "Ozg7IzswOTQ1NTMxMDczOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.0945531073.html"
+    }
+   ],
+   "trackingId": "Ozg7IzswOTQ1NTMxMDgzOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+   "url": "/fr_fr/productpage.0945531083.html",
+   "colorName": "Bleu ancien/noir/blanc",
+   "quantity": "3",
+   "isPreShopping": false,
+   "isOnline": true,
+   "colors": "4B5C7A",
+   "colourShades": "Bleu marine|Bleu vif|Bleu cobalt|Indigo|Bleu foncé|Bleu royal",
+   "isMultipack": true,
+   "sizes": [
+    {
+     "id": "001",
+     "label": "XS",
+     "stock": 2
+    },
+    {
+     "id": "002",
+     "label": "S",
+     "stock": 2
+    },
+    {
+     "id": "003",
+     "label": "M",
+     "stock": 2
+    },
+    {
+     "id": "004",
+     "label": "L",
+     "stock": 2
+    },
+    {
+     "id": "005",
+     "label": "XL",
+     "stock": 2
+    },
+    {
+     "id": "006",
+     "label": "XXL",
+     "stock": 2
+    }
+   ],
+   "newArrival": true,
+   "isLiquidPixelUrl": false,
+   "colorWithNames": "blanc_ffffff|noir_000000|bleu_0000ff",
+   "comparativeFormattedPrice": "6,66 €",
+   "mainCatCode": "men_tshirtstanks_multipacks"
+  },
+  {
+   "availability": {
+    "comingSoon": false,
+    "stockState": "Available"
+   },
+   "brandName": "H&M",
+   "external": false,
+   "hasVideo": false,
+   "id": "1365195002",
+   "images": [
+    {
+     "altText": "Un ensemble de dÃ©tente en coton, composÃ© dâun haut en jersey noir Ã  manches longues et dâun pantalon en flanelle Ã  carreaux vert foncÃ© et noir, est portÃ© par le mannequin. Le pantalon prÃ©sente une taille Ã  cordon de serrage visible, avec un pull en maille vert nouÃ© autour de la taille.",
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/5e/a0/5ea085ebfc57c52e66267aff9b6963ee2cc61b2b.jpg"
+    },
+    {
+     "altText": "Un ensemble de vÃªtements dâintÃ©rieur en coton, composÃ© dâun haut en jersey noir Ã  manches longues avec Ã©paules tombantes et dâun pantalon en flanelle Ã  carreaux vert et noir, est portÃ© par le mannequin. Le mannequin se tient de dos face Ã  lâappareil photo, les mains jointes derriÃ¨re le dos, mettant en valeur la coupe dÃ©contractÃ©e des vÃªtements.",
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/b0/56/b0563da67472a272237b5f655a12c62e56bdbe57.jpg"
+    },
+    {
+     "altText": "Un ensemble de vÃªtements dâintÃ©rieur en coton, composÃ© dâun haut en jersey noir Ã  manches longues et dâun pantalon en flanelle Ã  carreaux vert et noir, est portÃ© par le mannequin. Un pull en maille vert est nouÃ© Ã  la taille du pantalon Ã  jambes larges.",
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/7d/59/7d593866f5cf7760e20d509318537f6010ffcab8.jpg"
+    },
+    {
+     "altText": "Ce pantalon Ã  jambes larges est prÃ©sentÃ© de face et arbore un motif Ã  carreaux vert et noir. Il est dotÃ© d'une taille Ã©lastiquÃ©e avec cordon de serrage noir et de poches latÃ©rales fendues.",
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/60/66/6066721b2431b081dc297c0c1bb4b086cc5307b1.jpg"
+    },
+    {
+     "altText": "Un t-shirt noir Ã  manches longues est prÃ©sentÃ© de face, avec un col rond cÃ´telÃ© et des Ã©paules tombantes. Le vÃªtement affiche une silhouette dÃ©contractÃ©e avec des manches larges et longues, ainsi quâun ourlet droit.",
+     "assetType": "DescriptiveDetail",
+     "url": "https://image.hm.com/assets/hm/88/e6/88e6a1dca09432469efc6f0cc036a64c0d546b8e.jpg"
+    }
+   ],
+   "modelImage": "https://image.hm.com/assets/hm/a8/0f/a80fe7c611fc1d3fb301763038e37dde0119bb01.jpg",
+   "modelImageInfo": {
+    "altText": "Un ensemble de loungewear en coton, composÃ© dâun haut en jersey noir Ã  manches longues, aux Ã©paules tombantes, et dâun pantalon en flanelle Ã  carreaux verts et noirs Ã  jambes larges, est portÃ© par le mannequin. Le mannequin est debout, une main posÃ©e dans la poche du pantalon, mettant en valeur la coupe dÃ©contractÃ©e et la taille Ã  cordon de serrage.",
+    "assetType": "Lookbook",
+    "url": "https://image.hm.com/assets/hm/a8/0f/a80fe7c611fc1d3fb301763038e37dde0119bb01.jpg"
+   },
+   "prices": [
+    {
+     "formattedPrice": "39,99 €",
+     "maxPrice": 39.99,
+     "minPrice": 39.99,
+     "price": 39.99,
+     "priceType": "whitePrice"
+    }
+   ],
+   "productImage": "https://image.hm.com/assets/hm/ed/a3/eda3c528b9f670e506dddbb5c79c85c15e42856d.jpg",
+   "productImageInfo": {
+    "altText": "Un ensemble de loungewear deux piÃ¨ces est prÃ©sentÃ© en vue Ã  plat, comprenant un t-shirt Ã  col rond noir uni pliÃ©, positionnÃ© au-dessus dâun pantalon de pyjama Ã  carreaux verts et noirs pliÃ©. Le pantalon met en valeur une taille Ã©lastiquÃ©e froncÃ©e avec un cordon de serrage noir.",
+    "assetType": "DescriptiveStillLife",
+    "url": "https://image.hm.com/assets/hm/ed/a3/eda3c528b9f670e506dddbb5c79c85c15e42856d.jpg"
+   },
+   "productMarkers": [],
+   "productName": "Ensemble d'intérieur 2 pièces Loose Fit en coton",
+   "removed": false,
+   "showPriceMarker": false,
+   "swatches": [
+    {
+     "articleId": "1365195002",
+     "colorCode": "272627",
+     "colorName": "Noir/carreaux",
+     "productImage": "https://image.hm.com/assets/hm/ed/a3/eda3c528b9f670e506dddbb5c79c85c15e42856d.jpg",
+     "trackingId": "Ozg7IzsxMzY1MTk1MDAyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MzszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.1365195002.html"
+    },
+    {
+     "articleId": "1365195001",
+     "colorCode": "272627",
+     "colorName": "Noir/rayé",
+     "productImage": "https://image.hm.com/assets/hm/3e/ca/3eca562938f43b486a46d3755fc1c0601aa3f2dd.jpg",
+     "trackingId": "Ozg7IzsxMzY1MTk1MDAxOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MzszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+     "url": "/fr_fr/productpage.1365195001.html"
+    }
+   ],
+   "trackingId": "Ozg7IzsxMzY1MTk1MDAyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MzszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+   "url": "/fr_fr/productpage.1365195002.html",
+   "colorName": "Noir/carreaux",
+   "isPreShopping": false,
+   "isOnline": true,
+   "colors": "272627",
+   "colourShades": "Charbon",
+   "isMultipack": false,
+   "sizes": [
+    {
+     "id": "001",
+     "label": "XS",
+     "stock": 2
+    },
+    {
+     "id": "002",
+     "label": "S",
+     "stock": 2
+    },
+    {
+     "id": "003",
+     "label": "M",
+     "stock": 2
+    },
+    {
+     "id": "004",
+     "label": "L",
+     "stock": 2
+    },
+    {
+     "id": "005",
+     "label": "XL",
+     "stock": 2
+    },
+    {
+     "id": "006",
+     "label": "XXL",
+     "stock": 2
+    }
+   ],
+   "newArrival": false,
+   "isLiquidPixelUrl": false,
+   "colorWithNames": "noir_000000|multi_000000",
+   "mainCatCode": "men_trousers_drawstring"
+  }
+ ],
+ "hits": [
+  {
+   "locale": "fr_fr",
+   "titleTag": "h2",
+   "title": "Ensemble d'intérieur gaufré 2 pièces",
+   "articleCode": "1357440002",
+   "pdpUrl": "/fr_fr/productpage.1357440002.html",
+   "brandName": "H&M",
+   "isExternalBrand": false,
+   "category": "men_trousers_drawstring",
+   "ticket": "Ozg7IzsxMzU3NDQwMDAyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MTszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+   "showFavoriteButton": true,
+   "imageProductSrc": "https://image.hm.com/assets/hm/bf/ba/bfba0160a3bc85ec55c9ac87e25073196b51eaa8.jpg",
+   "imageProductAlt": "Ensemble d'intérieur gaufré 2 pièces",
+   "imageModelSrc": "https://image.hm.com/assets/hm/64/5a/645a6b826f3a232fe9a74b976240815eed0da1a9.jpg",
+   "imageModelAlt": "Ensemble d'intérieur gaufré 2 pièces",
+   "ratio": "2:3",
+   "useModelAsDefault": true,
+   "galleryImages": [
+    {
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/64/5a/645a6b826f3a232fe9a74b976240815eed0da1a9.jpg"
+    },
+    {
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/bf/ba/bfba0160a3bc85ec55c9ac87e25073196b51eaa8.jpg"
+    },
+    {
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/0e/be/0ebe963c0d3f0e56a4eff4d0e0dadf53ebe502da.jpg"
+    },
+    {
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/d0/34/d034daa8250f8be42c034fe54e54ba865a9fe30b.jpg"
+    },
+    {
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/b7/8b/b78ba3f4deb51c1fd1a0d5afa9490bac93c54a07.jpg"
+    },
+    {
+     "assetType": "DescriptiveDetail",
+     "url": "https://image.hm.com/assets/hm/c4/3d/c43d433109fa71c22195a0b2d6b7b832bfe81654.jpg"
+    }
+   ],
+   "labels": {
+    "carouselNextArrow": "Image suivante",
+    "carouselPreviousArrow": "Image précédente"
+   },
+   "prices": [
+    {
+     "formattedPrice": "34,99 €",
+     "maxPrice": 34.99,
+     "minPrice": 34.99,
+     "price": 34.99,
+     "priceType": "whitePrice"
+    }
+   ],
+   "priceSymbol": "€",
+   "regularPrice": "34,99 €",
+   "redPrice": "",
+   "yellowPrice": "",
+   "normalPriceLabel": "Prix initial",
+   "discountedPriceLabel": "Prix réduit",
+   "comparativePrice": {
+    "formattedPrice": "",
+    "comparativeQuantity": "",
+    "quantity": ""
+   },
+   "priorPrice": "",
+   "priorPriceLabel": "Prix le plus bas au cours des 30 derniers jours",
+   "tileLayoutConfig": {
+    "layout": "standard_tile",
+    "imageType": "lookbook_photo"
+   },
+   "showEnergyButton": false,
+   "energyLabelProps": {},
+   "videoId": "",
+   "isPlpVideo": false,
+   "videoLabels": {
+    "areaTitle": "Vidéo présentant les caractéristiques du produit",
+    "playButtonText": "Play",
+    "pauseButtonText": "Pause",
+    "videoLoadingText": "Loading"
+   },
+   "videoFallbackImage": {
+    "src": "https://image.hm.com/assets/hm/64/5a/645a6b826f3a232fe9a74b976240815eed0da1a9.jpg",
+    "altText": "Ensemble d'intérieur gaufré 2 pièces"
+   },
+   "promotionalMarkerText": "",
+   "legalText": "",
+   "marketingMarkerType": "",
+   "marketingMarkerText": "",
+   "discountPercentage": "",
+   "clubPriceLabel": "Prix membre",
+   "isComingSoon": false,
+   "comingSoonLabel": "Bientôt disponible",
+   "swatchesTotal": 3,
+   "swatches": [
+    {
+     "hexColor": "#AFAFAF",
+     "colorName": "Gris clair chiné",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.1357440002.html"
+    },
+    {
+     "hexColor": "#3A1A19",
+     "colorName": "Bordeaux",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.1357440003.html"
+    },
+    {
+     "hexColor": "#272627",
+     "colorName": "Noir",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.1357440001.html"
+    }
+   ],
+   "expandSwatchesLabel": "Voir toutes les couleurs disponibles.",
+   "closeSwatchesLabel": "Fermer",
+   "productColor": {
+    "colorName": "Gris clair chiné",
+    "colorLink": "/fr_fr/productpage.1357440002.html",
+    "hexColor": "#AFAFAF"
+   },
+   "sizes": [
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1357440002001",
+     "size": "001",
+     "name": "XS",
+     "stock": 0
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1357440002002",
+     "size": "002",
+     "name": "S",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1357440002003",
+     "size": "003",
+     "name": "M",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1357440002004",
+     "size": "004",
+     "name": "L",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1357440002005",
+     "size": "005",
+     "name": "XL",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1357440002006",
+     "size": "006",
+     "name": "XXL",
+     "stock": 2
+    }
+   ]
+  },
+  {
+   "locale": "fr_fr",
+   "titleTag": "h2",
+   "title": "Lot de 3 T-shirts Regular Fit",
+   "articleCode": "0945531083",
+   "pdpUrl": "/fr_fr/productpage.0945531083.html",
+   "brandName": "H&M",
+   "isExternalBrand": false,
+   "category": "men_tshirtstanks_multipacks",
+   "ticket": "Ozg7IzswOTQ1NTMxMDgzOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MjszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+   "showFavoriteButton": true,
+   "imageProductSrc": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg",
+   "imageProductAlt": "Trois t-shirts en jersey de coton coupe regular, en bleu, blanc et noir, sont suspendus dans une disposition superposÃ©e, de face. Le t-shirt bleu au premier plan met en valeur un col rond cÃ´telÃ©, des manches courtes et un ourlet droit, tandis que les t-shirts blanc et noir se superposent en arriÃ¨re-plan.",
+   "imageModelSrc": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg",
+   "imageModelAlt": "Trois t-shirts en jersey de coton coupe regular, en bleu, blanc et noir, sont suspendus dans une disposition superposÃ©e, de face. Le t-shirt bleu au premier plan met en valeur un col rond cÃ´telÃ©, des manches courtes et un ourlet droit, tandis que les t-shirts blanc et noir se superposent en arriÃ¨re-plan.",
+   "ratio": "2:3",
+   "useModelAsDefault": true,
+   "galleryImages": [
+    {
+     "altText": "Trois t-shirts en jersey de coton coupe regular, en bleu, blanc et noir, sont suspendus dans une disposition superposÃ©e, de face. Le t-shirt bleu au premier plan met en valeur un col rond cÃ´telÃ©, des manches courtes et un ourlet droit, tandis que les t-shirts blanc et noir se superposent en arriÃ¨re-plan.",
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg"
+    },
+    {
+     "altText": "Un t-shirt en jersey de coton bleu est prÃ©sentÃ© en gros plan, mettant lâaccent sur son col rond bord-cÃ´te avec surpiqÃ»res Ã  double aiguille. Une Ã©tiquette noire de la marque est visible Ã  lâintÃ©rieur de lâencolure dos, portant le texte Â« H&M REGULAR Â».",
+     "assetType": "DescriptiveDetail",
+     "url": "https://image.hm.com/assets/hm/c1/f1/c1f1a9c293ed7af97b3f9b28501816f2c99b72ce.jpg"
+    }
+   ],
+   "labels": {
+    "carouselNextArrow": "Image suivante",
+    "carouselPreviousArrow": "Image précédente"
+   },
+   "prices": [
+    {
+     "formattedPrice": "19,99 €",
+     "maxPrice": 19.99,
+     "minPrice": 19.99,
+     "price": 19.99,
+     "priceType": "whitePrice"
+    }
+   ],
+   "priceSymbol": "€",
+   "regularPrice": "19,99 €",
+   "redPrice": "",
+   "yellowPrice": "",
+   "normalPriceLabel": "Prix initial",
+   "discountedPriceLabel": "Prix réduit",
+   "comparativePrice": {
+    "formattedPrice": "6,66 €",
+    "comparativeQuantity": "pièce",
+    "quantity": "3 pièces"
+   },
+   "priorPrice": "",
+   "priorPriceLabel": "Prix le plus bas au cours des 30 derniers jours",
+   "tileLayoutConfig": {
+    "layout": "standard_tile",
+    "imageType": "lookbook_photo"
+   },
+   "showEnergyButton": false,
+   "energyLabelProps": {},
+   "videoId": "",
+   "isPlpVideo": false,
+   "videoLabels": {
+    "areaTitle": "Vidéo présentant les caractéristiques du produit",
+    "playButtonText": "Play",
+    "pauseButtonText": "Pause",
+    "videoLoadingText": "Loading"
+   },
+   "videoFallbackImage": {
+    "src": "https://image.hm.com/assets/hm/27/48/2748b1ac469dcad8c8d4cd722a979414e8bca57a.jpg",
+    "altText": "Lot de 3 T-shirts Regular Fit"
+   },
+   "promotionalMarkerText": "",
+   "legalText": "",
+   "marketingMarkerType": "",
+   "marketingMarkerText": "",
+   "discountPercentage": "",
+   "clubPriceLabel": "Prix membre",
+   "isComingSoon": false,
+   "comingSoonLabel": "Bientôt disponible",
+   "swatchesTotal": 8,
+   "swatches": [
+    {
+     "hexColor": "#4B5C7A",
+     "colorName": "Bleu ancien/noir/blanc",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.0945531083.html"
+    },
+    {
+     "hexColor": "#FFFFFF",
+     "colorName": "Blanc",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.0945531001.html"
+    },
+    {
+     "hexColor": "#272628",
+     "colorName": "Noir",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.0945531012.html"
+    },
+    {
+     "hexColor": "#AFAFAF",
+     "colorName": "Gris chiné/noir/blanc",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.0945531072.html"
+    },
+    {
+     "hexColor": "#BFAED2",
+     "colorName": "Lilas",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.0945531079.html"
+    },
+    {
+     "hexColor": "#3A1A19",
+     "colorName": "Bleu marine/bordeaux",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.0945531082.html"
+    },
+    {
+     "hexColor": "#3C514C",
+     "colorName": "Bleu marine/vert foncé",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.0945531080.html"
+    },
+    {
+     "hexColor": "#38484C",
+     "colorName": "Bleu canard/marron/gris clair",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.0945531073.html"
+    }
+   ],
+   "expandSwatchesLabel": "Voir toutes les couleurs disponibles.",
+   "closeSwatchesLabel": "Fermer",
+   "productColor": {
+    "colorName": "Bleu ancien/noir/blanc",
+    "colorLink": "/fr_fr/productpage.0945531083.html",
+    "hexColor": "#4B5C7A"
+   },
+   "sizes": [
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "0945531083001",
+     "size": "001",
+     "name": "XS",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "0945531083002",
+     "size": "002",
+     "name": "S",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "0945531083003",
+     "size": "003",
+     "name": "M",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "0945531083004",
+     "size": "004",
+     "name": "L",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "0945531083005",
+     "size": "005",
+     "name": "XL",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "0945531083006",
+     "size": "006",
+     "name": "XXL",
+     "stock": 2
+    }
+   ]
+  },
+  {
+   "locale": "fr_fr",
+   "titleTag": "h2",
+   "title": "Ensemble d'intérieur 2 pièces Loose Fit en coton",
+   "articleCode": "1365195002",
+   "pdpUrl": "/fr_fr/productpage.1365195002.html",
+   "brandName": "H&M",
+   "isExternalBrand": false,
+   "category": "men_trousers_drawstring",
+   "ticket": "Ozg7IzsxMzY1MTk1MDAyOyM7IzsvREVTS1RPUC9MQU5ESU5HX1BBR0UvTkFWSUdBVElPTl9SRVNVTFQ7IzsjO3Q7MzszMzsjOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7L21lbi9zaG9wLWJ5LXByb2R1Y3QvdC1zaGlydHMtYW5kLXRhbmtzOyM7_e4",
+   "showFavoriteButton": true,
+   "imageProductSrc": "https://image.hm.com/assets/hm/ed/a3/eda3c528b9f670e506dddbb5c79c85c15e42856d.jpg",
+   "imageProductAlt": "Un ensemble de loungewear deux piÃ¨ces est prÃ©sentÃ© en vue Ã  plat, comprenant un t-shirt Ã  col rond noir uni pliÃ©, positionnÃ© au-dessus dâun pantalon de pyjama Ã  carreaux verts et noirs pliÃ©. Le pantalon met en valeur une taille Ã©lastiquÃ©e froncÃ©e avec un cordon de serrage noir.",
+   "imageModelSrc": "https://image.hm.com/assets/hm/a8/0f/a80fe7c611fc1d3fb301763038e37dde0119bb01.jpg",
+   "imageModelAlt": "Un ensemble de loungewear en coton, composÃ© dâun haut en jersey noir Ã  manches longues, aux Ã©paules tombantes, et dâun pantalon en flanelle Ã  carreaux verts et noirs Ã  jambes larges, est portÃ© par le mannequin. Le mannequin est debout, une main posÃ©e dans la poche du pantalon, mettant en valeur la coupe dÃ©contractÃ©e et la taille Ã  cordon de serrage.",
+   "ratio": "2:3",
+   "useModelAsDefault": true,
+   "galleryImages": [
+    {
+     "altText": "Un ensemble de loungewear en coton, composÃ© dâun haut en jersey noir Ã  manches longues, aux Ã©paules tombantes, et dâun pantalon en flanelle Ã  carreaux verts et noirs Ã  jambes larges, est portÃ© par le mannequin. Le mannequin est debout, une main posÃ©e dans la poche du pantalon, mettant en valeur la coupe dÃ©contractÃ©e et la taille Ã  cordon de serrage.",
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/a8/0f/a80fe7c611fc1d3fb301763038e37dde0119bb01.jpg"
+    },
+    {
+     "altText": "Un ensemble de loungewear deux piÃ¨ces est prÃ©sentÃ© en vue Ã  plat, comprenant un t-shirt Ã  col rond noir uni pliÃ©, positionnÃ© au-dessus dâun pantalon de pyjama Ã  carreaux verts et noirs pliÃ©. Le pantalon met en valeur une taille Ã©lastiquÃ©e froncÃ©e avec un cordon de serrage noir.",
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/ed/a3/eda3c528b9f670e506dddbb5c79c85c15e42856d.jpg"
+    },
+    {
+     "altText": "Un ensemble de dÃ©tente en coton, composÃ© dâun haut en jersey noir Ã  manches longues et dâun pantalon en flanelle Ã  carreaux vert foncÃ© et noir, est portÃ© par le mannequin. Le pantalon prÃ©sente une taille Ã  cordon de serrage visible, avec un pull en maille vert nouÃ© autour de la taille.",
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/5e/a0/5ea085ebfc57c52e66267aff9b6963ee2cc61b2b.jpg"
+    },
+    {
+     "altText": "Un ensemble de vÃªtements dâintÃ©rieur en coton, composÃ© dâun haut en jersey noir Ã  manches longues avec Ã©paules tombantes et dâun pantalon en flanelle Ã  carreaux vert et noir, est portÃ© par le mannequin. Le mannequin se tient de dos face Ã  lâappareil photo, les mains jointes derriÃ¨re le dos, mettant en valeur la coupe dÃ©contractÃ©e des vÃªtements.",
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/b0/56/b0563da67472a272237b5f655a12c62e56bdbe57.jpg"
+    },
+    {
+     "altText": "Un ensemble de vÃªtements dâintÃ©rieur en coton, composÃ© dâun haut en jersey noir Ã  manches longues et dâun pantalon en flanelle Ã  carreaux vert et noir, est portÃ© par le mannequin. Un pull en maille vert est nouÃ© Ã  la taille du pantalon Ã  jambes larges.",
+     "assetType": "Lookbook",
+     "url": "https://image.hm.com/assets/hm/7d/59/7d593866f5cf7760e20d509318537f6010ffcab8.jpg"
+    },
+    {
+     "altText": "Ce pantalon Ã  jambes larges est prÃ©sentÃ© de face et arbore un motif Ã  carreaux vert et noir. Il est dotÃ© d'une taille Ã©lastiquÃ©e avec cordon de serrage noir et de poches latÃ©rales fendues.",
+     "assetType": "DescriptiveStillLife",
+     "url": "https://image.hm.com/assets/hm/60/66/6066721b2431b081dc297c0c1bb4b086cc5307b1.jpg"
+    },
+    {
+     "altText": "Un t-shirt noir Ã  manches longues est prÃ©sentÃ© de face, avec un col rond cÃ´telÃ© et des Ã©paules tombantes. Le vÃªtement affiche une silhouette dÃ©contractÃ©e avec des manches larges et longues, ainsi quâun ourlet droit.",
+     "assetType": "DescriptiveDetail",
+     "url": "https://image.hm.com/assets/hm/88/e6/88e6a1dca09432469efc6f0cc036a64c0d546b8e.jpg"
+    }
+   ],
+   "labels": {
+    "carouselNextArrow": "Image suivante",
+    "carouselPreviousArrow": "Image précédente"
+   },
+   "prices": [
+    {
+     "formattedPrice": "39,99 €",
+     "maxPrice": 39.99,
+     "minPrice": 39.99,
+     "price": 39.99,
+     "priceType": "whitePrice"
+    }
+   ],
+   "priceSymbol": "€",
+   "regularPrice": "39,99 €",
+   "redPrice": "",
+   "yellowPrice": "",
+   "normalPriceLabel": "Prix initial",
+   "discountedPriceLabel": "Prix réduit",
+   "comparativePrice": {
+    "formattedPrice": "",
+    "comparativeQuantity": "",
+    "quantity": ""
+   },
+   "priorPrice": "",
+   "priorPriceLabel": "Prix le plus bas au cours des 30 derniers jours",
+   "tileLayoutConfig": {
+    "layout": "standard_tile",
+    "imageType": "lookbook_photo"
+   },
+   "showEnergyButton": false,
+   "energyLabelProps": {},
+   "videoId": "",
+   "isPlpVideo": false,
+   "videoLabels": {
+    "areaTitle": "Vidéo présentant les caractéristiques du produit",
+    "playButtonText": "Play",
+    "pauseButtonText": "Pause",
+    "videoLoadingText": "Loading"
+   },
+   "videoFallbackImage": {
+    "src": "https://image.hm.com/assets/hm/a8/0f/a80fe7c611fc1d3fb301763038e37dde0119bb01.jpg",
+    "altText": "Ensemble d'intérieur 2 pièces Loose Fit en coton"
+   },
+   "promotionalMarkerText": "",
+   "legalText": "",
+   "marketingMarkerType": "",
+   "marketingMarkerText": "",
+   "discountPercentage": "",
+   "clubPriceLabel": "Prix membre",
+   "isComingSoon": false,
+   "comingSoonLabel": "Bientôt disponible",
+   "swatchesTotal": 2,
+   "swatches": [
+    {
+     "hexColor": "#272627",
+     "colorName": "Noir/carreaux",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.1365195002.html"
+    },
+    {
+     "hexColor": "#272627",
+     "colorName": "Noir/rayé",
+     "colorLink": "https://www2.hm.com/fr_fr/productpage.1365195001.html"
+    }
+   ],
+   "expandSwatchesLabel": "Voir toutes les couleurs disponibles.",
+   "closeSwatchesLabel": "Fermer",
+   "productColor": {
+    "colorName": "Noir/carreaux",
+    "colorLink": "/fr_fr/productpage.1365195002.html",
+    "hexColor": "#272627"
+   },
+   "sizes": [
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1365195002001",
+     "size": "001",
+     "name": "XS",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1365195002002",
+     "size": "002",
+     "name": "S",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1365195002003",
+     "size": "003",
+     "name": "M",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1365195002004",
+     "size": "004",
+     "name": "L",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1365195002005",
+     "size": "005",
+     "name": "XL",
+     "stock": 2
+    },
+    {
+     "sizeScaleCode": "",
+     "sizeCode": "1365195002006",
+     "size": "006",
+     "name": "XXL",
+     "stock": 2
+    }
+   ]
+  }
+ ]
+}

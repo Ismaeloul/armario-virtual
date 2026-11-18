@@ -1,0 +1,1147 @@
+{
+ "status": "ok",
+ "result": {
+  "aggregations": {},
+  "pagination": {
+   "total": 23,
+   "offset": 0,
+   "count": 3
+  },
+  "relaxedQueries": [],
+  "items": [
+   {
+    "colors": [
+     {
+      "code": "COL16",
+      "displayCode": "16",
+      "name": "ROUGE",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "RED"
+     },
+     {
+      "code": "COL00",
+      "displayCode": "00",
+      "name": "BLANC",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "WHITE"
+     },
+     {
+      "code": "COL06",
+      "displayCode": "06",
+      "name": "GRIS",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GRAY"
+     },
+     {
+      "code": "COL08",
+      "displayCode": "08",
+      "name": "GRIS FONCÉ",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GRAY"
+     },
+     {
+      "code": "COL09",
+      "displayCode": "09",
+      "name": "NOIR",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLACK"
+     },
+     {
+      "code": "COL12",
+      "displayCode": "12",
+      "name": "ROSE",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "PINK"
+     },
+     {
+      "code": "COL30",
+      "displayCode": "30",
+      "name": "NUDE",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BEIGE"
+     },
+     {
+      "code": "COL39",
+      "displayCode": "39",
+      "name": "MARRON FONCÉ",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BROWN"
+     },
+     {
+      "code": "COL58",
+      "displayCode": "58",
+      "name": "VERT FONCÉ",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GREEN"
+     },
+     {
+      "code": "COL65",
+      "displayCode": "65",
+      "name": "BLEU",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLUE"
+     },
+     {
+      "code": "COL68",
+      "displayCode": "68",
+      "name": "BLEU",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLUE"
+     }
+    ],
+    "genderName": "Unisexe",
+    "genderCategory": "UNISEX",
+    "sizeGender": "MEN",
+    "images": {
+     "main": {
+      "12": {
+       "image": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/item/goods_12_465193_3x4.jpg",
+       "model": []
+      },
+      "16": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_16_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "30": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_30_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "39": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_39_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "58": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_58_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "65": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_65_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "68": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_68_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "00": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_00_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "06": {
+       "image": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/item/goods_06_465193_3x4.jpg",
+       "model": []
+      },
+      "08": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_08_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "09": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/item/eugoods_09_465193_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      }
+     },
+     "chip": {
+      "11": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_11_465193_chip.jpg",
+      "12": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_12_465193_chip.jpg",
+      "16": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_16_465193_chip.jpg",
+      "19": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_19_465193_chip.jpg",
+      "30": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_30_465193_chip.jpg",
+      "39": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_39_465193_chip.jpg",
+      "52": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_52_465193_chip.jpg",
+      "56": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_56_465193_chip.jpg",
+      "58": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_58_465193_chip.jpg",
+      "65": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_65_465193_chip.jpg",
+      "68": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_68_465193_chip.jpg",
+      "69": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_69_465193_chip.jpg",
+      "70": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_70_465193_chip.jpg",
+      "75": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_75_465193_chip.jpg",
+      "76": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_76_465193_chip.jpg",
+      "77": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_77_465193_chip.jpg",
+      "00": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_00_465193_chip.jpg",
+      "06": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_06_465193_chip.jpg",
+      "08": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_08_465193_chip.jpg",
+      "09": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/chip/goods_09_465193_chip.jpg"
+     },
+     "sub": [
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/sub/goods_465193_sub1_3x4.jpg",
+       "model": []
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/sub/eugoods_465193_sub3_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ],
+       "colorCode": "16"
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/sub/eugoods_465193_sub6_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Women"
+        }
+       ],
+       "colorCode": "16"
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465193/sub/eugoods_465193_sub7_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Women"
+        }
+       ],
+       "colorCode": "16"
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/sub/goods_465193_sub11_3x4.jpg",
+       "model": []
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465193/sub/goods_465193_sub17_3x4.jpg",
+       "model": []
+      }
+     ]
+    },
+    "l1Id": "465193",
+    "name": "T-shirt AIRism en coton (Manches longues)",
+    "prices": {
+     "base": {
+      "currency": {
+       "code": "EUR",
+       "symbol": "€"
+      },
+      "value": 24.9
+     },
+     "promo": null,
+     "isDualPrice": false
+    },
+    "productId": "E465193-000",
+    "priceGroup": "00",
+    "plds": [
+     {
+      "code": "PTB000",
+      "displayCode": "000",
+      "name": "-",
+      "display": {
+       "showFlag": false,
+       "chipType": 0
+      }
+     }
+    ],
+    "rating": {
+     "average": 4.8,
+     "count": 1227
+    },
+    "representativeColorDisplayCode": "16",
+    "representative": {
+     "color": {
+      "code": "COL16",
+      "displayCode": "16",
+      "name": "ROUGE",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "RED"
+     },
+     "flags": {
+      "priceFlags": [],
+      "productFlags": [
+       {
+        "code": "unisex",
+        "name": "Unisexe",
+        "id": 135,
+        "rank": 103,
+        "type": "product_flag",
+        "isRepresentativeL2Flag": true,
+        "effectiveTime": {
+         "start": 0,
+         "end": 0
+        },
+        "flagColor": "normal"
+       }
+      ]
+     },
+     "l2Id": "09458935",
+     "pld": {
+      "code": "PTB000",
+      "displayCode": "000",
+      "name": "-",
+      "display": {
+       "showFlag": false,
+       "chipType": 0
+      }
+     },
+     "sales": true,
+     "size": {
+      "code": "SMA002",
+      "displayCode": "002",
+      "name": "XS",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     "communicationCode": "465193-16-002-000"
+    },
+    "sizes": [
+     {
+      "code": "SMA002",
+      "displayCode": "002",
+      "name": "XS",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA003",
+      "displayCode": "003",
+      "name": "S",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA004",
+      "displayCode": "004",
+      "name": "M",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA005",
+      "displayCode": "005",
+      "name": "L",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA006",
+      "displayCode": "006",
+      "name": "XL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA007",
+      "displayCode": "007",
+      "name": "XXL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA008",
+      "displayCode": "008",
+      "name": "3XL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     }
+    ],
+    "promotionText": "",
+    "storeStockOnly": false
+   },
+   {
+    "colors": [
+     {
+      "code": "COL02",
+      "displayCode": "02",
+      "name": "GRIS CLAIR",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GRAY"
+     },
+     {
+      "code": "COL00",
+      "displayCode": "00",
+      "name": "BLANC",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "WHITE"
+     },
+     {
+      "code": "COL07",
+      "displayCode": "07",
+      "name": "GRIS",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GRAY"
+     },
+     {
+      "code": "COL09",
+      "displayCode": "09",
+      "name": "NOIR",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLACK"
+     },
+     {
+      "code": "COL39",
+      "displayCode": "39",
+      "name": "MARRON FONCÉ",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BROWN"
+     },
+     {
+      "code": "COL42",
+      "displayCode": "42",
+      "name": "JAUNE",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "YELLOW"
+     },
+     {
+      "code": "COL50",
+      "displayCode": "50",
+      "name": "VERT CLAIR",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GREEN"
+     },
+     {
+      "code": "COL58",
+      "displayCode": "58",
+      "name": "VERT FONCÉ",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GREEN"
+     },
+     {
+      "code": "COL65",
+      "displayCode": "65",
+      "name": "BLEU",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLUE"
+     },
+     {
+      "code": "COL69",
+      "displayCode": "69",
+      "name": "BLEU MARINE",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLUE"
+     },
+     {
+      "code": "COL70",
+      "displayCode": "70",
+      "name": "VIOLET CLAIR",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "PURPLE"
+     }
+    ],
+    "genderName": "Unisexe",
+    "genderCategory": "UNISEX",
+    "sizeGender": "MEN",
+    "images": {
+     "main": {
+      "39": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_39_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "42": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_42_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "50": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_50_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "58": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_58_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "65": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_65_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "69": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_69_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "70": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_70_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "00": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_00_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "02": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_02_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "07": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_07_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "09": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/item/eugoods_09_465185_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      }
+     },
+     "chip": {
+      "11": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_11_465185_chip.jpg",
+      "12": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_12_465185_chip.jpg",
+      "15": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_15_465185_chip.jpg",
+      "17": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_17_465185_chip.jpg",
+      "18": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_18_465185_chip.jpg",
+      "19": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_19_465185_chip.jpg",
+      "33": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_33_465185_chip.jpg",
+      "34": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_34_465185_chip.jpg",
+      "35": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_35_465185_chip.jpg",
+      "39": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_39_465185_chip.jpg",
+      "41": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_41_465185_chip.jpg",
+      "42": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_42_465185_chip.jpg",
+      "50": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_50_465185_chip.jpg",
+      "52": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_52_465185_chip.jpg",
+      "53": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_53_465185_chip.jpg",
+      "55": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_55_465185_chip.jpg",
+      "57": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_57_465185_chip.jpg",
+      "58": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_58_465185_chip.jpg",
+      "64": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_64_465185_chip.jpg",
+      "65": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_65_465185_chip.jpg",
+      "66": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_66_465185_chip.jpg",
+      "67": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_67_465185_chip.jpg",
+      "69": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_69_465185_chip.jpg",
+      "70": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_70_465185_chip.jpg",
+      "71": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_71_465185_chip.jpg",
+      "76": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_76_465185_chip.jpg",
+      "00": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_00_465185_chip.jpg",
+      "02": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_02_465185_chip.jpg",
+      "07": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_07_465185_chip.jpg",
+      "09": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/chip/goods_09_465185_chip.jpg"
+     },
+     "sub": [
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/sub/eugoods_465185_sub3_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ],
+       "colorCode": "39"
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/sub/eugoods_465185_sub6_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Women"
+        }
+       ],
+       "colorCode": "39"
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/465185/sub/eugoods_465185_sub7_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Women"
+        }
+       ],
+       "colorCode": "39"
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/sub/goods_465185_sub11_3x4.jpg",
+       "model": []
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/465185/sub/goods_465185_sub17_3x4.jpg",
+       "model": []
+      }
+     ]
+    },
+    "l1Id": "465185",
+    "name": "T-shirt oversize AIRism en coton",
+    "prices": {
+     "base": {
+      "currency": {
+       "code": "EUR",
+       "symbol": "€"
+      },
+      "value": 19.9
+     },
+     "promo": null,
+     "isDualPrice": false
+    },
+    "productId": "E465185-000",
+    "priceGroup": "00",
+    "plds": [
+     {
+      "code": "PTB000",
+      "displayCode": "000",
+      "name": "-",
+      "display": {
+       "showFlag": false,
+       "chipType": 0
+      }
+     }
+    ],
+    "rating": {
+     "average": 4.8,
+     "count": 6602
+    },
+    "representativeColorDisplayCode": "02",
+    "representative": {
+     "color": {
+      "code": "COL02",
+      "displayCode": "02",
+      "name": "GRIS CLAIR",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GRAY"
+     },
+     "flags": {
+      "priceFlags": [],
+      "productFlags": [
+       {
+        "code": "unisex",
+        "name": "Unisexe",
+        "id": 135,
+        "rank": 103,
+        "type": "product_flag",
+        "isRepresentativeL2Flag": true,
+        "effectiveTime": {
+         "start": 0,
+         "end": 0
+        },
+        "flagColor": "normal"
+       }
+      ]
+     },
+     "l2Id": "07938968",
+     "pld": {
+      "code": "PTB000",
+      "displayCode": "000",
+      "name": "-",
+      "display": {
+       "showFlag": false,
+       "chipType": 0
+      }
+     },
+     "sales": true,
+     "size": {
+      "code": "SMA002",
+      "displayCode": "002",
+      "name": "XS",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     "communicationCode": "465185-02-002-000"
+    },
+    "sizes": [
+     {
+      "code": "SMA002",
+      "displayCode": "002",
+      "name": "XS",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA003",
+      "displayCode": "003",
+      "name": "S",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA004",
+      "displayCode": "004",
+      "name": "M",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA005",
+      "displayCode": "005",
+      "name": "L",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA006",
+      "displayCode": "006",
+      "name": "XL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA007",
+      "displayCode": "007",
+      "name": "XXL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA008",
+      "displayCode": "008",
+      "name": "3XL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     }
+    ],
+    "promotionText": "",
+    "storeStockOnly": false
+   },
+   {
+    "colors": [
+     {
+      "code": "COL00",
+      "displayCode": "00",
+      "name": "BLANC",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "WHITE"
+     },
+     {
+      "code": "COL07",
+      "displayCode": "07",
+      "name": "GRIS",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GRAY"
+     },
+     {
+      "code": "COL09",
+      "displayCode": "09",
+      "name": "NOIR",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLACK"
+     },
+     {
+      "code": "COL57",
+      "displayCode": "57",
+      "name": "VERT OLIVE",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "GREEN"
+     },
+     {
+      "code": "COL63",
+      "displayCode": "63",
+      "name": "BLEU",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLUE"
+     },
+     {
+      "code": "COL69",
+      "displayCode": "69",
+      "name": "BLEU MARINE",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "BLUE"
+     }
+    ],
+    "genderName": "Homme",
+    "genderCategory": "MEN",
+    "sizeGender": "MEN",
+    "images": {
+     "main": {
+      "57": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/item/eugoods_57_482522_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "63": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/item/eugoods_63_482522_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "69": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/item/eugoods_69_482522_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "00": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/item/eugoods_00_482522_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "07": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/item/eugoods_07_482522_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      },
+      "09": {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/item/eugoods_09_482522_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ]
+      }
+     },
+     "chip": {
+      "56": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/chip/goods_56_482522_chip.jpg",
+      "57": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/chip/goods_57_482522_chip.jpg",
+      "60": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/chip/goods_60_482522_chip.jpg",
+      "63": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/chip/goods_63_482522_chip.jpg",
+      "69": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/chip/goods_69_482522_chip.jpg",
+      "00": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/chip/goods_00_482522_chip.jpg",
+      "07": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/chip/goods_07_482522_chip.jpg",
+      "09": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/chip/goods_09_482522_chip.jpg"
+     },
+     "sub": [
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/sub/eugoods_482522_sub3_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ],
+       "colorCode": "63"
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/sub/eugoods_482522_sub4_3x4.jpg",
+       "model": [
+        {
+         "modelGender": "Men"
+        }
+       ],
+       "colorCode": "63"
+      },
+      {
+       "video": "https://image.uniqlo.com/UQ/ST3/eu/imagesgoods/482522/subvideo/eugoods_482522_sub13_video_3x4.mp4",
+       "model": []
+      },
+      {
+       "image": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/482522/sub/goods_482522_sub14_3x4.jpg",
+       "model": []
+      }
+     ]
+    },
+    "l1Id": "482522",
+    "name": "T-shirt AIRism en coton",
+    "prices": {
+     "base": {
+      "currency": {
+       "code": "EUR",
+       "symbol": "€"
+      },
+      "value": 14.9
+     },
+     "promo": null,
+     "isDualPrice": false
+    },
+    "productId": "E482522-000",
+    "priceGroup": "00",
+    "plds": [
+     {
+      "code": "PTB000",
+      "displayCode": "000",
+      "name": "-",
+      "display": {
+       "showFlag": false,
+       "chipType": 0
+      }
+     }
+    ],
+    "rating": {
+     "average": 4.7,
+     "count": 433
+    },
+    "representativeColorDisplayCode": "00",
+    "representative": {
+     "color": {
+      "code": "COL00",
+      "displayCode": "00",
+      "name": "BLANC",
+      "display": {
+       "showFlag": true,
+       "chipType": 1
+      },
+      "filterCode": "WHITE"
+     },
+     "flags": {
+      "priceFlags": [],
+      "productFlags": []
+     },
+     "l2Id": "09078832",
+     "pld": {
+      "code": "PTB000",
+      "displayCode": "000",
+      "name": "-",
+      "display": {
+       "showFlag": false,
+       "chipType": 0
+      }
+     },
+     "sales": true,
+     "size": {
+      "code": "SMA002",
+      "displayCode": "002",
+      "name": "XS",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     "communicationCode": "482522-00-002-000"
+    },
+    "sizes": [
+     {
+      "code": "SMA002",
+      "displayCode": "002",
+      "name": "XS",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA003",
+      "displayCode": "003",
+      "name": "S",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA004",
+      "displayCode": "004",
+      "name": "M",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA005",
+      "displayCode": "005",
+      "name": "L",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA006",
+      "displayCode": "006",
+      "name": "XL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA007",
+      "displayCode": "007",
+      "name": "XXL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     },
+     {
+      "code": "SMA008",
+      "displayCode": "008",
+      "name": "3XL",
+      "display": {
+       "showFlag": true,
+       "chipType": 0
+      }
+     }
+    ],
+    "promotionText": "",
+    "storeStockOnly": false
+   }
+  ],
+  "relaxedQueryItems": []
+ }
+}

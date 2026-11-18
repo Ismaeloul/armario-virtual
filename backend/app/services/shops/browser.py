@@ -2,7 +2,9 @@
 (Pull&Bear y Bershka: a httpx les responden con un desafío de JavaScript y a un Chromium sin
 ventana con «Access Denied»; JD Sports: desde el Umbrel responde 403 a curl y a httpx en casi todo;
 Snipes y size?: el listado lo pide la propia página; Jules y Bonobo: Cloudflare da 403 a httpx, y en
-Bonobo también a las fotos, que se abren en otra pestaña de la misma sesión: `image`).
+Bonobo también a las fotos, que se abren en otra pestaña de la misma sesión: `image`; Uniqlo, Mango, H&M,
+COS y Weekday: Akamai o Vercel, y solo se lee su listado; para sus páginas siguientes, `more` pulsa el
+botón de la propia web o baja hasta el final, como un usuario).
 
 Lo acordado con el usuario, sin excepciones:
 
@@ -338,22 +340,92 @@ class Session:
             while time.monotonic() < deadline and not ready([r.url for r in seen]):
                 page.wait_for_timeout(250)
             self._reject_cookies(page)
-            responses = []
-            for response in list(seen):
-                try:
-                    status = response.status
-                    data = json.loads(response.body()) if status == 200 else None
-                except Exception:
-                    status, data = response.status, None
-                if status in (403, 429):
-                    raise block(store, BLOCKED_TEXT)
-                responses.append(Response(response.url, status, data))
+            responses = self._collect(store, seen)
             if not ready([r.url for r in responses]):
                 self._check(store, page, None, strict=True)
             return responses
         finally:
             page.remove_listener("response", on_response)
             self._last = time.monotonic()
+
+    def _collect(self, store: str, seen: list) -> list[Response]:
+        """Las respuestas oídas, ya leídas como JSON. Un 403 o un 429 en lo que interesa es un bloqueo."""
+        responses = []
+        for response in list(seen):
+            try:
+                status = response.status
+                data = json.loads(response.body()) if status == 200 else None
+            except Exception:
+                status, data = response.status, None
+            if status in (403, 429):
+                raise block(store, BLOCKED_TEXT)
+            responses.append(Response(response.url, status, data))
+        return responses
+
+    def more(self, store: str, want, ready, click: str | None = None, wait: float = WAIT_JSON_SECONDS) -> list[Response]:
+        """En la página ya abierta, lo que haría un usuario para ver más productos: pulsar el botón de la
+        propia web (`click`, un selector: «Charger la page suivante» en COS) o, sin él, bajar hasta el final
+        poco a poco (las que cargan al llegar abajo: Uniqlo, Mango). Devuelve las respuestas JSON nuevas
+        que pide la página y que interesan (`want`), esperando hasta que `ready(urls)` diga que ya están.
+        Sin botón (ya no hay más) o sin nada nuevo, una lista vacía. Lanza BlockedError si la tienda bloquea."""
+        page = self._page
+        if page is None:
+            raise ShopError("no hay ninguna página abierta")
+        self._wait_turn()
+        seen: list = []
+
+        def on_response(response) -> None:
+            try:
+                if want(response.url):
+                    seen.append(response)
+            except Exception:
+                pass
+
+        page.on("response", on_response)
+        try:
+            self.pages += 1
+            try:
+                if click:
+                    button = page.locator(click).first
+                    if button.count() == 0:
+                        return []
+                    button.scroll_into_view_if_needed(timeout=5000)
+                    if not button.is_visible(timeout=2000) or not button.is_enabled(timeout=2000):
+                        return []
+                    button.click(timeout=5000)
+                else:
+                    # Hasta abajo a trozos de pantalla, como con la rueda: la web carga al llegar al final.
+                    for _ in range(12):
+                        at_end = page.evaluate(
+                            "() => { window.scrollBy(0, Math.round(window.innerHeight * 0.9));"
+                            " return window.innerHeight + window.scrollY >= document.body.scrollHeight - 4; }")
+                        page.wait_for_timeout(350)
+                        if at_end:
+                            break
+            except ShopError:
+                raise
+            except Exception as exc:
+                raise ShopError(f"la página no respondió ({type(exc).__name__})") from exc
+            deadline = time.monotonic() + wait
+            while time.monotonic() < deadline and not ready([r.url for r in seen]):
+                page.wait_for_timeout(250)
+            responses = self._collect(store, seen)
+            if not responses:
+                self._check(store, page, None)
+            return responses
+        finally:
+            page.remove_listener("response", on_response)
+            self._last = time.monotonic()
+
+    def evaluate(self, store: str, expression: str, arg=None):
+        """Lee algo de la página ya abierta (los datos que trae dentro: el `self.__next_f` de Mango). No
+        pide nada a la tienda. Lanza ShopError si no hay página o si falla."""
+        if self._page is None:
+            raise ShopError("no hay ninguna página abierta")
+        try:
+            return self._page.evaluate(expression, arg)
+        except Exception as exc:
+            raise ShopError(f"la página no se pudo leer ({type(exc).__name__})") from exc
 
     def page_json(self, store: str, url: str, script_id: str = "__NEXT_DATA__",
                   wait: float = WAIT_SCRIPT_SECONDS) -> tuple[int | None, object]:

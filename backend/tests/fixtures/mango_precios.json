@@ -1,0 +1,26 @@
+{
+ "56": {
+  "default": {
+   "price": 49.99,
+   "starPrice": false,
+   "type": "PVP",
+   "currency": "EUR"
+  }
+ },
+ "48": {
+  "default": {
+   "price": 49.99,
+   "starPrice": false,
+   "type": "PVP",
+   "currency": "EUR"
+  }
+ },
+ "30": {
+  "default": {
+   "price": 49.99,
+   "starPrice": false,
+   "type": "PVP",
+   "currency": "EUR"
+  }
+ }
+}
