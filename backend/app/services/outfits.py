@@ -147,8 +147,10 @@ def warm_months(today: date) -> bool:
     return 5 <= today.month <= 9
 
 
-# La IA escribe tanto «manga corta» como «mangas cortas amplias».
-_SHORT_SLEEVE, _LONG_SLEEVE = re.compile(r"mangas? cortas?"), re.compile(r"mangas? largas?")
+# La IA escribe tanto «manga corta» como «mangas cortas amplias». Las tiendas de Francia, en francés:
+# «manches courtes» / «manches longues».
+_SHORT_SLEEVE = re.compile(r"mangas? cortas?|manches? courtes?")
+_LONG_SLEEVE = re.compile(r"mangas? largas?|manches? longues?")
 
 
 def summer_only(item) -> bool:

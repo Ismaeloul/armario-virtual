@@ -1,0 +1,92 @@
+{
+ "productGroups": [
+  {
+   "elements": [
+    {
+     "commercialComponents": [
+      {
+       "id": 545423065,
+       "type": "Product",
+       "name": "POLO À STRUCTURE VERTICALE",
+       "price": 2595,
+       "seo": {
+        "keyword": "polo-a-structure-verticale",
+        "seoProductId": "00526410",
+        "discernProductId": 545423065
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "251",
+          "name": "Blanc cassé",
+          "productId": 545423065
+         }
+        ]
+       }
+      },
+      {
+       "id": 545479842,
+       "type": "Product",
+       "name": "POLO EN MAILLE REGULAR FIT STRUCTURÉ",
+       "price": 2157,
+       "seo": {
+        "keyword": "polo-en-maille-regular-fit-structure",
+        "seoProductId": "02632420",
+        "discernProductId": 545479842
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "420",
+          "name": "Bleu roi",
+          "productId": 545479842
+         }
+        ]
+       }
+      },
+      {
+       "id": 556955225,
+       "type": "Product",
+       "name": "CHEMISE EN JEAN COUPE BOXY À RAYURES",
+       "price": 3995,
+       "seo": {
+        "keyword": "chemise-en-denim-boxy-fit-a-rayures",
+        "seoProductId": "00840335",
+        "discernProductId": 556955225
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "407",
+          "name": "Bleu",
+          "productId": 556955225
+         }
+        ]
+       }
+      },
+      {
+       "id": 545490340,
+       "type": "Product",
+       "name": "POLO TECHNIQUE À ZIP",
+       "price": 3595,
+       "seo": {
+        "keyword": "polo-technique-a-zip",
+        "seoProductId": "06861692",
+        "discernProductId": 545490340
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "800",
+          "name": "Noir",
+          "productId": 545490340
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

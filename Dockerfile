@@ -17,8 +17,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     CODEX_HOME=/codex-home     HOME=/tmp
 
 # Node solo hace falta para el lanzador del CLI de Codex (suscripción de ChatGPT).
+# curl: JD Sports responde 403 a httpx y 200 a curl (backend/app/services/shops/fetch.py).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nodejs npm ca-certificates \
+    && apt-get install -y --no-install-recommends nodejs npm ca-certificates curl \
     && npm install -g @openai/codex --no-fund --no-audit \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /root/.npm
 

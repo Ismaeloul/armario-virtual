@@ -44,6 +44,7 @@ class ShopProduct:
     style: str
     season: str
     details: str = ""  # texto libre (nombre, pistas de la categoría) para las reglas que leen palabras
+    brand: str = ""  # la marca del producto, si la tienda vende varias (Nike, Adidas…); "" si es la propia tienda
     # Lo que el conector necesita para volver a pedir el detalle de este producto más adelante.
     store_data: dict = field(default_factory=dict)
 
@@ -54,7 +55,10 @@ class ShopDetail:
 
     price_cents: int | None
     sizes: list[dict]  # [{"name": "M", "in_stock": True}]
-    photo_urls: list[str]  # fotos de producto sin modelo: delante, detrás, otra vista (como mucho 3)
+    # Fotos de producto sin modelo, en el orden de la prenda: delante, detrás, otra vista (en calzado:
+    # lateral, tres cuartos o de frente, otra vista). Las tres primeras pasan al armario al comprarla;
+    # una cuarta, si la hay, solo se ve en el visor.
+    photo_urls: list[str]
     description: str = ""
     color_hex: str | None = None
     composition: str = ""  # de qué está hecha, como lo dice la tienda («Exterior: 55% poliéster, 45% lana»)
@@ -63,6 +67,10 @@ class ShopDetail:
     # producto aparte (su propio `product_ref`); `store_data` es lo que hace falta para pedir su ficha.
     # None si el conector no lo sabe.
     siblings: list[dict] | None = None
+    # El nombre del color según la ficha, si el listado no lo traía (Courir): "" si no lo dice.
+    store_color: str = ""
+    # Datos que la ficha sabe y el listado no (el código de fabricante en Courir): se añaden a `store_data`.
+    store_data: dict = field(default_factory=dict)
 
     @property
     def in_stock(self) -> bool:
@@ -71,7 +79,9 @@ class ShopDetail:
 
 class ShopConnector(Protocol):
     key: str  # "zara"
-    name: str  # "Zara": se enseña al usuario y es la marca de la prenda al comprarla
+    name: str  # "Zara": se enseña al usuario; es la marca de la prenda al comprarla si el producto no trae otra
+    # Idioma de los nombres de la tienda ("fr", "es"…): lo que no está en español se traduce para enseñarlo.
+    language: str
     categories: dict[str, str]  # slug de la tienda -> nombre para el usuario
     # Día de la semana en que se consulta (lunes = 0): el siguiente al que la tienda saca novedades.
     refresh_weekday: int

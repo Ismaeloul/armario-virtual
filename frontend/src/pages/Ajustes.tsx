@@ -223,6 +223,39 @@ export default function Ajustes() {
                 </div>
                 <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.codexModeloTexto}</p>
                 {changeFailed("codex_model", "codex_effort")}
+
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  <Field label={t.ajustes.codexTraducir}>
+                    <select
+                      className={inputClass}
+                      value={settings?.codex_translate_model ?? ""}
+                      onChange={(e) => change({ codex_translate_model: e.target.value })}
+                    >
+                      <option value="">{t.ajustes.codexAuto}</option>
+                      {(models.translate_models ?? models.models).map((m) => (
+                        <option key={m.slug} value={m.slug}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label={t.ajustes.codexEsfuerzo}>
+                    <select
+                      className={inputClass}
+                      value={settings?.codex_translate_effort ?? "low"}
+                      onChange={(e) => change({ codex_translate_effort: e.target.value })}
+                    >
+                      <option value="">{t.ajustes.codexEsfuerzoAuto}</option>
+                      {models.efforts.map((e) => (
+                        <option key={e} value={e}>
+                          {t.ajustes.codexEsfuerzos[e] ?? e}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+                <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.codexTraducirTexto}</p>
+                {changeFailed("codex_translate_model", "codex_translate_effort")}
               </div>
             )}
 

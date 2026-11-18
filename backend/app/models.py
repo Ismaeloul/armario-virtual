@@ -170,6 +170,14 @@ class ShopItem(Base):
     # None = todavía no se sabe: se rellena la próxima vez que se pida su ficha.
     siblings: Mapped[list | None] = mapped_column(JSON, nullable=True)
     composition: Mapped[str | None] = mapped_column(Text, nullable=True)  # de qué está hecha, si la tienda lo dice
+    # La marca, en las tiendas de varias marcas (Courir, JD Sports). Al comprarla, es la de la prenda.
+    brand: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    # Traducción al español de lo que la tienda dice en otro idioma. Lo original (name, store_color,
+    # composition) no se toca: es lo que se puntúa y lo que sirve para buscarlo en la tienda.
+    name_es: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    store_color_es: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    composition_es: Mapped[str | None] = mapped_column(Text, nullable=True)
+    translated: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # True = ya traducido
 
 
 class Setting(Base):

@@ -9,6 +9,7 @@ _TMP = tempfile.mkdtemp(prefix="armario-tests-")
 os.environ["ARMARIO_DATA_DIR"] = _TMP
 os.environ["ARMARIO_FRONTEND_DIST"] = str(Path(_TMP) / "sin-frontend")
 os.environ["ARMARIO_SHOP_AUTO"] = "0"  # sin bucle de tandas: los tests nunca llaman a las tiendas
+os.environ["ARMARIO_SHOP_TRANSLATE"] = "0"  # ni a Codex para traducir
 os.environ.pop("ANTHROPIC_API_KEY", None)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -19,6 +20,8 @@ from PIL import Image  # noqa: E402
 from app.db import Base, engine  # noqa: E402
 from app.main import app  # noqa: E402
 from app.services.ai import selector  # noqa: E402
+from app.services.ai import translate  # noqa: E402
+from app.services.shops.fetch import Fetcher  # noqa: E402
 from app.services.shops.zara import ZaraConnector  # noqa: E402
 
 VALID_DRAFT = {
@@ -65,6 +68,12 @@ def sin_red(monkeypatch):
         raise AssertionError(f"Un test ha intentado llamar a la tienda: {url}")
 
     monkeypatch.setattr(ZaraConnector, "_get", _blocked)
+    monkeypatch.setattr(Fetcher, "get", _blocked)  # Courir y JD Sports
+
+    def _no_ai(prompt):
+        raise AssertionError("Un test ha intentado traducir con la IA de verdad")
+
+    monkeypatch.setattr(translate, "BACKENDS", [("codex", _no_ai)])
 
 
 @pytest.fixture

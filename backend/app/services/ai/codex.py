@@ -31,7 +31,10 @@ class CodexAnalyzer:
         home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
         return (home / "auth.json").is_file()
 
-    def analyze(self, images: list[Path], prompt: str) -> str:
+    def analyze(self, images: list[Path], prompt: str, schema: dict | None = None, timeout: float | None = None,
+                purpose: str = codex_models.ANALYSIS) -> str:
+        """La respuesta de Codex (JSON con la forma de `schema`; por defecto, el borrador de una prenda).
+        Sin imágenes vale para trabajos de solo texto, como traducir nombres (ai/translate.py)."""
         binary = self._binary()
         if not binary:
             raise AnalysisError("Codex no está instalado en el servidor")
@@ -40,7 +43,7 @@ class CodexAnalyzer:
             work = Path(tmp)
             schema_file = work / "esquema.json"
             result_file = work / "resultado.json"
-            schema_file.write_text(json.dumps(OUTPUT_SCHEMA), encoding="utf-8")
+            schema_file.write_text(json.dumps(schema or OUTPUT_SCHEMA), encoding="utf-8")
 
             cmd = [
                 binary, "exec",
@@ -51,7 +54,7 @@ class CodexAnalyzer:
                 "--output-schema", str(schema_file),
                 "--output-last-message", str(result_file),
             ]
-            cmd += codex_models.cli_args()  # modelo y esfuerzo elegidos en Ajustes
+            cmd += codex_models.cli_args(purpose)  # modelo y esfuerzo elegidos en Ajustes para esto
             for image in images:
                 cmd += ["--image", str(image)]
             cmd.append("-")  # el prompt entra por stdin: sin problemas de comillas
@@ -70,7 +73,7 @@ class CodexAnalyzer:
             except OSError as exc:
                 raise AnalysisError("No se pudo ejecutar Codex") from exc
             try:
-                stdout, stderr = proc.communicate(prompt, timeout=config.AI_TIMEOUT_SECONDS)
+                stdout, stderr = proc.communicate(prompt, timeout=timeout or config.AI_TIMEOUT_SECONDS)
             except subprocess.TimeoutExpired as exc:
                 # Matar el árbol entero antes de recoger las tuberías: si no, el hijo nativo
                 # sigue vivo y communicate() puede quedarse esperando.

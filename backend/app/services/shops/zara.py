@@ -1,4 +1,4 @@
-"""Conector de Zara España (catálogo de hombre). Sin navegador: las mismas páginas con `?ajax=true`
+"""Conector de Zara (catálogo de hombre), de momento la tienda de Francia (el usuario vive allí). Sin navegador: las mismas páginas con `?ajax=true`
 devuelven JSON.
 
 Se le pide poco y despacio: una petición cada vez y con una pausa entre ellas. Si responde algo que
@@ -23,11 +23,61 @@ from .estimate import (
     sentence_case,
 )
 
-BASE = "https://www.zara.com/es/es"
+# País de la tienda. Para añadir otro (España: "es"), una entrada en SITES con sus categorías.
+COUNTRY = "fr"
+
+
+@dataclass(frozen=True)
+class ZaraSite:
+    path: str  # «fr/fr»: país e idioma en las direcciones
+    store_id: int  # la tienda del buscador de la web (`itxrest/.../store/<id>/query`)
+    locale: str
+    accept_language: str
+    language: str  # idioma de los nombres: si no es "es", se traducen para enseñarlos
+    # slug de la categoría -> (nombre para el usuario, tipo por defecto si el nombre del producto no lo dice)
+    categories: dict
+
+
+SITES = {
+    # Store id 10703 sacado de la propia web (`storeId` en el JSON de una categoría), 18-11-2026.
+    # Los slugs, de `https://www.zara.com/fr/fr/categories?ajax=true` (sección homme): las mismas doce
+    # secciones que en España, con el mismo número de categoría.
+    "fr": ZaraSite("fr/fr", 10703, "fr_FR", "fr-FR,fr;q=0.9", "fr", {
+        "homme-t-shirts-l855": ("Camisetas", "camiseta"),
+        "homme-t-shirts-manches-courtes-l19355": ("Camisetas de manga corta", "camiseta"),
+        "homme-polos-l733": ("Polos", "polo"),
+        "homme-chemises-l737": ("Camisas", "camisa"),
+        "homme-sweats-l821": ("Sudaderas", "sudadera"),
+        "homme-maille-l681": ("Punto", "jersey"),
+        "homme-vestes-l640": ("Chaquetas", "chaqueta"),
+        "man-overshirts-l3174": ("Sobrecamisas", "sobrecamisa"),
+        "homme-pantalons-l838": ("Pantalones", "pantalón"),
+        "homme-jeans-l659": ("Vaqueros", "vaquero"),
+        "homme-bermudas-l592": ("Bermudas", "pantalón corto"),
+        "homme-chaussures-baskets-l797": ("Zapatos y zapatillas", "zapatillas"),
+    }),
+    "es": ZaraSite("es/es", 10701, "es_ES", "es-ES,es;q=0.9", "es", {
+        "hombre-camisetas-l855": ("Camisetas", "camiseta"),
+        "hombre-camisetas-manga-corta-l19355": ("Camisetas de manga corta", "camiseta"),
+        "hombre-polos-l733": ("Polos", "polo"),
+        "hombre-camisas-l737": ("Camisas", "camisa"),
+        "hombre-sudaderas-l821": ("Sudaderas", "sudadera"),
+        "hombre-punto-l681": ("Punto", "jersey"),
+        "hombre-chaquetas-l640": ("Chaquetas", "chaqueta"),
+        "hombre-sobrecamisas-l3174": ("Sobrecamisas", "sobrecamisa"),
+        "hombre-pantalones-l838": ("Pantalones", "pantalón"),
+        "hombre-jeans-l659": ("Vaqueros", "vaquero"),
+        "hombre-bermudas-l592": ("Bermudas", "pantalón corto"),
+        "hombre-zapatos-zapatillas-l797": ("Zapatos y zapatillas", "zapatillas"),
+    }),
+}
+SITE = SITES[COUNTRY]
+
+BASE = f"https://www.zara.com/{SITE.path}"
 MEDIA = "https://static.zara.net"
-# El buscador de la web (10701 es la tienda de España). Solo se usa para el texto libre, y solo en
-# hombre: una referencia o un enlace van directos a la ficha, sea de la sección que sea.
-SEARCH = "https://www.zara.com/itxrest/1/search/store/10701/query"
+# El buscador de la web. Solo se usa para el texto libre, y solo en hombre: una referencia o un enlace
+# van directos a la ficha, sea de la sección que sea.
+SEARCH = f"https://www.zara.com/itxrest/1/search/store/{SITE.store_id}/query"
 TEXT_RESULTS = 6  # de cada resultado de texto hay que pedir luego la ficha: pocos, para no hacer esperar
 PAGE_CACHE_SECONDS = 300  # lo que se recuerda la ficha recién buscada, para no pedirla otra vez por color
 HEADERS = {
@@ -36,24 +86,12 @@ HEADERS = {
         "Chrome/130.0.0.0 Safari/537.36"
     ),
     "Accept": "application/json",
-    "Accept-Language": "es-ES,es;q=0.9",
+    "Accept-Language": SITE.accept_language,
 }
 
-# slug de la categoría -> (nombre para el usuario, tipo por defecto si el nombre del producto no lo dice)
-CATEGORIES = {
-    "hombre-camisetas-l855": ("Camisetas", "camiseta"),
-    "hombre-camisetas-manga-corta-l19355": ("Camisetas de manga corta", "camiseta"),
-    "hombre-polos-l733": ("Polos", "polo"),
-    "hombre-camisas-l737": ("Camisas", "camisa"),
-    "hombre-sudaderas-l821": ("Sudaderas", "sudadera"),
-    "hombre-punto-l681": ("Punto", "jersey"),
-    "hombre-chaquetas-l640": ("Chaquetas", "chaqueta"),
-    "hombre-sobrecamisas-l3174": ("Sobrecamisas", "sobrecamisa"),
-    "hombre-pantalones-l838": ("Pantalones", "pantalón"),
-    "hombre-jeans-l659": ("Vaqueros", "vaquero"),
-    "hombre-bermudas-l592": ("Bermudas", "pantalón corto"),
-    "hombre-zapatos-zapatillas-l797": ("Zapatos y zapatillas", "zapatillas"),
-}
+# slug de la categoría -> (nombre para el usuario, tipo por defecto si el nombre del producto no lo dice).
+# Los de cualquier país: un producto guardado con otro país sigue sabiendo su tipo por defecto.
+CATEGORIES = {**SITES["es"].categories, **SITE.categories}
 
 _PRODUCT_PHOTO = re.compile(r"-e(\d+)$")  # las fotos de producto sin modelo: -e1 (delante), -e2 (detrás)…
 _AVAILABLE = ("in_stock", "low_on_stock")
@@ -99,7 +137,7 @@ def _parse_product(item: dict, slug: str, default_type: str | None) -> ShopProdu
     discern_id = seo.get("discernProductId") or item.get("id")
     color_id = str(color.get("id") or discern_id)
     details = name.lower()
-    if "manga-corta" in slug and "manga" not in details:
+    if ("manga-corta" in slug or "manches-courtes" in slug) and "manga" not in details and "manche" not in details:
         details += " manga corta"
     return ShopProduct(
         store="zara",
@@ -364,7 +402,9 @@ class ZaraConnector:
     name = "Zara"
     # Zara saca novedades los jueves (según la prensa de moda; no es un dato oficial): se consulta los viernes.
     refresh_weekday = 4  # lunes = 0
-    categories = {slug: label for slug, (label, _default) in CATEGORIES.items()}
+    refresh_after_release = True  # el día de consulta sale de cuándo saca novedades
+    language = SITE.language
+    categories = {slug: label for slug, (label, _default) in SITE.categories.items()}
 
     def __init__(self, pause: float | None = None, timeout: float | None = None, pages: int | None = None):
         self.pause = config.SHOP_PAUSE_SECONDS if pause is None else pause
@@ -461,7 +501,7 @@ class ZaraConnector:
     def search(self, query: str, limit: int = 12) -> list[ShopProduct]:
         wanted = parse_query(query)
         if wanted.seo_id is None:
-            url = f"{SEARCH}?query={quote(wanted.text)}&locale=es_ES&section=MAN&offset=0&limit={TEXT_RESULTS * 2}"
+            url = f"{SEARCH}?query={quote(wanted.text)}&locale={SITE.locale}&section=MAN&offset=0&limit={TEXT_RESULTS * 2}"
             products = parse_search(self._json(url, follow=False) or {}, min(limit, TEXT_RESULTS))
             if not products:
                 raise SearchError(f"No he encontrado nada en Zara con «{wanted.text}»")

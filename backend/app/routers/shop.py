@@ -45,7 +45,9 @@ class ShopItemOut(BaseModel):
     store_name: str
     product_ref: str
     reference: str | None  # la de la tienda, legible («3918/300/800»)
-    name: str
+    brand: str | None  # la marca, en las tiendas de varias marcas (Courir, JD Sports)
+    name: str  # en español si se ha podido traducir
+    name_original: str | None  # el nombre como lo escribe la tienda, si se enseña traducido
     price_cents: int
     url: str
     store_color: str
@@ -126,6 +128,8 @@ class ShopStoreOut(BaseModel):
     enabled: bool
     categories: list[ShopCategoryOut]
     weekday: int  # día de la semana en que se consulta (lunes = 0)
+    # El día sale de cuándo saca novedades la tienda (Zara); si no, es uno elegido sin ese dato.
+    weekday_after_release: bool
     status: ShopStatusOut
     next_check: date | None  # cuándo se consultará sola (None si está desactivada)
 
@@ -205,10 +209,13 @@ def _to_out(item: ShopItem) -> ShopItemOut:
         store_name=connector.name if connector else item.store.capitalize(),
         product_ref=item.product_ref,
         reference=shopping.store_reference(item),
-        name=item.name,
+        brand=item.brand or None,
+        # Lo traducido, si lo hay; si no, lo que dice la tienda.
+        name=item.name_es or item.name,
+        name_original=item.name if item.name_es and item.name_es != item.name else None,
         price_cents=item.price_cents,
         url=item.url,
-        store_color=item.store_color,
+        store_color=item.store_color_es or item.store_color,
         type=item.type,
         category=item.category,
         color=item.color,
@@ -220,7 +227,7 @@ def _to_out(item: ShopItem) -> ShopItemOut:
         liked_at=item.liked_at,
         expires_at=item.expires_at,
         expires_soon=item.status == shopping.LIKED and shopping.expires_soon(item),
-        composition=item.composition or None,
+        composition=item.composition_es or item.composition or None,
         colors=shopping.colors_of(item),
     )
 
@@ -259,6 +266,7 @@ def _state(db: Session) -> ShopState:
                 name=connector.name,
                 enabled=key in enabled,
                 weekday=getattr(connector, "refresh_weekday", 0),
+                weekday_after_release=bool(getattr(connector, "refresh_after_release", False)),
                 status=ShopStatusOut(
                     state=("ok" if status.get("ok") else "failed") if consulted else "never",
                     at=status.get("at") if consulted else None,

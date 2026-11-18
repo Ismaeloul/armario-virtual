@@ -47,7 +47,7 @@ from . import ai, outfits, shops, storage, style_rules
 from .ai.base import build_prompt
 from .ai import codex_models
 from .shops import NotThisStore, SearchError, ShopError
-from .shops.estimate import estimate_color, norm
+from .shops.estimate import brand_family, estimate_color, norm
 
 log = logging.getLogger("armario.compras")
 
@@ -95,6 +95,9 @@ BASE = 30.0
 W_PREF_TYPE = 16.0  # tipo de prenda («sueles descartar los polos»)
 W_PREF_COLOR = 16.0  # color
 W_PREF_WORD = 16.0  # palabras del nombre (cropped, pana, relaxed…), sumadas y topadas en ±1
+# La marca (Nike, Adidas, New Balance…), en las tiendas que venden varias. Pesa menos que el tipo y el
+# color: «te gustan las Nike» no debe tapar que una zapatilla concreta no va con el armario.
+W_PREF_BRAND = 10.0
 # El precio NO cuenta (decisión del usuario, 18-11-2026): ni suma, ni resta, ni sale como motivo.
 # Se sigue apuntando por franjas por si algún día se quiere usar.
 W_PREF_PRICE = 0.0
@@ -137,7 +140,10 @@ SECTION_STEP = 2.0  # por cada candidato ya elegido de la misma categoría de la
 _RISKY = re.compile(
     r"\b(cropped|culotte|flare|acampanad[oa]s?|crochet|calad[oa]s?|transparentes?|lentejuelas|brillos?|"
     r"satinad[oa]s?|metalizad[oa]s?|limited|faldas?|top|sandalias?|zuecos?|flores|floral|bordad[oa]s?|"
-    r"jacquard|rejilla|leopardo|balloon|pareo|kimono|plumas)\b"
+    r"jacquard|rejilla|leopardo|balloon|pareo|kimono|plumas|"
+    # Lo mismo en francés (Zara Francia).
+    r"evase|evasee|ajoure|ajouree|transparente?s?|paillettes|brillante?s?|satine|satinee|metallise|metallisee|"
+    r"jupes?|sandales?|sabots?|fleurs|fleuri|brode|brodee|resille|leopard|plumes)\b"
 )
 
 # A quién se le echa la culpa de un «no me gusta», según el motivo que dé el usuario:
@@ -191,7 +197,15 @@ def active_categories(db: Session, store: str) -> list[str]:
     chosen = (_get(db, K_CATEGORIES, {}) or {}).get(store)
     if chosen is None:
         return list(connector.categories)
-    return [slug for slug in connector.categories if slug in chosen]
+    # Zara numera sus categorías igual en todos los países («-l855»): lo elegido con la tienda de otro
+    # país (España) sigue valiendo.
+    keys = {_category_key(slug) for slug in chosen}
+    return [slug for slug in connector.categories if slug in chosen or _category_key(slug) in keys]
+
+
+def _category_key(slug: str) -> str:
+    match = re.search(r"-l\d+$", slug)
+    return match.group() if match else slug
 
 
 def set_store(db: Session, store: str, enabled: bool | None, categories: list[str] | None) -> None:
@@ -285,6 +299,9 @@ def next_check(db: Session, store: str, today: date | None = None) -> date:
 _STOP_WORDS = {
     "con", "sin", "para", "por", "del", "los", "las", "the", "and", "zara", "hombre", "fit", "regular", "manga",
     "mangas", "larga", "corta", "basico", "basica", "pack", "edition", "cuello", "efecto", "tejido",
+    # En francés (Zara Francia, Courir, JD Sports .fr).
+    "avec", "sans", "pour", "des", "les", "une", "homme", "manche", "manches", "longue", "longues", "courte",
+    "courtes", "basique", "col", "effet", "tissu", "coupe", "maille",
 }
 
 
@@ -308,6 +325,7 @@ class ShopTaste:
     colors: dict[str, list[float]] = field(default_factory=dict)
     prices: dict[str, list[float]] = field(default_factory=dict)
     words: dict[str, list[float]] = field(default_factory=dict)
+    brands: dict[str, list[float]] = field(default_factory=dict)  # por familia: Adidas Originals es Adidas
 
     def learn(self, item, liked: bool, reason: str | None = None, strength: float = 1.0) -> None:
         """Un «me gusta» cuenta entero en todo (por `strength`: una compra vale varias veces más).
@@ -320,6 +338,9 @@ class ShopTaste:
             (self.prices, price_band(item.price_cents), by_price),
         ]
         votes += [(self.words, word, by_word) for word in name_words(item.name)]
+        family = brand_family(getattr(item, "brand", None))
+        if family:
+            votes.append((self.brands, family, by_type))  # la marca carga la misma culpa que el tipo
         for table, key, weight in votes:
             if weight:
                 entry = table.setdefault(key, [0.0, 0.0])
@@ -452,8 +473,13 @@ def candidate_item(product) -> outfits.Item:
 
 
 # Lo que delata a una prenda de verano en el nombre o en la descripción de la tienda.
-_SUMMER_TEXT = re.compile(r"\b(tirantes|sin mangas|lino|bermudas?|shorts?|banador|sandalias?|chanclas?)\b")
-_SHORT_SLEEVE, _LONG_SLEEVE = re.compile(r"\bmangas? cortas?\b"), re.compile(r"\bmangas? largas?\b")
+# En español y en francés (Zara Francia).
+_SUMMER_TEXT = re.compile(
+    r"\b(tirantes|sin mangas|lino|bermudas?|shorts?|banador|sandalias?|chanclas?|"
+    r"sans manches|debardeurs?|lin|maillot de bain|sandales?|claquettes?|tongs)\b"
+)
+_SHORT_SLEEVE = re.compile(r"\bmangas? cortas?\b|\bmanches? courtes?\b")
+_LONG_SLEEVE = re.compile(r"\bmangas? largas?\b|\bmanches? longues?\b")
 
 
 def summer_text(text: str | None) -> bool:
@@ -509,6 +535,14 @@ def score(product, wardrobe: list[outfits.Item], taste=None, prefs: ShopTaste | 
                 reason(f"Te suele gustar lo «{strongest}»")
             elif by_word[strongest] <= -CLEAR_PREF:
                 reason(f"Sueles descartar lo «{strongest}»", "contra")
+        family = brand_family(getattr(product, "brand", None))
+        if family:
+            by_brand = prefs.opinion(prefs.brands, family)
+            total += W_PREF_BRAND * by_brand
+            if by_brand >= CLEAR_PREF:
+                reason(f"Te suelen gustar {article} {family}")
+            elif by_brand <= -CLEAR_PREF:
+                reason(f"Sueles descartar {article} {family}", "contra")
         if W_PREF_PRICE and by_price >= CLEAR_PREF:
             reason("Precio como los que te gustan")
         elif W_PREF_PRICE and by_price <= -CLEAR_PREF:
@@ -781,6 +815,19 @@ def colors_of(item: ShopItem) -> list[dict] | None:
     ]
 
 
+def _detail_color(row: ShopItem, detail) -> None:
+    """El color de la ficha cuando el listado no lo traía (Courir), y lo que la ficha sabe para la
+    referencia (el código de fabricante)."""
+    if getattr(detail, "store_color", "") and not row.store_color:
+        row.store_color = detail.store_color[:60]
+        row.color = estimate_color(detail.store_color, detail.color_hex)
+        row.store_color_es = None
+        row.translated = None
+    extra = getattr(detail, "store_data", None) or {}
+    if extra:
+        row.store_data = {**(row.store_data or {}), **{k: v for k, v in extra.items() if v}}
+
+
 def _apply_detail(row: ShopItem, detail) -> None:
     """Lo que la ficha dice además de fotos y tallas: en qué colores existe y de qué está hecha."""
     # Siempre en el mismo orden (la tienda pone primero el color que se le pide): si no, al cambiar de
@@ -806,6 +853,8 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
     if size and in_stock and size not in in_stock:
         raise CannotBuy("Esa talla no está entre las disponibles")
     front, back, extra = (photos + [None, None])[:3]
+    for photo_id in photos[3:]:  # una cuarta foto (la suela en Courir) solo se veía en el visor
+        storage.delete(photo_id)
 
     result = ai.analyze(
         [storage.photo_path(p) for p in photos[:3]],
@@ -815,10 +864,12 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
             kind="calzado" if item.category == "calzado" else "ropa",
         ),
     )
-    brand = shops.CONNECTORS[item.store].name if item.store in shops.CONNECTORS else item.store.capitalize()
+    store_name = shops.CONNECTORS[item.store].name if item.store in shops.CONNECTORS else item.store.capitalize()
+    # En una tienda de varias marcas (Courir, JD Sports) la marca es la del producto; en Zara, Zara.
+    brand = item.brand or store_name
     draft = result.draft
     if draft is not None:
-        # La marca y la talla no salen de la foto: son la tienda y la talla elegida.
+        # La marca y la talla no salen de la foto: son la del producto (o la tienda) y la talla elegida.
         saved_draft = {**draft.model_dump(), "brand": brand, "size": size}
         fields = dict(
             name=draft.name.strip(), type=draft.type, color_primary=draft.color_primary.name,
@@ -845,7 +896,7 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
         size=size,
         # De dónde vino, para poder buscarla o pedirla otra vez desde la Ficha.
         reference=store_reference(item),
-        store_name=brand[:40],
+        store_name=store_name[:40],
         store_url=item.url or None,
         photo_front=front,
         photo_back=back,
@@ -947,7 +998,11 @@ def _store_candidate(db: Session, row: ShopItem | None, product, today: date) ->
     # Si ya se le bajó la ficha, se conserva lo que decía la descripción (y la temporada que salió de
     # ella): así un «manga corta» ya descubierto no vuelve a gastar una petición cada semana.
     described = row.name == name and len(row.details or "") > len(product.details)
+    if row.name != name or row.store_color != product.store_color[:60]:
+        row.name_es = row.store_color_es = None  # lo traducido era de otro texto
+        row.translated = None
     row.name, row.price_cents, row.url = name, product.price_cents, product.url
+    row.brand = (getattr(product, "brand", "") or "")[:40] or None
     row.store_color, row.section, row.store_data = product.store_color[:60], product.section, product.store_data
     row.type, row.category, row.color = product.type, product.category, product.color
     row.pattern, row.style = product.pattern, product.style
@@ -1017,6 +1072,7 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
             db.commit()
             continue
         row.status, row.batch, row.photos = NEW, today, photos
+        _detail_color(row, detail)
         row.price_cents = detail.price_cents or row.price_cents
         row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, True
         row.first_seen_at = now_utc()
@@ -1318,9 +1374,16 @@ def lookup(db: Session, query: str, today: date | None = None) -> list[ShopItem]
     if not _lock.acquire(blocking=False):
         raise LookupFailed("Ahora mismo estoy consultando el catálogo. Prueba dentro de un minuto.", "ocupado")
     try:
-        return _lookup(db, query, today or outfits.local_today())
+        items = _lookup(db, query, today or outfits.local_today())
     finally:
         _lock.release()
+    pending = [item.id for item in items if _foreign(item.store, item.url) and not item.translated]
+    worker = translate_soon(pending) if pending else None
+    if worker is not None:
+        worker.join(LOOKUP_TRANSLATE_SECONDS)  # si no llega, se responde en el original y se traduce después
+        for item in items:
+            db.refresh(item)
+    return items
 
 
 def _has_photos(item: ShopItem) -> bool:
@@ -1341,6 +1404,7 @@ def _store_fetched(db: Session, row: ShopItem | None, product, detail, photos: l
     row.can_undo = False
     row.price_cents = detail.price_cents or row.price_cents
     row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, detail.in_stock
+    _detail_color(row, detail)
     if row.color == "multicolor" and detail.color_hex:
         # El nombre del color no decía nada conocido («Bronce»): con la ficha ya se sabe el tono.
         row.color = estimate_color(row.store_color, detail.color_hex)
@@ -1402,6 +1466,7 @@ def _sibling_product(item: ShopItem, sibling: dict) -> shops.ShopProduct:
         store_color=name, section=item.section, type=item.type, category=item.category,
         color=estimate_color(name, sibling.get("hex")), pattern=item.pattern, style=item.style,
         season=item.season, details=item.details or "", store_data=dict(sibling.get("store_data") or {}),
+        brand=item.brand or "",
     )
 
 
@@ -1452,6 +1517,8 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
     elif target.status == SEARCHED:
         target.first_seen_at = now_utc()  # se ha vuelto a mirar: el plazo de limpieza empieza otra vez
         db.commit()
+    if _foreign(target.store, target.url) and not target.translated:
+        translate_soon([target.id])
     return target
 
 
@@ -1532,6 +1599,80 @@ def _lookup(db: Session, query: str, today: date) -> list[ShopItem]:
     return items
 
 
+# ---------- Traducción al español (lo que se enseña de las tiendas en otro idioma)
+
+TRANSLATE_STATUSES = (NEW, LIKED, SEARCHED, VARIANT)
+LOOKUP_TRANSLATE_SECONDS = 15.0  # lo que el buscador espera a la traducción antes de responder
+_translating = threading.Lock()
+
+
+# Productos guardados de la tienda española (antes de pasar a la de Francia): ya están en español.
+_SPANISH_URL = re.compile(r"zara\.com/es/|jdsports\.es/")
+
+
+def _foreign(store: str, url: str | None = None) -> bool:
+    connector = shops.CONNECTORS.get(store)
+    if url and _SPANISH_URL.search(url):
+        return False
+    return connector is not None and getattr(connector, "language", "es") != "es"
+
+
+def translate_items(db: Session, ids: list[int] | None = None) -> int:
+    """Traduce nombre, color y composición de lo que se enseña y aún no está traducido (de las
+    tiendas que no están en español). Lo original no se toca: la nota se hace siempre con él.
+    Devuelve cuántos productos se han traducido. Si la IA falla, no pasa nada: se queda el original y
+    se vuelve a intentar la próxima vez."""
+    from .ai import translate  # aquí: el servicio de Compras no necesita la IA para nada más
+
+    stmt = select(ShopItem).where(ShopItem.status.in_(TRANSLATE_STATUSES), ShopItem.translated.is_not(True))
+    if ids is not None:
+        stmt = stmt.where(ShopItem.id.in_(ids))
+    items = [item for item in db.scalars(stmt) if _foreign(item.store, item.url)]
+    if not items:
+        return 0
+    texts = [t for item in items for t in (item.name, item.store_color, item.composition) if t]
+    done = translate.translate(texts)
+    if not done:
+        return 0
+
+    def key(text: str | None) -> str:
+        return " ".join((text or "").split())[: translate.MAX_TEXT]
+
+    count = 0
+    for item in items:
+        name = done.get(key(item.name))
+        if not name:
+            continue  # sin nombre traducido no se da por hecho: se reintenta
+        item.name_es = name[:160]
+        item.store_color_es = done.get(key(item.store_color), item.store_color_es or None) if item.store_color else None
+        item.composition_es = done.get(key(item.composition)) if item.composition else None
+        item.translated = True
+        count += 1
+    db.commit()
+    return count
+
+
+def _translate_job(ids: list[int] | None = None) -> None:
+    if not _translating.acquire(blocking=False):
+        return  # ya hay una traducción en marcha: lo que quede se traduce la próxima vez
+    try:
+        with SessionLocal() as db:
+            translate_items(db, ids)
+    except Exception:
+        log.exception("Compras: la traducción falló")
+    finally:
+        _translating.release()
+
+
+def translate_soon(ids: list[int] | None = None) -> threading.Thread | None:
+    """Traduce en un hilo aparte, sin hacer esperar a nadie. None si está desactivado (tests)."""
+    if not config.SHOP_TRANSLATE:
+        return None
+    worker = threading.Thread(target=_translate_job, args=(ids,), name="armario-traduccion", daemon=True)
+    worker.start()
+    return worker
+
+
 # ---------- En segundo plano
 
 _lock = threading.Lock()  # una sola tanda a la vez, sea la consulta semanal o un «Ver más»
@@ -1553,7 +1694,9 @@ def running_job() -> str | None:
 
 
 def _run_locked(job) -> None:
-    """Hace el trabajo (`job(db)`) con el cerrojo ya cogido y lo suelta al acabar, pase lo que pase."""
+    """Hace el trabajo (`job(db)`) con el cerrojo ya cogido y lo suelta al acabar, pase lo que pase.
+    Después, aparte y sin cerrojo, traduce lo nuevo: las propuestas salen ya, en el idioma de la
+    tienda, y pasan al español en cuanto llega la traducción."""
     try:
         with SessionLocal() as db:
             job(db)
@@ -1562,6 +1705,7 @@ def _run_locked(job) -> None:
     finally:
         _running.clear()
         _lock.release()
+    translate_soon()
 
 
 def _start(job, kind: str) -> bool:
@@ -1600,6 +1744,7 @@ def _loop() -> None:
             with SessionLocal() as db:
                 clean_lookups(db)
                 due = due_stores(db)
+            translate_soon()  # lo que se quedara sin traducir (la IA falló o estaba ocupada)
             if due and _lock.acquire(blocking=False):
                 _job = "consulta"
                 _running.set()

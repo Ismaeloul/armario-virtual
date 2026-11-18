@@ -21,30 +21,35 @@ def sentence_case(name: str) -> str:
     return name[:1].upper() + name[1:].lower()
 
 
-# Lo que no cabe en el armario (no hay tipo para ello): se descarta.
+# Lo que no cabe en el armario (no hay tipo para ello): se descarta. En español, francés (las tiendas de
+# Francia) e inglés (los nombres de las zapatillas).
 _NOT_A_GARMENT = re.compile(
     r"\b(calcetin|gorra|gorro|bufanda|cinturon|bolso|mochila|perfume|colonia|corbata|boxer|calzoncillo|"
-    r"pijama|banador|guante|cartera|gafas|panuelo|rinonera|sombrero|llavero|slip)"
+    r"pijama|banador|guante|cartera|gafas|panuelo|rinonera|sombrero|llavero|slip|"
+    r"chaussette|casquette|bonnet|echarpe|ceinture|sacs?\b|sacoche|parfum|eau de toilette|cravate|"
+    r"calecon|maillot de bain|gants?\b|portefeuille|lunettes|porte-cles|chapeau|bandana|claquette|tongs?\b|"
+    r"chausson|pantoufle|socks?\b|beanie|backpack|bags?\b)"
 )
 
 # Palabra del nombre -> tipo. Gana la que aparece antes en el nombre («POLO PUNTO» es un polo).
 _TYPE_WORDS = [
-    (r"sobrecamisas?", "sobrecamisa"),
-    (r"camisetas?", "camiseta"),
-    (r"camisas?", "camisa"),
+    (r"sobrecamisas?|surchemises?|overshirts?", "sobrecamisa"),
+    (r"camisetas?|t-?shirts?|tee-?shirts?|debardeurs?", "camiseta"),
+    (r"camisas?|chemises?", "camisa"),
     (r"polos?", "polo"),
-    (r"sudaderas?|hoodie", "sudadera"),
-    (r"jersey|jerseis|cardigan|sueter", "jersey"),
-    (r"abrigo|gabardina|trench|parka|anorak|plumifero", "abrigo"),
-    (r"cazadora|chaqueta|bomber|blazer|americana|chaleco", "chaqueta"),
+    (r"sudaderas?|hoodies?|sweats?|sweat-?shirts?", "sudadera"),
+    (r"jersey|jerseis|cardigans?|sueter|pulls?|pull-?overs?|maille", "jersey"),
+    (r"abrigo|gabardina|trench|parkas?|anorak|plumifero|manteaux?|doudounes?|caban", "abrigo"),
+    (r"cazadora|chaqueta|bombers?|blazers?|americana|chaleco|vestes?|blousons?", "chaqueta"),
     (r"bermudas?|shorts?", "pantalón corto"),
     (r"jeans?|vaqueros?", "vaquero"),
-    (r"joggers?|chandal", "chándal"),
-    (r"pantalon|pantalones", "pantalón"),
+    (r"joggers?|chandal|joggings?|survetements?", "chándal"),
+    (r"pantalon|pantalones|pantalons", "pantalón"),
     (r"chinos?", "chino"),
-    (r"zapatillas?|sneakers?|deportivas?", "zapatillas"),
-    (r"botas?|botin|botines", "botas"),
-    (r"zapatos?|mocasin|mocasines|nauticos?|sandalias?|alpargatas?|zuecos?", "zapatos"),
+    (r"zapatillas?|sneakers?|deportivas?|baskets?|trainers?", "zapatillas"),
+    (r"botas?|botin|botines|bottes?|bottines?|boots?|chukkas?", "botas"),
+    (r"zapatos?|mocasin|mocasines|nauticos?|sandalias?|alpargatas?|zuecos?|chaussures?|mocassins?|derbys?|"
+     r"richelieus?|loafers?|sandales?|sabots?|espadrilles?", "zapatos"),
 ]
 _TYPE_RE = [(re.compile(rf"\b(?:{words})\b"), garment_type) for words, garment_type in _TYPE_WORDS]
 
@@ -61,11 +66,11 @@ def estimate_type(name: str, default: str | None = None) -> str | None:
     garment_type = min(found)[1] if found else default
     if garment_type == "pantalón" or (garment_type == "vaquero" and not found):
         # «PANTALÓN CHINO», «PANTALÓN JOGGER», «PANTALÓN CORTO»: lo que manda es el apellido.
-        if re.search(r"\b(cortos?|bermudas?|shorts?)\b", text):
+        if re.search(r"\b(cortos?|courts?|bermudas?|shorts?)\b", text):
             return "pantalón corto"
         if re.search(r"\bchinos?\b", text):
             return "chino"
-        if re.search(r"\b(joggers?|jogging|chandal)\b", text):
+        if re.search(r"\b(joggers?|joggings?|chandal|survetements?)\b", text):
             return "chándal"
         if re.search(r"\b(jeans?|vaqueros?|denim)\b", text):
             return "vaquero"
@@ -73,25 +78,30 @@ def estimate_type(name: str, default: str | None = None) -> str | None:
 
 
 # Texto de la tienda -> nuestra paleta. De lo más concreto a lo más general: «Rojo burgundy» es burdeos.
+# En español, francés (Zara Francia, Courir, JD Sports) e inglés (los colores de las zapatillas).
 _COLOR_WORDS = [
-    (r"multicolor|varios|combinad|estampad", "multicolor"),
-    (r"blanco roto|blanco hueso|off white|crudo|ecru|hueso|marfil|nata|crema|tiza|mantequilla", "crudo"),
-    (r"marino|navy|azul oscuro|azul noche|tinta", "azul marino"),
-    (r"azul claro|azul cielo|azul palido|azul hielo|celeste", "celeste"),
-    (r"oliva|khaki|kaki|caqui|militar|musgo", "verde oliva"),
-    (r"burdeos|burgundy|granate|vino|berenjena", "burdeos"),
-    (r"marron|chocolate|conac|tabaco|cuero|tostado|caramelo|camel|taupe|topo|moka|cafe|castano|avellana|cobre", "marrón"),
-    (r"beige|arena|piedra|vison|nude", "beige"),
-    (r"gris|antracita|plomo|plata|marengo|ceniza|humo|grafito|carbon", "gris"),
-    (r"negro|black", "negro"),
-    (r"blanco|white", "blanco"),
-    (r"azul|indigo|anil|petroleo|denim|cobalto|turquesa", "azul"),
-    (r"verde|verdos|botella|menta|esmeralda", "verde"),
-    (r"rojo|rojiz|coral", "rojo"),
-    (r"amarillo|mostaza|vainilla|lima|ocre", "amarillo"),
-    (r"naranja|teja|terracota|ladrillo|oxido|calabaza", "naranja"),
-    (r"rosa|fucsia|salmon|maquillaje", "rosa"),
-    (r"morado|lila|malva|violeta|lavanda|purpura", "morado"),
+    (r"multicolor|varios|combinad|estampad|\bmulti\b", "multicolor"),
+    (r"blanco roto|blanco hueso|off white|off-white|crudo|ecru|hueso|marfil|nata|crema|tiza|mantequilla|"
+     r"blanc casse|creme|cream|ivoire|ivory|coquille|\bsail\b|vanille|vanilla", "crudo"),
+    (r"marino|navy|azul oscuro|azul noche|tinta|marine|bleu nuit|bleu fonce|midnight", "azul marino"),
+    (r"azul claro|azul cielo|azul palido|azul hielo|celeste|bleu clair|bleu ciel|bleu pale|light blue|sky blue|"
+     r"baby blue|\bciel\b", "celeste"),
+    (r"oliva|khaki|kaki|caqui|militar|musgo|olive", "verde oliva"),
+    (r"burdeos|burgundy|granate|vino|berenjena|bordeaux|maroon|\bwine\b|aubergine", "burdeos"),
+    (r"marron|chocolate|conac|tabaco|cuero|tostado|caramelo|camel|taupe|topo|moka|cafe|castano|avellana|cobre|"
+     r"\bbrun|brown|chocolat|cognac|\btan\b|noisette|bronze|cuivre|\bmiel\b|wheat", "marrón"),
+    (r"beige|arena|piedra|vison|nude|\bsable\b|\bsand\b|stone|\bpierre\b", "beige"),
+    (r"gris|antracita|plomo|plata|marengo|ceniza|humo|grafito|carbon|grey|gray|argent|silver|anthracite|"
+     r"charcoal", "gris"),
+    (r"negro|black|noir", "negro"),
+    (r"blanco|white|blanc", "blanco"),
+    (r"azul|indigo|anil|petroleo|denim|cobalto|turquesa|bleu|blue|turquoise|royal", "azul"),
+    (r"verde|verdos|botella|menta|esmeralda|\bvert|green|\bmint|menthe|sapin", "verde"),
+    (r"rojo|rojiz|coral|rouge|\bred\b|corail", "rojo"),
+    (r"amarillo|mostaza|vainilla|lima|ocre|jaune|yellow|moutarde|\bor\b|\bdore|gold", "amarillo"),
+    (r"naranja|teja|terracota|ladrillo|oxido|calabaza|orange|rouille|brique", "naranja"),
+    (r"rosa|fucsia|salmon|maquillaje|\brose\b|pink|fuchsia|saumon", "rosa"),
+    (r"morado|lila|malva|violeta|lavanda|purpura|violet|purple|lilas|mauve|lavande|prune", "morado"),
 ]
 _COLOR_RE = [(re.compile(words), color) for words, color in _COLOR_WORDS]
 
@@ -117,33 +127,38 @@ def estimate_color(store_color: str | None, hex_color: str | None = None) -> str
     Si el texto no dice nada conocido, el tono más cercano; sin tono, multicolor.
     """
     text = norm(store_color)
-    for rx, color in _COLOR_RE:
-        if rx.search(text):
-            return color
+    # «Noir/Blanc», «marron/blanc», «Black/White»: el primero es el principal.
+    for part in [*text.split("/"), text] if "/" in text else [text]:
+        for rx, color in _COLOR_RE:
+            if rx.search(part):
+                return color
     return nearest_color(hex_color) or "multicolor"
 
 
 def estimate_pattern(name: str) -> str:
     text = norm(name)
-    if re.search(r"\b(rayas?|listas?)\b", text):
+    if re.search(r"\b(rayas?|listas?|rayures?|raye(e|s|es)?|stripes?)\b", text):
         return "rayas"
-    if re.search(r"\b(cuadros?|vichy|tartan)\b", text):
+    if re.search(r"\b(cuadros?|vichy|tartan|carreaux|ecossais(e|es)?|checks?)\b", text):
         return "cuadros"
-    if re.search(r"color ?block|\bbloques?\b", text):
+    if re.search(r"colou?r ?block|\bbloques?\b", text):
         return "bloques de color"
-    if re.search(r"estampad|\bprint|grafic|ilustracion|\btexto\b|slogan|dibujo", text):
+    if re.search(r"estampad|\bprint|grafic|graphique|ilustracion|\btexto\b|slogan|dibujo|imprim|\bmotifs?\b", text):
         return "gráfico"
-    if re.search(r"\b(textura|texturizad[oa]|estructura|pana|borreguito|trenzad[oa]|canale)\b", text):
+    if re.search(
+        r"\b(textura|texturizad[oa]|estructura|pana|borreguito|trenzad[oa]|canale|texture(e|s|es)?|"
+        r"structure(e|s|es)?|velours|cotele(e|s|es)?|cannele(e|s|es)?|tresse(e|s|es)?|gaufre(e|s|es)?)\b", text
+    ):
         return "texturizado"
     return "liso"
 
 
 def estimate_style(name: str, garment_type: str) -> str:
     text = norm(name)
-    if garment_type == "chándal" or re.search(r"tecnic|training|running|deportiv|athletic|\bsport", text):
+    if garment_type == "chándal" or re.search(r"tecnic|techni|training|running|deportiv|athletic|\bsport", text):
         return "deportivo"
     if garment_type in ("camisa", "chino", "zapatos") or re.search(
-        r"\b(traje|blazer|americana|vestir|sastre|oxford)\b", text
+        r"\b(traje|blazer|americana|vestir|sastre|oxford|costume|habille(e|s|es)?|tailleur)\b", text
     ):
         return "smart casual"
     return "casual"
@@ -154,10 +169,81 @@ def estimate_season(name: str, garment_type: str) -> str:
     text = norm(name)
     if garment_type in ("sudadera", "jersey", "abrigo", "botas"):
         return "invierno"
-    if garment_type == "pantalón corto" or re.search(r"\b(lino|tirantes|sin mangas)\b", text):
+    if garment_type == "pantalón corto" or re.search(
+        r"\b(lino|tirantes|sin mangas|lin|sans manches|debardeur)\b", text
+    ):
         return "verano"
-    if garment_type == "chaqueta" and re.search(r"acolchad|plumifer|puffer|borreg|\blana\b|sherpa|grues", text):
+    if garment_type == "chaqueta" and re.search(
+        r"acolchad|plumifer|puffer|borreg|\blana\b|sherpa|grues|matelasse|rembourre|doudoune|\blaine\b|"
+        r"mouton|fourre|polaire", text
+    ):
         return "invierno"
-    if garment_type == "camisa" and "franela" in text:
+    if garment_type == "camisa" and re.search(r"franela|flanelle", text):
         return "invierno"
     return "todo_el_ano"
+
+
+# ---------- Calzado (Courir, JD Sports): el nombre es un modelo, no una descripción
+
+_BOOT = re.compile(r"\b(botas?|botin(es)?|bottes?|bottines?|boots?|chukkas?)\b")
+_SHOE = re.compile(r"\b(zapatos?|mocasin(es)?|mocassins?|loafers?|derbys?|richelieus?|chaussures? de ville)\b")
+
+
+def estimate_shoe_type(name: str) -> str | None:
+    """Zapatillas, salvo que el nombre diga claramente bota o zapato. None si no es calzado del armario
+    (chanclas, calcetines…)."""
+    text = norm(name)
+    if _NOT_A_GARMENT.search(text):
+        return None
+    if _BOOT.search(text):
+        return "botas"
+    if _SHOE.search(text):
+        return "zapatos"
+    return "zapatillas"
+
+
+# Siglas que se escriben en mayúsculas aunque el resto vaya en formato de título.
+_UPPER = {"asics", "hoka", "ugg", "dc", "og", "sb", "gtx", "se", "lx", "qs", "sp", "prm", "nyc", "usa", "uk", "us",
+          "ii", "iii", "iv", "gs", "nb", "xt", "fc", "ea7"}
+
+
+def title_case(text: str) -> str:
+    """«AIR JORDAN 3 RETRO TRUE BLUE» -> «Air Jordan 3 Retro True Blue»; «GEL-NYC» -> «Gel-NYC».
+    Los nombres de zapatillas son modelos: en formato de frase quedaban raros («Air jordan 3…»)."""
+
+    def word(part: str) -> str:
+        if not part:
+            return part
+        if part.lower() in _UPPER or (any(ch.isdigit() for ch in part) and any(ch.isalpha() for ch in part)):
+            return part.upper()
+        return part[:1].upper() + part[1:].lower()
+
+    return " ".join("-".join(word(p) for p in w.split("-")) for w in " ".join((text or "").split()).split(" "))
+
+
+# Marcas de varias palabras (o con su forma propia). La clave es la «familia»: Adidas Originals es Adidas.
+_BRAND_FAMILIES = {
+    "new balance": "New Balance", "under armour": "Under Armour", "the north face": "The North Face",
+    "le coq sportif": "Le Coq Sportif", "dr martens": "Dr. Martens", "dr. martens": "Dr. Martens",
+    "on running": "On", "on": "On", "air jordan": "Jordan", "tommy hilfiger": "Tommy Hilfiger",
+    "calvin klein": "Calvin Klein", "ralph lauren": "Ralph Lauren", "polo ralph lauren": "Ralph Lauren",
+    "emporio armani": "Armani", "hugo boss": "Boss",
+}
+
+
+def brand_name(brand: str | None) -> str:
+    """La marca como se enseña: «ADIDAS ORIGINALS» -> «Adidas Originals», «asics» -> «ASICS»."""
+    brand = " ".join((brand or "").split())
+    return title_case(brand)[:40] if brand else ""
+
+
+def brand_family(brand: str | None) -> str:
+    """La familia de la marca, para aprender los gustos: «Adidas Originals» y «adidas» son «Adidas»,
+    «Nike Sportswear» es «Nike», «New Balance» sigue siendo «New Balance». "" si no hay marca."""
+    text = " ".join(norm(brand).split())
+    if not text:
+        return ""
+    for key in sorted(_BRAND_FAMILIES, key=len, reverse=True):
+        if text == key or text.startswith(key + " "):
+            return _BRAND_FAMILIES[key]
+    return title_case(text.split(" ")[0])

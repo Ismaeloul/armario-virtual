@@ -70,8 +70,12 @@ export type Catalog = {
   themes: string[];
 };
 
+export type CodexModel = { slug: string; name: string; efforts: string[]; default_effort: string | null; vision?: boolean };
 export type CodexModels = {
-  models: { slug: string; name: string; efforts: string[]; default_effort: string | null }[];
+  /** Para analizar fotos: solo los que tienen visión. */
+  models: CodexModel[];
+  /** Para traducir los nombres de las tiendas: todos, también los que no ven. */
+  translate_models: CodexModel[];
   efforts: string[];
 };
 
@@ -80,6 +84,9 @@ export type Settings = {
   ai_provider: string;
   codex_model: string;
   codex_effort: string;
+  /** Los de traducir los nombres de las tiendas, aparte de los de analizar fotos. */
+  codex_translate_model: string;
+  codex_translate_effort: string;
   city: string;
   notify_enabled: boolean;
   notify_time: string;
@@ -144,7 +151,12 @@ export type ShopItem = {
   product_ref: string;
   /** La referencia de la tienda, legible («3918/300/800»). */
   reference: string | null;
+  /** La marca, en las tiendas de varias marcas (Courir, JD Sports). */
+  brand: string | null;
+  /** En español si se ha podido traducir. */
   name: string;
+  /** El nombre como lo escribe la tienda, si `name` está traducido (sirve para buscarlo en su web). */
+  name_original: string | null;
   price_cents: number;
   url: string;
   store_color: string;
@@ -190,6 +202,8 @@ export type ShopStore = {
   categories: { slug: string; label: string; enabled: boolean }[];
   /** Día de la semana en que se consulta (lunes = 0). */
   weekday: number;
+  /** El día sale de cuándo saca novedades la tienda; si no, es uno elegido sin ese dato. */
+  weekday_after_release: boolean;
   status: {
     state: "ok" | "failed" | "never";
     at: string | null;

@@ -1,0 +1,248 @@
+{
+ "index": "jd_prod_products_fr",
+ "nbHits": 1330,
+ "hitsPerPage": 72,
+ "page": 0,
+ "nbPages": 19,
+ "hits": [
+  {
+   "objectID": "19772886",
+   "productRef": "807022",
+   "styleId": "762586",
+   "name": "On Running Cloudtilt",
+   "brand": [
+    "On Running"
+   ],
+   "colour": "Noir",
+   "slug": "noir-on-running-cloudtilt",
+   "price": 170,
+   "priceFormatted": "170,00€",
+   "wasPrice": null,
+   "wasPriceFormatted": null,
+   "discountPct": null,
+   "image": "https://i8.amplience.net/i/jpl/jd_807022_plc",
+   "imageSquare": "https://i8.amplience.net/i/jpl/jd_807022_al",
+   "size": [
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45",
+    "46",
+    "47",
+    "48",
+    "40.5",
+    "42.5",
+    "44.5",
+    "47.5"
+   ],
+   "ageDaysRound": 25,
+   "newArrival": true,
+   "new7Days": false,
+   "new30Days": true,
+   "inStock": true,
+   "gender": [
+    "Hommes"
+   ],
+   "productType": [
+    "Baskets"
+   ],
+   "hierarchicalCategories": {
+    "lvl0": [
+     "Homme"
+    ],
+    "lvl1": [
+     "Homme > Chaussures Homme"
+    ],
+    "lvl2": [
+     "Homme > Chaussures Homme > Baskets"
+    ]
+   },
+   "otherColourways": [
+    {
+     "objectID": "19652060",
+     "name": "On Running Cloudtilt",
+     "colour": "Noir",
+     "slug": "noir-on-running-cloudtilt",
+     "image": "https://i8.amplience.net/i/jpl/jd_707268_plc",
+     "imageSquare": "https://i8.amplience.net/i/jpl/jd_707268_al",
+     "price": 170,
+     "priceFormatted": "170,00€"
+    },
+    {
+     "objectID": "19675025",
+     "name": "On Running Cloudtilt",
+     "colour": "Crème",
+     "slug": "crme-on-running-cloudtilt",
+     "image": "https://i8.amplience.net/i/jpl/jd_725863_plc",
+     "imageSquare": "https://i8.amplience.net/i/jpl/jd_725863_al",
+     "price": 170,
+     "priceFormatted": "170,00€"
+    },
+    {
+     "objectID": "19713389",
+     "name": "On Running Cloudtilt",
+     "colour": "Noir",
+     "slug": "noir-on-running-cloudtilt",
+     "image": "https://i8.amplience.net/i/jpl/jd_759327_plc",
+     "imageSquare": "https://i8.amplience.net/i/jpl/jd_759327_al",
+     "price": 170,
+     "priceFormatted": "170,00€"
+    },
+    {
+     "objectID": "19760862",
+     "name": "On Running Cloudtilt",
+     "colour": "Bleu",
+     "slug": "bleu-on-running-cloudtilt",
+     "image": "https://i8.amplience.net/i/jpl/jd_815629_plc",
+     "imageSquare": "https://i8.amplience.net/i/jpl/jd_815629_al",
+     "price": 170,
+     "priceFormatted": "170,00€"
+    }
+   ],
+   "description": "<p>Rebond et douceur avec les baskets On Running Cloudtilt pour homme et leur mousse CloudTec Phase et Helion.</p><ul><li>Coloris : noir</li><li>Tige en textile et synthétique</li><li>Col rembourré pour le maintien</li><li>Lacets rapides pour enfiler facilement</li><li>Semelle en caoutchouc pour l'adhérence</li><li>Logo On et détails réfléchissants</li><li>Exclusivité JD</li></ul>",
+   "exclusive": [
+    "Exclusive"
+   ]
+  },
+  {
+   "objectID": "19713373",
+   "productRef": "759326",
+   "styleId": "811823",
+   "name": "On Running Cloudtilt",
+   "brand": [
+    "On Running"
+   ],
+   "colour": "Bleu",
+   "slug": "bleu-on-running-cloudtilt",
+   "price": 170,
+   "priceFormatted": "170,00€",
+   "wasPrice": null,
+   "wasPriceFormatted": null,
+   "discountPct": null,
+   "image": "https://i8.amplience.net/i/jpl/jd_759326_plc",
+   "imageSquare": "https://i8.amplience.net/i/jpl/jd_759326_al",
+   "size": [
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45",
+    "46",
+    "47",
+    "48",
+    "40.5",
+    "42.5",
+    "44.5",
+    "47.5"
+   ],
+   "ageDaysRound": 430,
+   "newArrival": false,
+   "new7Days": false,
+   "new30Days": false,
+   "inStock": true,
+   "gender": [
+    "Hommes"
+   ],
+   "productType": [
+    "Baskets"
+   ],
+   "hierarchicalCategories": {
+    "lvl0": [
+     "Homme"
+    ],
+    "lvl1": [
+     "Homme > Chaussures Homme"
+    ],
+    "lvl2": [
+     "Homme > Chaussures Homme > Baskets"
+    ]
+   },
+   "otherColourways": [],
+   "description": "<p>Les baskets On Running Cloudtilt pour homme coloris Steel et détails bleu marine te suivent des longues distances aux pas de tous les jours.</p><ul><li>Dessus léger et aéré</li><li>Mousse Helion et amorti CloudTec pour une sensation moelleuse</li><li>Logo On</li></ul>",
+   "exclusive": []
+  },
+  {
+   "objectID": "19615454",
+   "productRef": "686881",
+   "styleId": "833546",
+   "name": "On Running Cloudtilt",
+   "brand": [
+    "On Running"
+   ],
+   "colour": "Blanc",
+   "slug": "blanc-on-running-cloudtilt",
+   "price": 170,
+   "priceFormatted": "170,00€",
+   "wasPrice": null,
+   "wasPriceFormatted": null,
+   "discountPct": null,
+   "image": "https://i8.amplience.net/i/jpl/jd_686881_plc",
+   "imageSquare": "https://i8.amplience.net/i/jpl/jd_686881_al",
+   "size": [
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "40.5",
+    "42.5",
+    "44.5",
+    "47.5"
+   ],
+   "ageDaysRound": 1020,
+   "newArrival": false,
+   "new7Days": false,
+   "new30Days": false,
+   "inStock": true,
+   "gender": [
+    "Hommes"
+   ],
+   "productType": [
+    "Baskets"
+   ],
+   "hierarchicalCategories": {
+    "lvl0": [
+     "Homme"
+    ],
+    "lvl1": [
+     "Homme > Chaussures Homme"
+    ],
+    "lvl2": [
+     "Homme > Chaussures Homme > Baskets"
+    ]
+   },
+   "otherColourways": [
+    {
+     "objectID": "19753519",
+     "name": "On Running Cloudtilt",
+     "colour": "Blanc",
+     "slug": "blanc-on-running-cloudtilt",
+     "image": "https://i8.amplience.net/i/jpl/jd_813541_plc",
+     "imageSquare": "https://i8.amplience.net/i/jpl/jd_813541_al",
+     "price": 170,
+     "priceFormatted": "170,00€"
+    },
+    {
+     "objectID": "19754918",
+     "name": "On Running Cloudtilt",
+     "colour": "Vert",
+     "slug": "vert-on-running-cloudtilt",
+     "image": "https://i8.amplience.net/i/jpl/jd_789381_plc",
+     "imageSquare": "https://i8.amplience.net/i/jpl/jd_789381_al",
+     "price": 170,
+     "priceFormatted": "170,00€"
+    }
+   ],
+   "description": "<p>Vitesse et style dans ta foulée avec les baskets On Running Cloudtilt pour homme noires et ivoire en mesh respirant.</p><ul><li>Tige en mesh et synthétique résistante</li><li>Fermeture à lacets</li><li>Col rembourré</li><li>Semelle intermédiaire CloudTec Phase</li><li>Semelle extérieure en caoutchouc adhérente</li><li>Speedboard pour plus de rebond</li><li>Logos On Running</li></ul>",
+   "exclusive": []
+  }
+ ]
+}

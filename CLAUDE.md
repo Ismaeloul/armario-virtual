@@ -40,6 +40,14 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   tocar el nombre de la tarjeta abre ese mismo visor. El enlace de la tienda se abre tocando el propio
   enlace (sin botón aparte) y no hay «Copiar todo» (el usuario los quitó). El contador de propuestas va en
   la pestaña («Descubrir (27)») para dejarle más alto a la foto.
+  Decisiones del 18-11-2026 sobre tiendas: de momento TODAS con su versión de FRANCIA (el usuario vive allí;
+  más adelante se añadirá España además de Francia, sin distinguir envíos). Pull&Bear y Bershka (y casi todas
+  las grandes: H&M, Mango, Uniqlo, ASOS, Zalando, Adidas…) rechazan a un programa sin navegador y a un Chromium
+  sin ventana, pero dejan pasar un Chromium de serie CON ventana (probado una vez con Playwright, sin parches).
+  Plan aprobado: meter en la app un Chromium con pantalla virtual y leer las respuestas JSON que pide la propia
+  página. Límite acordado con el usuario: solo «trucos legales»; nada de parches que oculten el navegador ni de
+  resolver o rodear captchas: si una tienda pone captcha o bloquea, sale como «Falló» con el motivo en Tiendas.
+  Se dejan leer sin navegador (sondeo): Nike, Jack & Jones, Jules, Courir; JD Sports solo las 72 primeras por sección.
   Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
   va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se

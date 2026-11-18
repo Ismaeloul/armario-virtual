@@ -343,14 +343,23 @@ function Discover({
 
   // Ninguna tienda activada: se explica qué es esto y se ofrece activarla.
   if (enabled.length === 0) {
-    const store = state.stores[0];
+    const [store, ...others] = state.stores;
     if (!store) return null;
     return (
       <>
-        <Notice icon="cart" title={t.compras.desactivada.titulo} text={t.compras.desactivada.texto(store.name)}>
+        <Notice
+          icon="cart"
+          title={t.compras.desactivada.titulo}
+          text={t.compras.desactivada.texto(state.stores.map((s) => s.name))}
+        >
           <PrimaryButton disabled={busy} onClick={() => search(store)}>
             {busy ? t.compras.desactivada.activando : t.compras.desactivada.activar(store.name)}
           </PrimaryButton>
+          {others.map((other) => (
+            <SecondaryButton key={other.key} onClick={() => !busy && search(other)}>
+              {t.compras.desactivada.activar(other.name)}
+            </SecondaryButton>
+          ))}
         </Notice>
         {alert}
       </>
@@ -1082,7 +1091,7 @@ function SwipeCard({
       <div className="flex shrink-0 flex-col gap-1 px-4 pt-3 pb-10">
         <div className="flex items-baseline justify-between gap-3">
           <span className="label-caps min-w-0 truncate text-text-2">
-            {[item.store_name, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
+            {[item.store_name, item.brand, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
           </span>
           <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
         </div>
@@ -1213,7 +1222,10 @@ function PhotoViewer({
   const facts: { key: string; label: string; value: string }[] = [
     { key: "referencia", label: t.compras.visor.referencia, value: item.reference ?? "" },
     { key: "tienda", label: t.compras.visor.tienda, value: item.store_name },
+    { key: "marca", label: t.compras.visor.marca, value: item.brand ?? "" },
     { key: "nombre", label: t.compras.visor.nombre, value: item.name },
+    // El de la tienda, si el nombre está traducido: sirve para buscarlo en su web.
+    { key: "original", label: t.compras.visor.nombreOriginal, value: item.name_original ?? "" },
     { key: "color", label: t.compras.visor.color, value: item.store_color },
     { key: "precio", label: t.compras.visor.precio, value: t.compras.precio(item.price_cents) },
     { key: "tallas", label: t.compras.visor.tallas, value: sizes },
@@ -1321,11 +1333,12 @@ function PhotoViewer({
             <div className="flex shrink-0 flex-col gap-1 px-4 pt-3 pb-2">
               <div className="flex items-baseline justify-between gap-3">
                 <span className="label-caps min-w-0 truncate text-text-2">
-                  {[item.store_name, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
+                  {[item.store_name, item.brand, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
                 </span>
                 <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
               </div>
               <h3 className="font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
+              {item.name_original && <p className="-mt-0.5 text-[11px] text-text-3">{item.name_original}</p>}
               <div className="flex items-center justify-between gap-2">
                 <div className="shrink-0">
                   <StoreLink item={item} />
@@ -1564,7 +1577,7 @@ function Liked({ onChanged }: { onChanged: () => void }) {
                 )}
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="label-caps text-text-2">
-                    {item.store_name} · {cap(item.type)}
+                    {[item.store_name, item.brand, cap(item.type)].filter(Boolean).join(" · ")}
                   </span>
                   <h3 className="text-base leading-snug font-medium">{item.name}</h3>
                   <span className="font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
@@ -1926,7 +1939,7 @@ function SearchResult({
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="label-caps truncate text-text-2">
-            {[item.store_name, item.store_color].filter(Boolean).join(" · ")}
+            {[item.store_name, item.brand, item.store_color].filter(Boolean).join(" · ")}
           </span>
           <h3 className="text-[15px] leading-snug font-medium">{item.name}</h3>
           <span className="font-display text-base font-semibold">{t.compras.precio(item.price_cents)}</span>
@@ -2159,7 +2172,11 @@ function StoresPanel({
                       {status.error}
                     </p>
                   )}
-                  <p>{t.compras.panel.dia(t.compras.dias[store.weekday] ?? "")}</p>
+                  <p>
+                    {store.weekday_after_release
+                      ? t.compras.panel.dia(t.compras.dias[store.weekday] ?? "")
+                      : t.compras.panel.diaSinDato(t.compras.dias[store.weekday] ?? "")}
+                  </p>
                   <p>
                     {store.enabled && store.next_check
                       ? t.compras.panel.proxima(dayLabel(store.next_check))

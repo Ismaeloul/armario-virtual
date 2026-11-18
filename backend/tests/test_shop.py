@@ -163,7 +163,7 @@ def test_el_parser_de_zara_normaliza_los_productos_y_se_salta_lo_que_no_vale():
     first = products[0]
     assert first.store == "zara" and first.product_ref == "zara:05854122-800"
     assert first.price_cents == 6995
-    assert first.url == "https://www.zara.com/es/es/sobrecamisa-estructura-brillo-p05854122.html?v1=590649460"
+    assert first.url == "https://www.zara.com/fr/fr/sobrecamisa-estructura-brillo-p05854122.html?v1=590649460"
     assert first.store_color == "Negro"
     assert (first.type, first.category, first.color) == ("sobrecamisa", "capa_exterior", "negro")
     assert (first.pattern, first.style, first.season) == ("texturizado", "casual", "todo_el_ano")
@@ -179,7 +179,7 @@ def test_un_keyword_de_zara_con_espacios_se_arregla_para_que_el_enlace_funcione(
     item["seo"]["keyword"] = "sobrecamisa-estructura\u00a0brillo"  # espacio de no separación, visto en la web real
     first = zara.parse_category(data, "hombre-sobrecamisas-l3174")[0]
     assert first.store_data["keyword"] == "sobrecamisa-estructura-brillo"
-    assert first.url == "https://www.zara.com/es/es/sobrecamisa-estructura-brillo-p05854122.html?v1=590649460"
+    assert first.url == "https://www.zara.com/fr/fr/sobrecamisa-estructura-brillo-p05854122.html?v1=590649460"
 
 
 def test_zara_redirige_con_un_278_y_los_fallos_se_cuentan_en_claro(monkeypatch):
@@ -690,7 +690,11 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
     monkeypatch.setitem(shops.CONNECTORS, "zara", connector)
 
     state = client.get("/api/shop/state").json()
-    assert [(s["key"], s["name"], s["enabled"]) for s in state["stores"]] == [("zara", "Zara", False)]
+    # Las tres tiendas reales arrancan desactivadas, cada una con su día de consulta.
+    assert [(s["key"], s["name"], s["enabled"], s["weekday"]) for s in state["stores"]] == [
+        ("zara", "Zara", False, 4), ("courir", "Courir", False, 1), ("jdsports", "JD Sports", False, 2),
+    ]
+    assert [s["weekday_after_release"] for s in state["stores"]] == [False, False, False]  # el falso no lo dice
     assert all(c["enabled"] for c in state["stores"][0]["categories"])
     assert state["running"] is False and state["pending"] == 0
     assert state["stores"][0]["weekday"] == 4 and state["stores"][0]["next_check"] is None
@@ -1252,7 +1256,7 @@ def test_la_respuesta_del_buscador_de_zara_da_un_producto_por_color():
     ]
     first = products[0]
     assert (first.type, first.category, first.color, first.price_cents) == ("chaqueta", "capa_exterior", "negro", 3995)
-    assert first.url == "https://www.zara.com/es/es/cazadora-tecnica-combinado-polar-p03918300.html?v1=565710389"
+    assert first.url == "https://www.zara.com/fr/fr/cazadora-tecnica-combinado-polar-p03918300.html?v1=565710389"
     assert first.store_data == {
         "keyword": "cazadora-tecnica-combinado-polar", "seo_id": "03918300", "discern_id": 565710389, "color_id": "800",
     }

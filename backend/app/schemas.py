@@ -170,6 +170,9 @@ class SettingsOut(BaseModel):
     ai_provider: AIProvider
     codex_model: str  # vacío = el que Codex use por defecto
     codex_effort: str  # vacío = el del modelo
+    # Los de traducir los nombres de las tiendas, aparte (puede ser un modelo pequeño).
+    codex_translate_model: str
+    codex_translate_effort: str
     city: str
     notify_enabled: bool
     notify_time: str
@@ -180,6 +183,8 @@ class SettingsUpdate(BaseModel):
     ai_provider: AIProvider | None = None
     codex_model: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._-]{0,40}$")
     codex_effort: Literal["", "low", "medium", "high"] | None = None
+    codex_translate_model: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._-]{0,40}$")
+    codex_translate_effort: Literal["", "low", "medium", "high"] | None = None
     city: str | None = Field(default=None, min_length=1, max_length=80)
     notify_enabled: bool | None = None
     notify_time: str | None = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")

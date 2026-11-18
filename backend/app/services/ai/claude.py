@@ -28,7 +28,8 @@ class ClaudeAnalyzer:
     def available(self) -> bool:
         return api_key() is not None
 
-    def analyze(self, images: list[Path], prompt: str) -> str:
+    def analyze(self, images: list[Path], prompt: str, schema: dict | None = None, timeout: float | None = None) -> str:
+        """La respuesta de Claude (JSON con la forma de `schema`; por defecto, el borrador de una prenda)."""
         key = api_key()
         if not key:
             raise AnalysisError("Claude no está configurado (falta la API key)")
@@ -49,14 +50,14 @@ class ClaudeAnalyzer:
             raise AnalysisError("No se pudo leer la foto") from exc
         content.append({"type": "text", "text": prompt})
 
-        client = anthropic.Anthropic(api_key=key, timeout=config.AI_TIMEOUT_SECONDS, max_retries=1)
+        client = anthropic.Anthropic(api_key=key, timeout=timeout or config.AI_TIMEOUT_SECONDS, max_retries=1)
         try:
             response = client.messages.create(
                 model=config.CLAUDE_MODEL,
                 max_tokens=4000,
                 output_config={
                     "effort": "low",
-                    "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA},
+                    "format": {"type": "json_schema", "schema": schema or OUTPUT_SCHEMA},
                 },
                 messages=[{"role": "user", "content": content}],
             )
@@ -72,7 +73,7 @@ class ClaudeAnalyzer:
             raise AnalysisError("Claude devolvió un error") from exc
 
         if response.stop_reason == "refusal":
-            raise AnalysisError("Claude ha rechazado analizar la imagen")
+            raise AnalysisError("Claude ha rechazado la petición")
         if response.stop_reason == "max_tokens":
             raise AnalysisError("La respuesta de Claude se cortó")
 

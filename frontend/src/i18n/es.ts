@@ -93,8 +93,8 @@ export const t = {
     errorAccion: "No se pudo guardar. Inténtalo de nuevo.",
     desactivada: {
       titulo: "Novedades que pegan con tu armario",
-      texto: (tienda: string) =>
-        `Cada semana traigo las novedades de ${tienda}, las comparo con tu ropa y te enseño las que mejor combinan o tapan un hueco. Tú decides deslizando. La app solo enlaza a la tienda: nunca compra ni guarda datos de pago.`,
+      texto: (tiendas: string[]) =>
+        `Cada semana traigo las novedades de ${tiendas.length > 1 ? `${tiendas.slice(0, -1).join(", ")} o ${tiendas[tiendas.length - 1]}` : tiendas[0]}, las comparo con tu ropa y te enseño las que mejor combinan o tapan un hueco. Tú decides deslizando. La app solo enlaza a la tienda: nunca compra ni guarda datos de pago.`,
       activar: (tienda: string) => `Activar ${tienda}`,
       activando: "Activando…",
     },
@@ -148,6 +148,7 @@ export const t = {
       sinFallos: "Ninguna petición falló",
       error: "Error",
       dia: (dia: string) => `Se consulta los ${dia}, el día después de que la tienda saque novedades.`,
+      diaSinDato: (dia: string) => `Se consulta los ${dia} (no se sabe qué día saca novedades la tienda).`,
       proxima: (cuando: string) => `Próxima consulta: ${cuando}`,
       desactivadaTexto: "Desactivada: no se consulta.",
       categorias: "Qué te interesa",
@@ -159,9 +160,9 @@ export const t = {
     buscador: {
       abrir: "Buscar una prenda por su referencia",
       titulo: "Buscar una prenda",
-      placeholder: "Referencia o enlace de Zara",
+      placeholder: "Referencia o enlace de la tienda",
       ayuda:
-        "La referencia es el número que aparece en la etiqueta o en la web de Zara, tipo 3918/300. También vale pegar el enlace del producto o escribir qué buscas.",
+        "Vale la referencia de Zara (la de la etiqueta, tipo 3918/300), el código de fabricante de unas zapatillas de Courir (tipo IF6490), el enlace del producto de Zara, Courir o JD Sports, o escribir qué buscas en Zara.",
       buscar: "Buscar",
       buscando: "Buscando…",
       error: "No se pudo buscar. Inténtalo de nuevo.",
@@ -179,7 +180,9 @@ export const t = {
       datos: "Datos de la prenda",
       referencia: "Referencia",
       tienda: "Tienda",
+      marca: "Marca",
       nombre: "Nombre",
+      nombreOriginal: "Nombre en la tienda",
       color: "Color",
       precio: "Precio",
       tallas: "Tallas",
@@ -383,7 +386,10 @@ export const t = {
     codexEsfuerzoAuto: "El del modelo",
     codexEsfuerzos: { low: "Bajo", medium: "Medio", high: "Alto" } as Record<string, string>,
     codexModeloTexto:
-      "Con qué modelo de tu cuenta se analizan las prendas. Más esfuerzo acierta más con colores y detalles, pero tarda más y gasta más límite.",
+      "Para analizar las fotos de las prendas. Más esfuerzo acierta más con colores y detalles, pero tarda más y gasta más límite.",
+    codexTraducir: "Modelo para traducir",
+    codexTraducirTexto:
+      "Para traducir al español los nombres de las tiendas de Francia. Basta uno pequeño con poco esfuerzo.",
     aviso: "Aviso diario",
     avisoTitulo: "Outfit del día",
     avisoTexto: "Recibe tu propuesta cada mañana",

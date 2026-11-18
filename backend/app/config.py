@@ -35,6 +35,8 @@ SHOP_BATCH_SIZE = int(os.environ.get("ARMARIO_SHOP_BATCH", "40"))  # propuestas 
 SHOP_MORE_SIZE = int(os.environ.get("ARMARIO_SHOP_MORE", "20"))  # propuestas por cada «Ver más»
 SHOP_PAUSE_SECONDS = float(os.environ.get("ARMARIO_SHOP_PAUSE", "1.0"))  # entre peticiones a la tienda
 SHOP_TIMEOUT_SECONDS = float(os.environ.get("ARMARIO_SHOP_TIMEOUT", "20"))
+# Traducir al español lo que llega de las tiendas en otro idioma (con Codex, o Claude si no).
+SHOP_TRANSLATE = os.environ.get("ARMARIO_SHOP_TRANSLATE", "1") != "0"
 SHOP_PAGES = int(os.environ.get("ARMARIO_SHOP_PAGES", "3"))  # páginas de 20 productos por categoría
 
 PHOTO_MAX_SIDE = 1600

@@ -16,6 +16,8 @@ DEFAULTS = {
     "ai_provider": "codex",
     "codex_model": "",
     "codex_effort": "",
+    "codex_translate_model": "",
+    "codex_translate_effort": "low",
     "city": "Argenteuil",
     "notify_enabled": "true",
     "notify_time": "07:30",
@@ -30,6 +32,8 @@ def read_settings(db: Session) -> SettingsOut:
         ai_provider=values["ai_provider"],
         codex_model=values["codex_model"],
         codex_effort=values["codex_effort"],
+        codex_translate_model=values["codex_translate_model"],
+        codex_translate_effort=values["codex_translate_effort"],
         city=values["city"],
         notify_enabled=values["notify_enabled"] == "true",
         notify_time=values["notify_time"],
@@ -101,7 +105,11 @@ def codex_logout():
 @router.get("/ai/codex/models")
 def codex_models_list():
     """Modelos que Codex ofrece a esta cuenta (de su propia caché) y los esfuerzos que se pueden elegir."""
-    return {"models": codex_models.available(), "efforts": list(codex_models.EFFORTS)}
+    return {
+        "models": codex_models.available(),  # para analizar fotos: solo los que tienen visión
+        "translate_models": codex_models.available(vision=False),  # para traducir: cualquiera
+        "efforts": list(codex_models.EFFORTS),
+    }
 
 
 @router.get("/ai/codex/usage", response_model=CodexUsage)

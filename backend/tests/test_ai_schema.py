@@ -238,3 +238,46 @@ def test_el_modelo_y_el_esfuerzo_de_codex_salen_de_ajustes(client, tmp_path, mon
     assert client.patch("/api/settings", json={"codex_model": "malo; rm -rf"}).status_code == 422
     client.patch("/api/settings", json={"codex_model": "", "codex_effort": ""})
     assert codex_models.cli_args() == []
+
+
+def test_traducir_y_analizar_usan_cada_uno_su_modelo_y_su_esfuerzo(client, tmp_path, monkeypatch):
+    from app.services.ai import codex_models
+
+    cache = tmp_path / "models_cache.json"
+    cache.write_text(
+        '{"models": ['
+        '{"slug": "m-texto", "display_name": "Pequeño", "visibility": "list", "priority": 1,'
+        ' "input_modalities": ["text"], "supported_reasoning_levels": [{"effort": "low"}]},'
+        '{"slug": "m-vision", "visibility": "list", "priority": 2, "input_modalities": ["text", "image"],'
+        ' "supported_reasoning_levels": [{"effort": "low"}, {"effort": "high"}]}]}',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path))
+    listed = client.get("/api/ai/codex/models").json()
+    # Para analizar fotos, solo los que ven; para traducir, todos (y se dice cuáles ven).
+    assert [m["slug"] for m in listed["models"]] == ["m-vision"]
+    assert [(m["slug"], m["vision"]) for m in listed["translate_models"]] == [("m-texto", False), ("m-vision", True)]
+
+    # Por defecto: analizar con lo de Codex; traducir con su modelo por defecto y esfuerzo bajo.
+    assert codex_models.cli_args(codex_models.ANALYSIS) == []
+    assert codex_models.cli_args(codex_models.TRANSLATION) == ["-c", 'model_reasoning_effort="low"']
+
+    client.patch("/api/settings", json={"codex_model": "m-vision", "codex_effort": "high"})
+    assert codex_models.cli_args(codex_models.TRANSLATION) == ["-c", 'model_reasoning_effort="low"']  # no cambia
+    saved = client.patch("/api/settings", json={"codex_translate_model": "m-texto", "codex_translate_effort": ""}).json()
+    assert (saved["codex_translate_model"], saved["codex_translate_effort"]) == ("m-texto", "")
+    assert codex_models.cli_args(codex_models.TRANSLATION) == ["--model", "m-texto"]  # esfuerzo: el del modelo
+    assert codex_models.cli_args() == ["--model", "m-vision", "-c", 'model_reasoning_effort="high"']  # no cambia
+    assert client.patch("/api/settings", json={"codex_translate_effort": "ultra"}).status_code == 422
+    assert client.patch("/api/settings", json={"codex_translate_model": "x; rm"}).status_code == 422
+
+    # Y cada llamada de Codex pide los suyos.
+    from app.services.ai import translate
+    from app.services.ai.codex import CodexAnalyzer
+
+    seen = []
+    monkeypatch.setattr(CodexAnalyzer, "available", lambda self: True)
+    monkeypatch.setattr(CodexAnalyzer, "analyze", lambda self, images, prompt, schema=None, timeout=None,
+                        purpose=codex_models.ANALYSIS: seen.append((images, purpose)) or "{}")
+    translate._codex("hola")
+    assert seen == [([], codex_models.TRANSLATION)]
