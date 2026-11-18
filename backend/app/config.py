@@ -37,7 +37,47 @@ SHOP_PAUSE_SECONDS = float(os.environ.get("ARMARIO_SHOP_PAUSE", "1.0"))  # entre
 SHOP_TIMEOUT_SECONDS = float(os.environ.get("ARMARIO_SHOP_TIMEOUT", "20"))
 # Traducir al español lo que llega de las tiendas en otro idioma (con Codex, o Claude si no).
 SHOP_TRANSLATE = os.environ.get("ARMARIO_SHOP_TRANSLATE", "1") != "0"
-SHOP_PAGES = int(os.environ.get("ARMARIO_SHOP_PAGES", "3"))  # páginas de 20 productos por categoría
+
+
+def _pause(name: str, default: str) -> tuple[float, float]:
+    """«6-10» -> (6.0, 10.0); «3» -> (3.0, 3.0). Segundos entre una página del listado y la siguiente."""
+    for raw in (os.environ.get(name, default), default):
+        low, _, high = raw.replace(",", ".").partition("-")
+        try:
+            low_f = float(low)
+            high_f = float(high) if high else low_f
+        except ValueError:
+            continue
+        return (max(0.0, min(low_f, high_f)), max(0.0, low_f, high_f))
+    return (6.0, 10.0)
+
+
+# El catálogo entero de cada tienda se lee de noche y despacio: pausas largas, con algo de variación.
+# «Consultar ahora» (de día, con el usuario esperando) hace el mismo recorrido con pausas algo menores.
+SHOP_NIGHT_PAUSE = _pause("ARMARIO_SHOP_NIGHT_PAUSE", "6-10")
+SHOP_DAY_PAUSE = _pause("ARMARIO_SHOP_DAY_PAUSE", "3-5")
+# Si una tienda bloqueó a mitad, al retomar se va aún más despacio.
+SHOP_SLOW_FACTOR = float(os.environ.get("ARMARIO_SHOP_SLOW_FACTOR", "1.5"))
+# Topes de seguridad por sección (que un fallo no deje el recorrido dando vueltas), no de catálogo.
+# Se pueden cambiar por tienda: ARMARIO_SHOP_MAX_PAGES_ZARA, ARMARIO_SHOP_MAX_PRODUCTS_COURIR…
+SHOP_MAX_PAGES = int(os.environ.get("ARMARIO_SHOP_MAX_PAGES", "60"))
+SHOP_MAX_PRODUCTS = int(os.environ.get("ARMARIO_SHOP_MAX_PRODUCTS", "3000"))
+# La reserva: propuestas con ficha y fotos ya bajadas por delante de lo que el usuario lleva visto.
+# Cuando quedan menos de SHOP_RESERVE_LOW por ver, se repone en segundo plano hasta SHOP_RESERVE.
+SHOP_RESERVE = int(os.environ.get("ARMARIO_SHOP_RESERVE", "25"))
+SHOP_RESERVE_LOW = int(os.environ.get("ARMARIO_SHOP_RESERVE_LOW", "15"))
+# Colores que se dejan preparados (ficha y fotos) por propuesta en las tiendas que no pueden traer un
+# color al momento (JD Sports), contando el que se ve.
+SHOP_COLOR_PREP = int(os.environ.get("ARMARIO_SHOP_COLOR_PREP", "4"))
+
+
+def shop_limit(store: str, kind: str) -> int:
+    """Tope de seguridad de una tienda: «PAGES» (páginas por sección) o «PRODUCTS» (productos por sección)."""
+    default = SHOP_MAX_PAGES if kind == "PAGES" else SHOP_MAX_PRODUCTS
+    try:
+        return max(1, int(os.environ.get(f"ARMARIO_SHOP_MAX_{kind}_{store.upper()}", default)))
+    except ValueError:
+        return default
 
 PHOTO_MAX_SIDE = 1600
 THUMB_MAX_SIDE = 480

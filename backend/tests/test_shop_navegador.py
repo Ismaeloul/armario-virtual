@@ -429,19 +429,29 @@ def test_jd_lee_el_listado_y_las_paginas_de_charger_plus(monkeypatch):
         JD_BASKETS + "?from=144": ShopError("HTTP 500"),  # una página siguiente que falla: basta con lo que hay
     })
     _con_sesion(monkeypatch, session)
-    products = jdsports.JDSportsConnector().list_category("baskets")
+    # Una página siguiente que falla: lo leído se entrega, pero la ruta no cuenta como leída entera.
+    with pytest.raises(shops.Partial) as caught:
+        jdsports.JDSportsConnector().list_category("baskets")
     assert session.opened == [JD_BASKETS, JD_BASKETS + "?from=72", JD_BASKETS + "?from=144"]
+    products = caught.value.products
     assert [p.product_ref for p in products] == ["jdsports:19772886", "jdsports:19713373", "jdsports:19615454"]
     assert products[0].brand == "On Running" and products[0].price_cents == 17000
-    # Si la ruta solo tiene una página, no se abre ninguna más; y nunca más de PAGES.
+    # Si la ruta solo tiene una página, no se abre ninguna más; si tiene seis, las seis (la ruta entera).
     session = FakeJDSession({JD_BASKETS: (200, _jd_listado(hits, pages=1))})
     _con_sesion(monkeypatch, session)
     assert len(jdsports.JDSportsConnector().list_category("baskets")) == 3 and session.opened == [JD_BASKETS]
-    session = FakeJDSession({JD_BASKETS + (f"?from={72 * i}" if i else ""): (200, _jd_listado(hits, page=i))
-                             for i in range(6)})
+    session = FakeJDSession({JD_BASKETS + (f"?from={72 * i}" if i else ""): (200, _jd_listado(hits, page=i, pages=6))
+                             for i in range(8)})
     _con_sesion(monkeypatch, session)
     jdsports.JDSportsConnector().list_category("baskets")
-    assert len(session.opened) == jdsports.PAGES
+    assert len(session.opened) == 6
+    # Y nunca más del tope de seguridad.
+    monkeypatch.setenv("ARMARIO_SHOP_MAX_PAGES_JDSPORTS", "4")
+    session = FakeJDSession({JD_BASKETS + (f"?from={72 * i}" if i else ""): (200, _jd_listado(hits, page=i, pages=19))
+                             for i in range(19)})
+    _con_sesion(monkeypatch, session)
+    jdsports.JDSportsConnector().list_category("baskets")
+    assert len(session.opened) == 4
 
 
 def test_jd_la_primera_pagina_que_falla_o_un_bloqueo_paran_la_ruta(monkeypatch):
@@ -454,8 +464,9 @@ def test_jd_la_primera_pagina_que_falla_o_un_bloqueo_paran_la_ruta(monkeypatch):
         JD_BASKETS + "?from=72": BlockedError("la tienda ha bloqueado el acceso (no se vuelve a intentar hasta mañana)"),
     })
     _con_sesion(monkeypatch, session)
-    with pytest.raises(BlockedError):
+    with pytest.raises(shops.Partial) as caught:  # bloqueo a mitad: lo leído se guarda, y se para
         jdsports.JDSportsConnector().list_category("baskets")
+    assert isinstance(caught.value.cause, BlockedError) and len(caught.value.products) == 3
 
 
 def test_jd_la_ficha_se_abre_en_el_navegador_y_fuera_de_una_consulta_no(monkeypatch):

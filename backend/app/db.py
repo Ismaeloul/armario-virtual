@@ -54,7 +54,7 @@ _NEW_COLUMNS = {
         "decided_at": "DATETIME", "can_undo": "BOOLEAN", "discard_reason": "VARCHAR(20)",
         "prev_status": "VARCHAR(20)", "siblings": "JSON", "composition": "TEXT",
         "brand": "VARCHAR(40)", "name_es": "VARCHAR(160)", "store_color_es": "VARCHAR(60)",
-        "composition_es": "TEXT", "translated": "BOOLEAN",
+        "composition_es": "TEXT", "translated": "BOOLEAN", "listed_at": "DATETIME",
     },
 }
 

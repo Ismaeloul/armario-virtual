@@ -7,12 +7,15 @@ serie con su ventana, no. No se imita ninguna huella: es el navegador de verdad.
 - Los datos van en el `__NEXT_DATA__` de cada página (Next.js): se abre la página en el navegador y se
   lee ese JSON de la página ya cargada, nada de lo que pinta. El servidor pinta 72 productos por
   página en el orden «recomendados». Las páginas siguientes son las que abre el propio botón
-  «Charger plus» de la web (`?from=72`, `?from=144`…, que el servidor también pinta): se leen hasta
-  PAGES por ruta. Para cubrir más catálogo se recorren varias rutas (novedades, subcategorías y marcas)
-  y se ordena en local por antigüedad (`ageDaysRound`). El servicio de búsqueda de terceros que usa la
-  web en el cliente NO se consulta nunca.
-- La ficha, igual: la página del producto en el navegador y su `__NEXT_DATA__`. Las fotos, de su CDN
-  (otro dominio, que responde a un cliente normal), con httpx.
+  «Charger plus» de la web (`?from=72`, `?from=144`…, que el servidor también pinta): se leen todas,
+  de noche y despacio (ver crawl.py). Las rutas de marca y Novedades ya están dentro de Zapatillas
+  (`covered_by`): con esa activa no se recorren. El servicio de búsqueda de terceros que usa la web en
+  el cliente NO se consulta nunca.
+- Cada producto del listado trae ya la referencia de sus fotos, sus tallas, su descripción y sus
+  otros colores (`otherColourways`): se guardan (`snap`) y la ficha sale de ahí sin abrir su página
+  (`cached_detail`), con las fotos de su CDN (otro dominio, que responde a un cliente normal, httpx).
+- Si hace falta la ficha de verdad (un «me gusta» que no salió en el listado), la página del producto
+  en el navegador y su `__NEXT_DATA__`.
 - Sin buscador: el navegador no se abre dentro de una petición HTTP. A un enlace de JD se le explica.
 """
 import html
@@ -20,8 +23,8 @@ import re
 from urllib.parse import urlsplit
 
 from ... import config
-from . import browser
-from .base import BlockedError, NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from . import browser, crawl
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_shoe_type
 from .estimate import estimate_style, title_case
 from .fetch import IMAGE, Fetcher
@@ -46,6 +49,12 @@ SITES = {
             "running": ("Running", "/homme/chaussures-homme/chaussures-de-running/"),
             "bottes": ("Botas y zapatos", "/homme/chaussures-homme/bottes-et-chaussures/"),
         },
+        # Con el catálogo entero, Zapatillas ya contiene las de cada marca, y Novedades está dentro de
+        # Zapatillas más Botas: si esas están activas y se han leído enteras, estas no se recorren.
+        "covered_by": {
+            "nike": ("baskets",), "adidas": ("baskets",), "new-balance": ("baskets",),
+            "new-in": ("baskets", "bottes"),
+        },
     },
     "es": {
         "base": "https://www.jdsports.es",
@@ -58,13 +67,13 @@ SITES = {
             "nike": ("Nike", "/hombre/calzado-de-hombre/zapatillas/marca/nike/"),
             "running": ("Running", "/hombre/calzado-de-hombre/zapatillas-running/"),
         },
+        "covered_by": {"nike": ("baskets",)},
     },
 }
 SITE = SITES[COUNTRY]
 BASE = SITE["base"]
 
 PHOTO_WIDTH = 1600
-PAGES = 3  # páginas de 72 por ruta: las que abriría el botón «Charger plus» de la web
 PER_PAGE = 72  # lo que pinta el servidor por página (la propia página lo dice en `hitsPerPage`)
 # Vistas de la ficha: _a lateral, _b tres cuartos, _c trasera. Ni la suela (_f) ni un detalle (_d) ni la
 # cenital (_e) como fotos del armario.
@@ -102,8 +111,42 @@ def _is_for_men(hit: dict) -> bool:
     return not genders or bool(genders & SITE["men"])
 
 
+_IMAGE_REF = re.compile(r"/jd_([A-Za-z0-9]+)_[a-z]+(?:\?|$)")
+_TAGS = re.compile(r"<[^>]+>")
+
+
+def _image_ref(url) -> str | None:
+    """«https://i8.amplience.net/i/jpl/jd_807022_plc» -> «807022»: la referencia de sus fotos."""
+    match = _IMAGE_REF.search(str(url or ""))
+    return match.group(1) if match else None
+
+
+def listing_snapshot(hit: dict) -> dict:
+    """Lo que el listado ya dice de un producto y basta para su ficha sin abrir su página: la referencia
+    de sus fotos (las vistas _a, _b y _c salen de ahí, en su CDN), las tallas que quedan, la
+    descripción y sus otros colores. Va en `store_data["snap"]`."""
+    colours = []
+    for other in hit.get("otherColourways") or []:
+        if not isinstance(other, dict) or not str(other.get("objectID") or "").isdigit():
+            continue
+        colours.append({
+            "id": str(other["objectID"]), "slug": str(other.get("slug") or ""),
+            "colour": " ".join(html.unescape(str(other.get("colour") or "")).split()),
+            "ref": _image_ref(other.get("image")),
+        })
+    sizes = [str(s).strip() for s in hit.get("size") or [] if str(s).strip()]
+    description = " ".join(html.unescape(_TAGS.sub(" ", str(hit.get("description") or ""))).split())
+    return {
+        "ref": str(hit.get("productRef") or "") or _image_ref(hit.get("image")),
+        "colour": " ".join(html.unescape(str(hit.get("colour") or "")).split()),
+        "sizes": sizes[:30],
+        "desc": description[:400],
+        "colours": colours[:12],
+    }
+
+
 def make_product(*, object_id: str, name: str, brand: str, colour: str, price: float | int | None, slug: str,
-                 section: str, product_ref: str | None, age_days=None) -> ShopProduct | None:
+                 section: str, product_ref: str | None, age_days=None, snap: dict | None = None) -> ShopProduct | None:
     shown_brand = brand_name(brand)
     clean = _clean_name(name, shown_brand)
     shoe_type = estimate_shoe_type(f"{name} {section}")
@@ -130,7 +173,8 @@ def make_product(*, object_id: str, name: str, brand: str, colour: str, price: f
         season=estimate_season(name, shoe_type),
         details=f"{shown_brand} {clean}".strip().lower(),
         brand=shown_brand,
-        store_data={"id": object_id, "slug": slug, "ref": product_ref or None, "age": age_days},
+        store_data={"id": object_id, "slug": slug, "ref": product_ref or None, "age": age_days,
+                    **({"snap": snap} if snap else {})},
     )
 
 
@@ -146,6 +190,7 @@ def parse_listing(results: dict, section: str) -> list[ShopProduct]:
             object_id=str(hit.get("objectID") or ""), name=str(hit.get("name") or ""), brand=brand,
             colour=str(hit.get("colour") or ""), price=hit.get("price"), slug=str(hit.get("slug") or ""),
             section=section, product_ref=str(hit.get("productRef") or "") or None, age_days=hit.get("ageDaysRound"),
+            snap=listing_snapshot(hit),
         )
         if product and product.product_ref not in refs:
             refs.add(product.product_ref)
@@ -215,6 +260,47 @@ def parse_product(data: dict) -> ShopDetail | None:
     )
 
 
+IMAGE_BASE = "https://i8.amplience.net/i/jpl"
+
+
+def detail_from_listing(store_data: dict) -> ShopDetail | None:
+    """La ficha a partir de lo que guardó el listado (`snap`), sin abrir la página del producto: fotos
+    de la CDN (la vista _a es obligatoria; si falta otra, se salta al bajarla), las tallas que quedaban
+    y los otros colores. None si el listado no dejó lo necesario (un item guardado antes)."""
+    snap = store_data.get("snap")
+    if not isinstance(snap, dict):
+        return None
+    ref = str(snap.get("ref") or store_data.get("ref") or "")
+    object_id = str(store_data.get("id") or "")
+    if not re.fullmatch(r"[A-Za-z0-9]+", ref) or not object_id.isdigit():
+        return None
+    own = str(snap.get("colour") or "")
+    siblings = [{
+        "product_ref": f"jdsports:{object_id}", "name": own[:1].upper() + own[1:], "hex": None,
+        "url": product_url(str(store_data.get("slug") or "p"), object_id),
+        "store_data": {"id": object_id, "slug": store_data.get("slug"), "ref": ref},
+    }]
+    for colour in snap.get("colours") or []:
+        if not isinstance(colour, dict) or not str(colour.get("id") or "").isdigit():
+            continue
+        if any(s["product_ref"] == f"jdsports:{colour['id']}" for s in siblings):
+            continue
+        name = str(colour.get("colour") or "")
+        siblings.append({
+            "product_ref": f"jdsports:{colour['id']}", "name": name[:1].upper() + name[1:], "hex": None,
+            "url": product_url(str(colour.get("slug") or "p"), str(colour["id"])),
+            "store_data": {"id": str(colour["id"]), "slug": colour.get("slug"), "ref": colour.get("ref")},
+        })
+    return ShopDetail(
+        price_cents=None,  # el del listado ya está en el producto
+        sizes=[{"name": size, "in_stock": True} for size in snap.get("sizes") or []],
+        photo_urls=[_photo(f"{IMAGE_BASE}/jd_{ref}_{view}") for view in _VIEWS],
+        description=str(snap.get("desc") or ""),
+        siblings=siblings if len(siblings) > 1 else None,
+        store_data={"ref": ref},
+    )
+
+
 def parse_query(text: str) -> tuple[str, str]:
     """(slug, número de producto) de un enlace de JD Sports (de cualquier país: el número es el mismo).
     Lanza NotThisStore con cualquier otra cosa: JD no tiene buscador que se pueda usar."""
@@ -247,9 +333,13 @@ class JDSportsConnector:
     refresh_after_release = False
     language = SITE["language"]
     categories = {slug: label for slug, (label, _path) in SITE["routes"].items()}
+    covered_by = SITE.get("covered_by", {})
+    # Elegir otro color no puede abrir el navegador: solo se ofrecen los colores ya preparados (ficha y
+    # fotos bajadas en segundo plano, ver shopping.prepare_colors).
+    prepared_colors = True
 
-    def __init__(self, pages: int = PAGES):
-        self.pages = pages
+    def __init__(self, pages: int | None = None):
+        self.pages = pages  # None: hasta el final de la ruta (con el tope de seguridad de crawl.py)
         # Las fotos, de la CDN: un cliente normal, con su pausa corta.
         self.fetcher = Fetcher("jdsports", pause=0.3, timeout=config.SHOP_TIMEOUT_SECONDS,
                                accept_language=SITE["accept_language"])
@@ -260,29 +350,42 @@ class JDSportsConnector:
         return status, data if isinstance(data, dict) else None
 
     def list_category(self, slug: str) -> list[ShopProduct]:
+        """La ruta entera: las páginas que abriría el botón «Charger plus», hasta la última (o el tope).
+        Si una página siguiente falla o la tienda bloquea a mitad, `crawl.Partial` con lo leído."""
         _label, path = SITE["routes"][slug]
         hits: list = []
         per_page = PER_PAGE
-        for index in range(self.pages):
-            try:
+        limit = self.pages or crawl.max_pages(self.key)
+        try:
+            for index in range(max(1, limit)):
+                crawl.before_page()
                 status, data = self._read(page_url(path, index, per_page))
                 if status != 200 or data is None:
                     raise ShopError(f"HTTP {status}")
                 results = listing_results(data)
-            except ShopError as exc:
-                # Un bloqueo para la tienda entera; si falla una página siguiente, basta con lo que hay.
-                if index == 0 or isinstance(exc, BlockedError):
-                    raise
-                break
-            if results.get("page") not in (None, index):
-                break  # el servidor no ha dado la página pedida: no se insiste
-            hits += results.get("hits") or []
-            if isinstance(results.get("hitsPerPage"), int) and results["hitsPerPage"] > 0:
-                per_page = results["hitsPerPage"]
-            pages = results.get("nbPages")
-            if isinstance(pages, int) and index + 1 >= pages:
-                break
+                if results.get("page") not in (None, index):
+                    crawl.page_read(0)
+                    break  # el servidor no ha dado la página pedida: es que ya no hay más
+                page_hits = results.get("hits") or []
+                hits += page_hits
+                crawl.page_read(len(page_hits))
+                if isinstance(results.get("hitsPerPage"), int) and results["hitsPerPage"] > 0:
+                    per_page = results["hitsPerPage"]
+                pages = results.get("nbPages")
+                if index == 0 and isinstance(pages, int):
+                    crawl.section_total(min(pages, limit))
+                if (isinstance(pages, int) and index + 1 >= pages) or not page_hits:
+                    break
+                if len(hits) >= crawl.max_products(self.key):
+                    break
+        except ShopError as exc:
+            if not hits:
+                raise
+            raise crawl.Partial(parse_listing({"hits": hits}, slug), exc) from exc
         return parse_listing({"hits": hits}, slug)
+
+    def cached_detail(self, store_data: dict) -> ShopDetail | None:
+        return detail_from_listing(store_data)
 
     def detail(self, store_data: dict) -> ShopDetail | None:
         object_id = str(store_data.get("id") or "")

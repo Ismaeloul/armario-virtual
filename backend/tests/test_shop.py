@@ -1,6 +1,7 @@
 """Compras (Fase 4). Todo sin red: un conector falso y JSON de ejemplo recortado de Zara."""
 import json
-from datetime import date, timedelta
+import re
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -604,9 +605,13 @@ def test_cada_tienda_se_consulta_en_su_dia_de_la_semana(client, tienda):
     assert shopping.check_day("zara", jueves) == VIERNES - timedelta(days=7)
 
     with SessionLocal() as db:
-        # Nunca consultada: toca en cuanto se activa, sea el día que sea.
-        assert shopping.is_due(db, "zara", INVIERNO) and shopping.due_stores(db, INVIERNO) == ["zara"]
-        assert shopping.next_check(db, "zara", INVIERNO) == INVIERNO
+        # Nunca consultada: toca la primera noche después de activarla (aquí, el miércoles a las 15:00).
+        shopping._set(db, shopping.K_ENABLED_AT, {"zara": "2026-11-18T14:00:00+00:00"})
+        db.commit()
+        noche = datetime(2026, 11, 19, 3, 30)
+        assert not shopping.is_due(db, "zara", now=datetime(2026, 11, 18, 23, 0))
+        assert shopping.is_due(db, "zara", now=noche) and shopping.due_stores(db, now=noche) == ["zara"]
+        assert shopping.next_check(db, "zara", INVIERNO) == INVIERNO + timedelta(days=1)
 
         # Consultada con éxito un miércoles («Consultar ahora»): ya no toca hasta el viernes.
         shopping.refresh(db, today=INVIERNO)
@@ -701,12 +706,15 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
     assert state["running"] is False and state["pending"] == 0
     assert state["stores"][0]["weekday"] == 4 and state["stores"][0]["next_check"] is None
     assert state["stores"][0]["status"] == {
-        "state": "never", "at": None, "found": 0, "added": 0, "failed": 0, "error": None,
+        "state": "never", "at": None, "found": 0, "added": 0, "failed": 0, "error": None, "complete": False,
+        "cancelled": False, "sections": 0, "sections_total": 0, "pages": 0, "seconds": 0, "resume": False,
     }
     assert client.post("/api/shop/refresh").status_code == 409  # sin tienda activada no hay tanda
     assert client.post("/api/shop/refresh", json={"store": "zara"}).status_code == 409
     assert client.post("/api/shop/refresh", json={"store": "otra"}).status_code == 404
-    assert client.get("/api/shop/next").json() == {"item": None, "remaining": 0, "more": 0, "can_undo": False}
+    assert client.get("/api/shop/next").json() == {
+        "item": None, "remaining": 0, "more": 0, "can_undo": False, "refilling": False, "queue": [],
+    }
     assert state["last_more"] is None and client.post("/api/shop/more").status_code == 409
     with SessionLocal() as db:
         assert shopping.due_stores(db) == []
@@ -716,7 +724,10 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
     assert [c["slug"] for c in state["stores"][0]["categories"] if c["enabled"]] == ["camisas"]
     assert client.patch("/api/shop/settings", json={"store": "otra", "enabled": True}).status_code == 404
     with SessionLocal() as db:
-        assert shopping.due_stores(db) == ["zara"]
+        # Recién activada: toca la primera noche, a las 03:30 (con «Consultar ahora», ya).
+        moment = shopping.due_at(db, "zara")
+        assert moment.strftime("%H:%M") == "03:30" and moment > shopping.local_now()
+        assert shopping.due_stores(db) == [] and shopping.due_stores(db, now=moment) == ["zara"]
 
     # «Consultar ahora» lanza la consulta en segundo plano y la petición vuelve ya.
     assert client.post("/api/shop/refresh", json={"store": "zara"}).status_code == 202
@@ -818,20 +829,61 @@ def test_la_he_comprado_con_la_ia_caida_crea_la_prenda_con_lo_estimado(client, t
     assert _items()[0].status == "comprado"
 
 
-def test_zara_baja_de_pagina_si_la_categoria_tiene_menos(monkeypatch):
-    """Pedir más páginas de las que hay da 404: se reintenta con menos en vez de dar la categoría por perdida."""
-    from app.services.shops import zara
+def _zara_pages(pages: int) -> dict:
+    """Un listado de Zara con `pages` páginas juntas (una «Camisa» por página, para contarlas)."""
+    items = [
+        {"type": "Product", "name": f"CAMISA {n}", "price": 2995,
+         "seo": {"keyword": f"camisa-{n}", "seoProductId": f"0{n:07d}", "discernProductId": n},
+         "detail": {"colors": [{"id": "800", "name": "BLANCO"}]}}
+        for n in range(1, pages + 1)
+    ]
+    return {"productGroups": [{"elements": [{"commercialComponents": items}]}]}
 
-    connector = zara.ZaraConnector(pause=0, pages=3)
+
+@pytest.mark.parametrize(("existen", "pedidas"), [
+    (3, ["page=4", "page=2", "page=3"]),  # se pasa (404), busca a medio camino
+    (11, ["page=4", "page=8", "page=16", "page=12", "page=10", "page=11"]),
+    (1, ["page=4", "page=2", ""]),  # solo la primera: sin `page`
+])
+def test_zara_lee_la_categoria_entera_doblando_paginas(monkeypatch, existen, pedidas):
+    """`page=N` trae las N primeras juntas y dice si es la última; pedir de más da 404. Se dobla y, si se
+    pasa, se busca a medio camino: la categoría entera con pocas peticiones."""
+    connector = zara.ZaraConnector(pause=0)
     asked = []
 
     def fake_json(url, *args, **kwargs):
-        asked.append(url)
-        return None if "page=3" in url else {"productGroups": []}
+        match = re.search(r"page=(\d+)", url)
+        pages = int(match.group(1)) if match else 1
+        asked.append(match.group() if match else "")
+        if pages > existen:
+            return None
+        return {**_zara_pages(pages), "paginationInfo": {"page": pages, "isLastPage": pages == existen}}
 
     monkeypatch.setattr(connector, "_json", fake_json)
-    assert connector.list_category("hombre-camisetas-l855") == []
-    assert len(asked) == 2 and asked[1].endswith("page=2")
+    products = connector.list_category("hombre-camisas-l737")
+    assert asked == pedidas and len(products) == existen
+
+
+def test_zara_respeta_el_tope_y_guarda_lo_leido_si_falla_a_mitad(monkeypatch):
+    connector = zara.ZaraConnector(pause=0)
+    asked = []
+
+    def fake_json(url, *args, **kwargs):
+        pages = int(re.search(r"page=(\d+)", url).group(1))
+        asked.append(pages)
+        if pages > 4:
+            raise ShopError("HTTP 500")
+        return {**_zara_pages(pages), "paginationInfo": {"page": pages, "isLastPage": False}}
+
+    monkeypatch.setattr(connector, "_json", fake_json)
+    with pytest.raises(shops.Partial) as caught:
+        connector.list_category("hombre-camisas-l737")
+    assert asked == [4, 8] and len(caught.value.products) == 4 and "HTTP 500" in str(caught.value.cause)
+    # Con un tope de 6 páginas no se pasa de ahí aunque la tienda diga que hay más.
+    monkeypatch.setenv("ARMARIO_SHOP_MAX_PAGES_ZARA", "6")
+    monkeypatch.setattr(connector, "_json", lambda url, *a, **k: {
+        **_zara_pages(int(re.search(r"page=(\d+)", url).group(1))), "paginationInfo": {"isLastPage": False}})
+    assert len(connector.list_category("hombre-camisas-l737")) == 6
 
 
 # ---------- Candidatos y «Ver más»
@@ -1374,7 +1426,9 @@ def test_el_buscador_guarda_lo_que_encuentra_como_buscado_y_no_es_una_propuesta(
     # No es una propuesta: ni en Descubrir, ni en los contadores, ni entre los candidatos, ni al aprender.
     with SessionLocal() as db:
         shopping.set_store(db, "zara", True, None)
-    assert client.get("/api/shop/next").json() == {"item": None, "remaining": 0, "more": 0, "can_undo": False}
+    assert client.get("/api/shop/next").json() == {
+        "item": None, "remaining": 0, "more": 0, "can_undo": False, "refilling": False, "queue": [],
+    }
     state = client.get("/api/shop/state").json()
     assert (state["pending"], state["liked"]) == (0, 0) and client.get("/api/shop/liked").json() == []
     assert _taste() == shopping.ShopTaste()
@@ -1413,12 +1467,17 @@ def test_el_buscador_dice_en_claro_por_que_no_hay_nada(client, tienda):
     assert client.post("/api/shop/lookup", json={"query": "x" * 601}).status_code == 422
     assert _items() == []  # nada de eso deja rastro
 
-    # Con una consulta del catálogo en marcha no se busca: se dice y ya.
+    # Una consulta del catálogo en marcha (o un «Ver más») no frena el buscador; otra búsqueda, sí.
     assert shopping._lock.acquire(blocking=False)
     try:
-        assert "consultando el catálogo" in falla("9999/999", 409)
+        assert falla("9999/999", 404) == "No he encontrado nada con esa referencia"
     finally:
         shopping._lock.release()
+    assert shopping._lookup_lock.acquire(blocking=False)
+    try:
+        assert "buscando otra cosa" in falla("9999/999", 409)
+    finally:
+        shopping._lookup_lock.release()
 
 
 def test_el_buscador_reutiliza_lo_que_ya_existia_sea_cual_sea_su_estado(client, tienda, analyzers):

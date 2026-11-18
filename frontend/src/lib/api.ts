@@ -141,7 +141,16 @@ export type Taste = {
 export type ShopReason = { text: string; kind: "pro" | "contra" };
 export type ShopSize = { name: string; in_stock: boolean };
 /** Uno de los colores en los que existe un producto. Cada color es un producto aparte. */
-export type ShopColor = { product_ref: string; name: string; hex: string; current: boolean };
+export type ShopColor = {
+  product_ref: string;
+  name: string;
+  hex: string;
+  current: boolean;
+  /** Se puede ver ya. Si no (JD Sports: aún sin descargar), sale apagado y solo enlaza a la tienda. */
+  available: boolean;
+  /** Su página en la tienda. */
+  url: string;
+};
 
 /** Un producto de una tienda propuesto en Compras. */
 export type ShopItem = {
@@ -175,6 +184,8 @@ export type ShopItem = {
   composition: string | null;
   /** Los colores entre los que se puede elegir (vacío si solo hay uno). null = aún no se sabe (shopColors). */
   colors: ShopColor[] | null;
+  /** Encontrado en lo guardado y aún sin fotos: llegan en segundo plano. */
+  photo_pending?: boolean;
 };
 
 /** «Combina con…»: las prendas del armario que mejor van con un producto, por parte del cuerpo. */
@@ -215,8 +226,44 @@ export type ShopStore = {
     added: number;
     failed: number;
     error: string | null;
+    /** Se leyeron enteras todas las secciones activas. */
+    complete: boolean;
+    cancelled: boolean;
+    sections: number;
+    sections_total: number;
+    pages: number;
+    seconds: number;
+    /** Quedó a medias: la próxima vez se retoma por donde iba. */
+    resume: boolean;
   };
   next_check: string | null;
+  /** Cuándo se consultará sola, con hora local («2026-11-20T03:30:00»). */
+  next_check_at: string | null;
+};
+
+/** Por dónde va la consulta del catálogo en marcha. */
+export type ShopCrawl = {
+  store: string | null;
+  store_name: string | null;
+  /** Leyendo el catálogo · eligiendo las mejores · bajando fichas y fotos. */
+  phase: "catalogo" | "eligiendo" | "propuestas";
+  store_index: number;
+  stores_total: number;
+  section: string | null;
+  section_page: number;
+  section_pages: number | null;
+  sections_done: number;
+  sections_total: number;
+  pages: number;
+  products: number;
+  /** 0-99, nunca retrocede. */
+  percent: number;
+  /** false: aún no se puede estimar el total (barra indeterminada). */
+  known: boolean;
+  eta_seconds: number | null;
+  night: boolean;
+  started_at: string | null;
+  cancelling: boolean;
 };
 
 export type ShopState = {
@@ -224,6 +271,12 @@ export type ShopState = {
   /** Hay una consulta del catálogo o un «Ver más» en marcha, y cuál de los dos. */
   running: boolean;
   job: "consulta" | "mas" | null;
+  /** La consulta del catálogo en marcha, con su avance. */
+  crawl: ShopCrawl | null;
+  /** Se están reponiendo propuestas de un filtro que se quedó vacío. */
+  refilling: ShopFilter | null;
+  /** A qué hora (HH:MM, local) se hace la consulta automática. */
+  night_time: string;
   pending: number;
   liked: number;
   /** Cómo fue el último «Ver más» desde la última consulta semanal. `low`: lo que trajo ya encaja menos. */
@@ -237,6 +290,10 @@ export type ShopNext = {
   more: number;
   /** Hay una decisión que «Volver» puede deshacer. */
   can_undo: boolean;
+  /** El filtro se ha quedado vacío y se están trayendo más de eso en segundo plano. */
+  refilling: boolean;
+  /** Las que vienen detrás de `item` (la pila de tarjetas). */
+  queue: ShopItem[];
 };
 /** El filtro de Descubrir: una tienda y un tipo de prenda (nuestras categorías). null = todo. */
 export type ShopFilter = { store: string | null; category: string | null };
@@ -313,6 +370,10 @@ export const api = {
   shopDislike: (id: number, filter?: ShopFilter) =>
     request<ShopNext>(`/api/shop/items/${id}/dislike${shopQuery(filter)}`, { method: "POST" }),
   /** «Volver»: deshace la última decisión y devuelve esa propuesta. */
+  /** Corta la consulta del catálogo en marcha; lo leído se guarda. */
+  shopCancel: () => request<ShopState>("/api/shop/refresh/cancel", { method: "POST" }),
+  /** La hora de la consulta automática. */
+  shopNight: (night_time: string) => request<ShopState>("/api/shop/night", json("PUT", { night_time })),
   shopUndo: (filter?: ShopFilter) => request<ShopNext>(`/api/shop/undo${shopQuery(filter)}`, { method: "POST" }),
   /** Por qué se descartó (opcional). */
   shopReason: (id: number, reason: ShopDiscardReason) =>

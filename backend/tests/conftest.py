@@ -10,6 +10,8 @@ os.environ["ARMARIO_DATA_DIR"] = _TMP
 os.environ["ARMARIO_FRONTEND_DIST"] = str(Path(_TMP) / "sin-frontend")
 os.environ["ARMARIO_SHOP_AUTO"] = "0"  # sin bucle de tandas: los tests nunca llaman a las tiendas
 os.environ["ARMARIO_SHOP_TRANSLATE"] = "0"  # ni a Codex para traducir
+os.environ["ARMARIO_SHOP_NIGHT_PAUSE"] = "0"  # el recorrido del catálogo, sin pausas
+os.environ["ARMARIO_SHOP_DAY_PAUSE"] = "0"
 os.environ.pop("ANTHROPIC_API_KEY", None)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

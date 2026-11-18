@@ -31,14 +31,18 @@ prendas del armario va mejor un producto, con la misma afinidad de Hoy y Gustos.
 import json
 import logging
 import math
+import os
 import re
 import threading
 import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
+from datetime import time as dtime
+from urllib.parse import parse_qs, urlsplit
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from sqlalchemy import or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy import func, or_, select
+from sqlalchemy.orm import Session, object_session
 
 from .. import catalog, config
 from ..db import SessionLocal
@@ -46,7 +50,8 @@ from ..models import Garment, Setting, ShopItem, now_utc
 from . import ai, outfits, shops, storage, style_rules
 from .ai.base import build_prompt
 from .ai import codex_models
-from .shops import BlockedError, BrowserUnavailable, NeedsBrowser, NotThisStore, SearchError, ShopError
+from .shops import BlockedError, BrowserUnavailable, Cancelled, NeedsBrowser, NotThisStore, Partial, SearchError
+from .shops import ShopError
 from .shops.estimate import brand_family, estimate_color, norm
 
 log = logging.getLogger("armario.compras")
@@ -166,6 +171,10 @@ PRICE_BANDS = ((2500, "hasta_25"), (5000, "hasta_50"), (8000, "hasta_80"))
 K_STORES, K_CATEGORIES = "shop_stores", "shop_categories"
 K_STATUS = "shop_status"  # tienda -> cómo fue su última consulta (ver `store_status`)
 K_MORE = "shop_more"  # cómo fue el último «Ver más» (ver `more`); None tras cada consulta semanal
+K_NIGHT = "shop_night_time"  # a qué hora (local, «HH:MM») se hace la consulta automática
+K_ENABLED_AT = "shop_enabled_at"  # tienda -> cuándo se activó (UTC): la primera consulta es esa noche
+DEFAULT_NIGHT = "03:30"
+_HHMM = re.compile(r"([01]\d|2[0-3]):([0-5]\d)")
 
 
 # ---------- Ajustes de la pestaña
@@ -211,6 +220,8 @@ def _category_key(slug: str) -> str:
 def set_store(db: Session, store: str, enabled: bool | None, categories: list[str] | None) -> None:
     if enabled is not None:
         stores = set(enabled_stores(db))
+        if enabled and store not in stores:
+            _set(db, K_ENABLED_AT, {**(_get(db, K_ENABLED_AT, {}) or {}), store: now_utc().isoformat()})
         stores.add(store) if enabled else stores.discard(store)
         _set(db, K_STORES, sorted(stores))
     if categories is not None:
@@ -263,34 +274,105 @@ def check_day(store: str, today: date) -> date:
     return today - timedelta(days=(today.weekday() - weekday) % 7)
 
 
-def is_due(db: Session, store: str, today: date | None = None) -> bool:
-    """¿Toca consultar esta tienda hoy?
+def night_time(db: Session) -> str:
+    """La hora local («HH:MM») de la consulta automática. Por defecto, las 03:30."""
+    value = _get(db, K_NIGHT, DEFAULT_NIGHT)
+    return value if isinstance(value, str) and _HHMM.fullmatch(value) else DEFAULT_NIGHT
 
-    Sí, si está activada y desde su último día de consulta no hay ninguna consulta que fuera bien (hoy es
-    su día, o lo fue mientras la app estaba apagada). Si la de hoy ya falló, no se insiste hasta mañana.
+
+def set_night_time(db: Session, value: str) -> None:
+    if not _HHMM.fullmatch(value or ""):
+        raise ValueError("La hora va como HH:MM")
+    _set(db, K_NIGHT, value)
+    db.commit()
+
+
+def _clock(db: Session) -> dtime:
+    hours, minutes = night_time(db).split(":")
+    return dtime(int(hours), int(minutes))
+
+
+def local_now() -> datetime:
+    """La hora de casa del usuario (`ARMARIO_TZ`), sin zona: con ella se compara la hora de la consulta."""
+    try:
+        return datetime.now(ZoneInfo(os.environ.get("ARMARIO_TZ", "Europe/Paris"))).replace(tzinfo=None)
+    except (ZoneInfoNotFoundError, ValueError, OSError):
+        return datetime.now()
+
+
+def _to_local(moment: datetime | None) -> datetime | None:
+    """Un instante en UTC a la hora local de casa, sin zona."""
+    if moment is None:
+        return None
+    try:
+        zone = ZoneInfo(os.environ.get("ARMARIO_TZ", "Europe/Paris"))
+        return _aware(moment).astimezone(zone).replace(tzinfo=None)
+    except (ZoneInfoNotFoundError, ValueError, OSError):
+        return _aware(moment).astimezone().replace(tzinfo=None)
+
+
+def _parse_moment(value) -> datetime | None:
+    try:
+        return datetime.fromisoformat(value) if value else None
+    except (TypeError, ValueError):
+        return None
+
+
+def due_at(db: Session, store: str, today: date | None = None) -> datetime | None:
+    """Cuándo (hora local, sin zona) toca la próxima consulta automática de la tienda; None si está
+    desactivada.
+
+    - Su día de la semana, a la hora de la noche (`night_time`), salvo que desde ese día ya haya una
+      consulta completa (p. ej. con «Consultar ahora»): entonces, el mismo día de la semana siguiente.
+    - Si la de hoy falló o quedó a medias, la noche siguiente (se retoma por donde iba).
+    - Recién activada y sin consultar nunca: la primera noche después de activarla.
+    Si la app estaba apagada a esa hora, el momento ya ha pasado: toca en cuanto arranque.
     """
-    today = today or outfits.local_today()
     if store not in enabled_stores(db):
-        return False
+        return None
+    today = today or outfits.local_today()
+    clock = _clock(db)
     status = store_status(db, store) or {}
+    cycle_day = check_day(store, today)
     ok_day = _parse_day(status.get("ok_day"))
-    if ok_day and ok_day >= check_day(store, today):
-        return False
-    return _parse_day(status.get("day")) != today
+    if ok_day and ok_day >= cycle_day:
+        return datetime.combine(cycle_day + timedelta(days=7), clock)
+    moment = datetime.combine(cycle_day, clock)
+    attempted = _parse_day(status.get("day"))
+    if attempted is None and not status:
+        enabled_at = _to_local(_parse_moment((_get(db, K_ENABLED_AT, {}) or {}).get(store)))
+        if enabled_at is not None:
+            first = datetime.combine(enabled_at.date(), clock)
+            moment = first if first > enabled_at else first + timedelta(days=1)
+    if attempted is not None and attempted >= cycle_day:
+        moment = max(moment, datetime.combine(attempted + timedelta(days=1), clock))
+    return moment
 
 
-def due_stores(db: Session, today: date | None = None) -> list[str]:
-    return [store for store in enabled_stores(db) if is_due(db, store, today)]
+def is_due(db: Session, store: str, today: date | None = None, now: datetime | None = None) -> bool:
+    """¿Toca consultar ya esta tienda? `now` es la hora local (sin zona); sin ella, la de ahora. Si
+    solo se da `today`, se mira a mediodía de ese día (para los tests y para «qué toca hoy»)."""
+    if now is None:
+        now = datetime.combine(today, dtime(12, 0)) if today is not None else local_now()
+    moment = due_at(db, store, now.date())
+    return moment is not None and now >= moment
+
+
+def due_stores(db: Session, today: date | None = None, now: datetime | None = None) -> list[str]:
+    return [store for store in enabled_stores(db) if is_due(db, store, today, now)]
 
 
 def next_check(db: Session, store: str, today: date | None = None) -> date:
-    """Qué día se consultará la tienda por su cuenta: hoy si toca, mañana si hoy falló, o su próximo día."""
+    """Qué día se consultará la tienda por su cuenta (hoy si ya toca)."""
     today = today or outfits.local_today()
-    status = store_status(db, store) or {}
-    ok_day = _parse_day(status.get("ok_day"))
-    if ok_day and ok_day >= check_day(store, today):
-        return check_day(store, today) + timedelta(days=7)
-    return today + timedelta(days=1) if _parse_day(status.get("day")) == today else today
+    moment = due_at(db, store, today)
+    return max(moment.date(), today) if moment is not None else today
+
+
+def next_check_at(db: Session, store: str) -> datetime | None:
+    """Cuándo (hora local) se consultará sola; si ya ha pasado (estaba apagada), ahora."""
+    moment = due_at(db, store)
+    return None if moment is None else max(moment, local_now().replace(second=0, microsecond=0))
 
 
 def blocked_today(db: Session, store: str, today: date | None = None) -> str | None:
@@ -719,6 +801,7 @@ def like(db: Session, item: ShopItem) -> None:
     item.expires_at = now + timedelta(days=LIKED_DAYS)
     db.commit()
     rescore_pending(db)
+    top_up_soon()  # quedan menos por ver: se repone la reserva en segundo plano
 
 
 def dislike(db: Session, item: ShopItem) -> None:
@@ -730,6 +813,7 @@ def dislike(db: Session, item: ShopItem) -> None:
     item.can_undo = True
     db.commit()
     rescore_pending(db)
+    top_up_soon()
 
 
 def set_reason(db: Session, item: ShopItem, reason: str | None) -> None:
@@ -811,24 +895,40 @@ def store_reference(item: ShopItem) -> str | None:
 
 
 def colors_of(item: ShopItem) -> list[dict] | None:
-    """Los colores entre los que se puede elegir, para la interfaz: [{"product_ref", "name", "hex",
-    "current"}]. Vacío si solo existe en uno; None si aún no se sabe (item guardado antes de que se
-    apuntaran: `ensure_colors` lo rellena)."""
+    """Los colores del producto, para la interfaz: [{"product_ref", "name", "hex", "current",
+    "available", "url"}]. Vacío si solo existe en uno; None si aún no se sabe (item guardado antes de
+    que se apuntaran: `ensure_colors` lo rellena).
+
+    `available`: se puede ver ya. En las tiendas que no pueden traer un color al momento (JD Sports, con
+    navegador: `prepared_colors`) solo los ya preparados (ver `prepare_colors`); los demás se enseñan
+    apagados, con el enlace a la tienda, y van detrás de los disponibles. En el resto, todos."""
     if item.siblings is None:
         return None
-    if len(item.siblings) < 2:
+    siblings = item.siblings
+    if len(siblings) < 2:
         return []
+    ready: set[str] | None = None
+    if getattr(shops.CONNECTORS.get(item.store), "prepared_colors", False):
+        db = object_session(item)
+        others = [s["product_ref"] for s in siblings if s.get("product_ref") != item.product_ref]
+        ready = set()
+        if db is not None and others:
+            ready = {row.product_ref for row in db.scalars(select(ShopItem).where(ShopItem.product_ref.in_(others)))
+                     if _color_ready(db, row)}
     foreign = _foreign(item.store, item.url)
-    return [
+    colors = [
         {
             "product_ref": sibling["product_ref"],
             "name": color_name(sibling.get("name"), sibling.get("name_es"), foreign),
             # Sin tono de la tienda, el de nuestra paleta que mejor le va al nombre.
             "hex": sibling.get("hex") or catalog.COLOR_HEX[estimate_color(sibling.get("name"))],
             "current": sibling["product_ref"] == item.product_ref,
+            "available": ready is None or sibling["product_ref"] == item.product_ref or sibling["product_ref"] in ready,
+            "url": sibling.get("url") or item.url,
         }
-        for sibling in sorted(item.siblings, key=lambda sibling: sibling["product_ref"])
+        for sibling in sorted(siblings, key=lambda sibling: sibling["product_ref"])
     ]
+    return sorted(colors, key=lambda color: not color["available"])  # estable: el orden de siempre dentro
 
 
 def color_name(store_color: str | None, translated: str | None, foreign: bool, palette: str | None = None) -> str:
@@ -988,41 +1088,119 @@ def _round_robin(queues: list[list]):
                 yield queue[position]
 
 
-def _varied(entries: list[tuple], head: int) -> list[tuple]:
+_MODEL_SKIP = _STOP_WORDS | {"homme", "hombre", "unisex", "unisexe", "mixte", "pour", "with", "and"}
+
+
+def model_keys(row) -> tuple[str, str]:
+    """(modelo, familia) de un producto, por su nombre, para no amontonar lo mismo en una tanda. Sin
+    marca: el modelo son las tres primeras palabras que cuentan y la familia, las dos primeras
+    («pantalon chino slim» / «pantalon chino»). Con marca: la marca y dos palabras / la marca y una
+    («nike air force» para «Air Force 1 '07» y «Air Force 1 Low» / «nike air»). Sin palabras que
+    cuenten, vacíos (no se compara)."""
+    colour = set(re.findall(r"[a-z0-9]+", norm(getattr(row, "store_color", "") or "")))
+    words = [
+        w for w in re.findall(r"[a-z0-9]+", norm(row.name))
+        if w not in _MODEL_SKIP and w not in colour and (len(w) >= 3 or any(ch.isdigit() for ch in w))
+    ]
+    brand = brand_family(getattr(row, "brand", None)) or ""
+    brand = norm(brand)
+    words = [w for w in words if w not in brand.split()]
+    if not words:
+        return "", ""
+    # Con marca (zapatillas), el modelo son sus dos primeras palabras («Boston Suede», «Boston Birkoflor»
+    # son el mismo zueco; «Air Force 1 Low» y «'07» la misma zapatilla) y la familia, la primera.
+    size = 2 if brand else 3
+    head = " ".join([brand, *words[:size]]).strip()
+    family = " ".join([brand, *words[: size - 1]]).strip() if len(words) >= size - 1 and (brand or len(words) >= 2) else ""
+    return head, family
+
+
+# Al elegir qué candidatos se traen, cada repetido baja (solo para elegir) a los que quedan iguales:
+TYPE_STEP = 1.5  # por cada uno ya elegido del mismo tipo de prenda (que no salgan 40 pantalones)
+MODEL_STEP = 12.0  # por cada uno ya elegido del mismo modelo (el mismo nombre en otro color, 8 Air Force 1)
+BRAND_STEP = 4.0  # por cada uno ya elegido de la misma marca (en las tiendas de varias marcas)
+FAMILY_STEP = 10.0  # por cada uno ya elegido de la misma familia (casi el mismo nombre, el mismo modelo de una marca)
+
+
+class _Variety:
+    """Lo ya elegido (o ya pendiente de ver), para que lo siguiente no repita tipo, color, sección ni modelo."""
+
+    def __init__(self, rows=()):
+        self.counts: dict[tuple, int] = {}
+        for row in rows:
+            self.add(row)
+
+    def _keys(self, row) -> list[tuple]:
+        model, family = model_keys(row)
+        keys = [("tc", row.type, row.color), ("t", row.type), ("s", row.store, row.section)]
+        if model:
+            keys.append(("m", model))
+        if family:
+            keys.append(("f", family))
+        brand = brand_family(getattr(row, "brand", None))
+        if brand:
+            keys.append(("b", brand))
+        return keys
+
+    def add(self, row) -> None:
+        for key in self._keys(row):
+            self.counts[key] = self.counts.get(key, 0) + 1
+
+    def penalty(self, row) -> float:
+        steps = {"tc": REPEAT_STEP, "t": TYPE_STEP, "s": SECTION_STEP, "m": MODEL_STEP, "f": FAMILY_STEP,
+                 "b": BRAND_STEP}
+        return sum(steps[key[0]] * self.counts.get(key, 0) for key in self._keys(row))
+
+
+def _varied(entries: list[tuple], head: int, variety: "_Variety | None" = None) -> list[tuple]:
     """Ordena por nota, pero sin amontonar lo mismo: cada elegido baja un poco (solo para elegir) a los
-    que quedan de su mismo tipo y color y de su misma categoría de la tienda. Así una categoría floja
-    no entra a la fuerza y una buena no lo llena todo. Solo se afina la cabeza (`head`): el resto va por nota.
+    que quedan de su mismo tipo y color, de su mismo tipo, de su misma categoría de la tienda y, sobre
+    todo, de su mismo modelo (ver `model_keys`). Así una categoría floja no entra a la fuerza y una
+    buena no lo llena todo. Solo se afina la cabeza (`head`): el resto va por nota. `variety` trae lo
+    que ya está pendiente de ver, para que una reposición no repita lo que ya hay en la cola.
+
+    Con miles de candidatos solo se miran los mejores (cinco veces la cabeza, y al menos 200): lo que
+    queda por debajo no llegaría a entrar aunque los de arriba se penalizaran.
     """
-    left = sorted(entries, key=lambda entry: (-entry[0], entry[2].product_ref))
+    ordered = sorted(entries, key=lambda entry: (-entry[0], entry[2].product_ref))
+    # Los mejores en general y, además, los mejores de cada tipo de prenda: si no, con mil pantalones
+    # empatados arriba no entraría nada más a competir.
+    pool_size = max(200, head * 5)
+    chosen, by_type = set(range(min(pool_size, len(ordered)))), {}
+    for index, entry in enumerate(ordered):
+        seen = by_type.setdefault(entry[2].type, 0)
+        if seen < head:
+            chosen.add(index)
+            by_type[entry[2].type] = seen + 1
+    left = [entry for index, entry in enumerate(ordered) if index in chosen]
+    rest = [entry for index, entry in enumerate(ordered) if index not in chosen]
     picked: list[tuple] = []
-    same: dict[tuple, int] = {}
-    sections: dict[str, int] = {}
+    variety = variety or _Variety()
     while left and len(picked) < head:
-        def worth(entry: tuple) -> float:
-            row = entry[2]
-            return entry[0] - REPEAT_STEP * same.get((row.type, row.color), 0) - SECTION_STEP * sections.get(row.section, 0)
-
-        best = max(range(len(left)), key=lambda i: (worth(left[i]), -i))
+        best = max(range(len(left)), key=lambda i: (left[i][0] - variety.penalty(left[i][2]), -i))
         entry = left.pop(best)
-        row = entry[2]
-        same[(row.type, row.color)] = same.get((row.type, row.color), 0) + 1
-        sections[row.section] = sections.get(row.section, 0) + 1
+        variety.add(entry[2])
         picked.append(entry)
-    return picked + left
+    return picked + left + rest
 
 
-def _ranked(context: "Context", rows: list[ShopItem], head: int) -> list[tuple]:
+def _ranked(context: "Context", rows: list[ShopItem], head: int, variety_rows=()) -> list[tuple]:
     """Los candidatos en el orden en que se intentará traerlos, como (nota, motivos, fila).
 
     El cupo se reparte a partes iguales entre tiendas, para que un catálogo grande no entierre a los
     demás, y dentro de cada tienda manda la nota con algo de variedad (`_varied`). Es el orden de
     traída: al enseñarlas, las propuestas van por nota, vengan de la tienda que vengan.
+    `variety_rows`: lo que ya está pendiente de ver (una reposición no debe repetirlo).
     """
     by_store: dict[str, list[tuple]] = {}
     for row in rows:
         value, reasons = context.score(row)
         by_store.setdefault(row.store, []).append((value, reasons, row))
-    return list(_round_robin([_varied(entries, head) for entries in by_store.values()]))
+    pending = list(variety_rows)
+    return list(_round_robin([
+        _varied(entries, head, _Variety([r for r in pending if r.store == store]))
+        for store, entries in by_store.items()
+    ]))
 
 
 def _store_candidate(db: Session, row: ShopItem | None, product, today: date) -> ShopItem:
@@ -1048,6 +1226,7 @@ def _store_candidate(db: Session, row: ShopItem | None, product, today: date) ->
     if not described:
         row.season, row.details = product.season, product.details
     row.last_checked_at = None  # todavía no se le ha pedido la ficha esta semana
+    row.listed_at = now_utc()
     return row
 
 
@@ -1065,10 +1244,26 @@ def candidates_left(db: Session, today: date | None = None, store: str | None = 
     return [row for row in db.scalars(stmt) if not out_of_season(row, today)]
 
 
-def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, today: date, failed) -> list[float]:
+def _detail_for(row, offline: bool = False):
+    """La ficha de un candidato: la que guardó el listado si la tienda la deja (sin volver a la web), y
+    si no, la de la tienda. `offline`: en las tiendas de navegador, solo la guardada (None si no hay)."""
+    detail = shops.cached_detail(row.store, row.store_data or {})
+    if detail is not None:
+        return detail
+    if offline and shops.needs_browser(row.store):
+        return None
+    return shops.CONNECTORS[row.store].detail(row.store_data)
+
+
+def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, today: date, failed,
+             offline: bool = False, stop=None, on_step=None) -> list[float]:
     """Baja la ficha y las fotos de los mejores candidatos hasta tener `limit` propuestas nuevas, y
     devuelve sus notas. Si uno no sirve (ya no existe, sin foto, sin tallas o, leída la descripción,
     fuera de temporada) entra el siguiente, con un tope de peticiones por educación con la tienda.
+
+    La ficha sale, si se puede, de lo que guardó el listado (Pull&Bear, Bershka, JD Sports): así no se
+    abre el navegador para nada y solo se bajan las fotos de su CDN. Con `offline` (la reserva, de día)
+    las tiendas de navegador que no guardaron nada se saltan. `stop()` dice si hay que parar (cancelada).
     """
     scores: list[float] = []
     attempts = 0
@@ -1079,16 +1274,23 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
     for _value, _reasons, row in ranked:
         if len(scores) >= limit or attempts >= limit * 2:
             break
+        if stop is not None and stop():
+            break
         if row.store in stopped:
             continue
         if row.product_ref in family:
             row.last_checked_at = now_utc()  # esta semana ya no se intenta: sale como color de otra
             db.commit()
             continue
-        attempts += 1
         connector = shops.CONNECTORS[row.store]
+        attempts += 1
+        if on_step is not None and attempts <= limit:
+            on_step()
         try:
-            detail = connector.detail(row.store_data)
+            detail = _detail_for(row, offline)
+            if detail is None and offline and shops.needs_browser(row.store):
+                attempts -= 1
+                continue  # sin lo del listado no se abre el navegador de día: ya llegará de noche
             row.last_checked_at = now_utc()
             if detail is None or not detail.photo_urls or not detail.in_stock:
                 db.commit()
@@ -1156,14 +1358,60 @@ def _failure_log(result: dict):
     return failed
 
 
-def refresh_store(db: Session, store: str, today: date | None = None, limit: int | None = None) -> dict:
-    """Consulta UNA tienda: guarda su catálogo como candidatos, deja los mejores como propuestas y
-    revisa sus «me gusta».
+def _resumable(cycle, today: date) -> bool:
+    """¿Se puede retomar el recorrido que quedó a medias? Sí si empezó hace menos de una semana."""
+    if not isinstance(cycle, dict) or not isinstance(cycle.get("done"), list):
+        return False
+    start = _parse_day(cycle.get("start"))
+    return start is not None and 0 <= (today - start).days < 7
+
+
+def _start_cycle(db: Session, store: str, today: date) -> int:
+    """Lo que se hace una vez por recorrido, en cuanto la tienda responde: las propuestas de tandas
+    anteriores que no se llegaron a valorar se retiran (las de la reserva que nunca se enseñaron vuelven
+    a ser candidatos), los colores apartados también, y se cierra la posibilidad de deshacer.
+    Devuelve cuántas caducaron."""
+    expired = 0
+    stale = select(ShopItem).where(
+        ShopItem.store == store, ShopItem.status.in_((NEW, VARIANT)), ShopItem.batch < today
+    )
+    for item in db.scalars(stale):
+        was_new = item.status == NEW
+        _retire_unseen(item)
+        if item.status == CANDIDATE:
+            item.last_checked_at = None  # se puede volver a proponer
+        elif was_new:
+            expired += 1
+    _set(db, K_MORE, None)
+    db.commit()
+    _close_undo(db, store)
+    return expired
+
+
+def _stale(row: ShopItem, cycle_at: datetime) -> bool:
+    """¿No ha salido en el listado desde que empezó el recorrido?"""
+    listed = _aware(row.listed_at)
+    return listed is None or listed < cycle_at
+
+
+def refresh_store(db: Session, store: str, today: date | None = None, limit: int | None = None,
+                  run: "shops.crawl.Crawl | None" = None) -> dict:
+    """Consulta UNA tienda: recorre su catálogo ENTERO (todas las páginas de cada sección activa, solo
+    datos, sin fotos) y lo guarda como candidatos; puntúa todos los candidatos con lo aprendido y solo
+    de los mejores baja ficha y fotos (su parte de la tanda); y revisa sus «me gusta».
+
+    `run` es el recorrido (pausas, topes, avance, cancelación; ver shops/crawl.py). Sin él, sin pausas.
+
+    Si se corta a medias (una sección que falla, un bloqueo, la cancelación), lo leído se guarda y la
+    próxima vez se retoma por la sección donde iba (`cycle` en el estado de la tienda), más despacio si
+    fue un bloqueo. Solo cuando todas las secciones se han leído enteras cuenta como consulta hecha
+    (`ok_day`) y se retiran los candidatos que la tienda ya no lista.
 
     Nunca lanza por culpa de la tienda: lo que falla se apunta, se guarda en el estado de la tienda
     (`store_status`) y se sigue con lo demás.
     """
     now = now_utc()
+    started_clock = time.monotonic()
     today = today or outfits.local_today()
     # El cupo de la tanda se reparte entre las tiendas activadas.
     limit = math.ceil((config.SHOP_BATCH_SIZE if limit is None else limit) / max(1, len(enabled_stores(db))))
@@ -1172,6 +1420,7 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
     result = {
         "at": now.isoformat(), "day": today.isoformat(), "ok": False, "ok_day": previous.get("ok_day"),
         "found": 0, "added": 0, "expired": 0, "failed": 0, "error": None, "errors": [],
+        "complete": False, "cancelled": False, "sections": 0, "sections_total": 0, "pages": 0, "seconds": 0,
     }
     errors: list[str] = result["errors"]
     failed = _failure_log(result)
@@ -1184,7 +1433,7 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
     why = shops.unavailable(store) or blocked_today(db, store, today)
     if why:
         message = f"{connector.name}: {why}"
-        result.update(error=message, errors=[message], failed=1)
+        result.update(error=message, errors=[message], failed=1, cycle=previous.get("cycle"))
         if previous.get("blocked_day") == today.isoformat() or shops.browser.blocked(store):
             result["blocked_day"] = today.isoformat()
         _save_status(db, store, result)
@@ -1192,71 +1441,172 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
         log.info("Compras: %s no se consulta: %s", store, why)
         return result
 
-    # Lo que ya se enseñó alguna vez (sea cual sea su estado) no vuelve; los candidatos se renuevan.
-    shown = set(db.scalars(select(ShopItem.product_ref).where(ShopItem.status != CANDIDATE)))
-    old = {
-        row.product_ref: row
-        for row in db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.status == CANDIDATE))
-    }
-    fresh: dict[str, ShopItem] = {}
-
-    # 1. Listados: una petición por categoría. Solo datos del listado, sin fotos ni detalle.
+    run = run or shops.crawl.Crawl(store)
+    progress = run.progress
     active = active_categories(db, store)
-    listed: set[str] = set()
-    stopped = False  # la tienda ha bloqueado o el navegador no arranca: se para con ella
-    for slug in active:
+    cycle = previous.get("cycle") if _resumable(previous.get("cycle"), today) else None
+    resumed = cycle is not None
+    if cycle is None:
+        cycle = {"start": today.isoformat(), "at": now.isoformat(), "done": [], "slow": False}
+    elif cycle.get("slow"):
+        # La última vez la tienda bloqueó a mitad: al retomar se va más despacio.
+        run.pause = tuple(value * config.SHOP_SLOW_FACTOR for value in run.pause)
+    cycle_at = _aware(_parse_moment(cycle.get("at"))) or now
+    covered = getattr(connector, "covered_by", None) or {}
+    # Las secciones contenidas en otras (marcas, novedades), al final: si las que las contienen se leen
+    # enteras, ya no hace falta recorrerlas.
+    todo = sorted((s for s in active if s not in cycle["done"]), key=lambda s: s in covered)
+    progress.update(store=store, name=connector.name, phase="catalogo", section=None, section_label=None,
+                    resumed=resumed)
+    run.start_sections(len(active), len(active) - len(todo))
+    result["sections_total"] = len(active)
+
+    started = resumed  # caducar lo de la tanda anterior ya se hizo al empezar este recorrido
+    shown: set[str] | None = None
+    old: dict[str, ShopItem] = {}
+    fresh: set[str] = set()
+    listed_shown: dict[str, object] = {}  # lo ya enseñado que sigue en el listado: ref -> producto
+    stop_store = cancelled = False
+    section_pages: dict[str, int] = dict(previous.get("section_pages") or {})
+
+    def load_rows() -> None:
+        nonlocal shown, old
+        if shown is None:
+            shown = set(db.scalars(select(ShopItem.product_ref).where(ShopItem.status != CANDIDATE)))
+            old = {
+                row.product_ref: row
+                for row in db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.status == CANDIDATE))
+            }
+
+    def drop_section(slug: str) -> None:
+        """La sección se ha leído entera: fuera sus candidatos que no han salido en este recorrido."""
+        for ref, row in list(old.items()):
+            if row.section == slug and ref not in fresh and _stale(row, cycle_at):
+                db.delete(row)
+                del old[ref]
+
+    def save_cycle() -> None:
+        _save_status(db, store, {**(store_status(db, store) or previous), "day": today.isoformat(), "cycle": cycle,
+                                     "section_pages": section_pages})
+        db.commit()
+
+    for slug in todo:
         label = connector.categories.get(slug, slug)
+        container = covered.get(slug)
+        if container and all(c in active and c in cycle["done"] for c in container):
+            load_rows()
+            drop_section(slug)
+            cycle["done"].append(slug)
+            run.section_end(skipped=True)
+            save_cycle()
+            continue
+        run.section_start(slug, label)
+        # Las páginas que tuvo la última vez: así la barra sabe el total desde la primera página (si
+        # la tienda lo dice, como JD o Pull&Bear, manda lo que diga).
+        known_pages = (previous.get("section_pages") or {}).get(slug)
+        if known_pages:
+            run.section_total(known_pages)
+        partial = None
         try:
             products = connector.list_category(slug)
+        except Partial as exc:
+            products, partial = exc.products, exc.cause
+        except Cancelled:
+            cancelled = True
+            break
         except (BlockedError, BrowserUnavailable) as exc:
             failed(connector.name, exc)
             if isinstance(exc, BlockedError):
                 result["blocked_day"] = today.isoformat()
-            stopped = True
+                cycle["slow"] = True
+            stop_store = True
             break
         except Exception as exc:  # ni la tienda ni un conector roto pueden tumbar la tanda
             if not isinstance(exc, ShopError):
                 log.exception("Compras: error inesperado en %s/%s", store, slug)
             failed(label, exc)
+            run.section_end(skipped=True)
             continue
         result["ok"] = True
+        if not started:
+            result["expired"] += _start_cycle(db, store, today)
+            started = True
+        load_rows()
         result["found"] += len(products)
-        listed.add(slug)
         for product in products:
             ref = product.product_ref
-            if ref not in shown and ref not in fresh:  # la misma prenda puede salir en dos categorías
-                fresh[ref] = _store_candidate(db, old.get(ref), product, today)
+            if ref in shown:
+                listed_shown.setdefault(ref, product)
+            elif ref not in fresh:  # la misma prenda puede salir en dos categorías
+                fresh.add(ref)
+                old[ref] = _store_candidate(db, old.get(ref), product, today)
+        if partial is None:
+            drop_section(slug)
+            cycle["done"].append(slug)
+            section_pages[slug] = int(progress.get("section_pages") or 0)
+            run.section_end()
+        elif isinstance(partial, Cancelled):
+            cancelled = True
+        elif isinstance(partial, (BlockedError, BrowserUnavailable)):
+            failed(connector.name, partial)
+            if isinstance(partial, BlockedError):
+                result["blocked_day"] = today.isoformat()
+                cycle["slow"] = True
+            stop_store = True
+        else:
+            failed(label, partial)
+            run.section_end()
+        save_cycle()
+        if cancelled or stop_store:
+            break
 
-    if result["ok"]:
-        # 2. Fuera lo que ya no está: los candidatos que la tienda ha retirado (los de una categoría que
-        #    hoy ha fallado se conservan), las propuestas de tandas anteriores que no se llegaron a
-        #    valorar y la posibilidad de deshacer las decisiones de la tanda anterior.
-        for ref, row in old.items():
-            if ref not in fresh and (row.section in listed or row.section not in active):
+    complete = not cancelled and all(s in cycle["done"] for s in active)
+    result["sections"] = sum(1 for s in active if s in cycle["done"])
+    if complete:
+        # Secciones que ya no interesan: fuera sus candidatos.
+        load_rows()
+        for ref, row in list(old.items()):
+            if row.section not in active and ref not in fresh:
                 db.delete(row)
-        stale = select(ShopItem).where(ShopItem.store == store, ShopItem.status == NEW, ShopItem.batch < today)
-        for item in db.scalars(stale):
-            _retire_unseen(item)
-            result["expired"] += 1
-        # Los colores apartados al elegir otro se van con su tanda, sin contar como nada.
-        aside = select(ShopItem).where(ShopItem.store == store, ShopItem.status == VARIANT, ShopItem.batch < today)
-        for item in db.scalars(aside):
-            _retire_unseen(item)
-        _set(db, K_MORE, None)
         db.commit()
-        _close_undo(db, store)
+        result["ok"] = result["complete"] = True
+    result["cancelled"] = cancelled
 
-        # 3. El detalle y las fotos, solo de los mejores.
-        context = Context.load(db)
-        in_season = [row for row in fresh.values() if not out_of_season(row, today)]
-        result["added"] = len(_promote(db, context, _ranked(context, in_season, limit * 2), limit, today, failed))
+    # El detalle y las fotos, solo de los mejores de TODO el catálogo guardado (también lo leído otros
+    # días si se ha retomado). Lo que ya está pendiente de este recorrido cuenta para su cupo.
+    blocked_now = bool(result.get("blocked_day") or shops.browser.blocked(store))
+    if result["ok"] and not cancelled and not blocked_now:
+        run.phase("eligiendo")
+        if _lock.acquire(timeout=600):
+            try:
+                pending = list(db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.status == NEW)))
+                in_cycle = sum(1 for item in pending if item.batch and item.batch >= _parse_day(cycle["start"]))
+                want = max(0, limit - in_cycle)
+                if want:
+                    context = Context.load(db)
+                    rows = candidates_left(db, today, store=store)
+                    ranked = _ranked(context, rows, want * 2, pending)
+                    run.phase("propuestas", want)
+                    result["added"] = len(_promote(db, context, ranked, want, today, failed,
+                                                   stop=run.cancel.is_set, on_step=run.step))
+            finally:
+                _lock.release()
 
-    # 4. Los «me gusta» de esta tienda: ¿siguen ahí y queda alguna talla?
-    stopped = stopped or bool(shops.browser.blocked(store))
+    # Los «me gusta» de esta tienda: ¿siguen ahí y queda alguna talla? Si han salido en el listado, con lo
+    # que dice el listado; si no, se pide su ficha.
+    stopped = stop_store or cancelled or blocked_now
     liked = [] if stopped else list(db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.status == LIKED)))
     for item in liked:
+        listed = listed_shown.get(item.product_ref)
         try:
-            detail = connector.detail(item.store_data)
+            detail = None
+            if listed is not None:
+                item.store_data = {**(item.store_data or {}), **(listed.store_data or {})}
+                detail = shops.cached_detail(store, item.store_data)
+            if detail is None:
+                detail = connector.detail(item.store_data)
+            if detail is not None and detail.in_stock and detail.photo_urls and not _has_photos(item):
+                item.photos = _save_photos(connector, detail.photo_urls)  # buscado sin foto: ya la tiene
         except (BlockedError, BrowserUnavailable) as exc:
             failed(connector.name, exc)
             if isinstance(exc, BlockedError):
@@ -1279,8 +1629,11 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
             _detail_color(item, detail)  # y lo que la ficha sepa para volver a pedirla (Pull&Bear, Bershka)
         db.commit()
 
-    if result["ok"]:
+    if complete:
         result["ok_day"] = today.isoformat()
+        result["cycle"] = None
+    else:
+        result["cycle"] = cycle
     if shops.browser.blocked(store):
         result["blocked_day"] = today.isoformat()
     # Un bloqueo o un navegador que no arranca va primero: es lo que hay que ver en el panel.
@@ -1290,24 +1643,43 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
         errors.insert(0, first)
     result["error"] = errors[0] if errors else None
     result["errors"] = errors[:20]
+    result["pages"] = int(progress.get("pages", 0))
+    result["section_pages"] = section_pages
+    result["seconds"] = round(time.monotonic() - started_clock)
     _save_status(db, store, result)
     db.commit()
     log.info(
-        "Compras: %s consultada (%s vistos, %s nuevos, %s caducados, %s peticiones fallidas)",
-        store, result["found"], result["added"], result["expired"], result["failed"],
+        "Compras: %s consultada (%s vistos, %s/%s secciones, %s páginas, %s nuevos, %s caducados, %s fallos, %s s%s)",
+        store, result["found"], result["sections"], result["sections_total"], result["pages"], result["added"],
+        result["expired"], result["failed"], result["seconds"], ", cancelada" if cancelled else "",
     )
     return result
 
 
-def refresh(db: Session, today: date | None = None, limit: int | None = None, stores: list[str] | None = None) -> dict:
-    """Una tanda: consulta las tiendas indicadas (por defecto, todas las activadas), una detrás de otra."""
-    total = {"ok": False, "found": 0, "added": 0, "expired": expire_old(db), "failed": 0, "errors": []}
+def refresh(db: Session, today: date | None = None, limit: int | None = None, stores: list[str] | None = None,
+            night: bool = False, cancel: threading.Event | None = None, progress: dict | None = None) -> dict:
+    """Una consulta: recorre el catálogo de las tiendas indicadas (por defecto, todas las activadas),
+    una detrás de otra. `night`: la automática, con las pausas largas de la noche; si no («Consultar
+    ahora»), el mismo recorrido con pausas algo menores. `cancel` la corta (se guarda lo leído) y
+    `progress` es el dict donde se va apuntando por dónde va (lo lee el panel)."""
+    total = {"ok": False, "found": 0, "added": 0, "expired": expire_old(db), "failed": 0, "errors": [],
+             "cancelled": False}
     clean_lookups(db, LOOKUP_KEEP_ON_REFRESH)  # antes de mirar qué se ha enseñado ya: un «buscado» no cuenta
-    for store in stores if stores is not None else enabled_stores(db):
-        if store not in shops.CONNECTORS:
-            continue
+    pause = config.SHOP_NIGHT_PAUSE if night else config.SHOP_DAY_PAUSE
+    cancel = cancel or threading.Event()
+    queue = [store for store in (stores if stores is not None else enabled_stores(db)) if store in shops.CONNECTORS]
+    for index, store in enumerate(queue):
+        if cancel.is_set():
+            total["cancelled"] = True
+            break
+        state = progress if progress is not None else {}
+        state.clear()
+        state.update(started_at=now_utc().isoformat(), night=night, pages=0, products=0, store=store,
+                     store_index=index + 1, stores_total=len(queue))
+        run = shops.crawl.Crawl(store, pause=pause, cancel=cancel, progress=state)
         try:
-            result = refresh_store(db, store, today, limit)
+            with shops.crawl.running(run):
+                result = refresh_store(db, store, today, limit, run)
         except Exception:  # un fallo nuestro con una tienda no impide consultar las demás
             log.exception("Compras: la consulta de %s falló", store)
             db.rollback()
@@ -1323,6 +1695,7 @@ def refresh(db: Session, today: date | None = None, limit: int | None = None, st
         for key in ("found", "added", "expired", "failed"):
             total[key] += result[key]
         total["errors"] += result["errors"]
+        total["cancelled"] = total["cancelled"] or bool(result.get("cancelled"))
     return total
 
 
@@ -1342,16 +1715,10 @@ def more(db: Session, store: str | None = None, category: str | None = None, lim
     result = {"at": now_utc().isoformat(), "added": 0, "mean": None, "low": False, "failed": 0, "error": None,
               "errors": []}
     context = Context.load(db)
-    ranked = _ranked(context, candidates_left(db, today, store, category), limit * 2)
+    rows = [row for row in candidates_left(db, today, store, category) if row.store not in _crawling_stores()]
+    ranked = _ranked(context, rows, limit * 2, _pending(db))
     scores = _promote(db, context, ranked, limit, today, _failure_log(result))
-    for key, connector in shops.CONNECTORS.items():
-        why = shops.browser.blocked(key)
-        status = store_status(db, key) or {}
-        if why and status.get("blocked_day") != today.isoformat():
-            # Ha bloqueado en este «Ver más»: que el panel lo diga y que hoy no se insista.
-            message = f"{connector.name}: {why}"
-            _save_status(db, key, {**status, "blocked_day": today.isoformat(), "error": message,
-                                   "errors": [message, *(status.get("errors") or [])][:20]})
+    _note_blocks(db, today)
     if scores:
         result["added"] = len(scores)
         result["mean"] = round(sum(scores) / len(scores), 1)
@@ -1368,6 +1735,152 @@ def more(db: Session, store: str | None = None, category: str | None = None, lim
 def last_more(db: Session) -> dict | None:
     """Cómo fue el último «Ver más» desde la última consulta semanal, o None si no ha habido."""
     return _get(db, K_MORE)
+
+
+def _note_blocks(db: Session, today: date) -> None:
+    """Si una tienda ha bloqueado fuera de la consulta («Ver más», la reserva): que el panel lo diga y
+    que hoy no se insista."""
+    for key, connector in shops.CONNECTORS.items():
+        why = shops.browser.blocked(key)
+        status = store_status(db, key) or {}
+        if why and status.get("blocked_day") != today.isoformat():
+            message = f"{connector.name}: {why}"
+            _save_status(db, key, {**status, "blocked_day": today.isoformat(), "error": message,
+                                   "errors": [message, *(status.get("errors") or [])][:20]})
+    db.commit()
+
+
+def _pending(db: Session) -> list[ShopItem]:
+    """Las propuestas que quedan por ver, de las tiendas activadas."""
+    return list(db.scalars(
+        select(ShopItem).where(ShopItem.status == NEW, ShopItem.store.in_(enabled_stores(db)))
+    ))
+
+
+# ---------- La reserva: fotos por adelantado
+
+
+def prepare_colors(db: Session, items: list[ShopItem] | None = None, limit: int | None = None) -> int:
+    """Deja preparados (ficha y fotos) otros colores de las propuestas pendientes en las tiendas que no
+    pueden traer un color al momento (`prepared_colors`: JD Sports, que se lee con navegador). Solo los
+    que han salido en el listado (de hombre y con talla): se sacan de lo que guardó el listado y las
+    fotos de su CDN, sin navegador. Quedan como «variante» (no se proponen aparte ni cuentan) y, si
+    nunca se llegan a ver, vuelven a ser candidatos con la siguiente consulta. Hasta `SHOP_COLOR_PREP`
+    colores por propuesta, contando el que se ve. Devuelve cuántos se han preparado."""
+    limit = config.SHOP_COLOR_PREP if limit is None else limit
+    stores = [key for key, c in shops.CONNECTORS.items() if getattr(c, "prepared_colors", False)]
+    if items is None:
+        items = list(db.scalars(select(ShopItem).where(ShopItem.status == NEW, ShopItem.store.in_(stores))))
+    prepared = 0
+    for item in items:
+        if item.store not in stores or not item.siblings or blocked_today(db, item.store):
+            continue
+        others = [s["product_ref"] for s in item.siblings if s.get("product_ref") and s["product_ref"] != item.product_ref]
+        if not others:
+            continue
+        rows = {row.product_ref: row for row in db.scalars(select(ShopItem).where(ShopItem.product_ref.in_(others)))}
+        ready = sum(1 for ref in others if ref in rows and _color_ready(db, rows[ref]))
+        connector = shops.CONNECTORS[item.store]
+        for ref in others:
+            if ready >= limit - 1:
+                break
+            row = rows.get(ref)
+            if row is None or row.status != CANDIDATE:
+                continue
+            detail = shops.cached_detail(row.store, row.store_data or {})
+            if detail is None or not detail.photo_urls or not detail.in_stock:
+                continue
+            try:
+                photos = _save_photos(connector, detail.photo_urls)
+            except ShopError as exc:
+                log.info("Compras: no se pudo preparar el color %s: %s", ref, exc)
+                continue
+            row.status, row.prev_status, row.batch, row.photos = VARIANT, CANDIDATE, item.batch, photos
+            row.sizes, row.in_stock, row.can_undo = detail.sizes, True, False
+            row.first_seen_at = now_utc()
+            _apply_detail(row, detail)
+            db.commit()
+            ready += 1
+            prepared += 1
+    return prepared
+
+
+def _color_ready(db: Session, row: ShopItem) -> bool:
+    """¿Se puede enseñar ese color al momento (sin ir a la tienda)?"""
+    return bool(already(db, row)) or (row.status in (NEW, SEARCHED, VARIANT) and _has_photos(row))
+
+
+def _fill_photos(db: Session) -> int:
+    """Lo que el buscador encontró en lo guardado sin poder bajar sus fotos (un producto de una tienda
+    de navegador sin datos del listado) y se guardó o se dejó buscado: si ya se puede, sus fotos."""
+    filled = 0
+    waiting = db.scalars(select(ShopItem).where(ShopItem.status.in_((SEARCHED, LIKED))))
+    for item in waiting:
+        if _has_photos(item) or not reachable(db, item.store):
+            continue
+        try:
+            detail = _detail_for(item, offline=True)
+            if detail is None or not detail.photo_urls:
+                continue
+            item.photos = _save_photos(shops.CONNECTORS[item.store], detail.photo_urls)
+        except Exception as exc:
+            if not isinstance(exc, ShopError):
+                log.exception("Compras: error inesperado al bajar las fotos de %s", item.product_ref)
+            continue
+        if not item.sizes:
+            item.sizes = detail.sizes
+        _apply_detail(item, detail)
+        db.commit()
+        filled += 1
+    return filled
+
+
+def needs_top_up(db: Session) -> bool:
+    """¿Quedan menos propuestas por ver de las que debe haber en la reserva, y algo con lo que reponer?"""
+    stores = enabled_stores(db)
+    if not stores:
+        return False
+    pending = db.scalar(select(func.count()).select_from(ShopItem).where(
+        ShopItem.status == NEW, ShopItem.store.in_(stores))) or 0
+    if pending >= config.SHOP_RESERVE_LOW:
+        return False
+    return (db.scalar(select(func.count()).select_from(ShopItem).where(
+        ShopItem.status == CANDIDATE, ShopItem.store.in_(stores), ShopItem.last_checked_at.is_(None))) or 0) > 0
+
+
+FILTER_RESERVE = 10  # propuestas que se reponen de un tipo cuando se agota con el filtro puesto
+
+
+def top_up(db: Session, today: date | None = None, target: int | None = None, store: str | None = None,
+           category: str | None = None) -> dict:
+    """Repone la reserva: baja ficha y fotos de los mejores candidatos (puntuados con lo de ahora y sin
+    repetir lo que ya está en la cola) hasta tener `target` propuestas por ver; prepara los colores de
+    las tiendas que lo necesitan y baja las fotos que esperaban. Las tiendas de navegador solo con lo
+    que guardó el listado: de día no se abre el navegador. No apunta nada en el panel salvo un bloqueo.
+
+    Con `store` o `category` (el filtro de Descubrir se ha quedado sin propuestas), repone solo de eso,
+    hasta FILTER_RESERVE.
+    """
+    today = today or outfits.local_today()
+    filtered = store is not None or category is not None
+    target = (FILTER_RESERVE if filtered else config.SHOP_RESERVE) if target is None else target
+    result = {"added": 0, "colors": 0, "photos": 0, "failed": 0, "errors": []}
+    pending = _pending(db)
+    mine = [p for p in pending if store in (None, p.store) and category in (None, p.category)]
+    want = target - len(mine)
+    if want > 0:
+        context = Context.load(db)
+        rows = [row for row in candidates_left(db, today, store, category) if row.store not in _crawling_stores()]
+        if rows:
+            ranked = _ranked(context, rows, want * 2, pending)
+            result["added"] = len(_promote(db, context, ranked, want, today, _failure_log(result), offline=True))
+    result["colors"] = prepare_colors(db)
+    result["photos"] = _fill_photos(db)
+    _note_blocks(db, today)
+    if result["added"] or result["colors"] or result["photos"]:
+        log.info("Compras: reserva repuesta (%s propuestas, %s colores, %s fotos)",
+                 result["added"], result["colors"], result["photos"])
+    return result
 
 
 # ---------- El buscador por referencia
@@ -1397,6 +1910,8 @@ def clean_lookups(db: Session, keep: timedelta = LOOKUP_KEEP, now: datetime | No
             continue
         _drop_photos(item)
         if item.prev_status:
+            if item.prev_status == CANDIDATE:
+                item.last_checked_at = None  # vuelve al catálogo guardado: se puede proponer
             item.status, item.prev_status, item.can_undo = item.prev_status, None, False
         else:
             db.delete(item)
@@ -1458,13 +1973,17 @@ def lookup(db: Session, query: str, today: date | None = None) -> list[ShopItem]
     query = " ".join((query or "").split())
     if not query:
         raise LookupFailed("Escribe una referencia, un enlace o qué prenda buscas")
-    # El mismo cerrojo que las tandas: una sola cosa a la vez hablando con las tiendas.
-    if not _lock.acquire(blocking=False):
-        raise LookupFailed("Ahora mismo estoy consultando el catálogo. Prueba dentro de un minuto.", "ocupado")
+    # Una búsqueda cada vez. La consulta del catálogo (que de noche dura un buen rato) no la frena: cada
+    # conector ya pide sus páginas de una en una.
+    if not _lookup_lock.acquire(blocking=False):
+        raise LookupFailed("Ya estoy buscando otra cosa. Prueba dentro de un momento.", "ocupado")
     try:
-        items = _lookup(db, query, today or outfits.local_today())
+        today = today or outfits.local_today()
+        items = _lookup_saved(db, query, today) or _lookup(db, query, today)
     finally:
-        _lock.release()
+        _lookup_lock.release()
+    if any(not _has_photos(item) for item in items):
+        top_up_soon()  # lo que se ha quedado sin foto, en segundo plano en cuanto se pueda
     pending = [item.id for item in items if _foreign(item.store, item.url) and not item.translated]
     worker = translate_soon(pending) if pending else None
     if worker is not None:
@@ -1484,10 +2003,17 @@ def _store_fetched(db: Session, row: ShopItem | None, product, detail, photos: l
     buscador, o se ha elegido ese color desde otro). `row` es su fila, si ya existía."""
     before = row.status if row is not None else None
     row = _store_candidate(db, row, product, today)
+    return _mark_searched(db, row, before, detail, photos, context, today)
+
+
+def _mark_searched(db: Session, row: ShopItem, before: str | None, detail, photos: list[str],
+                   context: "Context", today: date) -> ShopItem:
+    """Deja una fila como «buscado» con su ficha y sus fotos (que pueden faltar: ver `_lookup_saved`)."""
     _drop_photos(row)  # las que pudiera tener de antes
     row.status, row.batch, row.photos = SEARCHED, today, photos
     # Lo que ya se había valorado vuelve a su estado si no se hace nada con ello.
-    if before in (DISCARDED, EXPIRED, BOUGHT):
+    if before in (DISCARDED, EXPIRED, BOUGHT, CANDIDATE):
+        # Un candidato del catálogo guardado vuelve a serlo (sin fotos) si no se hace nada con él.
         row.prev_status = before
     row.can_undo = False
     row.price_cents = detail.price_cents or row.price_cents
@@ -1583,7 +2109,10 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
         if connector is None:
             raise ColorFailed("Esa tienda ya no está disponible", "tienda")
         try:
-            detail = connector.detail(sibling.get("store_data") or {})
+            # Si ese color salió en el listado, su ficha sale de ahí (sin volver a la tienda).
+            detail = shops.cached_detail(item.store, target.store_data or {}) if target is not None else None
+            if detail is None:
+                detail = connector.detail(sibling.get("store_data") or {})
             if detail is None or not detail.photo_urls:
                 raise ColorFailed("Ese color ya no está en la tienda")
             photos = _save_photos(connector, detail.photo_urls)
@@ -1599,7 +2128,10 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
         # Mientras se hablaba con la tienda ha podido cambiar algo (un «me gusta» a medio camino).
         db.refresh(item)
         target = db.scalars(select(ShopItem).where(ShopItem.product_ref == product_ref)).first()
-        target = _store_fetched(db, target, _sibling_product(item, sibling), detail, photos, today, Context.load(db))
+        product = _sibling_product(item, sibling)
+        if target is not None:  # lo que guardó el listado de ese color (su instantánea) no se pierde
+            product.store_data = {**product.store_data, **(target.store_data or {})}
+        target = _store_fetched(db, target, product, detail, photos, today, Context.load(db))
     if item.status == NEW and target.status in (NEW, SEARCHED, VARIANT):
         target.status, target.batch, target.can_undo = NEW, item.batch, False
         item.status = VARIANT
@@ -1701,6 +2233,128 @@ def _lookup(db: Session, query: str, today: date) -> list[ShopItem]:
     return items
 
 
+# ---------- El buscador en lo guardado (el catálogo entero de la última consulta)
+
+_ANY_LINK = re.compile(r"(?:https?://|www\.)\S+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/\S*", re.IGNORECASE)
+_LOOKUP_SKIP = {"de", "la", "el", "en", "con", "para", "the", "and", "pour", "avec", "les", "des", "du", "le"}
+
+
+def _alnum(value) -> str:
+    return re.sub(r"[^a-z0-9]", "", norm(str(value or ""))).lstrip("0")
+
+
+def _codes(row: ShopItem) -> set[str]:
+    """Las referencias de un producto, en minúsculas y sin separadores ni ceros delante: la de la tienda
+    (3918/300/800), el código de fabricante (IF6490), la de sus fotos (807022), el id de Zara…"""
+    data = row.store_data or {}
+    values = [store_reference(row), data.get("model"), data.get("ref"), data.get("seo_id"), data.get("sku")]
+    snap = data.get("snap")
+    if isinstance(snap, dict):
+        values.append(snap.get("ref"))
+    return {code for code in map(_alnum, values) if len(code) >= 4}
+
+
+def _link_match(url: str):
+    """De un enlace de producto a cómo reconocerlo entre lo guardado: una función fila -> bool, o None si
+    no es un enlace de producto de una tienda conocida."""
+    parts = urlsplit(url if "://" in url else f"https://{url}")
+    host, path = (parts.hostname or "").lower(), parts.path
+    query = parse_qs(parts.query)
+    first = lambda key: (query.get(key) or [""])[0]  # noqa: E731
+    if "jdsports." in host and (m := re.search(r"/product/[^/]+/(\d{5,10})", path)):
+        return lambda row, ref=f"jdsports:{m.group(1)}": row.product_ref == ref
+    if host.endswith("courir.com") and (m := re.search(r"-(\d{6,8})\.html", path)):
+        return lambda row, ref=f"courir:{m.group(1)}": row.product_ref == ref
+    if host.endswith("zara.com") and (m := re.search(r"-p(\d{7,8})", path)):
+        seo, v1 = m.group(1).zfill(8), first("v1")
+        return lambda row: row.store == "zara" and str((row.store_data or {}).get("seo_id")) == seo and (
+            not v1 or str((row.store_data or {}).get("discern_id")) == v1)
+    if host.endswith("pullandbear.com") and first("pelement"):
+        bundle, color = first("pelement"), first("cS")
+        return lambda row: row.store == "pullandbear" and str((row.store_data or {}).get("bundle")) == bundle and (
+            not color or str((row.store_data or {}).get("color")) == color)
+    if host.endswith("bershka.com") and (m := re.search(r"c0p(\d+)\.html", path)):
+        bundle, color = m.group(1), first("colorId")
+        return lambda row: row.store == "bershka" and str((row.store_data or {}).get("bundle")) == bundle and (
+            not color or str((row.store_data or {}).get("color")) == color)
+    return None
+
+
+def saved_matches(db: Session, query: str) -> list[ShopItem]:
+    """Lo guardado que encaja con lo que se busca (sin preguntar a ninguna tienda): por enlace de
+    producto, por referencia o código de fabricante, o por las palabras del nombre (el de la tienda o el
+    traducido), la marca o el color. De mejor a peor nota, como mucho LOOKUP_MAX."""
+    rows = list(db.scalars(select(ShopItem).where(ShopItem.store.in_(list(shops.CONNECTORS)))))
+    link = _ANY_LINK.search(query)
+    if link:
+        match = _link_match(link.group().rstrip(".,;)"))
+        found = [row for row in rows if match(row)] if match else []
+    else:
+        bare = re.sub(r"\b(ref|r[ée]f[ée]rence|referencia|code|mod[eè]le|modelo|style)\b\.?:?", " ", query, flags=re.I)
+        code = _alnum(bare)
+        if re.search(r"\d", code) and len(code) >= 4 and not re.search(r"[^\W\d_]{3,}\s+[^\W\d_]{3,}", bare):
+            # Tiene forma de referencia: «3918/300», «03918300», «IF6490», «DD1391-100».
+            found = [row for row in rows if any(c.startswith(code) for c in _codes(row))]
+        else:
+            words = [w for w in re.findall(r"[a-z0-9]+", norm(query)) if len(w) >= 3 and w not in _LOOKUP_SKIP]
+            if not words:
+                return []
+            found = []
+            for row in rows:
+                text = norm(" ".join(filter(None, (
+                    row.name, row.name_es, row.brand, row.store_color, row.store_color_es, store_reference(row),
+                ))))
+                if all(word in text for word in words):
+                    found.append(row)
+    if not found:
+        return []
+    context = Context.load(db)
+    # Primero lo ya guardado y con fotos; después, por nota.
+    ranked = sorted(found, key=lambda row: (not already(db, row), -context.score(row)[0], row.id))
+    return ranked[:LOOKUP_MAX]
+
+
+def _lookup_saved(db: Session, query: str, today: date) -> list[ShopItem]:
+    """El buscador mira primero en lo guardado. Lo que ya tiene fotos se devuelve tal cual; a lo demás
+    (un candidato del catálogo, algo descartado o caducado) se le baja la ficha y las fotos como en el
+    buscador normal. Si es de una tienda de navegador y el listado no guardó lo necesario, sale sin foto
+    (`photos` vacío): se bajan en segundo plano en cuanto se pueda (ver `_fill_photos`).
+    [] si no hay nada guardado que encaje: entonces se pregunta a las tiendas."""
+    found = saved_matches(db, query)
+    if not found:
+        return []
+    started = time.monotonic()
+    context = Context.load(db)
+    items: list[ShopItem] = []
+    for row in found:
+        if already(db, row) or (row.status in (NEW, SEARCHED, VARIANT) and _has_photos(row)):
+            if row.status == SEARCHED:
+                row.first_seen_at = now_utc()
+                db.commit()
+            items.append(row)
+            continue
+        if time.monotonic() - started > LOOKUP_SECONDS:
+            break
+        before = row.status
+        connector = shops.CONNECTORS[row.store]
+        try:
+            detail = _detail_for(row, offline=True)
+            photos = _save_photos(connector, detail.photo_urls) if detail is not None and detail.photo_urls else []
+        except Exception as exc:
+            if not isinstance(exc, ShopError):
+                log.exception("Compras: error inesperado al traer %s de lo guardado", row.product_ref)
+            continue
+        if detail is not None and not photos:
+            continue  # sin foto de producto no hay nada que guardar
+        if detail is None and not shops.needs_browser(row.store):
+            continue  # ya no está en la tienda
+        if detail is None:
+            detail = shops.ShopDetail(price_cents=None, sizes=row.sizes or [], photo_urls=[])
+        items.append(_mark_searched(db, row, before, detail, photos, context, today))
+    log.info("Compras: búsqueda en lo guardado de «%s» (%s resultados)", query[:60], len(items))
+    return items
+
+
 # ---------- Traducción al español (lo que se enseña de las tiendas en otro idioma)
 
 TRANSLATE_STATUSES = (NEW, LIKED, SEARCHED, VARIANT)
@@ -1783,39 +2437,84 @@ def translate_soon(ids: list[int] | None = None) -> threading.Thread | None:
 
 
 # ---------- En segundo plano
+#
+# Dos clases de trabajo, cada uno con su cerrojo:
+# - La consulta del catálogo (`start_refresh`): de noche, larga (media hora o más por tienda). Una a la
+#   vez. Se puede cancelar desde el panel y deja su avance en `crawl_progress()`.
+# - Los trabajos cortos (`_lock`): «Ver más» y la reserva (fotos por adelantado). La consulta coge este
+#   mismo cerrojo solo para su parte final (bajar las propuestas), para no pisarse con ellos.
+# El buscador va aparte (`_lookup_lock`): no lo frena una consulta en marcha.
 
-_lock = threading.Lock()  # una sola tanda a la vez, sea la consulta semanal o un «Ver más»
-_running = threading.Event()
+_lock = threading.Lock()  # un trabajo corto a la vez: «Ver más» o la reserva
+_lookup_lock = threading.Lock()  # una búsqueda a la vez
+_running = threading.Event()  # hay un «Ver más» en marcha (la reserva no se enseña)
 _stop = threading.Event()
 _worker: threading.Thread | None = None
 _scheduler: threading.Thread | None = None
-_job = "consulta"  # qué es lo que está en marcha: la «consulta» del catálogo o un ver «mas»
-FIRST_CHECK_SECONDS, CHECK_EVERY_SECONDS = 30, 3600
+_job = "mas"  # qué trabajo corto está en marcha: un ver «mas» o la «reserva»
+_reserve_filter: dict | None = None  # la reposición en marcha es la de este filtro de Descubrir
+
+_crawl_lock = threading.Lock()
+_crawl_running = threading.Event()
+_crawl_cancel = threading.Event()
+_crawl_progress: dict = {}
+_crawl_worker: threading.Thread | None = None
+
+# El bucle mira cada pocos minutos si a alguna tienda le toca su consulta de la noche (o si toca reponer).
+FIRST_CHECK_SECONDS, CHECK_EVERY_SECONDS = 30, 300
 
 
 def is_running() -> bool:
-    return _running.is_set()
+    """¿Hay una consulta del catálogo o un «Ver más» en marcha?"""
+    return _crawl_running.is_set() or _running.is_set()
 
 
 def running_job() -> str | None:
-    """«consulta» o «mas» mientras hay una tanda en marcha; None si no hay ninguna."""
-    return _job if _running.is_set() else None
+    """«mas» mientras hay un «Ver más» en marcha; si no, «consulta» mientras se recorre el catálogo."""
+    if _running.is_set():
+        return "mas"
+    return "consulta" if _crawl_running.is_set() else None
 
 
-def _run_locked(job) -> None:
-    """Hace el trabajo (`job(db)`) con el cerrojo ya cogido y lo suelta al acabar, pase lo que pase.
-    Después, aparte y sin cerrojo, traduce lo nuevo: las propuestas salen ya, en el idioma de la
-    tienda, y pasan al español en cuanto llega la traducción."""
+def crawl_progress() -> dict | None:
+    """Por dónde va la consulta en marcha (para el panel): tienda, sección, páginas y productos leídos,
+    si es la de la noche y si se está cancelando. None si no hay ninguna."""
+    if not _crawl_running.is_set():
+        return None
+    return {**_crawl_progress, "cancelling": _crawl_cancel.is_set()}
+
+
+def _crawling_stores() -> set[str]:
+    """La tienda cuyo catálogo se está recorriendo ahora: mientras tanto, la reserva no la toca."""
+    store = _crawl_progress.get("store") if _crawl_running.is_set() else None
+    return {store} if store else set()
+
+
+def _run_locked(job, kind: str) -> None:
+    """Hace el trabajo corto (`job(db)`) con el cerrojo ya cogido y lo suelta al acabar, pase lo que
+    pase. Después, aparte y sin cerrojo, traduce lo nuevo: las propuestas salen ya, en el idioma de la
+    tienda, y pasan al español en cuanto llega la traducción. «Ver más» puede abrir el navegador; la
+    reserva no (solo usa lo que guardó el listado)."""
     try:
-        # El navegador (Pull&Bear, Bershka, JD Sports) solo puede abrirse aquí dentro y se cierra al acabar.
-        with SessionLocal() as db, shops.browser.session():
-            job(db)
+        with SessionLocal() as db:
+            if kind == "mas":
+                with shops.browser.session():
+                    job(db)
+            else:
+                job(db)
     except Exception:
-        log.exception("Compras: la tanda falló")
+        log.exception("Compras: el trabajo «%s» falló", kind)
     finally:
+        global _reserve_filter
+        _reserve_filter = None
         _running.clear()
         _lock.release()
     translate_soon()
+
+
+def refilling() -> dict | None:
+    """Si está en marcha la reposición de un filtro que se quedó vacío: {"store", "category"}."""
+    return dict(_reserve_filter) if _reserve_filter and _lock.locked() and _job == "reserva" else None
 
 
 def _start(job, kind: str) -> bool:
@@ -1823,48 +2522,108 @@ def _start(job, kind: str) -> bool:
     if not _lock.acquire(blocking=False):
         return False
     _job = kind
-    _running.set()
-    _worker = threading.Thread(target=_run_locked, args=(job,), name=f"armario-compras-{kind}", daemon=True)
+    if kind == "mas":
+        _running.set()
+    _worker = threading.Thread(target=_run_locked, args=(job, kind), name=f"armario-compras-{kind}", daemon=True)
     _worker.start()
     return True
 
 
-def start_refresh(stores: list[str] | None = None) -> bool:
-    """Lanza una tanda en un hilo aparte y vuelve ya. False si ya había una en marcha."""
-    return _start(lambda db: refresh(db, stores=stores), "consulta")
+def _run_crawl(stores: list[str] | None, night: bool) -> None:
+    try:
+        # El navegador (Pull&Bear, Bershka, JD Sports) solo puede abrirse aquí dentro y se cierra al acabar.
+        with SessionLocal() as db, shops.browser.session():
+            refresh(db, stores=stores, night=night, cancel=_crawl_cancel, progress=_crawl_progress)
+    except Exception:
+        log.exception("Compras: la consulta falló")
+    finally:
+        _crawl_running.clear()
+        _crawl_lock.release()
+    translate_soon()
+    top_up_soon(force=True)  # los colores de las propuestas nuevas y lo que falte en la reserva
+
+
+def start_refresh(stores: list[str] | None = None, night: bool = False) -> bool:
+    """Lanza la consulta del catálogo en un hilo aparte y vuelve ya. `night`: la automática, con las
+    pausas largas. False si ya había una en marcha."""
+    global _crawl_worker
+    if not _crawl_lock.acquire(blocking=False):
+        return False
+    _crawl_cancel.clear()
+    _crawl_progress.clear()
+    _crawl_running.set()
+    _crawl_worker = threading.Thread(target=_run_crawl, args=(stores, night), name="armario-compras-consulta",
+                                     daemon=True)
+    _crawl_worker.start()
+    return True
+
+
+def cancel_refresh() -> bool:
+    """Corta la consulta en marcha (en la siguiente página): lo leído se guarda y se retoma la próxima
+    vez. False si no había ninguna."""
+    if not _crawl_running.is_set():
+        return False
+    _crawl_cancel.set()
+    return True
 
 
 def start_more(store: str | None = None, category: str | None = None) -> bool:
-    """Lanza un «Ver más» en un hilo aparte y vuelve ya. False si ya había una tanda en marcha."""
+    """Lanza un «Ver más» en un hilo aparte y vuelve ya. False si ya había un trabajo corto en marcha."""
     return _start(lambda db: more(db, store, category), "mas")
 
 
+def top_up_soon(force: bool = False, store: str | None = None, category: str | None = None) -> bool:
+    """Repone la reserva en segundo plano si hace falta (o siempre, con `force`; o de un filtro que se
+    ha quedado vacío, con `store`/`category`). Solo con el bucle automático encendido (en los tests y
+    en desarrollo, `ARMARIO_SHOP_AUTO=0`, no hace nada). False si no se lanza (otro trabajo en marcha:
+    el bucle lo vuelve a intentar en unos minutos)."""
+    if not config.SHOP_AUTO:
+        return False
+    if store is not None or category is not None:
+        def job(db):
+            global _reserve_filter
+            _reserve_filter = {"store": store, "category": category}
+            top_up(db, store=store, category=category)
+
+        return _start(job, "reserva")
+    if not force:
+        try:
+            with SessionLocal() as db:
+                if not needs_top_up(db):
+                    return False
+        except Exception:
+            log.exception("Compras: no se pudo mirar la reserva")
+            return False
+    return _start(lambda db: top_up(db), "reserva")
+
+
 def wait_idle(timeout: float = 30) -> None:
-    """Espera a que termine la tanda en marcha (para los tests)."""
-    if _worker is not None:
-        _worker.join(timeout)
+    """Espera a que terminen los trabajos en marcha (para los tests)."""
+    for worker in (_crawl_worker, _worker):
+        if worker is not None:
+            worker.join(timeout)
 
 
 def _loop() -> None:
-    global _job
     delay = FIRST_CHECK_SECONDS
     while not _stop.wait(delay):
         delay = CHECK_EVERY_SECONDS
         try:
             with SessionLocal() as db:
                 clean_lookups(db)
-                due = due_stores(db)
+                due = [] if _crawl_running.is_set() else due_stores(db)
             translate_soon()  # lo que se quedara sin traducir (la IA falló o estaba ocupada)
-            if due and _lock.acquire(blocking=False):
-                _job = "consulta"
-                _running.set()
-                _run_locked(lambda db: refresh(db, stores=due))
+            if due:
+                start_refresh(due, night=True)
+            else:
+                top_up_soon()
         except Exception:
-            log.exception("Compras: fallo en el bucle de la tanda semanal")
+            log.exception("Compras: fallo en el bucle de las consultas")
 
 
 def start_scheduler() -> None:
-    """El bucle que arranca con la app: mira cada hora si a alguna tienda le toca consulta hoy."""
+    """El bucle que arranca con la app: cada pocos minutos mira si a alguna tienda le toca su consulta
+    (su día, a la hora de la noche, o en cuanto arranque si estaba apagada) y si hay que reponer."""
     global _scheduler
     if _scheduler is not None and _scheduler.is_alive():
         return
@@ -1875,3 +2634,4 @@ def start_scheduler() -> None:
 
 def stop_scheduler() -> None:
     _stop.set()
+    _crawl_cancel.set()

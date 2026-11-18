@@ -100,8 +100,40 @@ export const t = {
     },
     buscando: {
       titulo: "Buscando novedades…",
-      texto: "Estoy mirando el catálogo con calma para no molestar a la tienda. Suele tardar uno o dos minutos; puedes quedarte aquí o volver luego.",
+      texto: "Estoy leyendo el catálogo entero de la tienda, despacio para no molestarla. Puede tardar un buen rato: puedes irte y volver luego.",
       aviso: "Buscando más novedades…",
+    },
+    progreso: {
+      fase: {
+        catalogo: "Leyendo el catálogo",
+        eligiendo: "Eligiendo lo que mejor te encaja",
+        propuestas: "Bajando fotos de las elegidas",
+      } as Record<string, string>,
+      tienda: (n: number, total: number) => `tienda ${n} de ${total}`,
+      pagina: (n: number, total: number | null) => (total ? `página ${n} de ${total}` : `página ${n}`),
+      paginas: (n: number) => (n === 1 ? "1 página" : `${n.toLocaleString("es-ES")} páginas`),
+      productos: (n: number) => (n === 1 ? "1 producto" : `${n.toLocaleString("es-ES")} productos`),
+      quedan: (segundos: number) =>
+        segundos < 90 ? "queda menos de un minuto" : `quedan unos ${Math.round(segundos / 60)} min`,
+      calculando: "calculando cuánto queda…",
+      cancelando: "cancelando…",
+      aria: (tienda: string) => `Avance de la consulta de ${tienda}`,
+    },
+    ocupado: {
+      // Lo que se trae de un filtro: «chaquetas y abrigos», o «más de Zara» si solo se filtra la tienda.
+      consultando: (tienda: string, seccion: number, total: number, que: string) =>
+        `Ahora mismo estoy consultando ${tienda} (sección ${seccion} de ${total}). Traeré más ${que} en cuanto termine.`,
+      consultandoSinFiltro: (tienda: string, seccion: number, total: number) =>
+        `Ahora mismo estoy consultando ${tienda} (sección ${seccion} de ${total}).`,
+      trayendo: (que: string) => `Trayendo más ${que}…`,
+      sinMas: (que: string, cuando: string) => `No hay más ${que} en las tiendas activas; llegarán con la próxima consulta: ${cuando}.`,
+      sinMasNunca: (que: string) => `No hay más ${que} en las tiendas activas.`,
+      vacioFiltro: (que: string) => `No quedan propuestas de ${que}.`,
+      mientras: "Mientras, puedes mirar otras categorías.",
+      verTodo: "Ver todo",
+      tiendas: "Ver en Tiendas",
+      deTienda: (tienda: string) => `cosas de ${tienda}`,
+      cosas: "propuestas",
     },
     vacio: {
       titulo: "No hay propuestas pendientes",
@@ -150,8 +182,22 @@ export const t = {
       dia: (dia: string) => `Se consulta los ${dia}, el día después de que la tienda saque novedades.`,
       diaSinDato: (dia: string) => `Se consulta los ${dia} (no se sabe qué día saca novedades la tienda).`,
       proxima: (cuando: string) => `Próxima consulta: ${cuando}`,
+      a: (hora: string) => `a las ${hora}`,
       desactivadaTexto: "Desactivada: no se consulta.",
-      conNavegador: "Se lee con navegador: cada consulta tarda unos minutos más.",
+      conNavegador: "Se lee con navegador: cada consulta tarda un poco más.",
+      noche: "Hora de la consulta",
+      nocheTexto:
+        "Cada tienda se consulta en su día, a esta hora: lee el catálogo entero, despacio. Si la app está apagada a esa hora, lo hace en cuanto arranque.",
+      nocheError: "No se pudo guardar la hora.",
+      consultarAviso: "Lee el catálogo entero: puede tardar un buen rato; mejor de noche.",
+      cancelar: "Cancelar la consulta",
+      cancelando: "Cancelando…",
+      leyendo: "Consultando ahora",
+      incompleta: (hechas: number, total: number) =>
+        `Quedó a medias (${hechas} de ${total} secciones): se retoma la próxima noche.`,
+      cancelada: "La cancelaste a mitad: lo leído se ha guardado.",
+      recorrido: (paginas: number, segundos: number) =>
+        `${paginas === 1 ? "1 página" : `${paginas} páginas`} en ${segundos < 90 ? `${segundos} s` : `${Math.round(segundos / 60)} min`}`,
       categorias: "Qué te interesa",
       consultar: "Consultar ahora",
       consultando: "Consultando…",
@@ -175,6 +221,7 @@ export const t = {
       enMeGustan: "Está en Me gustan",
       enArmario: "Está en tu armario",
       verFicha: "Ver la ficha",
+      fotoPendiente: "La foto llegará en un rato: esta tienda solo se lee de noche.",
     },
     visor: {
       pista: "Desliza hacia arriba para ver los datos",
@@ -198,6 +245,9 @@ export const t = {
     colores: {
       titulo: "Colores",
       color: (nombre: string) => `Color ${nombre || "sin nombre"}`,
+      noDisponible: (nombre: string) => `${cap(nombre || "sin nombre")} (no disponible ahora)`,
+      aunNo: "Ese color aún no está descargado.",
+      verlo: "Puedes verlo en la tienda",
       error: "No se pudo traer ese color. Inténtalo de nuevo.",
     },
     combina: {

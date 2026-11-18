@@ -6,8 +6,8 @@ Sin navegador: la web (Salesforce Commerce Cloud) pinta el HTML en el servidor.
   único que trae los precios (la primera página los pinta después, en el navegador). Cada producto
   lleva en `data-gtm` su marca, nombre, sku (el de Courir, uno por color) y `supplier_id` (el código
   del fabricante, tipo IF6490). No trae el color: sale en la ficha.
-- No se puede ordenar por novedad: se leen las novedades de hombre (`HOMME-NOUVEAUTES`, filtrando el
-  calzado) y las primeras páginas de cada categoría.
+- Se lee cada categoría entera (ver crawl.py). Las novedades de hombre (`HOMME-NOUVEAUTES`, filtrando
+  el calzado) solo se recorren si Zapatillas o Botas no están activas: si lo están, ya las contienen.
 - Ficha: ld+json (nombre, precio, fotos), tallas EU en los botones, color y otros colores del modelo.
 - Buscador: por enlace de producto o por código de fabricante (el de la caja y la etiqueta).
 """
@@ -18,6 +18,7 @@ import time
 from urllib.parse import quote, urlsplit
 
 from ... import config
+from . import crawl
 from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season
 from .estimate import estimate_shoe_type, estimate_style, title_case
@@ -38,12 +39,14 @@ SITE = SITES[COUNTRY]
 BASE = SITE["base"]
 
 PAGE_SIZE = 40
-# slug -> (nombre para el usuario, categoría de Courir, páginas de 40 que se leen)
+# slug -> (nombre para el usuario, categoría de Courir). Se leen enteras, de 40 en 40.
 CATEGORIES = {
-    "nouveautes": ("Novedades", "HOMME-NOUVEAUTES", 5),
-    "sneakers": ("Zapatillas", "HOMME-CHAUSSURES-SNEAKERS", 3),
-    "boots": ("Botas", "HOMME-CHAUSSURES-BOOTS-BOTTINES", 1),
+    "nouveautes": ("Novedades", "HOMME-NOUVEAUTES"),
+    "sneakers": ("Zapatillas", "HOMME-CHAUSSURES-SNEAKERS"),
+    "boots": ("Botas", "HOMME-CHAUSSURES-BOOTS-BOTTINES"),
 }
+# Con el catálogo entero, las novedades de calzado ya están dentro de Zapatillas y Botas.
+COVERED_BY = {"nouveautes": ("sneakers", "boots")}
 MAX_PHOTOS = 4
 PHOTO_SIZE = 1200
 PAGE_CACHE_SECONDS = 300
@@ -282,7 +285,8 @@ class CourirConnector:
     refresh_weekday = 1  # lunes = 0
     refresh_after_release = False
     language = SITE["language"]
-    categories = {slug: label for slug, (label, _cgid, _pages) in CATEGORIES.items()}
+    categories = {slug: label for slug, (label, _cgid) in CATEGORIES.items()}
+    covered_by = COVERED_BY
 
     def __init__(self, pause: float | None = None, timeout: float | None = None):
         self.fetcher = Fetcher(
@@ -305,20 +309,29 @@ class CourirConnector:
         return page.text
 
     def list_category(self, slug: str) -> list[ShopProduct]:
-        _label, cgid, pages = CATEGORIES[slug]
+        """La categoría entera, de 40 en 40, hasta la página que trae menos (o hasta el tope)."""
+        _label, cgid = CATEGORIES[slug]
         products: list[ShopProduct] = []
         refs: set[str] = set()
-        for number in range(pages):
-            page = self._grid(f"cgid={cgid}", number * PAGE_SIZE)
-            tiles = len(_TILE_SPLIT.findall(page))
-            if number == 0 and tiles == 0 and "grid-tile" not in page:
-                raise ShopError("la respuesta no era la esperada (sin productos)")
-            for product in parse_grid(page, slug, only_shoes=slug == "nouveautes"):
-                if product.product_ref not in refs:
-                    refs.add(product.product_ref)
-                    products.append(product)
-            if tiles < PAGE_SIZE:
-                break  # no hay más páginas
+        try:
+            for number in range(max(1, crawl.max_pages(self.key))):
+                crawl.before_page()
+                page = self._grid(f"cgid={cgid}", number * PAGE_SIZE)
+                tiles = len(_TILE_SPLIT.findall(page))
+                if number == 0 and tiles == 0 and "grid-tile" not in page:
+                    raise ShopError("la respuesta no era la esperada (sin productos)")
+                before = len(products)
+                for product in parse_grid(page, slug, only_shoes=slug == "nouveautes"):
+                    if product.product_ref not in refs:
+                        refs.add(product.product_ref)
+                        products.append(product)
+                crawl.page_read(len(products) - before)
+                if tiles < PAGE_SIZE or len(products) >= crawl.max_products(self.key):
+                    break  # no hay más páginas (o el tope de seguridad)
+        except ShopError as exc:
+            if not products:
+                raise
+            raise crawl.Partial(products, exc) from exc
         return products
 
     def _product_page(self, url: str) -> str | None:

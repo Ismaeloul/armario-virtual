@@ -156,6 +156,9 @@ class ShopItem(Base):
     liked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # La última vez que salió en el listado de la tienda. Al terminar de leer una sección entera, sus
+    # candidatos que no han salido desde que empezó el recorrido es que la tienda ya no los tiene.
+    listed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Cuándo se dijo me gusta / no me gusta, si aún se puede deshacer («Volver») y por qué se descartó.
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     can_undo: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)

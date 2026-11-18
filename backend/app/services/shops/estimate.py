@@ -81,11 +81,14 @@ def estimate_type(name: str, default: str | None = None) -> str | None:
 # En español, francés (Zara Francia, Courir, JD Sports) e inglés (los colores de las zapatillas).
 _COLOR_WORDS = [
     (r"multicolor|varios|combinad|estampad|\bmulti\b", "multicolor"),
+    (r"azul hielo|bleu glace|ice blue", "celeste"),
+    # «Glace» a secas (Pull&Bear, Bershka) es un blanco hielo tirando a beige muy claro, no un azul: un
+    # pantalón «Glace» claramente beige claro salía como celeste (visto por el usuario, 18-11-2026).
     (r"blanco roto|blanco hueso|off white|off-white|crudo|ecru|hueso|marfil|nata|crema|tiza|mantequilla|"
-     r"blanc casse|creme|cream|ivoire|ivory|coquille|\bsail\b|vanille|vanilla", "crudo"),
+     r"blanc casse|creme|cream|ivoire|ivory|coquille|\bsail\b|vanille|vanilla|\bglace\b", "crudo"),
     (r"marino|navy|azul oscuro|azul noche|tinta|marine|bleu nuit|bleu fonce|midnight", "azul marino"),
-    (r"azul claro|azul cielo|azul palido|azul hielo|celeste|bleu clair|bleu ciel|bleu pale|light blue|sky blue|"
-     r"baby blue|\bciel\b|\bglace\b", "celeste"),
+    (r"azul claro|azul cielo|azul palido|celeste|bleu clair|bleu ciel|bleu pale|light blue|sky blue|"
+     r"baby blue|\bciel\b", "celeste"),
     (r"oliva|khaki|kaki|caqui|militar|musgo|olive", "verde oliva"),
     (r"burdeos|burgundy|granate|vino|berenjena|bordeaux|maroon|\bwine\b|aubergine", "burdeos"),
     (r"marron|chocolate|conac|tabaco|cuero|tostado|caramelo|camel|taupe|topo|moka|cafe|castano|avellana|cobre|"
@@ -121,16 +124,34 @@ def nearest_color(hex_color: str | None) -> str | None:
     )
 
 
+# Palabras de color que no dicen un color claro por sí solas: tonos de nombre «poético» que cada tienda
+# usa a su manera (hielo, tiza, piedra, arena, humo…). Si la tienda da además el tono (#rrggbb), manda el
+# tono; si no, valen como pista.
+_DOUBTFUL = {
+    "glace", "ice", "tiza", "coquille", "sail", "vanille", "vanilla", "mantequilla", "nata", "crema", "creme",
+    "cream", "hueso", "piedra", "pierre", "stone", "arena", "sable", "sand", "nude", "vison", "humo", "ceniza",
+    "smoke", "tinta", "militar", "musgo", "tabaco", "cuero", "tostado", "caramelo", "miel", "wheat", "topo",
+    "taupe", "plomo", "plata", "argent", "silver", "botella", "bouteille", "sapin", "maquillaje", "royal",
+    "petroleo", "lima", "ocre", "or", "dore", "gold", "bronze", "cuivre", "cobre", "oxido", "rouille", "teja",
+    "ladrillo", "brique", "calabaza", "prune", "berenjena", "aubergine", "vino", "wine", "moka", "cafe",
+    "avellana", "noisette", "castano",
+}
+
+
 def estimate_color(store_color: str | None, hex_color: str | None = None) -> str:
     """Del texto de la tienda («Marino», «Khaki», «Gris vigoré») a nuestra paleta.
 
-    Si el texto no dice nada conocido, el tono más cercano; sin tono, multicolor.
+    Si el texto no dice nada conocido, el tono más cercano; sin tono, multicolor. Si solo lo dice una
+    palabra dudosa (`_DOUBTFUL`: «Glace», «Tiza», «Piedra») y la tienda da el tono, manda el tono.
     """
     text = norm(store_color)
     # «Noir/Blanc», «marron/blanc», «Black/White»: el primero es el principal.
     for part in [*text.split("/"), text] if "/" in text else [text]:
         for rx, color in _COLOR_RE:
-            if rx.search(part):
+            match = rx.search(part)
+            if match:
+                if match.group().strip() in _DOUBTFUL and nearest_color(hex_color):
+                    return nearest_color(hex_color)
                 return color
     return nearest_color(hex_color) or "multicolor"
 

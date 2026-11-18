@@ -37,6 +37,8 @@ class ShopColorOut(BaseModel):
     name: str  # como lo llama la tienda («Blanco roto»)
     hex: str
     current: bool  # es el del item que se está viendo
+    available: bool  # se puede ver ya (en JD, solo los preparados; los demás salen apagados)
+    url: str  # su página en la tienda (para los que no se pueden ver ahora)
 
 
 class ShopItemOut(BaseModel):
@@ -66,6 +68,8 @@ class ShopItemOut(BaseModel):
     # Los colores entre los que se puede elegir (vacío si solo hay uno). None = aún no se sabe: se
     # rellenan pidiendo `/items/{id}/colors`.
     colors: list[ShopColorOut] | None
+    # Encontrado en lo guardado, de una tienda de navegador, y aún sin fotos: llegan en segundo plano.
+    photo_pending: bool = False
 
 
 class ShopLookupOut(ShopItemOut):
@@ -120,6 +124,13 @@ class ShopStatusOut(BaseModel):
     added: int  # propuestas nuevas que salieron de ahí
     failed: int  # peticiones que fallaron
     error: str | None  # el primer fallo, en claro («Camisas: HTTP 403»)
+    complete: bool  # se leyeron enteras todas las secciones activas
+    cancelled: bool  # la cancelaste a mitad
+    sections: int  # secciones leídas enteras en este recorrido
+    sections_total: int
+    pages: int  # páginas del listado leídas en la última consulta
+    seconds: int  # lo que tardó
+    resume: bool  # quedó a medias: la próxima vez se retoma por donde iba
 
 
 class ShopStoreOut(BaseModel):
@@ -132,6 +143,7 @@ class ShopStoreOut(BaseModel):
     weekday_after_release: bool
     status: ShopStatusOut
     next_check: date | None  # cuándo se consultará sola (None si está desactivada)
+    next_check_at: datetime | None  # lo mismo, con la hora (local)
     browser: bool  # se lee con un navegador de verdad (Pull&Bear, Bershka): tarda más
     # Por qué no se puede consultar en este equipo («No disponible: falta el navegador»); None si se puede.
     unavailable: str | None
@@ -145,10 +157,42 @@ class ShopMoreOut(BaseModel):
     error: str | None  # el primer fallo, en claro
 
 
+class ShopCrawlOut(BaseModel):
+    """Por dónde va la consulta del catálogo en marcha (panel «Tiendas» y avisos de Descubrir)."""
+
+    store: str | None
+    store_name: str | None
+    # leyendo el catálogo · eligiendo las mejores · bajando fichas y fotos de las elegidas
+    phase: Literal["catalogo", "eligiendo", "propuestas"]
+    store_index: int  # la tienda que va (1, 2…) de las que se consultan en esta tanda
+    stores_total: int
+    section: str | None  # la sección que se está leyendo, como la ve el usuario
+    section_page: int  # página de la sección en curso
+    section_pages: int | None  # páginas de la sección en curso, si la tienda lo dice
+    sections_done: int
+    sections_total: int
+    pages: int
+    products: int
+    percent: float  # 0-99, nunca retrocede
+    known: bool  # False: aún no se puede estimar el total (barra indeterminada)
+    eta_seconds: int | None  # lo que queda, al ritmo medido (None si aún no se sabe)
+    night: bool  # la automática de la noche (pausas largas) o «Consultar ahora»
+    started_at: datetime | None
+    cancelling: bool
+
+
+class ShopFilterOut(BaseModel):
+    store: str | None
+    category: str | None
+
+
 class ShopState(BaseModel):
     stores: list[ShopStoreOut]
     running: bool  # hay una consulta o un «Ver más» en marcha
-    job: Literal["consulta", "mas"] | None  # cuál de las dos
+    job: Literal["consulta", "mas"] | None  # cuál de las dos («mas» si coinciden)
+    crawl: ShopCrawlOut | None  # la consulta del catálogo en marcha, si la hay
+    refilling: ShopFilterOut | None  # se están reponiendo propuestas de un filtro que se quedó vacío
+    night_time: str  # a qué hora (local, HH:MM) se hace la consulta automática
     pending: int  # propuestas por ver
     liked: int
     last_more: ShopMoreOut | None
@@ -158,6 +202,10 @@ class ShopSettingsIn(BaseModel):
     store: str
     enabled: bool | None = None
     categories: list[str] | None = Field(default=None, max_length=50)
+
+
+class NightIn(BaseModel):
+    night_time: str = Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")
 
 
 class RefreshIn(BaseModel):
@@ -178,6 +226,10 @@ class ShopNext(BaseModel):
     remaining: int  # cuántas quedan con este filtro, contando esta
     more: int  # candidatos que «Ver más» aún puede traer con este filtro
     can_undo: bool  # hay una decisión que «Volver» puede deshacer
+    refilling: bool = False  # el filtro se ha quedado vacío y se están trayendo más de eso en segundo plano
+    # Las que vienen detrás de `item` (como mucho QUEUE), con el mismo filtro: la pila de tarjetas de
+    # Descubrir las pinta y precarga sus fotos para que al decidir la siguiente ya esté ahí.
+    queue: list[ShopItemOut] = []
 
 
 def _check_filter(store: str | None, category: str | None) -> None:
@@ -232,6 +284,7 @@ def _to_out(item: ShopItem) -> ShopItemOut:
         expires_soon=item.status == shopping.LIKED and shopping.expires_soon(item),
         composition=item.composition_es or item.composition or None,
         colors=shopping.colors_of(item),
+        photo_pending=not item.photos and item.status in (shopping.SEARCHED, shopping.LIKED),
     )
 
 
@@ -277,8 +330,16 @@ def _state(db: Session) -> ShopState:
                     added=int(status.get("added", 0)),
                     failed=int(status.get("failed", 0)),
                     error=status.get("error"),
+                    complete=bool(status.get("complete", status.get("ok"))),
+                    cancelled=bool(status.get("cancelled")),
+                    sections=int(status.get("sections", 0) or 0),
+                    sections_total=int(status.get("sections_total", 0) or 0),
+                    pages=int(status.get("pages", 0) or 0),
+                    seconds=int(status.get("seconds", 0) or 0),
+                    resume=bool(status.get("cycle")),
                 ),
                 next_check=shopping.next_check(db, key) if key in enabled else None,
+                next_check_at=shopping.next_check_at(db, key) if key in enabled else None,
                 browser=shops.needs_browser(key),
                 unavailable=shops.unavailable(key),
                 categories=[
@@ -288,16 +349,40 @@ def _state(db: Session) -> ShopState:
             )
         )
     more = shopping.last_more(db)
+    crawl = shopping.crawl_progress()
+    crawl_out = None
+    if crawl is not None:
+        store_key = crawl.get("store")
+        connector = shops.CONNECTORS.get(store_key) if store_key else None
+        crawl_out = ShopCrawlOut(
+            store=store_key, store_name=connector.name if connector else None,
+            phase=crawl.get("phase") if crawl.get("phase") in ("eligiendo", "propuestas") else "catalogo",
+            store_index=int(crawl.get("store_index", 1) or 1), stores_total=int(crawl.get("stores_total", 1) or 1),
+            section=crawl.get("section_label"), section_page=int(crawl.get("section_pages", 0) or 0),
+            section_pages=crawl.get("section_pages_total"),
+            sections_done=int(crawl.get("sections_done", 0)),
+            sections_total=int(crawl.get("sections_total", 0)), pages=int(crawl.get("pages", 0)),
+            products=int(crawl.get("products", 0)), percent=float(crawl.get("percent", 0.0) or 0.0),
+            known=bool(crawl.get("known")), eta_seconds=crawl.get("eta_seconds"), night=bool(crawl.get("night")),
+            started_at=crawl.get("started_at"), cancelling=bool(crawl.get("cancelling")),
+        )
+    refilling = shopping.refilling()
     return ShopState(
         stores=stores,
         running=shopping.is_running(),
         job=shopping.running_job(),
+        crawl=crawl_out,
+        refilling=ShopFilterOut(**refilling) if refilling else None,
+        night_time=shopping.night_time(db),
         pending=_count(db, shopping.NEW, enabled),
         liked=_count(db, shopping.LIKED),
         last_more=ShopMoreOut(added=more.get("added", 0), low=bool(more.get("low")), error=more.get("error"))
         if more
         else None,
     )
+
+
+QUEUE = 2  # propuestas que se mandan detrás de la actual
 
 
 def _next(db: Session, only: Filter, first: ShopItem | None = None) -> ShopNext:
@@ -307,12 +392,25 @@ def _next(db: Session, only: Filter, first: ShopItem | None = None) -> ShopNext:
     stmt = select(ShopItem).where(ShopItem.status == shopping.NEW, ShopItem.store.in_(stores))
     if only.category is not None:
         stmt = stmt.where(ShopItem.category == only.category)
-    item = first or db.scalars(stmt.order_by(ShopItem.score.desc(), ShopItem.id).limit(1)).first()
+    ordered = stmt.order_by(ShopItem.score.desc(), ShopItem.id)
+    top = list(db.scalars(ordered.limit(QUEUE + 2)))
+    item = first or (top[0] if top else None)
+    queue = [other for other in top if item is None or other.id != item.id][:QUEUE]
+    remaining = _count(db, shopping.NEW, stores, only.category)
+    more = len(shopping.candidates_left(db, store=only.store, category=only.category))
+    refilling = False
+    if remaining < 3 and more and (only.store or only.category):
+        # El filtro se queda sin propuestas: se traen más de eso de lo guardado, sin esperar a la consulta.
+        shopping.top_up_soon(store=only.store, category=only.category)
+        current = shopping.refilling()
+        refilling = bool(current) and current == {"store": only.store, "category": only.category}
     return ShopNext(
         item=_to_out(item) if item else None,
-        remaining=_count(db, shopping.NEW, stores, only.category),
-        more=len(shopping.candidates_left(db, store=only.store, category=only.category)),
+        remaining=remaining,
+        more=more,
         can_undo=shopping.last_decision(db) is not None,
+        refilling=refilling,
+        queue=[_to_out(other) for other in queue],
     )
 
 
@@ -348,6 +446,21 @@ def refresh(body: RefreshIn | None = None, db: Session = Depends(get_db)):
     if not enabled or (store is not None and store not in enabled):
         raise HTTPException(409, "Activa primero la tienda")
     shopping.start_refresh([store] if store else None)
+    return _state(db)
+
+
+@router.post("/refresh/cancel", response_model=ShopState)
+def cancel_refresh(db: Session = Depends(get_db)):
+    """Corta la consulta del catálogo en marcha (en la página siguiente). Lo leído se guarda y la
+    próxima vez se retoma por donde iba."""
+    shopping.cancel_refresh()
+    return _state(db)
+
+
+@router.put("/night", response_model=ShopState)
+def night(body: NightIn, db: Session = Depends(get_db)):
+    """A qué hora (local) se hace la consulta automática de cada tienda, en su día."""
+    shopping.set_night_time(db, body.night_time)
     return _state(db)
 
 

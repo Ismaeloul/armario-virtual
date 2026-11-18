@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, quote, urlsplit
 import httpx
 
 from ... import catalog, config
+from . import crawl
 from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
 from .estimate import (
     estimate_color,
@@ -80,6 +81,8 @@ MEDIA = "https://static.zara.net"
 SEARCH = f"https://www.zara.com/itxrest/1/search/store/{SITE.store_id}/query"
 TEXT_RESULTS = 6  # de cada resultado de texto hay que pedir luego la ficha: pocos, para no hacer esperar
 PAGE_CACHE_SECONDS = 300  # lo que se recuerda la ficha recién buscada, para no pedirla otra vez por color
+FIRST_PAGES = 4  # el listado se pide primero con 4 páginas juntas y se va doblando (ver `list_category`)
+LIST_TIMEOUT = 60.0  # una respuesta del listado con muchas páginas pesa varios MB
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -406,18 +409,16 @@ class ZaraConnector:
     language = SITE.language
     categories = {slug: label for slug, (label, _default) in SITE.categories.items()}
 
-    def __init__(self, pause: float | None = None, timeout: float | None = None, pages: int | None = None):
+    def __init__(self, pause: float | None = None, timeout: float | None = None):
         self.pause = config.SHOP_PAUSE_SECONDS if pause is None else pause
         self.timeout = config.SHOP_TIMEOUT_SECONDS if timeout is None else timeout
-        # El listado va de 20 en 20 y `page=N` devuelve las N primeras páginas juntas, en una sola petición.
-        self.pages = config.SHOP_PAGES if pages is None else pages
         self._client: httpx.Client | None = None
         self._lock = threading.Lock()  # una petición cada vez
         self._last = 0.0
         self.requests = 0
         self._pages: dict[str, tuple[float, dict]] = {}  # seo_id -> (cuándo, la ficha recién buscada)
 
-    def _get(self, url: str, pause: float, headers: dict | None = None) -> httpx.Response:
+    def _get(self, url: str, pause: float, headers: dict | None = None, timeout: float | None = None) -> httpx.Response:
         with self._lock:
             if self._client is None:
                 self._client = httpx.Client(headers=HEADERS, timeout=self.timeout, follow_redirects=True)
@@ -426,17 +427,19 @@ class ZaraConnector:
                 time.sleep(wait)
             try:
                 self.requests += 1
-                return self._client.get(url, headers=headers)
+                if timeout is None:
+                    return self._client.get(url, headers=headers)
+                return self._client.get(url, headers=headers, timeout=timeout)
             except httpx.TimeoutException as exc:
-                raise ShopError(f"tiempo agotado ({self.timeout:g} s)") from exc
+                raise ShopError(f"tiempo agotado ({timeout or self.timeout:g} s)") from exc
             except httpx.HTTPError as exc:
                 raise ShopError(f"no se pudo conectar ({type(exc).__name__})") from exc
             finally:
                 self._last = time.monotonic()
 
-    def _json(self, url: str, follow: bool = True) -> dict | None:
+    def _json(self, url: str, follow: bool = True, timeout: float | None = None) -> dict | None:
         """El JSON de una página. None si la página ya no existe (404 o 410)."""
-        response = self._get(url, self.pause)
+        response = self._get(url, self.pause) if timeout is None else self._get(url, self.pause, timeout=timeout)
         if response.status_code in (404, 410):
             return None
         if response.status_code == 278 and follow:
@@ -446,7 +449,7 @@ class ZaraConnector:
             except (ValueError, AttributeError):
                 location = None
             if isinstance(location, str) and location.startswith(BASE + "/"):
-                return self._json(location, follow=False)
+                return self._json(location, follow=False, timeout=timeout)
         if response.status_code != 200:
             raise ShopError(f"HTTP {response.status_code}")
         try:
@@ -458,17 +461,47 @@ class ZaraConnector:
         return data
 
     def list_category(self, slug: str) -> list[ShopProduct]:
-        # Pedir más páginas de las que tiene la categoría da 404 (comprobado con Camisetas, que solo
-        # tiene dos): se va bajando hasta dar con las que hay.
-        data = None
-        for pages in range(max(self.pages, 1), 0, -1):
-            page = f"&page={pages}" if pages > 1 else ""
-            data = self._json(f"{BASE}/{slug}.html?ajax=true{page}")
-            if data is not None:
-                break
-        if data is None:
+        """La categoría entera. El listado va de 20 en 20 «elementos» (unos 80 productos) y `page=N`
+        devuelve las N primeras páginas JUNTAS en una sola respuesta, que dice si ya es la última
+        (`paginationInfo.isLastPage`). Pedir más páginas de las que hay da 404. Así que se dobla (4, 8,
+        16…) hasta llegar a la última y, si se pasa, se busca a medio camino: pocas peticiones, aunque
+        cada una pese varios MB. Comprobado el 18-11-2026: Pantalones, 8 páginas y 638 productos."""
+        cap = max(1, crawl.max_pages(self.key))
+        best: dict | None = None
+        good, bad = 0, None  # la última página que existe y la primera que da 404
+        page = min(FIRST_PAGES, cap)
+        seen = 0
+        try:
+            while True:
+                crawl.before_page()
+                suffix = f"&page={page}" if page > 1 else ""
+                data = self._json(f"{BASE}/{slug}.html?ajax=true{suffix}", timeout=max(self.timeout, LIST_TIMEOUT))
+                if data is None:
+                    bad = page
+                    crawl.page_read(0)
+                else:
+                    count = len(parse_category(data, slug))
+                    crawl.page_read(count - seen)
+                    seen = max(seen, count)
+                    best, good = data, page
+                    info = data.get("paginationInfo")
+                    if not isinstance(info, dict) or info.get("isLastPage", True) or page >= cap:
+                        break
+                    if count >= crawl.max_products(self.key):
+                        break
+                if bad is None:
+                    page = min(page * 2, cap)
+                elif bad - good <= 1:
+                    break
+                else:
+                    page = (good + bad) // 2
+        except ShopError as exc:
+            if best is None:
+                raise
+            raise crawl.Partial(parse_category(best, slug), exc) from exc
+        if best is None:
             raise ShopError("HTTP 404 o 410: la categoría ya no existe")
-        return parse_category(data, slug)
+        return parse_category(best, slug)[: crawl.max_products(self.key)]
 
     def _product_page(self, seo_id: str) -> dict | None:
         """La ficha de un producto a partir solo de su referencia. None si Zara no la conoce.

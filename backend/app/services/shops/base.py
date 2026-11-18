@@ -105,8 +105,17 @@ class ShopConnector(Protocol):
     # Esas solo hablan con la tienda en el hilo de las consultas (ver shops/browser.py).
     # needs_browser: bool
 
+    # Opcional: secciones que ya están dentro de otras ({"nike": ("baskets",)}). Si las que la contienen
+    # están activas y se han leído enteras, esta no se vuelve a recorrer.
+    # covered_by: dict[str, tuple[str, ...]]
+
     def list_category(self, slug: str) -> list[ShopProduct]:
-        """Los productos de una categoría. Lanza ShopError si la tienda no responde bien."""
+        """TODOS los productos de una categoría, página a página (ver crawl.py: antes de cada página
+        `crawl.before_page()`, después `crawl.page_read(n)`, y los topes de `crawl.max_pages`). Lanza
+        ShopError si la primera página falla, y `crawl.Partial` (con lo leído) si falla una siguiente."""
+
+    # Opcional: def cached_detail(self, store_data: dict) -> ShopDetail | None
+    #   La ficha sacada de lo que guardó el listado, sin volver a la tienda (fotos de su CDN incluidas).
 
     def detail(self, store_data: dict) -> ShopDetail | None:
         """La ficha de un producto. None si ya no existe en la tienda. Lanza ShopError si falla."""

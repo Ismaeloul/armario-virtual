@@ -58,6 +58,17 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   en este entorno («spawn UNKNOWN»). Las zapatillas guardan la marca y el algoritmo la aprende. Los nombres,
   colores y composición se traducen al español con Codex en lote (`services/ai/translate.py`), con modelo y
   esfuerzo propios en Ajustes (el usuario quiere Luna en bajo para traducir y Terra en alto para las fotos).
+  Tiendas nuevas acordadas con el usuario el 18-11-2026 (investigadas, SIN construir; notas y fixtures por
+  tienda en el scratchpad de esa sesión, carpeta `tiendas/`): sin navegador Nike (solo zapatillas), Jack & Jones,
+  Carhartt WIP y Foot Locker (por marcas y novedades; no pagina bien); con navegador Snipes, Size?, Jules, Bonobo,
+  Massimo Dutti y Lefties (mismo `inditex.py`), Uniqlo, Mango y Weekday; y H&M y COS solo con el listado (la ficha
+  da Access Denied: sin tallas). Fuera: Arket y Springfield (decisión del usuario: fotos dudosas / solo con
+  modelo), Adidas, New Balance, Levi's, Celio, Kiabi y Citadium (bloqueo o captcha también con navegador),
+  Stradivarius (sin hombre en Francia) y los marketplaces (Zalando, ASOS, About You, La Redoute: el usuario no
+  los quiere). No usar identificadores copiados de la web para llamar a APIs internas (Nike disponibilidad,
+  Uniqlo `x-fr-clientid`, Mango): esas tiendas van por el navegador escuchando lo que pide la página. Todas
+  nacen desactivadas. Ojo al investigar: un agente lanzó 33 peticiones seguidas a Mango y otro llegó al
+  cortafuegos de Citadium; las dos bloquearon un tiempo la IP de casa. Pausas siempre.
   Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
   va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se

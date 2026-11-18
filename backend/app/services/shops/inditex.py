@@ -4,10 +4,10 @@ de un antibots que solo deja pasar a un navegador de verdad con su ventana (ver 
 Cómo se lee (investigado el 18-11-2026):
 
 - Se abre la página de la sección con Chromium y se ESCUCHAN las respuestas JSON que la propia web
-  pide a `itxrest`: la de la categoría (`.../category/<id>/product?...`, con los ids de sus productos
-  en el orden de la tienda) y la primera tanda de fichas (`.../productsArray?productIds=...`). Las
-  fichas que faltan hasta PER_CATEGORY se piden desde dentro de la página (mismo origen), con la
-  misma dirección que usa la web. No se lee nada de lo que pinta la página.
+  pide a `itxrest`: la de la categoría (`.../category/<id>/product?...`, con los ids de TODOS sus
+  productos en el orden de la tienda) y la primera tanda de fichas (`.../productsArray?productIds=...`).
+  Las fichas que faltan (la sección entera, de noche y despacio: ver crawl.py) se piden desde dentro
+  de la página (mismo origen), con la misma dirección que usa la web. No se lee nada de lo que pinta.
 - `productsArray` trae ya la ficha entera de cada producto: todos sus colores, tallas, precio,
   composición y fotos. Así que el listado deja guardada una «instantánea» compacta del producto en
   `store_data` (`snap`), y la ficha (`detail`) sale de ahí sin volver a la tienda: lo nuevo de la
@@ -20,19 +20,19 @@ Cómo se lee (investigado el 18-11-2026):
 - Buscador: no. Abrir el navegador dentro de una petición HTTP no se hace; un enlace de estas tiendas
   responde con un mensaje que lo explica.
 """
+import math
 import re
 import time
 from dataclasses import dataclass, field
 from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 
 from ... import catalog, config
-from . import browser
+from . import browser, crawl
 from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
 from .estimate import estimate_color, estimate_pattern, estimate_season, estimate_style, estimate_type
 from .estimate import sentence_case
 from .fetch import IMAGE, Fetcher
 
-PER_CATEGORY = 40  # productos que se leen de cada sección: los primeros, en el orden de la tienda
 BATCH = 20  # fichas por petición, como las pide la web
 SNAPSHOT_HOURS = 24  # una instantánea más vieja se pide otra vez (si hay navegador)
 PHOTO_WIDTH = 1280
@@ -390,8 +390,12 @@ class InditexConnector:
     # --- la interfaz de los conectores
 
     def list_category(self, slug: str) -> list[ShopProduct]:
+        """La sección entera: la página da los ids de todos sus productos y sus fichas se piden de
+        BATCH en BATCH, como la web al bajar. Se guarda una instantánea compacta de cada una (ver
+        `snapshot`), sin las fotos. Si una tanda falla a mitad, `crawl.Partial` con lo leído."""
         _label, path, _default = self.site.categories[slug]
         session = browser.require(self.key)
+        crawl.before_page()
         responses = session.open(
             self.key, self.site.base + path,
             want=lambda url: self._is_category(url) or self._is_array(url),
@@ -401,7 +405,7 @@ class InditexConnector:
         category = next((r for r in responses if self._is_category(r.url) and isinstance(r.data, dict)), None)
         if category is None:
             raise ShopError("la respuesta no era la esperada (sin categoría)")
-        ids = category_ids(category.data)[:PER_CATEGORY]
+        ids = category_ids(category.data)[: crawl.max_products(self.key)]
         products: dict[str, dict] = {}
         template = None
         for response in responses:
@@ -411,19 +415,36 @@ class InditexConnector:
                     if isinstance(product, dict) and product.get("id") is not None:
                         products.setdefault(str(product["id"]), product)
         left = [i for i in ids if i not in products]
+        crawl.section_total(1 + math.ceil(len(left) / BATCH))
+        crawl.page_read(len(products))
         template = template or array_url(category.url)
-        for start in range(0, len(left), BATCH):
-            status, data = session.fetch_json(self.key, with_ids(template, left[start : start + BATCH]))
-            if status != 200 or not isinstance(data, dict):
-                if products:
-                    break  # con lo que ya hay basta: no se insiste
-                raise ShopError(f"HTTP {status}")
-            for product in data.get("products") or []:
-                if isinstance(product, dict) and product.get("id") is not None:
-                    products.setdefault(str(product["id"]), product)
         order = {product_id: index for index, product_id in enumerate(ids)}
-        ranked = sorted(products.items(), key=lambda pair: order.get(pair[0], len(order)))
-        return parse_products([product for _id, product in ranked], self.site, slug)
+
+        def parsed() -> list[ShopProduct]:
+            ranked = sorted(products.items(), key=lambda pair: order.get(pair[0], len(order)))
+            return parse_products([product for _id, product in ranked], self.site, slug)
+
+        try:
+            for start in range(0, len(left), BATCH):
+                crawl.before_page()
+                status, data = session.fetch_json(self.key, with_ids(template, left[start : start + BATCH]))
+                if status != 200 or not isinstance(data, dict):
+                    raise ShopError(f"HTTP {status}")
+                before = len(products)
+                for product in data.get("products") or []:
+                    if isinstance(product, dict) and product.get("id") is not None:
+                        products.setdefault(str(product["id"]), product)
+                crawl.page_read(len(products) - before)
+        except ShopError as exc:
+            if not products:
+                raise
+            raise crawl.Partial(parsed(), exc) from exc
+        return parsed()
+
+    def cached_detail(self, store_data: dict) -> ShopDetail | None:
+        """La ficha de la instantánea del listado, sea de cuando sea: las fotos están en la CDN, que
+        no necesita navegador. Las tallas pueden tener unos días (se comprueban con los «me gusta»)."""
+        return detail_from(self.site, store_data) if isinstance(store_data.get("snap"), dict) else None
 
     def detail(self, store_data: dict) -> ShopDetail | None:
         """La ficha de un color. Con la instantánea del listado si es reciente o si no hay navegador

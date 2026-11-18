@@ -13,6 +13,7 @@ import {
   ApiError,
   mediaUrl,
   type ShopColor,
+  type ShopCrawl,
   type ShopDiscardReason,
   type ShopFilter,
   type ShopItem,
@@ -101,8 +102,9 @@ export default function Compras() {
     if (filter.store && filteredStore && !filteredStore.enabled) changeFilter({ ...filter, store: null });
   }, [filter, filteredStore, changeFilter]);
 
-  // Mientras hay una consulta en marcha se sondea el estado; al terminar se piden las propuestas.
-  const running = state?.running ?? false;
+  // Mientras hay una consulta, un «Ver más» o una reposición en marcha se sondea el estado (y el
+  // avance); al terminar, o en cuanto hay propuestas, se piden.
+  const running = (state?.running ?? false) || Boolean(state?.refilling) || Boolean(next?.refilling);
   useEffect(() => {
     if (!running) return;
     const timer = window.setInterval(() => {
@@ -111,7 +113,18 @@ export default function Compras() {
         .shopState()
         .then((s) => {
           setState(s);
-          if (!s.running || s.pending > 0) api.shopNext(filterRef.current).then(setNext).catch(() => undefined);
+          // Si ya se está viendo una tarjeta, no se toca (la pila se pone al día al decidir).
+          if (!s.running || s.pending > 0)
+            api
+              .shopNext(filterRef.current)
+              .then((n) =>
+                setNext((now) => {
+                  if (!now?.item || !n.item || now.item.id === n.item.id) return n;
+                  const others = [n.item, ...n.queue].filter((o) => o.id !== now.item?.id);
+                  return { ...n, item: now.item, queue: others.slice(0, 2) };
+                }),
+              )
+              .catch(() => undefined);
         })
         .catch(() => undefined);
     }, POLL_MS);
@@ -238,6 +251,14 @@ function Discover({
   const askTimer = useRef(0);
   useEffect(() => () => window.clearTimeout(askTimer.current), []);
 
+  // La pila: las decisiones se enseñan al momento (la de debajo pasa arriba sin esperar al servidor) y
+  // se guardan en orden, una detrás de otra. `deciding` son las que aún no ha confirmado el servidor:
+  // no deben volver a salir aunque una respuesta anterior aún las traiga.
+  const latest = useRef(next);
+  latest.current = next;
+  const chain = useRef<Promise<unknown>>(Promise.resolve());
+  const deciding = useRef(new Set<number>());
+
   const ask = (value: { id: number; done: boolean } | null, ms = 0) => {
     window.clearTimeout(askTimer.current);
     setAsking(value);
@@ -246,6 +267,26 @@ function Discover({
 
   const enabled = state.stores.filter((s) => s.enabled);
   const item = next.item;
+  const behind = next.queue[0] ?? null;
+
+  // Precarga: la primera foto de la actual, de la siguiente y de la que va detrás (la segunda de la
+  // actual la precarga la propia tarjeta).
+  useEffect(() => {
+    for (const shopItem of [item, ...next.queue]) {
+      if (shopItem?.photos[0]) preloadPhoto(mediaUrl(shopItem.photos[0].url));
+    }
+  }, [item, next.queue]);
+
+  // La tarjeta de debajo crece según se aparta la de arriba.
+  const backCard = useRef<HTMLDivElement>(null);
+  const growBehind = useCallback((shift: number) => {
+    const el = backCard.current;
+    if (!el) return;
+    const p = Math.min(1, Math.abs(shift) / 160);
+    el.style.transform = `translateY(${(1 - p) * 8}px) scale(${0.955 + 0.045 * p})`;
+  }, []);
+  useLayoutEffect(() => growBehind(0), [item?.id, growBehind]);
+
   // Al elegir otro color cambia el item, pero la tarjeta es la misma: no debe entrar de nuevo ni
   // perder su sitio. Aquí se apunta a qué tarjeta pertenece cada color.
   const cards = useRef(new Map<number, number>());
@@ -254,28 +295,52 @@ function Discover({
     onItem(from.id, found);
   });
 
+  /** Lo que dice el servidor, sin deshacer lo que ya se ve: la tarjeta de arriba se queda si sigue pendiente. */
+  const merge = (answer: ShopNext): ShopNext => {
+    const shown = latest.current.item;
+    const all = [answer.item, ...answer.queue].filter(
+      (other): other is ShopItem => other !== null && !deciding.current.has(other.id),
+    );
+    const top = shown && all.some((other) => other.id === shown.id) ? shown : (all[0] ?? null);
+    return {
+      ...answer,
+      item: top,
+      queue: all.filter((other) => other.id !== top?.id).slice(0, 2),
+      remaining: Math.max(0, answer.remaining - deciding.current.size),
+    };
+  };
+
   const decide = (liked: boolean) => {
-    if (!item || busy || colors.pending) return;
+    if (!item || colors.pending) return;
     const id = item.id;
     sides.current.set(id, liked ? 1 : -1);
-    setBusy(true);
     setError(null);
-    (liked ? api.shopLike(id, filter) : api.shopDislike(id, filter))
-      .then((n) => {
-        setFly(0);
-        setBack(null);
-        onNext(n);
-        // La pregunta del motivo no frena nada: sale aparte, se puede ignorar y se va sola.
-        // Ya no se pregunta el motivo al descartar (decisión del usuario): descartar una prenda no
-        // siempre tiene un motivo que se pueda decir, y no debe sentirse como una encuesta.
-        ask(null);
+    setFly(0);
+    setBack(null);
+    ask(null);
+    deciding.current.add(id);
+    // Optimista: la de debajo pasa arriba ya.
+    const now = latest.current;
+    onNext({
+      ...now,
+      item: now.queue[0] ?? null,
+      queue: now.queue.slice(1),
+      remaining: Math.max(0, now.remaining - 1),
+      can_undo: true,
+    });
+    chain.current = chain.current
+      .then(() => (liked ? api.shopLike(id, filter) : api.shopDislike(id, filter)))
+      .then((answer) => {
+        deciding.current.delete(id);
+        onNext(merge(answer));
       })
       .catch(() => {
-        setFly(0);
+        // No se guardó: la tarjeta vuelve (el servidor la sigue teniendo pendiente).
+        deciding.current.delete(id);
         setError(t.compras.errorAccion);
         setAttempt((n) => n + 1);
-      })
-      .finally(() => setBusy(false));
+        return api.shopNext(filter).then((answer) => onNext(merge(answer))).catch(() => undefined);
+      });
   };
 
   /** Botón de la X o del corazón: la tarjeta sale volando hacia su lado y luego se guarda la decisión. */
@@ -285,17 +350,17 @@ function Discover({
     flyTimer.current = window.setTimeout(() => decide(liked), FLY_MS);
   };
 
-  /** «Volver»: deshace la última decisión y vuelve a enseñar esa tarjeta. */
+  /** «Volver»: deshace la última decisión y vuelve a enseñar esa tarjeta, encima de la pila. */
   const undo = () => {
     if (busy || !next.can_undo) return;
     setBusy(true);
     setError(null);
     ask(null);
-    api
-      .shopUndo(filter)
+    chain.current = chain.current
+      .then(() => api.shopUndo(filter))
       .then((n) => {
         if (n.item) setBack({ id: n.item.id, side: sides.current.get(n.item.id) ?? -1 });
-        onNext(n);
+        onNext({ ...n, queue: n.queue.filter((other) => !deciding.current.has(other.id)) });
       })
       .catch(() => setError(t.compras.errorVolver))
       .finally(() => setBusy(false));
@@ -367,6 +432,7 @@ function Discover({
   }
 
   // Dos filas de filtros con scroll horizontal: la tienda (solo si hay más de una) y el tipo de prenda.
+  // Se ven siempre: también mientras se consulta y cuando el filtro se queda sin propuestas.
   const filters = (
     <div className="flex flex-col gap-2">
       {enabled.length > 1 && (
@@ -410,6 +476,16 @@ function Discover({
     </button>
   );
 
+  // Qué está pasando de verdad (para la línea de arriba y los avisos): qué se trae y de dónde.
+  const store = enabled.find((s) => s.key === filter.store) ?? enabled[0];
+  const filtered = filter.category !== null || filter.store !== null;
+  const what = filter.category
+    ? (t.compras.filtros.categorias[filter.category] ?? "").toLowerCase()
+    : filter.store
+      ? t.compras.ocupado.deTienda(store.name)
+      : t.compras.ocupado.cosas;
+  const status = activity(state, next, filter, what);
+
   if (item) {
     return (
       <>
@@ -418,33 +494,57 @@ function Discover({
             item={viewing}
             onClose={() => {
               setViewing(null);
-              api.shopNext(filter).then(onNext).catch(() => undefined);
+              api.shopNext(filter).then((n) => onNext(merge(n))).catch(() => undefined);
             }}
           />
         )}
         {/* Todo en una pantalla: la foto se queda con el alto que sobra, para no tener que bajar a los botones. */}
         <div ref={fit.ref} style={fit.style} className="relative -mt-2 flex min-h-[25rem] flex-col gap-2.5">
         {filters}
-        {(state.running || state.last_more?.low) && (
-          <p className="truncate text-xs text-text-3">
-            {state.running
-              ? state.job === "mas"
-                ? t.compras.mas.aviso
-                : t.compras.buscando.aviso
-              : t.compras.mas.encajaMenos}
-          </p>
+        {(status || state.last_more?.low) && (
+          <button
+            type="button"
+            onClick={status?.crawl ? onOpenStores : undefined}
+            className="-my-1 truncate py-1 text-left text-xs text-text-3"
+          >
+            {status ? status.text : t.compras.mas.encajaMenos}
+          </button>
         )}
-        <SwipeCard
-          key={`${cards.current.get(item.id) ?? item.id}-${attempt}`}
-          item={item}
-          busy={busy || colors.pending !== null}
-          pending={colors.pending}
-          onColor={colors.pick}
-          fly={fly}
-          enterFrom={back?.id === item.id ? back.side : 0}
-          onDecide={decide}
-          onOpen={() => setViewing(item)}
-        />
+        {/* La pila: la de debajo ya pintada (con su foto) y sin sumar alto; la tercera solo se precarga. */}
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          {behind && (
+            <div
+              ref={backCard}
+              className="pointer-events-none absolute inset-0 flex flex-col transition-transform duration-150 ease-out"
+              style={{ transform: "translateY(8px) scale(0.955)" }}
+            >
+              <SwipeCard
+                key={behind.id}
+                still
+                item={behind}
+                busy
+                pending={null}
+                onColor={() => undefined}
+                fly={0}
+                enterFrom={0}
+                onDecide={() => undefined}
+                onOpen={() => undefined}
+              />
+            </div>
+          )}
+          <SwipeCard
+            key={`${cards.current.get(item.id) ?? item.id}-${attempt}`}
+            item={item}
+            busy={busy || colors.pending !== null}
+            pending={colors.pending}
+            onColor={colors.pick}
+            fly={fly}
+            enterFrom={back?.id === item.id ? back.side : 0}
+            onDecide={decide}
+            onOpen={() => setViewing(item)}
+            onShift={growBehind}
+          />
+        </div>
         {alert}
         <section className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex h-16 items-center justify-center gap-6">
           <span className="pointer-events-auto absolute left-3">{undoButton}</span>
@@ -473,19 +573,57 @@ function Discover({
     );
   }
 
-  if (state.running) {
-    const bringing = state.job === "mas";
+  // De verdad no hay nada que enseñar en ningún filtro y se está leyendo el catálogo (la primera
+  // consulta): la tarjeta grande, con el avance real.
+  if (state.crawl && state.pending === 0 && !next.can_undo) {
     return (
-      <Notice
-        icon="search"
-        title={bringing ? t.compras.mas.titulo : t.compras.buscando.titulo}
-        text={bringing ? t.compras.mas.texto : t.compras.buscando.texto}
-        pulse
-      >
-        <div className="h-1 w-full overflow-hidden rounded-full bg-control">
-          <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
-        </div>
-      </Notice>
+      <>
+        {filters}
+        <Notice icon="search" title={t.compras.buscando.titulo} text={t.compras.buscando.texto}>
+          <CrawlProgress crawl={state.crawl} />
+          <button type="button" onClick={onOpenStores} className="min-h-11 text-xs font-medium text-text-2 underline">
+            {t.compras.ocupado.tiendas}
+          </button>
+        </Notice>
+        {alert}
+      </>
+    );
+  }
+
+  // El filtro se ha quedado vacío mientras se trae más (la consulta, un «Ver más» o la reposición de
+  // ese tipo): se dice qué pasa, sin bloquear. Se puede quitar el filtro o volver atrás.
+  if (status) {
+    return (
+      <>
+        {filters}
+        <section className="card flex flex-col gap-3 p-4">
+          <p className="text-sm text-text">
+            {filtered ? `${t.compras.ocupado.vacioFiltro(what)} ` : ""}
+            {status.text}
+            {filtered && state.pending > 0 ? ` ${t.compras.ocupado.mientras}` : ""}
+          </p>
+          {status.crawl && state.crawl && <CrawlProgress crawl={state.crawl} />}
+          <div className={`grid gap-2 ${filtered && state.pending > 0 && next.can_undo ? "grid-cols-2" : ""}`}>
+            {filtered && state.pending > 0 && (
+              <SecondaryButton onClick={() => onFilter({ store: null, category: null })}>
+                {t.compras.ocupado.verTodo}
+              </SecondaryButton>
+            )}
+            {next.can_undo && (
+              <SecondaryButton onClick={undo}>
+                <Icon name="undo" size={18} />
+                {t.compras.volver}
+              </SecondaryButton>
+            )}
+          </div>
+          {status.crawl && (
+            <button type="button" onClick={onOpenStores} className="-my-2 min-h-11 self-start text-xs font-medium text-text-2 underline">
+              {t.compras.ocupado.tiendas}
+            </button>
+          )}
+        </section>
+        {alert}
+      </>
     );
   }
 
@@ -494,6 +632,7 @@ function Discover({
   if (broken && next.more === 0 && !next.can_undo) {
     return (
       <>
+        {filters}
         <Notice icon="error" danger title={t.compras.fallo.titulo(broken.name)} text={t.compras.fallo.texto}>
           {broken.status.error && (
             <p className="w-full rounded-lg bg-card-2 px-3 py-2 text-left font-mono text-[11px] break-words text-text-2">
@@ -514,10 +653,9 @@ function Discover({
   }
 
   // Se han visto todas las de la tanda (o las del filtro): «Ver más» trae la siguiente del catálogo
-  // guardado; si ya no queda, se dice y se ofrece consultar la tienda.
-  const store = enabled.find((s) => s.key === filter.store) ?? enabled[0];
+  // guardado; si ya no queda, se dice tal cual y cuándo llegará más.
   const last = enabled.map((s) => s.status.at).filter((at): at is string => !!at).sort().pop();
-  const upcoming = enabled.map((s) => s.next_check).filter((d): d is string => !!d).sort()[0];
+  const upcoming = nextConsult(enabled);
   const filterLabel = filter.category
     ? t.compras.filtros.categorias[filter.category]
     : filter.store
@@ -525,16 +663,18 @@ function Discover({
       : null;
   const when = [
     last ? t.compras.vacio.ultima(dateTime(last)) : t.compras.vacio.nunca,
-    upcoming ? t.compras.vacio.proxima(dayLabel(upcoming)) : "",
+    upcoming ? t.compras.vacio.proxima(upcoming) : "",
   ];
   const text =
     next.more > 0
       ? filterLabel
         ? t.compras.mas.quedanFiltro(filterLabel)
         : t.compras.mas.quedan
-      : [filterLabel ? t.compras.mas.agotadoFiltro(filterLabel) : last ? t.compras.mas.agotado : "", ...when]
-          .filter(Boolean)
-          .join(" ");
+      : filterLabel
+        ? upcoming
+          ? t.compras.ocupado.sinMas(what, upcoming)
+          : t.compras.ocupado.sinMasNunca(what)
+        : [last ? t.compras.mas.agotado : "", ...when].filter(Boolean).join(" ");
   return (
     <>
       {filters}
@@ -553,6 +693,8 @@ function Discover({
             <Icon name="add" size={20} />
             {busy ? t.compras.mas.trayendo : t.compras.mas.ver}
           </PrimaryButton>
+        ) : filtered && state.pending > 0 ? (
+          <PrimaryButton onClick={() => onFilter({ store: null, category: null })}>{t.compras.ocupado.verTodo}</PrimaryButton>
         ) : (
           <PrimaryButton disabled={busy} onClick={() => search(store)}>
             <Icon name="search" size={20} />
@@ -569,6 +711,96 @@ function Discover({
       {alert}
       {reasonBar}
     </>
+  );
+}
+
+/**
+ * Qué se está haciendo ahora que afecte a lo que se ve en Descubrir, en claro: traer más de lo que se
+ * está mirando («Trayendo más chaquetas y abrigos…») o consultar una tienda («Ahora mismo estoy
+ * consultando Bershka (sección 4 de 11)…»). null si no hay nada en marcha.
+ */
+function activity(
+  state: ShopState,
+  next: ShopNext,
+  filter: ShopFilter,
+  what: string,
+): { text: string; crawl: boolean } | null {
+  const mine =
+    state.refilling && state.refilling.store === filter.store && state.refilling.category === filter.category;
+  if (next.refilling || mine || state.job === "mas") return { text: t.compras.ocupado.trayendo(what), crawl: false };
+  const crawl = state.crawl;
+  if (!crawl || !crawl.store_name) return null;
+  const section = Math.min(crawl.sections_total, crawl.sections_done + 1) || 1;
+  const total = Math.max(crawl.sections_total, 1);
+  const filtered = filter.category !== null || filter.store !== null;
+  return {
+    text: filtered
+      ? t.compras.ocupado.consultando(crawl.store_name, section, total, what)
+      : t.compras.ocupado.consultandoSinFiltro(crawl.store_name, section, total),
+    crawl: true,
+  };
+}
+
+/** «el lunes, Pull&Bear»: cuándo es la próxima consulta automática de las tiendas activadas, y de cuál. */
+function nextConsult(stores: ShopStore[]): string | null {
+  const soonest = stores
+    .filter((s) => s.next_check_at)
+    .sort((a, b) => (a.next_check_at ?? "").localeCompare(b.next_check_at ?? ""))[0];
+  if (!soonest?.next_check_at) return null;
+  const day = dayLabel(soonest.next_check_at.slice(0, 10));
+  return `${day}, ${soonest.name}`;
+}
+
+/**
+ * La barra de avance de la consulta, de verdad: el porcentaje (que nunca retrocede) y debajo por dónde
+ * va y cuánto queda. Si aún no se puede saber el total, una barra que se mueve de lado a lado.
+ */
+function CrawlProgress({ crawl }: { crawl: ShopCrawl }) {
+  // Por si acaso, tampoco retrocede aquí: el total se va ajustando y la barra espera a alcanzarlo.
+  const best = useRef<{ key: string; value: number }>({ key: "", value: 0 });
+  const key = `${crawl.started_at}-${crawl.store}`;
+  if (best.current.key !== key) best.current = { key, value: 0 };
+  best.current.value = Math.max(best.current.value, crawl.percent);
+  const percent = Math.round(best.current.value);
+  const p = t.compras.progreso;
+  const parts = [
+    crawl.stores_total > 1
+      ? `${crawl.store_name} (${p.tienda(crawl.store_index, crawl.stores_total)})`
+      : crawl.store_name,
+    crawl.phase === "catalogo" ? crawl.section : p.fase[crawl.phase],
+    crawl.phase === "catalogo" && crawl.section && crawl.section_page > 0
+      ? p.pagina(crawl.section_page, crawl.section_pages)
+      : null,
+    crawl.cancelling ? p.cancelando : crawl.eta_seconds !== null ? p.quedan(crawl.eta_seconds) : p.calculando,
+  ].filter(Boolean);
+  return (
+    <div className="flex w-full flex-col gap-1.5">
+      <div
+        role="progressbar"
+        aria-label={p.aria(crawl.store_name ?? "")}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={crawl.known ? percent : undefined}
+        aria-valuetext={parts.join(" · ")}
+        className="relative h-1.5 w-full overflow-hidden rounded-full bg-control"
+      >
+        {crawl.known ? (
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+            style={{ width: `${Math.max(2, percent)}%` }}
+          />
+        ) : (
+          <div className="absolute inset-y-0 left-0 w-1/3 animate-indeterminate rounded-full bg-primary" />
+        )}
+      </div>
+      <div className="flex items-baseline justify-between gap-2 text-left text-[11px] text-text-2">
+        <span className="min-w-0 truncate">{parts.join(" · ")}</span>
+        {crawl.known && <span className="shrink-0 font-semibold tabular-nums text-text">{percent} %</span>}
+      </div>
+      <span className="text-left text-[11px] text-text-3">
+        {p.productos(crawl.products)} · {p.paginas(crawl.pages)}
+      </span>
+    </div>
   );
 }
 
@@ -675,9 +907,10 @@ function Notice({
   children?: ReactNode;
 }) {
   return (
-    <div className="card flex flex-col items-center gap-3 p-8 text-center">
+    // Compacta: con las dos filas de filtros encima tiene que caber sin scroll en un móvil de 700 px.
+    <div className="card flex flex-col items-center gap-3 px-6 py-5 text-center">
       <span
-        className={`flex h-14 w-14 items-center justify-center rounded-full bg-card-2 ${
+        className={`flex h-12 w-12 items-center justify-center rounded-full bg-card-2 ${
           danger ? "text-danger" : "text-primary"
         } ${pulse ? "animate-pulse" : ""}`}
       >
@@ -802,6 +1035,15 @@ function ColorDots({
   const row = useRef<HTMLDivElement>(null);
   const mouse = useRef<{ id: number; x: number; left: number; moved: boolean } | null>(null);
   const [more, setMore] = useState(false); // quedan colores a la derecha: se insinúan con un degradado
+  // Tocar un color apagado (aún sin descargar): un aviso pequeño, con su enlace, que se va solo.
+  const [hint, setHint] = useState<string | null>(null);
+  const hintTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(hintTimer.current), []);
+  const showHint = (url: string) => {
+    window.clearTimeout(hintTimer.current);
+    setHint(url);
+    hintTimer.current = window.setTimeout(() => setHint(null), 4000);
+  };
   const chosenRef = pending ?? colors?.find((c) => c.current)?.product_ref ?? null;
 
   const measure = () => {
@@ -844,7 +1086,20 @@ function ColorDots({
 
   if (!colors || colors.length < 2) return null;
   return (
-    <div className={`relative flex max-w-full min-w-0 overflow-hidden ${className}`}>
+    <div className={`relative flex max-w-full min-w-0 ${className}`}>
+      {hint && (
+        // Encima de la fila y fuera del flujo: no suma alto (Descubrir cabe en una pantalla).
+        <p
+          role="status"
+          className="pointer-events-auto absolute bottom-full left-1/2 z-10 mb-1.5 w-max max-w-[16rem] -translate-x-1/2 rounded-xl border border-line bg-card px-3 py-1.5 text-center text-[11px] leading-snug text-text-2 shadow-[0_2px_8px_rgb(0_0_0/0.12)]"
+        >
+          {t.compras.colores.aunNo}{" "}
+          <a href={externalHref(hint)} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline">
+            {t.compras.colores.verlo}
+          </a>
+        </p>
+      )}
+      <div className="relative flex max-w-full min-w-0 overflow-hidden rounded-[inherit]">
       <div
         ref={row}
         role="group"
@@ -886,23 +1141,30 @@ function ColorDots({
       >
         {colors.map((c) => {
           const chosen = pending ? pending === c.product_ref : c.current;
+          // Apagado: aún sin descargar (JD Sports). Se ve gris y con el aro a trazos; tocarlo solo avisa.
+          const off = c.available === false;
           return (
             <button
               key={c.product_ref}
               data-ref={c.product_ref}
               type="button"
-              aria-label={t.compras.colores.color(c.name)}
-              title={c.name}
+              aria-label={off ? t.compras.colores.noDisponible(c.name) : t.compras.colores.color(c.name)}
+              title={off ? t.compras.colores.noDisponible(c.name) : c.name}
               aria-pressed={chosen}
+              aria-disabled={off || undefined}
               aria-busy={pending === c.product_ref || undefined}
-              disabled={disabled || pending !== null}
-              onClick={() => !c.current && onPick(c.product_ref)}
+              disabled={!off && (disabled || pending !== null)}
+              onClick={() => (off ? showHint(c.url) : !c.current && onPick(c.product_ref))}
               className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full"
             >
               <span
                 className={`h-6 w-6 rounded-full border transition-shadow duration-200 ${
-                  // Los muy claros (blanco, crudo) se pierden en la pastilla: borde más marcado.
-                  isLightHex(c.hex) ? "border-text/45" : "border-text/20"
+                  off
+                    ? "border-dashed border-text/50 opacity-35 grayscale"
+                    : // Los muy claros (blanco, crudo) se pierden en la pastilla: borde más marcado.
+                      isLightHex(c.hex)
+                      ? "border-text/45"
+                      : "border-text/20"
                 } ${chosen ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : ""} ${
                   pending === c.product_ref ? "animate-pulse" : ""
                 }`}
@@ -918,6 +1180,7 @@ function ColorDots({
           className="pointer-events-none absolute inset-y-0 right-0 w-7 rounded-r-full bg-linear-to-l from-card to-transparent"
         />
       )}
+      </div>
     </div>
   );
 }
@@ -965,6 +1228,27 @@ function useFitHeight(shown: boolean) {
 let lastBackdrop: string | null = null;
 
 /**
+ * Fotos ya cargadas en memoria (dirección -> color de su esquina, o null si no se pudo leer). La pila
+ * de Descubrir precarga la primera foto de la actual y de las dos siguientes, y la segunda de la
+ * actual: así la tarjeta que entra sale ya con su foto y su fondo.
+ */
+const photoCache = new Map<string, string | null>();
+const photoLoading = new Set<string>();
+
+function preloadPhoto(url: string) {
+  if (photoCache.has(url) || photoLoading.has(url)) return;
+  photoLoading.add(url);
+  const img = new Image();
+  img.decoding = "async";
+  img.onload = () => {
+    photoLoading.delete(url);
+    photoCache.set(url, cornerColor(img));
+  };
+  img.onerror = () => photoLoading.delete(url);
+  img.src = url;
+}
+
+/**
  * ¿Es oscuro el fondo de la foto? Los puntos que indican cuántas fotos hay van encima de la foto, no
  * del tema de la app: tienen que contrastar con ella (negros sobre fondo claro, blancos sobre oscuro).
  * Sin dato se supone claro, que es lo normal en una foto de tienda.
@@ -1006,6 +1290,8 @@ function SwipeCard({
   enterFrom,
   onDecide,
   onOpen,
+  still = false,
+  onShift,
 }: {
   item: ShopItem;
   busy: boolean;
@@ -1015,6 +1301,10 @@ function SwipeCard({
   enterFrom: -1 | 0 | 1; // tras «Volver», el lado por el que se fue y por el que vuelve
   onDecide: (liked: boolean) => void;
   onOpen: () => void; // tocar el nombre: los datos de la prenda y con qué combina
+  /** La tarjeta de debajo de la pila: solo se pinta (ni se toca ni se lee). */
+  still?: boolean;
+  /** Cuánto se ha movido (px): la de debajo crece según se aparta la de arriba. */
+  onShift?: (shift: number) => void;
 }) {
   const drag = useRef<{ id: number; x: number; y: number; active: boolean } | null>(null);
   const moved = useRef(false); // para que soltar un arrastre no cuente como toque en la foto o el enlace
@@ -1034,10 +1324,15 @@ function SwipeCard({
     return () => window.clearTimeout(wait);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  // Se empieza con el fondo de la foto anterior (los de una tienda se parecen) y la foto entra con un
+  // Si la primera foto ya está precargada (la pila lo hace), sale ya con su fondo y sin fundido. Si no,
+  // se empieza con el fondo de la foto anterior (los de una tienda se parecen) y la foto entra con un
   // fundido cuando ya está cargada y se sabe su color: así no hay salto de bandas ni parpadeo.
-  const [backdrop, setBackdrop] = useState<string | null>(lastBackdrop);
-  const [loaded, setLoaded] = useState<string | null>(null);
+  const first = item.photos[0];
+  const ready = first ? photoCache.has(mediaUrl(first.url)) : false;
+  const [backdrop, setBackdrop] = useState<string | null>(
+    (first && photoCache.get(mediaUrl(first.url))) || lastBackdrop,
+  );
+  const [loaded, setLoaded] = useState<string | null>(ready && first ? first.url : null);
   // La foto que se ve, apuntada con su item: al cambiar de color se empieza otra vez por la primera.
   const [at, setAt] = useState({ id: item.id, index: 0 });
   const timer = useRef(0);
@@ -1084,17 +1379,29 @@ function SwipeCard({
     }
   };
 
-  const shift = leaving ? leaving * 520 : entering ? entering * 520 : dx;
+  const shift = still ? 0 : leaving ? leaving * 520 : entering ? entering * 520 : dx;
   const strength = Math.min(1, Math.abs(shift) / 90);
   const photos = item.photos;
   const photo = at.id === item.id && at.index < photos.length ? at.index : 0;
+  const shiftRef = useRef(onShift);
+  shiftRef.current = onShift;
+  useEffect(() => {
+    shiftRef.current?.(shift);
+  }, [shift]);
+  // La segunda foto de la que se ve, también precargada: tocar «siguiente foto» es inmediato.
+  useEffect(() => {
+    if (!still && photos[1]) preloadPhoto(mediaUrl(photos[1].url));
+  }, [still, photos]);
 
   return (
     <div
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerEnd}
-      onPointerCancel={onPointerEnd}
+      aria-hidden={still || undefined}
+      // @ts-expect-error: `inert` aún no está en los tipos de React 18; el navegador lo entiende.
+      inert={still ? "" : undefined}
+      onPointerDown={still ? undefined : onPointerDown}
+      onPointerMove={still ? undefined : onPointerMove}
+      onPointerUp={still ? undefined : onPointerEnd}
+      onPointerCancel={still ? undefined : onPointerEnd}
       onClickCapture={(e) => {
         if (moved.current) {
           e.preventDefault();
@@ -1108,6 +1415,7 @@ function SwipeCard({
         transform: `translateX(${shift}px) rotate(${shift / 22}deg)`,
         transition: dragging ? "none" : `transform ${FLY_MS}ms ease-out, opacity ${FLY_MS}ms ease-out`,
         opacity: leaving || entering ? 0 : undefined,
+        zIndex: still ? undefined : 1,
       }}
     >
       <div className="relative min-h-0 w-full flex-1">
@@ -1131,6 +1439,7 @@ function SwipeCard({
               draggable={false}
               onLoad={(e) => {
                 const color = cornerColor(e.currentTarget);
+                photoCache.set(mediaUrl(photos[photo].url), color);
                 if (color) {
                   lastBackdrop = color;
                   setBackdrop(color);
@@ -1156,7 +1465,7 @@ function SwipeCard({
         {/* Los colores van sobre la foto, abajo: así no piden sitio y todo sigue cabiendo en una pantalla. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center px-3">
           <ColorDots
-            colors={item.colors}
+            colors={still ? null : item.colors}
             pending={pending}
             disabled={busy && !pending}
             onPick={onColor}
@@ -2056,6 +2365,12 @@ function SearchResult({
           {error || colors.error}
         </p>
       )}
+      {item.photo_pending && (
+        <p className="flex items-center gap-1.5 text-xs text-text-2">
+          <Icon name="search" size={15} />
+          {t.compras.buscador.fotoPendiente}
+        </p>
+      )}
 
       {item.saved === "comprado" ? (
         <div className="flex flex-col gap-2 border-t border-control pt-3">
@@ -2114,7 +2429,7 @@ function SearchResult({
               {t.compras.buscador.enMeGustan}
             </p>
           )}
-          <div className={`grid gap-2 ${item.saved === "gustado" ? "" : "grid-cols-2"}`}>
+          <div className={`grid gap-2 ${item.saved === "gustado" || item.photo_pending ? "" : "grid-cols-2"}`}>
             {item.saved !== "gustado" && (
               <button
                 type="button"
@@ -2126,6 +2441,7 @@ function SearchResult({
                 {busy === "gusta" ? t.compras.buscador.guardando : t.compras.si}
               </button>
             )}
+            {!item.photo_pending && (
             <button
               type="button"
               disabled={busy !== null}
@@ -2140,6 +2456,7 @@ function SearchResult({
               <Icon name="check_circle" size={18} />
               {t.compras.buscador.yaLaTengo}
             </button>
+            )}
           </div>
         </div>
       )}
@@ -2187,6 +2504,13 @@ function StoresPanel({
       .finally(() => setBusy(false));
   };
 
+  const [night, setNight] = useState(state.night_time);
+  useEffect(() => setNight(state.night_time), [state.night_time]);
+  const saveNight = (value: string) => {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value) || value === state.night_time) return;
+    act(api.shopNight(value), t.compras.panel.nocheError);
+  };
+
   const toggleCategory = (store: ShopStore, slug: string) => {
     const chosen = store.categories.filter((c) => (c.slug === slug ? !c.enabled : c.enabled)).map((c) => c.slug);
     act(api.shopSettings({ store: store.key, categories: chosen }), t.compras.panel.errorGuardar);
@@ -2223,6 +2547,20 @@ function StoresPanel({
           className="-mt-1 flex flex-col gap-4 overflow-y-auto px-5 pt-1 pb-5"
         >
           <p className="text-sm text-text-2">{t.compras.panel.intro}</p>
+          <section className="card flex flex-col gap-2 p-4">
+            <label className="flex items-center justify-between gap-3">
+              <span className="font-display text-base font-semibold">{t.compras.panel.noche}</span>
+              <input
+                type="time"
+                value={night}
+                onChange={(e) => setNight(e.target.value)}
+                onBlur={(e) => saveNight(e.target.value)}
+                disabled={busy}
+                className={`${inputClass} h-11 w-32 text-center`}
+              />
+            </label>
+            <p className="text-xs text-text-2">{t.compras.panel.nocheTexto}</p>
+          </section>
           {error && (
             <p role="alert" className="text-sm text-danger">
               {error}
@@ -2230,6 +2568,8 @@ function StoresPanel({
           )}
           {state.stores.map((store) => {
             const status = store.status;
+            const crawl = state.crawl?.store === store.key ? state.crawl : null;
+            const hour = store.next_check_at ? store.next_check_at.slice(11, 16).replace(/^0/, "") : null;
             return (
               <section key={store.key} className="card flex flex-col gap-3.5 p-4">
                 <div className="flex items-center justify-between gap-3">
@@ -2250,11 +2590,31 @@ function StoresPanel({
                   />
                 </div>
 
+                {crawl && (
+                  <div className="flex flex-col gap-2 rounded-xl bg-card-2 p-3">
+                    <span className="label-caps text-text-2">{t.compras.panel.leyendo}</span>
+                    <CrawlProgress crawl={crawl} />
+                    <SecondaryButton
+                      onClick={() => !crawl.cancelling && act(api.shopCancel(), t.compras.panel.errorGuardar)}
+                    >
+                      <Icon name="close" size={18} />
+                      {crawl.cancelling ? t.compras.panel.cancelando : t.compras.panel.cancelar}
+                    </SecondaryButton>
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-1 text-xs text-text-2">
                   {status.at && (
                     <>
                       <p>{t.compras.panel.ultima(dateTime(status.at))}</p>
-                      <p>{t.compras.panel.trajo(status.found, status.added)}</p>
+                      <p>
+                        {t.compras.panel.trajo(status.found, status.added)}
+                        {status.pages > 0 ? ` · ${t.compras.panel.recorrido(status.pages, status.seconds)}` : ""}
+                      </p>
+                      {status.cancelled && <p>{t.compras.panel.cancelada}</p>}
+                      {status.resume && !crawl && (
+                        <p className="text-text">{t.compras.panel.incompleta(status.sections, status.sections_total)}</p>
+                      )}
                       <p className={status.failed > 0 ? "text-danger" : ""}>
                         {status.failed > 0 ? t.compras.panel.fallaron(status.failed) : t.compras.panel.sinFallos}
                       </p>
@@ -2275,7 +2635,9 @@ function StoresPanel({
                   {store.browser && <p className="text-text-3">{t.compras.panel.conNavegador}</p>}
                   <p>
                     {store.enabled && store.next_check
-                      ? t.compras.panel.proxima(dayLabel(store.next_check))
+                      ? t.compras.panel.proxima(
+                          [dayLabel(store.next_check), hour ? t.compras.panel.a(hour) : ""].filter(Boolean).join(" "),
+                        )
                       : t.compras.panel.desactivadaTexto}
                   </p>
                 </div>
@@ -2307,6 +2669,7 @@ function StoresPanel({
                   <Icon name="refresh" size={20} />
                   {state.running ? t.compras.panel.consultando : t.compras.panel.consultar}
                 </PrimaryButton>
+                <p className="-mt-1.5 text-center text-[11px] text-text-3">{t.compras.panel.consultarAviso}</p>
               </section>
             );
           })}
