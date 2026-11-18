@@ -652,6 +652,8 @@ function useFitHeight(shown: boolean) {
  * El color de la esquina de la foto. Las fotos de tienda tienen un fondo liso; pintando con él los
  * lados que la foto no cubre, parece que llena la tarjeta. Si no se puede leer, se queda el de la app.
  */
+let lastBackdrop: string | null = null;
+
 function cornerColor(img: HTMLImageElement): string | null {
   try {
     const canvas = document.createElement("canvas");
@@ -679,7 +681,10 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [leaving, setLeaving] = useState<-1 | 0 | 1>(0);
-  const [backdrop, setBackdrop] = useState<string | null>(null);
+  // Se empieza con el fondo de la foto anterior (los de una tienda se parecen) y la foto entra con un
+  // fundido cuando ya está cargada y se sabe su color: así no hay salto de bandas ni parpadeo.
+  const [backdrop, setBackdrop] = useState<string | null>(lastBackdrop);
+  const [loaded, setLoaded] = useState<string | null>(null);
   const [photo, setPhoto] = useState(0);
   const timer = useRef(0);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -755,7 +760,7 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
         aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : undefined}
         disabled={photos.length < 2}
         onClick={() => setPhoto((n) => (n + 1) % photos.length)}
-        className="relative block min-h-0 w-full flex-1 overflow-hidden bg-card-2"
+        className="relative block min-h-0 w-full flex-1 overflow-hidden bg-card-2 transition-colors duration-300"
         style={backdrop ? { backgroundColor: backdrop } : undefined}
       >
         {photos[photo] && (
@@ -763,8 +768,17 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
             src={mediaUrl(photos[photo].url)}
             alt={item.name}
             draggable={false}
-            onLoad={(e) => setBackdrop(cornerColor(e.currentTarget))}
-            className="absolute inset-0 h-full w-full object-contain"
+            onLoad={(e) => {
+              const color = cornerColor(e.currentTarget);
+              if (color) {
+                lastBackdrop = color;
+                setBackdrop(color);
+              }
+              setLoaded(photos[photo].url);
+            }}
+            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
+              loaded === photos[photo].url ? "opacity-100" : "opacity-0"
+            }`}
           />
         )}
         {photos.length > 1 && (
