@@ -1,4 +1,4 @@
-import { useCallback, useState, type CSSProperties, type ImgHTMLAttributes, type Ref } from "react";
+import { useCallback, useRef, useState, type CSSProperties, type ImgHTMLAttributes, type Ref } from "react";
 
 /** Bloque gris con un destello que lo recorre: ocupa el sitio de lo que está cargando. */
 export function Skeleton({ className = "", style }: { className?: string; style?: CSSProperties }) {
@@ -11,17 +11,32 @@ export const stagger = (index: number, step = 45): CSSProperties => ({
 });
 
 /** Una foto que aparece suavemente cuando termina de cargar, en vez de pintarse de golpe. */
-export function FadeImg({ className = "", ...props }: ImgHTMLAttributes<HTMLImageElement>) {
+export function FadeImg({
+  className = "",
+  onReady,
+  ...props
+}: ImgHTMLAttributes<HTMLImageElement> & {
+  /** La foto ya está cargada (también si venía de la caché): para leer su tamaño real. */
+  onReady?: (img: HTMLImageElement) => void;
+}) {
   const [loaded, setLoaded] = useState(false);
+  const ready = useRef(onReady);
+  ready.current = onReady;
   // Si ya estaba en la caché del navegador no llega el evento: se mira al montar.
   const ref = useCallback((img: HTMLImageElement | null) => {
-    if (img?.complete) setLoaded(true);
+    if (img?.complete && img.naturalWidth) {
+      setLoaded(true);
+      ready.current?.(img);
+    }
   }, []);
   return (
     <img
       {...props}
       ref={ref}
-      onLoad={() => setLoaded(true)}
+      onLoad={(e) => {
+        setLoaded(true);
+        ready.current?.(e.currentTarget);
+      }}
       onError={() => setLoaded(true)}
       className={`${className} transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
     />

@@ -94,7 +94,14 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.7** (18-11-2026): fotos de tienda al añadir la prenda. El usuario
+- **Publicada en el Umbrel: 0.4.8** (19-11-2026): la foto de la Ficha. El recuadro toma la proporción
+  de la foto (sin bandas); la de la primera se mide antes de pintar la ficha y la foto va a su ancho,
+  pegada arriba, para que al cambiar de alto no parezca que hace zoom. Puntos abajo en vez de «Vista
+  frontal / posterior» y toque en la mitad derecha o izquierda para pasar de foto, en bucle como en
+  Compras. El botón de girar ya NO está en la Ficha: solo al añadir la prenda (decisión del usuario).
+  `ScrollManager` en `main.tsx`: al entrar en una pantalla el scroll va arriba (antes la ficha heredaba
+  el del Armario) y al volver atrás se recupera donde se estaba.
+- **Antes: 0.4.7** (18-11-2026): fotos de tienda al añadir la prenda. El usuario
   confirmó en el Umbrel que Codex genera imágenes dentro del contenedor y convirtió sus dos prendas; la
   tarjeta temporal de la Ficha ya NO existe. Ahora, en «Nueva prenda», tras el análisis sale cada foto
   junto a la que redibuja Codex (`components/StudioReview.tsx`, `POST /api/photos/studio`, de una en una):

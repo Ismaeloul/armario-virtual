@@ -1,14 +1,14 @@
 import { externalHref } from "../lib/links";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { PrimaryButton, RotateButton, Switch } from "../components/Controls";
+import { PrimaryButton, Switch } from "../components/Controls";
 import { CopyRow } from "../components/CopyButton";
 import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
 import { DetailSkeleton, FadeImg } from "../components/Skeleton";
 import { cap, t } from "../i18n/es";
-import { ApiError, api, mediaUrl, type Catalog, type Garment } from "../lib/api";
+import { ApiError, api, mediaUrl, type Catalog, type Garment, type Photo } from "../lib/api";
 
 function Row({ icon, label, children }: { icon: IconName; label: string; children: ReactNode }) {
   return (
@@ -47,21 +47,45 @@ export default function FichaPrenda() {
   // "missing": la prenda no existe (404); "red": no se pudo cargar (servidor caído, etc.).
   const [loadError, setLoadError] = useState<"missing" | "red" | null>(null);
   const [view, setView] = useState<"photo_front" | "photo_back" | "photo_extra" | "photo_label">("photo_front");
+  // La proporción (ancho/alto) de cada foto: el recuadro toma la de la foto que enseña, así no quedan
+  // bandas ni a los lados ni arriba y abajo. La de la primera se mide ANTES de pintar la ficha, para
+  // que el recuadro salga ya con su forma; las demás, por detrás. Sin medir, 3:4.
+  const ratios = useRef(new Map<string, number>());
+  const [, setMeasured] = useState(0);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [rotating, setRotating] = useState(false);
-  const [photoError, setPhotoError] = useState(false);
   const [patchError, setPatchError] = useState(false);
   const [wearing, setWearing] = useState(false);
   const [worn, setWorn] = useState(false);
   const [wearError, setWearError] = useState(false);
 
+  /** Carga una foto sin enseñarla para saber su proporción. */
+  const measure = (photo: Photo) =>
+    new Promise<void>((done) => {
+      if (ratios.current.has(photo.id)) return done();
+      const img = new Image();
+      img.onload = () => {
+        if (img.naturalWidth && img.naturalHeight) {
+          ratios.current.set(photo.id, img.naturalWidth / img.naturalHeight);
+          setMeasured((n) => n + 1);
+        }
+        done();
+      };
+      img.onerror = () => done();
+      img.src = mediaUrl(photo.url);
+    });
+
   const load = () => {
     setLoadError(null);
     api
       .garment(Number(id))
-      .then(setGarment)
+      .then(async (g) => {
+        // Como mucho se espera un momento por la primera foto: si tarda, la ficha sale igual.
+        await Promise.race([measure(g.photo_front), new Promise((done) => setTimeout(done, 1500))]);
+        setGarment(g);
+        for (const other of [g.photo_back, g.photo_extra, g.photo_label]) if (other) void measure(other);
+      })
       .catch((e) => setLoadError(e instanceof ApiError && e.status === 404 ? "missing" : "red"));
     api
       .catalog()
@@ -163,6 +187,9 @@ export default function FichaPrenda() {
     ] as const
   ).filter(([key]) => garment[key]);
   const photo = garment[view] ?? garment.photo_front;
+  const at = Math.max(0, views.findIndex(([key]) => key === view));
+  /** Pasa a otra foto, en bucle: tras la última vuelve la primera, y antes de la primera, la última. */
+  const go = (index: number) => setView(views[(index + views.length) % views.length][0]);
   const brandSize = [garment.brand, garment.size].filter(Boolean).join(" · ");
 
   return (
@@ -171,22 +198,35 @@ export default function FichaPrenda() {
       <Screen withNav={false}>
         <div className="flex animate-slide flex-col gap-4">
           {/* Foto: delante / detrás */}
-          <div className="relative overflow-hidden rounded-xl border border-line bg-card-2">
-            <FadeImg key={photo.id} src={mediaUrl(photo.url)} alt={garment.name} className="aspect-[3/4] w-full object-contain" />
-            <RotateButton
-              className="absolute right-3 top-3"
-              disabled={rotating}
-              onClick={() => {
-                setRotating(true);
-                setPhotoError(false);
-                api
-                  .rotatePhoto(photo.id)
-                  .then(() => api.garment(garment.id))
-                  .then(setGarment)
-                  .catch(() => setPhotoError(true))
-                  .finally(() => setRotating(false));
+          <div
+            className="relative overflow-hidden rounded-xl border border-line bg-card-2 transition-[aspect-ratio] duration-300 ease-out"
+            style={{ aspectRatio: ratios.current.get(photo.id) ?? 3 / 4 }}
+          >
+            <FadeImg
+              key={photo.id}
+              src={mediaUrl(photo.url)}
+              alt={garment.name}
+              onReady={(img) => {
+                if (!img.naturalWidth || !img.naturalHeight || ratios.current.has(photo.id)) return;
+                ratios.current.set(photo.id, img.naturalWidth / img.naturalHeight);
+                setMeasured((n) => n + 1);
               }}
+              // A su ancho y con su alto natural, pegada arriba: mientras el recuadro cambia de alto la
+              // foto no se estira ni se amplía, solo se va descubriendo.
+              className="absolute inset-x-0 top-0 h-auto w-full"
             />
+            {/* Tocar la mitad derecha pasa a la foto siguiente; la izquierda, a la anterior. */}
+            {views.length > 1 && (
+              <button
+                type="button"
+                aria-label={t.ficha.fotoN(at + 1, views.length, views[at][1])}
+                onClick={(e) => {
+                  const box = e.currentTarget.getBoundingClientRect();
+                  go(e.clientX < box.left + box.width / 2 ? at - 1 : at + 1);
+                }}
+                className="absolute inset-0 h-full w-full"
+              />
+            )}
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-line bg-card/90 px-2.5 py-1 backdrop-blur-md">
               {garment.on_order ? (
                 <Icon name="package_box" size={13} className="text-primary" />
@@ -199,27 +239,22 @@ export default function FichaPrenda() {
                 {garment.on_order ? t.ficha.pedida : garment.in_laundry ? t.ficha.enLavadora : t.ficha.disponible}
               </span>
             </div>
+            {/* Un punto por foto, como en Compras; el alargado es la que se ve. */}
             {views.length > 1 && (
-              <div className="absolute bottom-3 left-3 right-3 flex justify-center">
-                <div className="flex gap-1 rounded-full bg-text/75 p-1 backdrop-blur-md">
-                  {views.map(([key, label]) => (
-                    <button
+              <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
+                <span className="flex items-center gap-1.5 rounded-full bg-text/55 px-2 py-1.5 backdrop-blur-md">
+                  {views.map(([key]) => (
+                    <span
                       key={key}
-                      type="button"
-                      aria-pressed={view === key}
-                      onClick={() => setView(key)}
-                      className={`rounded-full px-3 py-2 text-[11px] font-medium ${
-                        view === key ? "bg-bg text-text" : "text-bg"
+                      className={`h-1.5 rounded-full bg-bg transition-all duration-300 ease-out ${
+                        key === view ? "w-4" : "w-1.5 opacity-50"
                       }`}
-                    >
-                      {label}
-                    </button>
+                    />
                   ))}
-                </div>
+                </span>
               </div>
             )}
           </div>
-          {photoError && <p className="-mt-2 text-center text-xs text-danger">{t.comun.errorRed}</p>}
 
           {/* Título */}
           <div>

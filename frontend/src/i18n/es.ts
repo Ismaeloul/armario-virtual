@@ -424,6 +424,7 @@ export const t = {
     pedidaTexto: "No se te propone en los outfits hasta que la marques como recibida.",
     pedidaDesde: (cuando: string) => `Pedida el ${cuando}.`,
     recibida: "Ya me ha llegado",
+    fotoN: (n: number, total: number, cual: string) => `Foto ${n} de ${total}: ${cual}. Toca para cambiar`,
     delante: "Vista frontal",
     detras: "Vista posterior",
     etiqueta: "Etiqueta",
@@ -528,7 +529,7 @@ export const t = {
     olvidar: "Borrar lo aprendido",
     olvidarConfirmar: "Toca otra vez para confirmar",
     olvidado: "Hecho. El algoritmo empieza de cero.",
-    version: "Armario · v0.4.7",
+    version: "Armario · v0.4.8",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",
