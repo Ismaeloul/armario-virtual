@@ -45,6 +45,8 @@ CANDIDATE = "candidato"
 NEW, LIKED, DISCARDED, BOUGHT, EXPIRED = "nuevo", "gustado", "descartado", "comprado", "caducado"
 
 LIKED_DAYS = 30  # lo que dura un «me gusta» antes de caducar
+BOUGHT_WEIGHT = 3.0  # una compra enseña tanto como tres «me gusta»
+LAPSED_WEIGHT = 0.5  # un «me gusta» que caducó o se quitó sin comprar
 EXPIRES_SOON_DAYS = 5  # desde cuándo se avisa de que caduca pronto
 DESCRIPTION_MAX = 400  # caracteres de la descripción de la tienda que se guardan en `details`
 
@@ -274,9 +276,11 @@ class ShopTaste:
     prices: dict[str, list[float]] = field(default_factory=dict)
     words: dict[str, list[float]] = field(default_factory=dict)
 
-    def learn(self, item, liked: bool, reason: str | None = None) -> None:
-        """Un «me gusta» cuenta entero en todo. Un «no me gusta» carga la culpa según el motivo (`_BLAME`)."""
-        by_type, by_color, by_price, by_word = (1.0, 1.0, 1.0, 1.0) if liked else _BLAME.get(reason, _BLAME[None])
+    def learn(self, item, liked: bool, reason: str | None = None, strength: float = 1.0) -> None:
+        """Un «me gusta» cuenta entero en todo (por `strength`: una compra vale varias veces más).
+        Un «no me gusta» carga la culpa según el motivo (`_BLAME`)."""
+        blame = (1.0, 1.0, 1.0, 1.0) if liked else _BLAME.get(reason, _BLAME[None])
+        by_type, by_color, by_price, by_word = (strength * part for part in blame)
         votes = [
             (self.types, item.type, by_type),
             (self.colors, item.color, by_color),
@@ -308,13 +312,18 @@ class ShopTaste:
 
 
 def load_shop_taste(db: Session) -> ShopTaste:
-    """Cuenta como «me gusta» todo lo que alguna vez gustó (aunque luego se quitara o se comprara) y
-    como «no me gusta» lo descartado sin haberlo guardado. Lo caducado sin valorar no dice nada, y lo
+    """Cada señal con su peso (acordado con el usuario): lo que compra manda (`BOUGHT_WEIGHT`), un
+    «me gusta» cuenta 1, un «me gusta» que no acabó en compra (caducó o lo quitó) cuenta la mitad
+    (`LAPSED_WEIGHT`) y un descarte, casi nada (`_BLAME`). Lo caducado sin valorar no dice nada, y lo
     deshecho con «Volver» tampoco: vuelve a estar pendiente."""
     learned = ShopTaste()
-    for item in db.scalars(select(ShopItem).where(ShopItem.status.in_((LIKED, DISCARDED, BOUGHT)))):
-        if item.liked_at is not None:
+    for item in db.scalars(select(ShopItem).where(ShopItem.status.in_((LIKED, DISCARDED, BOUGHT, EXPIRED)))):
+        if item.status == BOUGHT:
+            learned.learn(item, True, strength=BOUGHT_WEIGHT)
+        elif item.status == LIKED:
             learned.learn(item, True)
+        elif item.liked_at is not None:  # gustó, pero caducó o lo quitó sin comprarlo
+            learned.learn(item, True, strength=LAPSED_WEIGHT)
         elif item.status == DISCARDED:
             learned.learn(item, False, item.discard_reason)
     return learned

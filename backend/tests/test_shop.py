@@ -1145,3 +1145,32 @@ def test_las_columnas_nuevas_se_anaden_a_una_tabla_shop_items_que_ya_existia():
         columns = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(shop_items)")}
         row = conn.exec_driver_sql("SELECT decided_at, can_undo, discard_reason FROM shop_items").one()
     assert {"decided_at", "can_undo", "discard_reason"} <= columns and tuple(row) == (None, None, None)
+
+
+def test_cada_senal_pesa_lo_suyo_al_aprender(client):
+    """Comprar manda (3), un me gusta cuenta 1, uno que no acabó en compra 0,5 y un descarte casi nada."""
+    from datetime import datetime, timezone
+
+    from app.db import SessionLocal
+    from app.models import ShopItem
+
+    def add(db, ref, status, liked=False):
+        db.add(ShopItem(
+            store="zara", product_ref=ref, name="Prenda", price_cents=2995, url="https://example.com",
+            type="camisa", category="parte_superior", color="negro", pattern="liso", style="casual",
+            season="todo_el_ano", status=status, liked_at=datetime.now(timezone.utc) if liked else None,
+            batch=datetime.now(timezone.utc).date(),
+        ))
+
+    with SessionLocal() as db:
+        add(db, "comprada", shopping.BOUGHT, liked=True)
+        db.commit()
+        assert shopping.load_shop_taste(db).types["camisa"] == [3.0, 3.0]
+        add(db, "gustada", shopping.LIKED, liked=True)
+        add(db, "caducada", shopping.EXPIRED, liked=True)
+        add(db, "quitada", shopping.DISCARDED, liked=True)
+        add(db, "sin_valorar", shopping.EXPIRED)
+        add(db, "descartada", shopping.DISCARDED)
+        db.commit()
+        net, total = shopping.load_shop_taste(db).types["camisa"]
+    assert (net, total) == pytest.approx((3 + 1 + 0.5 + 0.5 - 0.2, 3 + 1 + 0.5 + 0.5 + 0.2))
