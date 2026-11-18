@@ -50,6 +50,7 @@ class Garment(Base):
     favorite: Mapped[bool] = mapped_column(Boolean, default=False)
 
     ai_provider: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    ai_model: Mapped[str | None] = mapped_column(String(60), nullable=True)  # modelo y esfuerzo usados
     ai_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     # Lo que propuso la IA, tal cual, para compararlo con lo que se guardó y afinar las instrucciones.
     ai_draft: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -105,6 +106,51 @@ class Rating(Base):
     source: Mapped[str] = mapped_column(String(20), default="gustos")  # "gustos" o "hoy"
     outfit_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class ShopItem(Base):
+    """Un producto de una tienda propuesto en la pestaña Compras, y qué se hizo con él.
+
+    Se guarda para siempre aunque se descarte o caduque: así no se vuelve a proponer.
+    """
+
+    __tablename__ = "shop_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    store: Mapped[str] = mapped_column(String(20), index=True)
+    product_ref: Mapped[str] = mapped_column(String(80), unique=True, index=True)  # producto + color
+    name: Mapped[str] = mapped_column(String(160))
+    price_cents: Mapped[int] = mapped_column(Integer)
+    url: Mapped[str] = mapped_column(Text)
+    store_color: Mapped[str] = mapped_column(String(60), default="")
+    store_color_hex: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    section: Mapped[str] = mapped_column(String(80), default="")  # categoría de la tienda
+    store_data: Mapped[dict] = mapped_column(JSON, default=dict)  # lo que el conector necesita para el detalle
+
+    # Estimación sin IA de nuestros campos cerrados.
+    type: Mapped[str] = mapped_column(String(40))
+    category: Mapped[str] = mapped_column(String(40))
+    color: Mapped[str] = mapped_column(String(40))
+    pattern: Mapped[str] = mapped_column(String(40))
+    style: Mapped[str] = mapped_column(String(40))
+    season: Mapped[str] = mapped_column(String(20))
+    details: Mapped[str] = mapped_column(Text, default="")
+
+    # Ids de foto de services/storage.py (delante, detrás, otra vista). Al comprar pasan a la prenda.
+    photos: Mapped[list] = mapped_column(JSON, default=list)
+    score: Mapped[float] = mapped_column(Float, default=0.0)
+    reasons: Mapped[list] = mapped_column(JSON, default=list)  # [{"text": …, "kind": "pro" | "contra"}]
+    # nuevo · gustado · descartado · comprado · caducado
+    status: Mapped[str] = mapped_column(String(20), index=True)
+    batch: Mapped[date] = mapped_column(Date, index=True)  # la tanda en la que llegó
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    liked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    in_stock: Mapped[bool] = mapped_column(Boolean, default=True)
+    sizes: Mapped[list] = mapped_column(JSON, default=list)  # [{"name": "M", "in_stock": true}]
+    garment_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # si se compró
+    ai_draft: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # lo que dijo la IA al comprarla
 
 
 class Setting(Base):

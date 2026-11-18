@@ -6,6 +6,21 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 ## Estado
 
 - Diseño cerrado. Stitch queda solo como referencia visual; no se le mandan más cambios.
+- **En `main`, sin publicar: Fase 4, Compras (18-11-2026).** Pestaña «Compras» (quinta pestaña, carrito)
+  con «Descubrir» (tarjetas tipo Tinder, deslizar o botones), «Me gustan» y el panel «Tiendas» (estado de
+  cada tienda: funciona / falló / sin consultar, error en claro, próxima consulta, «Consultar ahora» y
+  categorías). Conector por tienda en `services/shops/` (solo Zara), lógica en `services/shopping.py`, API
+  en `routers/shop.py`, tabla `shop_items`. Zara se lee SIN navegador y SIN IA (comprobado desde el PC y
+  desde el Umbrel): tipo, color y estampado se estiman por el nombre; Codex solo analiza al marcar «La he
+  comprado». Cada tienda se consulta un día fijo a la semana, el siguiente a sus novedades (Zara: viernes,
+  porque saca novedades los jueves según la prensa; no es dato oficial). Una tanda completa real: 1.220
+  productos vistos, 40 propuestas, 116 s. Lo descartado o caducado no se vuelve a proponer; los «me gusta»
+  caducan a los 30 días o si se agotan. La tienda arranca desactivada. Sin probar: «La he comprado» con
+  Codex real, el bucle semanal en un proceso largo, nada en el Umbrel, modo oscuro.
+- **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se
+  lee de `models_cache.json` de la carpeta de Codex (`services/ai/codex_models.py`); vacío = el de Codex
+  por defecto. Esfuerzo: bajo, medio o alto. Cada prenda guarda con qué modelo se analizó (`ai_model`).
+  Probado con un análisis real (gpt-6.2-astra · medium, 20 s frente a ~12 s por defecto).
 - **Barrido de pulido (18-11-2026, publicado en la 0.3.2):** 53 fallos e incoherencias corregidos por
   agentes (confirmaciones con `ConfirmDialog` propio en vez de `window.confirm`, errores que se tragaban,
   campos a 16 px para que iOS no haga zoom, timeouts de Codex, fotos compartidas, fecha de «hoy» en
@@ -125,7 +140,7 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
 - `stitch/*.html` son referencia visual, no base de código. `stitch/original/` es lo que salió de Stitch sin tocar.
 - Pantallas: Hoy, Armario (catálogo), Añadir Prenda, Ficha de Prenda, Gustos y Ajustes, en claro y oscuro.
   Gustos no tiene diseño en Stitch: se hizo directamente en código con el mismo estilo.
-- Barra inferior con 4 pestañas: Hoy, Armario, Gustos y Ajustes. Botón flotante "+" solo en Armario
+- Barra inferior con 5 pestañas: Hoy, Armario, Gustos, Compras y Ajustes. Botón flotante "+" solo en Armario
   (abajo a la derecha, encima de la barra). El 17-11-2026 se probó el "+" en el centro de la barra y al
   usuario no le gustó: no volver a proponerlo.
 - Iconos: Tabler (`@tabler/icons`, línea) como SVG en línea, elegidos por el usuario el 18-11-2026 entre

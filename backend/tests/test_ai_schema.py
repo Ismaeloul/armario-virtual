@@ -210,3 +210,31 @@ def test_el_lector_de_limites_no_espera_si_codex_se_cierra_sin_responder(monkeyp
     with pytest.raises(RuntimeError):  # el fallo se recuerda un rato
         codex_usage.read(timeout=10)
     codex_usage.forget()
+
+
+def test_el_modelo_y_el_esfuerzo_de_codex_salen_de_ajustes(client, tmp_path, monkeypatch):
+    from app.services.ai import codex_models
+
+    cache = tmp_path / "models_cache.json"
+    cache.write_text(
+        '{"models": ['
+        '{"slug": "m-oculto", "visibility": "hide", "priority": 1, "input_modalities": ["text", "image"]},'
+        '{"slug": "m-texto", "visibility": "list", "priority": 2, "input_modalities": ["text"]},'
+        '{"slug": "m-vision", "display_name": "M Visión", "visibility": "list", "priority": 3,'
+        ' "input_modalities": ["text", "image"], "default_reasoning_level": "low",'
+        ' "supported_reasoning_levels": [{"effort": "low"}, {"effort": "high"}, {"effort": "ultra"}]}]}',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path))
+    listed = client.get("/api/ai/codex/models").json()
+    assert [m["slug"] for m in listed["models"]] == ["m-vision"]  # solo los visibles y con visión
+    assert listed["models"][0]["efforts"] == ["low", "high"]
+
+    assert codex_models.cli_args() == []  # sin elegir nada, manda Codex
+    saved = client.patch("/api/settings", json={"codex_model": "m-vision", "codex_effort": "high"}).json()
+    assert (saved["codex_model"], saved["codex_effort"]) == ("m-vision", "high")
+    assert codex_models.cli_args() == ["--model", "m-vision", "-c", 'model_reasoning_effort="high"']
+    assert client.patch("/api/settings", json={"codex_effort": "ultra"}).status_code == 422
+    assert client.patch("/api/settings", json={"codex_model": "malo; rm -rf"}).status_code == 422
+    client.patch("/api/settings", json={"codex_model": "", "codex_effort": ""})
+    assert codex_models.cli_args() == []

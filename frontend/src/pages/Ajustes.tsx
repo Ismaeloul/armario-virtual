@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import { CodexSession } from "../components/CodexSession";
 import { ForgetTaste } from "../components/ForgetTaste";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { Segmented, Switch, inputClass } from "../components/Controls";
+import { Field, Segmented, Switch, inputClass } from "../components/Controls";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
-import { api, mediaUrl, type AIStatus, type Garment, type Settings } from "../lib/api";
+import { api, mediaUrl, type AIStatus, type CodexModels, type Garment, type Settings } from "../lib/api";
 import { applyTheme, storedTheme } from "../lib/theme";
 
 function Section({ label, children }: { label: string; children: ReactNode }) {
@@ -42,6 +42,7 @@ export default function Ajustes() {
   const [city, setCity] = useState("");
   const [laundry, setLaundry] = useState<Garment[]>([]);
   const [ai, setAi] = useState<AIStatus | null>(null);
+  const [models, setModels] = useState<CodexModels | null>(null);
   const [claudeKey, setClaudeKey] = useState("");
   const [keyError, setKeyError] = useState(false);
   // Ajuste cuyo último cambio no llegó al servidor (se muestra el aviso en su sección).
@@ -65,6 +66,7 @@ export default function Ajustes() {
   };
 
   useEffect(() => {
+    api.codexModels().then(setModels).catch(() => undefined); // sin la lista no se enseña el selector
     api
       .settings()
       .then((s) => {
@@ -186,6 +188,43 @@ export default function Ajustes() {
             )}
 
             {ai && <CodexSession ai={ai} onChange={loadAi} />}
+
+            {models && models.models.length > 0 && (
+              <div className="flex flex-col gap-2 border-t border-control pt-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label={t.ajustes.codexModelo}>
+                    <select
+                      className={inputClass}
+                      value={settings?.codex_model ?? ""}
+                      onChange={(e) => change({ codex_model: e.target.value })}
+                    >
+                      <option value="">{t.ajustes.codexAuto}</option>
+                      {models.models.map((m) => (
+                        <option key={m.slug} value={m.slug}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label={t.ajustes.codexEsfuerzo}>
+                    <select
+                      className={inputClass}
+                      value={settings?.codex_effort ?? ""}
+                      onChange={(e) => change({ codex_effort: e.target.value })}
+                    >
+                      <option value="">{t.ajustes.codexEsfuerzoAuto}</option>
+                      {models.efforts.map((e) => (
+                        <option key={e} value={e}>
+                          {t.ajustes.codexEsfuerzos[e] ?? e}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+                <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.codexModeloTexto}</p>
+                {changeFailed("codex_model", "codex_effort")}
+              </div>
+            )}
 
             <form
               className="flex flex-col gap-1.5"

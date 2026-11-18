@@ -10,13 +10,13 @@ from sqlalchemy import select
 
 from . import config
 from .db import SessionLocal, init_db
-from .models import Garment
-from .routers import garments, settings, taste, today
-from .services import storage
+from .models import Garment, ShopItem
+from .routers import garments, settings, shop, taste, today
+from .services import shopping, storage
 
 
-def _cleanup_orphan_photos() -> None:
-    """Al arrancar: fuera las fotos de análisis que nunca se guardaron como prenda."""
+def referenced_photos() -> set[str]:
+    """Las fotos que tienen dueño: las de las prendas y las de las propuestas de Compras."""
     with SessionLocal() as db:
         referenced = {
             photo
@@ -24,7 +24,14 @@ def _cleanup_orphan_photos() -> None:
             for photo in row
             if photo
         }
-    removed = storage.cleanup_orphans(referenced)
+        # Las fotos de las propuestas de Compras tampoco son huérfanas.
+        referenced.update(photo for photos in db.scalars(select(ShopItem.photos)) for photo in photos or [])
+    return referenced
+
+
+def _cleanup_orphan_photos() -> None:
+    """Al arrancar: fuera las fotos de análisis que nunca se guardaron como prenda."""
+    removed = storage.cleanup_orphans(referenced_photos())
     if removed:
         logging.getLogger("armario").info("Fotos huérfanas borradas: %s", removed)
 
@@ -34,7 +41,10 @@ async def lifespan(_app: FastAPI):
     config.ensure_dirs()
     init_db()
     _cleanup_orphan_photos()
+    if config.SHOP_AUTO:
+        shopping.start_scheduler()
     yield
+    shopping.stop_scheduler()
 
 
 app = FastAPI(title="Armario virtual", lifespan=lifespan)
@@ -51,6 +61,7 @@ app.include_router(garments.router)
 app.include_router(settings.router)
 app.include_router(today.router)
 app.include_router(taste.router)
+app.include_router(shop.router)
 
 
 @app.get("/api/health")

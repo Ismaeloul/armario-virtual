@@ -1,0 +1,209 @@
+{
+ "paginationInfo": {
+  "page": 1,
+  "pageSize": 20,
+  "isLastPage": false,
+  "isDisabled": false
+ },
+ "productGroups": [
+  {
+   "type": "main",
+   "elements": [
+    {
+     "id": "seo",
+     "commercialComponents": [
+      {
+       "id": 590649460,
+       "type": "Product",
+       "kind": "Wear",
+       "name": "SOBRECAMISA ESTRUCTURA BRILLO",
+       "price": 6995,
+       "seo": {
+        "keyword": "sobrecamisa-estructura-brillo",
+        "seoProductId": "05854122",
+        "discernProductId": 590649460
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "800",
+          "productId": 590649460,
+          "name": "Negro"
+         }
+        ]
+       }
+      },
+      {
+       "id": 545474962,
+       "type": "Product",
+       "kind": "Wear",
+       "name": "SOBRECAMISA REGULAR FIT EFECTO ANTE",
+       "price": 4995,
+       "seo": {
+        "keyword": "sobrecamisa-regular-fit-efecto-ante",
+        "seoProductId": "03046510",
+        "discernProductId": 545474962
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "778",
+          "productId": 545474962,
+          "name": "Coñac"
+         }
+        ]
+       }
+      },
+      {
+       "id": 1,
+       "type": "Product",
+       "kind": "Wear",
+       "name": "",
+       "price": 1995,
+       "seo": {
+        "keyword": "x",
+        "seoProductId": "00000001",
+        "discernProductId": 1
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "800",
+          "name": ""
+         }
+        ]
+       }
+      },
+      {
+       "id": 2,
+       "type": "Bundle",
+       "kind": "Marketing",
+       "name": "LOOK DE TEMPORADA",
+       "price": 1995,
+       "seo": {
+        "keyword": "look",
+        "seoProductId": "00000002",
+        "discernProductId": 2
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "800",
+          "name": "Negro"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "banner"
+    },
+    {
+     "id": "resto",
+     "commercialComponents": [
+      {
+       "id": 580427085,
+       "type": "Product",
+       "kind": "Wear",
+       "name": "SOBRECAMISA REGULAR FIT CUADROS",
+       "price": 4995,
+       "seo": {
+        "keyword": "sobrecamisa-regular-fit-cuadros",
+        "seoProductId": "05854111",
+        "discernProductId": 580427085
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "505",
+          "productId": 580427085,
+          "name": "Khaki"
+         }
+        ]
+       }
+      },
+      {
+       "id": 545474964,
+       "type": "Product",
+       "kind": "Wear",
+       "name": "SOBRECAMISA REGULAR FIT EFECTO ANTE",
+       "price": 4995,
+       "seo": {
+        "keyword": "sobrecamisa-regular-fit-efecto-ante",
+        "seoProductId": "03046510",
+        "discernProductId": 545474964
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "251",
+          "productId": 545474964,
+          "name": "Blanco roto"
+         }
+        ]
+       }
+      },
+      {
+       "id": 3,
+       "type": "Product",
+       "kind": "Wear",
+       "name": "SOBRECAMISA SIN SEO",
+       "price": 1995,
+       "seo": {},
+       "detail": {
+        "colors": [
+         {
+          "id": "800",
+          "name": "Negro"
+         }
+        ]
+       }
+      },
+      {
+       "id": 4,
+       "type": "Product",
+       "kind": "Wear",
+       "name": "PACK CALCETINES RAYAS",
+       "price": 995,
+       "seo": {
+        "keyword": "pack-calcetines-rayas",
+        "seoProductId": "00000004",
+        "discernProductId": 4
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "800",
+          "name": "Negro"
+         }
+        ]
+       }
+      },
+      {
+       "id": 590649460,
+       "type": "Product",
+       "kind": "Wear",
+       "name": "SOBRECAMISA ESTRUCTURA BRILLO",
+       "price": 6995,
+       "seo": {
+        "keyword": "sobrecamisa-estructura-brillo",
+        "seoProductId": "05854122",
+        "discernProductId": 590649460
+       },
+       "detail": {
+        "colors": [
+         {
+          "id": "800",
+          "productId": 590649460,
+          "name": "Negro"
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

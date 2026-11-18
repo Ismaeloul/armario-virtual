@@ -42,10 +42,11 @@ const TABS: { to: string; label: string; icon: IconName; active: IconName }[] = 
   { to: "/", label: t.nav.hoy, icon: "sunny", active: "sunny_fill" },
   { to: "/armario", label: t.nav.armario, icon: "checkroom", active: "checkroom_fill" },
   { to: "/gustos", label: t.nav.gustos, icon: "favorite", active: "favorite_fill" },
+  { to: "/compras", label: t.nav.compras, icon: "cart", active: "cart_fill" },
   { to: "/ajustes", label: t.nav.ajustes, icon: "tune", active: "tune_fill" },
 ];
 
-/** Barra inferior con cuatro pestañas: Hoy, Armario, Gustos y Ajustes. */
+/** Barra inferior con cinco pestañas: Hoy, Armario, Gustos, Compras y Ajustes. */
 export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-line bg-bg/90 pb-safe backdrop-blur-xl">
@@ -56,7 +57,7 @@ export function BottomNav() {
             to={tab.to}
             end={tab.to === "/"}
             className={({ isActive }) =>
-              `flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 ${
+              `flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 ${
                 isActive ? "font-semibold text-text" : "text-text-3"
               }`
             }

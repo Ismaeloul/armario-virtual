@@ -46,6 +46,7 @@ export type Analysis = {
   photo_label: Photo | null;
   draft: Draft | null;
   provider: string | null;
+  model?: string | null;
   fallback_used: boolean;
   error: string | null;
 };
@@ -64,9 +65,16 @@ export type Catalog = {
   themes: string[];
 };
 
+export type CodexModels = {
+  models: { slug: string; name: string; efforts: string[]; default_effort: string | null }[];
+  efforts: string[];
+};
+
 export type Settings = {
   theme: string;
   ai_provider: string;
+  codex_model: string;
+  codex_effort: string;
   city: string;
   notify_enabled: boolean;
   notify_time: string;
@@ -118,6 +126,52 @@ export type Taste = {
   learned: { likes: string[][]; dislikes: string[][] };
 };
 
+export type ShopReason = { text: string; kind: "pro" | "contra" };
+export type ShopSize = { name: string; in_stock: boolean };
+
+/** Un producto de una tienda propuesto en Compras. */
+export type ShopItem = {
+  id: number;
+  store: string;
+  store_name: string;
+  name: string;
+  price_cents: number;
+  url: string;
+  store_color: string;
+  type: string;
+  category: string;
+  color: string;
+  photos: Photo[];
+  score: number;
+  reasons: ShopReason[];
+  status: string;
+  sizes: ShopSize[];
+  liked_at: string | null;
+  expires_at: string | null;
+  expires_soon: boolean;
+};
+
+export type ShopStore = {
+  key: string;
+  name: string;
+  enabled: boolean;
+  categories: { slug: string; label: string; enabled: boolean }[];
+  /** Día de la semana en que se consulta (lunes = 0). */
+  weekday: number;
+  status: {
+    state: "ok" | "failed" | "never";
+    at: string | null;
+    found: number;
+    added: number;
+    failed: number;
+    error: string | null;
+  };
+  next_check: string | null;
+};
+
+export type ShopState = { stores: ShopStore[]; running: boolean; pending: number; liked: number };
+export type ShopNext = { item: ShopItem | null; remaining: number };
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -154,6 +208,7 @@ export const mediaUrl = (path: string) => BASE + path;
 export const api = {
   catalog: () => request<Catalog>("/api/catalog"),
   settings: () => request<Settings>("/api/settings"),
+  codexModels: () => request<CodexModels>("/api/ai/codex/models"),
   codexLoginStart: () => request<CodexLogin>("/api/ai/codex/login", { method: "POST" }),
   codexLoginStatus: () => request<CodexLogin>("/api/ai/codex/login"),
   codexLoginCancel: () => request<void>("/api/ai/codex/login", { method: "DELETE" }),
@@ -167,6 +222,18 @@ export const api = {
   tasteForget: () => request<void>("/api/taste", { method: "DELETE" }),
   tasteRate: (body: { garment_ids: number[]; liked: boolean; reasons: string[]; culprit_ids: number[] }) =>
     request<Taste>("/api/taste/rate", json("POST", body)),
+  shopState: () => request<ShopState>("/api/shop/state"),
+  shopSettings: (body: { store: string; enabled?: boolean; categories?: string[] }) =>
+    request<ShopState>("/api/shop/settings", json("PATCH", body)),
+  /** Lanza la consulta en segundo plano y vuelve ya; el avance se sigue con shopState. */
+  shopRefresh: (store?: string) => request<ShopState>("/api/shop/refresh", json("POST", { store: store ?? null })),
+  shopNext: () => request<ShopNext>("/api/shop/next"),
+  shopLike: (id: number) => request<ShopNext>(`/api/shop/items/${id}/like`, { method: "POST" }),
+  shopDislike: (id: number) => request<ShopNext>(`/api/shop/items/${id}/dislike`, { method: "POST" }),
+  shopLiked: () => request<ShopItem[]>("/api/shop/liked"),
+  shopRemove: (id: number) => request<void>(`/api/shop/items/${id}`, { method: "DELETE" }),
+  shopBought: (id: number, size: string | null) =>
+    request<{ garment_id: number; analyzed: boolean }>(`/api/shop/items/${id}/bought`, json("POST", { size })),
   today: () => request<Today>("/api/today"),
   todayNext: (action: "otra" | "pasar") => request<Today>("/api/today/next", json("POST", { action })),
   todayChoose: () => request<Today>("/api/today/choose", { method: "POST" }),
@@ -215,6 +282,7 @@ export const api = {
       photo_extra: string | null;
       photo_label: string | null;
       ai_provider: string | null;
+      ai_model: string | null;
       ai_confidence: number | null;
       ai_draft: Draft | null;
     },

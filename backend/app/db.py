@@ -40,6 +40,7 @@ _NEW_COLUMNS = {
         "photo_extra": "VARCHAR(32)",
         "photo_extra_original": "VARCHAR(64)",
         "closure": "VARCHAR(20)",
+        "ai_model": "VARCHAR(60)",
         "hood": "BOOLEAN",
         "fit": "VARCHAR(20)",
         "thickness": "VARCHAR(20)",

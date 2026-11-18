@@ -5,7 +5,7 @@ from .. import catalog
 from ..db import get_db
 from ..models import Setting
 from ..schemas import AIStatus, CodexLogin, CodexUsage, SettingsOut, SettingsUpdate
-from ..services.ai import codex_login, codex_usage
+from ..services.ai import codex_login, codex_models, codex_usage
 from ..services.ai import claude as claude_ai
 from ..services.ai.selector import ANALYZERS
 
@@ -14,6 +14,8 @@ router = APIRouter(prefix="/api", tags=["ajustes"])
 DEFAULTS = {
     "theme": "sistema",
     "ai_provider": "codex",
+    "codex_model": "",
+    "codex_effort": "",
     "city": "Argenteuil",
     "notify_enabled": "true",
     "notify_time": "07:30",
@@ -26,6 +28,8 @@ def read_settings(db: Session) -> SettingsOut:
     return SettingsOut(
         theme=values["theme"],
         ai_provider=values["ai_provider"],
+        codex_model=values["codex_model"],
+        codex_effort=values["codex_effort"],
         city=values["city"],
         notify_enabled=values["notify_enabled"] == "true",
         notify_time=values["notify_time"],
@@ -92,6 +96,12 @@ def codex_logout():
     except RuntimeError as exc:
         raise HTTPException(502, str(exc)) from exc
     return ai_status()
+
+
+@router.get("/ai/codex/models")
+def codex_models_list():
+    """Modelos que Codex ofrece a esta cuenta (de su propia caché) y los esfuerzos que se pueden elegir."""
+    return {"models": codex_models.available(), "efforts": list(codex_models.EFFORTS)}
 
 
 @router.get("/ai/codex/usage", response_model=CodexUsage)

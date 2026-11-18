@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from . import codex_models
 from ... import config
 from .base import OUTPUT_SCHEMA, AnalysisError
 from .process import NEW_SESSION, kill_tree
@@ -50,8 +51,7 @@ class CodexAnalyzer:
                 "--output-schema", str(schema_file),
                 "--output-last-message", str(result_file),
             ]
-            if config.CODEX_MODEL:
-                cmd += ["--model", config.CODEX_MODEL]
+            cmd += codex_models.cli_args()  # modelo y esfuerzo elegidos en Ajustes
             for image in images:
                 cmd += ["--image", str(image)]
             cmd.append("-")  # el prompt entra por stdin: sin problemas de comillas

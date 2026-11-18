@@ -68,6 +68,7 @@ class GarmentCreate(GarmentFields):
     photo_extra: str | None = Field(default=None, pattern=PHOTO_ID)
     photo_label: str | None = Field(default=None, pattern=PHOTO_ID)
     ai_provider: AIProvider | None = None
+    ai_model: str | None = Field(default=None, max_length=60)
     ai_confidence: float | None = Field(default=None, ge=0, le=1)
     ai_draft: GarmentDraft | None = None  # la propuesta original de la IA, sin los retoques del usuario
 
@@ -126,6 +127,7 @@ class GarmentOut(BaseModel):
     laundry_since: datetime | None
     favorite: bool
     ai_provider: str | None
+    ai_model: str | None = None
     ai_confidence: float | None
     wear_count: int
     last_worn_on: date | None
@@ -142,6 +144,7 @@ class AnalyzeResponse(BaseModel):
     photo_label: Photo | None
     draft: GarmentDraft | None
     provider: str | None  # quién analizó de verdad
+    model: str | None = None  # con qué modelo, si se sabe
     fallback_used: bool  # True si no fue el proveedor elegido en Ajustes
     error: str | None
 
@@ -160,6 +163,8 @@ class WearIn(BaseModel):
 class SettingsOut(BaseModel):
     theme: Theme
     ai_provider: AIProvider
+    codex_model: str  # vacío = el que Codex use por defecto
+    codex_effort: str  # vacío = el del modelo
     city: str
     notify_enabled: bool
     notify_time: str
@@ -168,6 +173,8 @@ class SettingsOut(BaseModel):
 class SettingsUpdate(BaseModel):
     theme: Theme | None = None
     ai_provider: AIProvider | None = None
+    codex_model: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._-]{0,40}$")
+    codex_effort: Literal["", "low", "medium", "high"] | None = None
     city: str | None = Field(default=None, min_length=1, max_length=80)
     notify_enabled: bool | None = None
     notify_time: str | None = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")

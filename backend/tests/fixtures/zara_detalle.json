@@ -1,0 +1,133 @@
+{
+ "product": {
+  "id": 590648890,
+  "type": "Product",
+  "name": "SOBRECAMISA ESTRUCTURA BRILLO",
+  "seo": {
+   "keyword": "sobrecamisa-estructura-brillo",
+   "description": "Sobrecamisa regular fit confeccionada en tejido con hilo efecto brillo. Cuello solapa y manga larga con pliegues en el puño. Cierre frontal con cremallera de doble dirección.",
+   "breadCrumb": [
+    {
+     "text": "SOBRECAMISA ESTRUCTURA BRILLO",
+     "id": 0
+    }
+   ],
+   "seoProductId": "05854122",
+   "discernProductId": 590649460,
+   "keyWordI18n": [
+    {
+     "langId": -1,
+     "keyword": "shiny-textured-overshirt"
+    },
+    {
+     "langId": -5,
+     "keyword": "sobrecamisa-estructura-brillo"
+    },
+    {
+     "langId": -11,
+     "keyword": "gaineko-alkandora-distiradun-egiturarekin"
+    },
+    {
+     "langId": -12,
+     "keyword": "sobrecamisa-estrutura-brilo"
+    },
+    {
+     "langId": -13,
+     "keyword": "sobrecamisa-estructura-brill-de-llavis"
+    }
+   ]
+  },
+  "detail": {
+   "colors": [
+    {
+     "id": "800",
+     "hexCode": "#0A0A0A",
+     "productId": 590649460,
+     "name": "Negro",
+     "price": 6995,
+     "description": "Sobrecamisa regular fit confeccionada en tejido con hilo efecto brillo. Cuello solapa y manga larga con pliegues en el puño. Cierre frontal con cremallera de doble dirección.",
+     "sizes": [
+      {
+       "name": "S",
+       "availability": "out_of_stock"
+      },
+      {
+       "name": "M",
+       "availability": "in_stock"
+      },
+      {
+       "name": "L",
+       "availability": "in_stock"
+      },
+      {
+       "name": "XL",
+       "availability": "in_stock"
+      }
+     ],
+     "xmedia": [
+      {
+       "type": "image",
+       "kind": "full",
+       "path": "/assets/public/4645/dcbd/30f344df9902/73b6efb4d9a8/05854122800-p",
+       "name": "05854122800-p"
+      },
+      {
+       "type": "image",
+       "kind": "other",
+       "path": "/assets/public/10d5/8ae0/6703456aaa4c/1299437c28a4/05854122800-a2",
+       "name": "05854122800-a2"
+      },
+      {
+       "type": "image",
+       "kind": "other",
+       "path": "/assets/public/35bb/9f1b/550b49eca096/b12dcb6612a4/05854122800-a3",
+       "name": "05854122800-a3"
+      },
+      {
+       "type": "image",
+       "kind": "other",
+       "path": "/assets/public/27f9/0345/ca1949e68501/98bf65e976ce/05854122800-a4",
+       "name": "05854122800-a4"
+      },
+      {
+       "type": "image",
+       "kind": "other",
+       "path": "/assets/public/450e/b475/a9ca4ffebaea/14d5a2bd7bf1/05854122800-a5",
+       "name": "05854122800-a5"
+      },
+      {
+       "type": "hls",
+       "kind": "animation",
+       "path": "/assets/public/83d1/c6eb/fb764c85ba48/9e436de3805f/05854122800-p",
+       "name": "master"
+      },
+      {
+       "type": "image",
+       "kind": "plain",
+       "path": "/assets/public/383e/c4df/a9a545b5a9ce/46d9fc7de9b7/05854122800-e1",
+       "name": "05854122800-e1"
+      },
+      {
+       "type": "image",
+       "kind": "plain",
+       "path": "/assets/public/ab25/df12/c1124cea8572/e167c12b32f8/05854122800-e2",
+       "name": "05854122800-e2"
+      },
+      {
+       "type": "image",
+       "kind": "plain",
+       "path": "/assets/public/c379/4ac8/d05649c5b39b/005467262462/05854122800-e4",
+       "name": "05854122800-e4"
+      },
+      {
+       "type": "image",
+       "kind": "plain",
+       "path": "/assets/public/3860/5950/50dc4fd1a0eb/b3bf3550e791/05854122800-e5",
+       "name": "05854122800-e5"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

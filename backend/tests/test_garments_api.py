@@ -112,6 +112,8 @@ def test_ajustes_por_defecto_y_cambio(client):
     assert client.get("/api/settings").json() == {
         "theme": "sistema",
         "ai_provider": "codex",
+        "codex_model": "",
+        "codex_effort": "",
         "city": "Argenteuil",
         "notify_enabled": True,
         "notify_time": "07:30",

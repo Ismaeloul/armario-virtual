@@ -7,6 +7,7 @@ import tune from "@tabler/icons/outline/adjustments-horizontal.svg?raw";
 import error from "@tabler/icons/outline/alert-circle.svg?raw";
 import notifications from "@tabler/icons/outline/bell.svg?raw";
 import bookmark_add from "@tabler/icons/outline/bookmark.svg?raw";
+import store from "@tabler/icons/outline/building-store.svg?raw";
 import calendar from "@tabler/icons/outline/calendar.svg?raw";
 import add_a_photo from "@tabler/icons/outline/camera-plus.svg?raw";
 import photo_camera from "@tabler/icons/outline/camera.svg?raw";
@@ -14,10 +15,12 @@ import done_all from "@tabler/icons/outline/checks.svg?raw";
 import arrow_back from "@tabler/icons/outline/chevron-left.svg?raw";
 import chevron_right from "@tabler/icons/outline/chevron-right.svg?raw";
 import check_circle from "@tabler/icons/outline/circle-check.svg?raw";
+import schedule from "@tabler/icons/outline/clock.svg?raw";
 import rain from "@tabler/icons/outline/cloud-rain.svg?raw";
 import cloud from "@tabler/icons/outline/cloud.svg?raw";
 import style from "@tabler/icons/outline/color-swatch.svg?raw";
 import contrast from "@tabler/icons/outline/contrast.svg?raw";
+import open_in_new from "@tabler/icons/outline/external-link.svg?raw";
 import weather from "@tabler/icons/outline/haze.svg?raw"; // Tabler no tiene «sol con nube»
 import favorite from "@tabler/icons/outline/heart.svg?raw";
 import history from "@tabler/icons/outline/history.svg?raw";
@@ -28,7 +31,9 @@ import add from "@tabler/icons/outline/plus.svg?raw";
 import refresh from "@tabler/icons/outline/refresh.svg?raw";
 import repeat from "@tabler/icons/outline/repeat.svg?raw";
 import rotate from "@tabler/icons/outline/rotate-clockwise.svg?raw";
+import search from "@tabler/icons/outline/search.svg?raw";
 import styler from "@tabler/icons/outline/shirt.svg?raw";
+import cart from "@tabler/icons/outline/shopping-cart.svg?raw";
 import snow from "@tabler/icons/outline/snowflake.svg?raw";
 import auto_awesome from "@tabler/icons/outline/sparkles.svg?raw";
 import sunny from "@tabler/icons/outline/sun.svg?raw";
@@ -39,6 +44,7 @@ import laundry from "@tabler/icons/outline/wash-machine.svg?raw";
 import close from "@tabler/icons/outline/x.svg?raw";
 import tune_fill from "@tabler/icons/filled/adjustments-horizontal.svg?raw";
 import favorite_fill from "@tabler/icons/filled/heart.svg?raw";
+import cart_fill from "@tabler/icons/filled/shopping-cart.svg?raw";
 import sunny_fill from "@tabler/icons/filled/sun.svg?raw";
 
 const checkroom =
@@ -58,6 +64,8 @@ const ICONS = {
   auto_awesome,
   bookmark_add,
   calendar,
+  cart,
+  cart_fill,
   check_circle,
   checkroom,
   checkroom_fill,
@@ -75,14 +83,18 @@ const ICONS = {
   laundry,
   location,
   notifications,
+  open_in_new,
   palette,
   photo_camera,
   rain,
   refresh,
   repeat,
   rotate,
+  schedule,
+  search,
   sell,
   snow,
+  store,
   style,
   styler,
   sunny,

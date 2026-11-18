@@ -223,6 +223,7 @@ export default function AnadirPrenda() {
         photo_extra: analysis.photo_extra?.id ?? null,
         photo_label: analysis.photo_label?.id ?? null,
         ai_provider: analysis.draft ? analysis.provider : null,
+        ai_model: analysis.draft ? (analysis.model ?? null) : null,
         ai_confidence: analysis.draft?.confidence ?? null,
         ai_draft: analysis.draft, // la propuesta original, para ver después qué se corrigió
       });

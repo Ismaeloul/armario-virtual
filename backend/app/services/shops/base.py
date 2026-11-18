@@ -1,0 +1,71 @@
+"""Interfaz común de los conectores de tiendas (Fase 4, Compras).
+
+Un conector sabe leer el catálogo de UNA tienda y devolverlo normalizado: nombre, precio, enlace y
+una estimación sin IA de nuestros campos cerrados (tipo, color, estampado, estilo y temporada).
+No compra nada ni toca datos de pago: la app solo enlaza a la página del producto.
+
+Para añadir una tienda (Pull&Bear, Bershka…): una clase con esta forma en su propio archivo y una
+línea en `CONNECTORS` (services/shops/__init__.py).
+"""
+from dataclasses import dataclass, field
+from typing import Protocol
+
+
+class ShopError(Exception):
+    """La tienda no respondió como se esperaba. El mensaje se enseña tal cual en el panel «Tiendas»,
+    así que va en claro: «HTTP 403», «tiempo agotado», «la respuesta no era la esperada»."""
+
+
+@dataclass
+class ShopProduct:
+    """Un producto del listado de una categoría, ya normalizado."""
+
+    store: str
+    product_ref: str  # único por producto + color, con la tienda delante ("zara:05854122-800")
+    name: str  # en formato de frase, no en MAYÚSCULAS
+    price_cents: int
+    url: str  # la página del producto, para el usuario
+    store_color: str  # el color tal como lo llama la tienda
+    section: str  # la categoría de la tienda de la que salió (slug)
+    # Estimación sin IA de nuestros campos cerrados.
+    type: str
+    category: str
+    color: str
+    pattern: str
+    style: str
+    season: str
+    details: str = ""  # texto libre (nombre, pistas de la categoría) para las reglas que leen palabras
+    # Lo que el conector necesita para volver a pedir el detalle de este producto más adelante.
+    store_data: dict = field(default_factory=dict)
+
+
+@dataclass
+class ShopDetail:
+    """La ficha de un producto: lo que no viene en el listado."""
+
+    price_cents: int | None
+    sizes: list[dict]  # [{"name": "M", "in_stock": True}]
+    photo_urls: list[str]  # fotos de producto sin modelo: delante, detrás, otra vista (como mucho 3)
+    description: str = ""
+    color_hex: str | None = None
+
+    @property
+    def in_stock(self) -> bool:
+        return any(size["in_stock"] for size in self.sizes)
+
+
+class ShopConnector(Protocol):
+    key: str  # "zara"
+    name: str  # "Zara": se enseña al usuario y es la marca de la prenda al comprarla
+    categories: dict[str, str]  # slug de la tienda -> nombre para el usuario
+    # Día de la semana en que se consulta (lunes = 0): el siguiente al que la tienda saca novedades.
+    refresh_weekday: int
+
+    def list_category(self, slug: str) -> list[ShopProduct]:
+        """Los productos de una categoría. Lanza ShopError si la tienda no responde bien."""
+
+    def detail(self, store_data: dict) -> ShopDetail | None:
+        """La ficha de un producto. None si ya no existe en la tienda. Lanza ShopError si falla."""
+
+    def download(self, url: str) -> bytes:
+        """Los bytes de una foto. Lanza ShopError si falla."""

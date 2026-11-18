@@ -17,6 +17,7 @@
   --on-chip: #444844;
   --line: transparent; /* en claro las tarjetas no llevan borde */
   --danger: #ba1a1a;
+  --ok: #2e7d4f; /* «funciona», «me gusta» al deslizar */
   --shadow-card: 0 2px 12px rgba(27, 27, 30, 0.04);
   --shadow-float: 0 6px 20px rgba(70, 77, 72, 0.35);
   --scrim: rgba(27, 27, 30, 0.4); /* velo detrás de los diálogos */
@@ -37,6 +38,7 @@
   --on-chip: #e0e3df;
   --line: rgba(255, 255, 255, 0.06); /* bordes: blanco al 6 % */
   --danger: #ffb4ab;
+  --ok: #8fd3a6;
   --shadow-card: none;
   --shadow-float: 0 6px 20px rgba(0, 0, 0, 0.5);
   --scrim: rgba(0, 0, 0, 0.6);
@@ -57,6 +59,7 @@
   --color-on-chip: var(--on-chip);
   --color-line: var(--line);
   --color-danger: var(--danger);
+  --color-ok: var(--ok);
   --color-scrim: var(--scrim);
 
   --font-display: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, sans-serif;

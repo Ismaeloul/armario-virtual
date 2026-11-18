@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from .. import catalog
 from ..db import get_db
 from ..models import Garment, WearLog, now_utc
+from ..services.ai import codex_models
 from ..schemas import (
     AnalyzeResponse,
     Color,
@@ -64,6 +65,7 @@ def _to_out(g: Garment, stats: dict[int, tuple[int, date | None]]) -> GarmentOut
         laundry_since=g.laundry_since,
         favorite=g.favorite,
         ai_provider=g.ai_provider,
+        ai_model=g.ai_model,
         ai_confidence=g.ai_confidence,
         wear_count=count,
         last_worn_on=last,
@@ -93,6 +95,14 @@ def _resolve_photo(upload: UploadFile | None, existing_id: str | None, required:
     if required:
         raise HTTPException(422, "Falta la foto delantera")
     return None
+
+
+def _model_used(result) -> str | None:
+    """«modelo · esfuerzo» con el que Codex analizó, para poder comparar modelos después."""
+    if result.draft is None or result.provider != "codex":
+        return None
+    model, effort = codex_models.chosen()
+    return " · ".join(part for part in (model or "automático", effort) if part)
 
 
 @router.post("/garments/analyze", response_model=AnalyzeResponse)
@@ -148,6 +158,7 @@ def analyze_garment(
         photo_label=storage.to_schema(label_photo) if label_photo else None,
         draft=result.draft,
         provider=result.provider,
+        model=_model_used(result),
         fallback_used=result.fallback_used,
         error=result.error,
     )
@@ -201,6 +212,7 @@ def create_garment(body: GarmentCreate, db: Session = Depends(get_db)):
         photo_label=body.photo_label,
         photo_label_original=storage.original_name(body.photo_label) if body.photo_label else None,
         ai_provider=body.ai_provider,
+        ai_model=body.ai_model,
         ai_confidence=body.ai_confidence,
         ai_draft=body.ai_draft.model_dump() if body.ai_draft else None,
     )
