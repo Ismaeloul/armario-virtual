@@ -1310,7 +1310,8 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
           </button>
         </div>
         <div
-          className="flex flex-col gap-4 overflow-y-auto px-5 pb-5"
+          // El pt-1 es para el aro de foco del campo: sin él, el borde de arriba se recorta al hacer scroll.
+          className="-mt-1 flex flex-col gap-4 overflow-y-auto px-5 pt-1 pb-5"
         >
           <form
             className="flex gap-2"
@@ -1616,7 +1617,8 @@ function StoresPanel({
           </button>
         </div>
         <div
-          className="flex flex-col gap-4 overflow-y-auto px-5 pb-5"
+          // El pt-1 es para el aro de foco del campo: sin él, el borde de arriba se recorta al hacer scroll.
+          className="-mt-1 flex flex-col gap-4 overflow-y-auto px-5 pt-1 pb-5"
         >
           <p className="text-sm text-text-2">{t.compras.panel.intro}</p>
           {error && (
