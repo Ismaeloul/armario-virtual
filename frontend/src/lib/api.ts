@@ -217,6 +217,10 @@ export type ShopStore = {
   weekday_after_release: boolean;
   /** Se lee con un navegador de verdad (Pull&Bear, Bershka, JD Sports): tarda más. */
   browser: boolean;
+  /** De las «pesadas» del reparto de noches: como mucho una por noche. */
+  heavy: boolean;
+  /** Qué clase de ropa trae con las secciones elegidas (nuestras categorías: «calzado»…). */
+  kinds: string[];
   /** Por qué no se puede consultar en este equipo («No disponible: falta el navegador»), o null. */
   unavailable: string | null;
   status: {
@@ -277,6 +281,11 @@ export type ShopState = {
   refilling: ShopFilter | null;
   /** A qué hora (HH:MM, local) se hace la consulta automática. */
   night_time: string;
+  /** El reparto de la semana: por día (lunes = 0), las claves de las tiendas que tocan. */
+  week: string[][];
+  /** Tiendas que se consultan como mucho en una noche, y de ellas, pesadas. */
+  per_night: number;
+  heavy_per_night: number;
   pending: number;
   liked: number;
   /** Cómo fue el último «Ver más» desde la última consulta semanal. `low`: lo que trajo ya encaja menos. */

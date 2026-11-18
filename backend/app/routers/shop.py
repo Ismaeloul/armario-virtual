@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .. import catalog
+from .. import catalog, config
 from ..db import get_db
 from ..models import Garment, ShopItem
 from ..schemas import Photo
@@ -145,6 +145,10 @@ class ShopStoreOut(BaseModel):
     next_check: date | None  # cuándo se consultará sola (None si está desactivada)
     next_check_at: datetime | None  # lo mismo, con la hora (local)
     browser: bool  # se lee con un navegador de verdad (Pull&Bear, Bershka): tarda más
+    heavy: bool  # de las «pesadas» del reparto de noches: como mucho una por noche
+    # Qué clase de ropa trae con las secciones elegidas (nuestras categorías: «calzado»…): el aviso de
+    # Descubrir no promete chaquetas mientras se consulta una tienda de zapatillas.
+    kinds: list[str]
     # Por qué no se puede consultar en este equipo («No disponible: falta el navegador»); None si se puede.
     unavailable: str | None
 
@@ -193,6 +197,9 @@ class ShopState(BaseModel):
     crawl: ShopCrawlOut | None  # la consulta del catálogo en marcha, si la hay
     refilling: ShopFilterOut | None  # se están reponiendo propuestas de un filtro que se quedó vacío
     night_time: str  # a qué hora (local, HH:MM) se hace la consulta automática
+    week: list[list[str]]  # el reparto de la semana: por día (lunes = 0), las tiendas que tocan
+    per_night: int  # tiendas que se consultan como mucho en una noche
+    heavy_per_night: int  # de ellas, pesadas
     pending: int  # propuestas por ver
     liked: int
     last_more: ShopMoreOut | None
@@ -341,6 +348,8 @@ def _state(db: Session) -> ShopState:
                 next_check=shopping.next_check(db, key) if key in enabled else None,
                 next_check_at=shopping.next_check_at(db, key) if key in enabled else None,
                 browser=shops.needs_browser(key),
+                heavy=shops.heavy(key),
+                kinds=shops.kinds(key, list(active)),
                 unavailable=shops.unavailable(key),
                 categories=[
                     ShopCategoryOut(slug=slug, label=label, enabled=slug in active)
@@ -374,6 +383,9 @@ def _state(db: Session) -> ShopState:
         crawl=crawl_out,
         refilling=ShopFilterOut(**refilling) if refilling else None,
         night_time=shopping.night_time(db),
+        week=shopping.week_plan(),
+        per_night=config.SHOP_STORES_PER_NIGHT,
+        heavy_per_night=config.SHOP_HEAVY_PER_NIGHT,
         pending=_count(db, shopping.NEW, enabled),
         liked=_count(db, shopping.LIKED),
         last_more=ShopMoreOut(added=more.get("added", 0), low=bool(more.get("low")), error=more.get("error"))

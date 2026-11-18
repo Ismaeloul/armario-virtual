@@ -61,6 +61,10 @@ SHOP_SLOW_FACTOR = float(os.environ.get("ARMARIO_SHOP_SLOW_FACTOR", "1.5"))
 # Topes de seguridad por sección (que un fallo no deje el recorrido dando vueltas), no de catálogo.
 # Se pueden cambiar por tienda: ARMARIO_SHOP_MAX_PAGES_ZARA, ARMARIO_SHOP_MAX_PRODUCTS_COURIR…
 SHOP_MAX_PAGES = int(os.environ.get("ARMARIO_SHOP_MAX_PAGES", "60"))
+# El reparto de la noche: cuántas tiendas se consultan como mucho en una misma noche, y cuántas de ellas
+# «pesadas» (las de Inditex con navegador). Las que no caben pasan a la noche siguiente.
+SHOP_STORES_PER_NIGHT = max(1, int(os.environ.get("ARMARIO_SHOP_STORES_PER_NIGHT", "2")))
+SHOP_HEAVY_PER_NIGHT = max(1, int(os.environ.get("ARMARIO_SHOP_HEAVY_PER_NIGHT", "1")))
 SHOP_MAX_PRODUCTS = int(os.environ.get("ARMARIO_SHOP_MAX_PRODUCTS", "3000"))
 # La reserva: propuestas con ficha y fotos ya bajadas por delante de lo que el usuario lleva visto.
 # Cuando quedan menos de SHOP_RESERVE_LOW por ver, se repone en segundo plano hasta SHOP_RESERVE.

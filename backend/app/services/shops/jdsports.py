@@ -334,6 +334,10 @@ class JDSportsConnector:
     language = SITE["language"]
     categories = {slug: label for slug, (label, _path) in SITE["routes"].items()}
     covered_by = SITE.get("covered_by", {})
+    section_types = {slug: "botas" if slug == "bottes" else "zapatillas" for slug in SITE["routes"]}
+    # Con navegador, pero solo zapatillas: unas pocas páginas por semana. No cuenta como «pesada» en el
+    # reparto de noches (ver shops/__init__.py): puede coincidir con una de las de Inditex.
+    heavy = False
     # Elegir otro color no puede abrir el navegador: solo se ofrecen los colores ya preparados (ficha y
     # fotos bajadas en segundo plano, ver shopping.prepare_colors).
     prepared_colors = True

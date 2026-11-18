@@ -408,6 +408,8 @@ class ZaraConnector:
     refresh_after_release = True  # el día de consulta sale de cuándo saca novedades
     language = SITE.language
     categories = {slug: label for slug, (label, _default) in SITE.categories.items()}
+    section_types = {slug: default for slug, (_label, default) in SITE.categories.items()}
+    heavy = False
 
     def __init__(self, pause: float | None = None, timeout: float | None = None):
         self.pause = config.SHOP_PAUSE_SECONDS if pause is None else pause

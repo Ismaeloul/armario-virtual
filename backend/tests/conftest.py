@@ -23,6 +23,7 @@ from app.db import Base, engine  # noqa: E402
 from app.main import app  # noqa: E402
 from app.services.ai import selector  # noqa: E402
 from app.services.ai import translate  # noqa: E402
+from app.services.shops import browser  # noqa: E402
 from app.services.shops.fetch import Fetcher  # noqa: E402
 from app.services.shops.zara import ZaraConnector  # noqa: E402
 
@@ -70,7 +71,8 @@ def sin_red(monkeypatch):
         raise AssertionError(f"Un test ha intentado llamar a la tienda: {url}")
 
     monkeypatch.setattr(ZaraConnector, "_get", _blocked)
-    monkeypatch.setattr(Fetcher, "get", _blocked)  # Courir y JD Sports
+    monkeypatch.setattr(Fetcher, "get", _blocked)  # Courir, Nike, Jack & Jones, Carhartt WIP y las fotos
+    browser.forget_blocks()  # un bloqueo apuntado por un test no pasa al siguiente
 
     def _no_ai(prompt):
         raise AssertionError("Un test ha intentado traducir con la IA de verdad")

@@ -92,8 +92,9 @@ def is_neutral(piece) -> bool:
 
 
 def loudness(pieces: list) -> int:
-    """De 0 (todo liso y neutro) a 3 (muy cargado): colores fuertes distintos más estampados."""
-    strong = len({p.color for p in pieces if not is_neutral(p)})
+    """De 0 (todo liso y neutro) a 3 (muy cargado): colores fuertes distintos más estampados. Un color
+    que aún no se sabe ("": una zapatilla de tienda sin ficha) no cuenta como color fuerte."""
+    strong = len({p.color for p in pieces if p.color and not is_neutral(p)})
     patterns = sum(1 for p in pieces if p.pattern not in ("liso", "texturizado"))
     return min(3, strong + patterns)
 
@@ -193,8 +194,9 @@ def relation_rule(a, b, seen=None) -> float:
 
 
 def palette(pieces: list, seen=None) -> float:
-    """Los colores del conjunto entero: varios colores fuertes compitiendo restan."""
-    strong = len({p.color for p in pieces if not is_neutral(p)})
+    """Los colores del conjunto entero: varios colores fuertes compitiendo restan (sin contar uno aún
+    desconocido)."""
+    strong = len({p.color for p in pieces if p.color and not is_neutral(p)})
     if strong <= 1:
         return 0.0
     return CROWDED_PALETTE * (strong - 1) * _trust(seen, "loud", loudness(pieces))

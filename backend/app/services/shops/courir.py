@@ -287,6 +287,8 @@ class CourirConnector:
     language = SITE["language"]
     categories = {slug: label for slug, (label, _cgid) in CATEGORIES.items()}
     covered_by = COVERED_BY
+    section_types = {"nouveautes": "zapatillas", "sneakers": "zapatillas", "boots": "botas"}
+    heavy = False
 
     def __init__(self, pause: float | None = None, timeout: float | None = None):
         self.fetcher = Fetcher(

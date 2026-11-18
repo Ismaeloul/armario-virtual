@@ -1,5 +1,7 @@
-"""Base común de Pull&Bear y Bershka (Francia): la misma plataforma de Inditex que Zara, pero detrás
-de un antibots que solo deja pasar a un navegador de verdad con su ventana (ver browser.py).
+"""Base común de Pull&Bear, Bershka, Massimo Dutti y Lefties (Francia): la misma plataforma de Inditex
+que Zara, pero detrás de un antibots que solo deja pasar a un navegador de verdad con su ventana (ver
+browser.py). Massimo Dutti y Lefties pasan además por un intersticial de Akamai que se resuelve solo al
+cargar (no se toca nada: es la propia página).
 
 Cómo se lee (investigado el 18-11-2026):
 
@@ -58,12 +60,22 @@ class InditexSite:
     shoe_views: tuple[tuple[str, ...], ...]  # en calzado: lateral, tres cuartos, otra vista
     color_param: str  # el color en el enlace del producto: «cS» (Pull&Bear) o «colorId» (Bershka)
     bundle_param: str | None  # Pull&Bear lleva además el id del producto en `pelement`
-    # slug de la sección -> (nombre para el usuario, ruta después de `path`, tipo por defecto)
+    # slug de la sección -> (nombre para el usuario, ruta después de `path`, tipo por defecto[, id de la
+    # categoría en `itxrest`]). Con el id, si la página no pide ella sola su categoría (Massimo Dutti),
+    # se pide desde dentro de la página, con la misma dirección que usan las demás.
     categories: dict = field(default_factory=dict)
+    # El id que va en el enlace estilo Bershka (`-c0p<id>.html`): el del «bundle» exterior (Bershka) o
+    # el del producto de dentro (`summary`: Lefties, cuyo enlace con el exterior no está comprobado).
+    link_id: str = "bundle"
 
     @property
     def base(self) -> str:
         return self.origin + self.path
+
+    def section(self, slug: str) -> tuple[str, str, str | None, int | None]:
+        """(nombre, ruta, tipo por defecto, id de categoría o None) de una sección."""
+        entry = tuple(self.categories[slug])
+        return (entry + (None,) * 4)[:4]
 
 
 # ---------- Lo que se lee del JSON
@@ -197,12 +209,14 @@ def product_url(site: InditexSite, page: str, bundle: str, color: str) -> str:
 
 
 def _page(site: InditexSite, summary: dict, bundle: str, name: str) -> str:
-    """La ruta de la página del producto. Pull&Bear: `/fr/<productUrl>`. Bershka: `/fr/<nombre>-c0p<id>.html`,
-    con el nombre en minúsculas y guiones, como en sus propios enlaces."""
+    """La ruta de la página del producto. Pull&Bear y Massimo Dutti: `/fr/<productUrl>`. Bershka y Lefties:
+    `/fr/<nombre>-c0p<id>.html`, con el nombre en minúsculas y guiones, como en sus propios enlaces (el
+    id, el del «bundle» o el del producto de dentro según la tienda: `link_id`)."""
     if site.bundle_param:
         return f"{site.path}/{summary.get('productUrl') or 'p'}"
     words = re.sub(r"[^\w]+", "-", name.lower()).strip("-") or "p"
-    return f"{site.path}/{quote(words)}-c0p{bundle}.html"
+    link = str(summary.get("id") or bundle) if site.link_id == "summary" else bundle
+    return f"{site.path}/{quote(words)}-c0p{link}.html"
 
 
 def reference(store_data: dict) -> str | None:
@@ -265,7 +279,7 @@ def make_product(site: InditexSite, product: dict, section: str, default_type: s
 def parse_products(products: list, site: InditexSite, section: str, now: float | None = None) -> list[ShopProduct]:
     """De las fichas de `productsArray` a productos normalizados, sin repetir (el mismo producto
     puede salir envuelto en dos «bundles»)."""
-    default_type = site.categories.get(section, (None, None, None))[2]
+    default_type = site.section(section)[2] if section in site.categories else None
     found: list[ShopProduct] = []
     refs: set[str] = set()
     for product in products or []:
@@ -338,6 +352,13 @@ def with_ids(url: str, ids: list[str]) -> str:
     return urlunsplit(parts._replace(query=urlencode(query, safe=",")))
 
 
+def category_url(site: InditexSite, catalog_id: int, category_id: int) -> str:
+    """La dirección de la categoría que pide la web (Pull&Bear, Bershka, Lefties) para las tiendas cuya
+    página no la pide sola (Massimo Dutti lleva los ids dentro del HTML)."""
+    return (f"{site.origin}/itxrest/3/catalog/store/{site.store_id}/{catalog_id}/category/{category_id}/product"
+            "?languageId=-2&appId=1&showProducts=false")
+
+
 def array_url(category_url: str) -> str:
     """Si la página no pidió fichas, la misma dirección que pide la web, sacada de la de la categoría."""
     parts = urlsplit(category_url)
@@ -353,9 +374,10 @@ def array_url(category_url: str) -> str:
 
 
 class InditexConnector:
-    """Pull&Bear y Bershka: misma plataforma, distinta tienda (`site`)."""
+    """Pull&Bear, Bershka, Massimo Dutti y Lefties: misma plataforma, distinta tienda (`site`)."""
 
     needs_browser = True
+    heavy = True  # muchas secciones y muchas fichas: de estas, una por noche
     refresh_after_release = False
     language = "fr"
 
@@ -364,7 +386,8 @@ class InditexConnector:
         self.key = site.key
         self.name = site.name
         self.refresh_weekday = refresh_weekday
-        self.categories = {slug: label for slug, (label, _path, _type) in site.categories.items()}
+        self.categories = {slug: site.section(slug)[0] for slug in site.categories}
+        self.section_types = {slug: site.section(slug)[2] for slug in site.categories}
         self.catalog_id = site.catalog_id
         # Las fotos, de la CDN: un cliente normal, con su pausa corta.
         self.fetcher = Fetcher(site.key, pause=0.3, timeout=config.SHOP_TIMEOUT_SECONDS, accept_language="fr-FR,fr;q=0.9")
@@ -393,31 +416,44 @@ class InditexConnector:
         """La sección entera: la página da los ids de todos sus productos y sus fichas se piden de
         BATCH en BATCH, como la web al bajar. Se guarda una instantánea compacta de cada una (ver
         `snapshot`), sin las fotos. Si una tanda falla a mitad, `crawl.Partial` con lo leído."""
-        _label, path, _default = self.site.categories[slug]
+        _label, path, _default, category_id = self.site.section(slug)
         session = browser.require(self.key)
         crawl.before_page()
+        # Massimo Dutti no pide su categoría (lleva los ids dentro del HTML): basta con oír sus fichas, y
+        # la categoría se pide luego desde dentro de la página, como hacen las demás.
         responses = session.open(
             self.key, self.site.base + path,
             want=lambda url: self._is_category(url) or self._is_array(url),
-            ready=lambda urls: any(map(self._is_category, urls)) and any(map(self._is_array, urls)),
+            ready=lambda urls: any(map(self._is_array, urls)) and (
+                category_id is not None or any(map(self._is_category, urls))),
         )
         self._learn([r.url for r in responses])
         category = next((r for r in responses if self._is_category(r.url) and isinstance(r.data, dict)), None)
-        if category is None:
+        if category is not None:
+            data, category_link = category.data, category.url
+        elif category_id is not None:
+            category_link = category_url(self.site, self.catalog_id, category_id)
+            crawl.before_page()
+            status, data = session.fetch_json(self.key, category_link)
+            if status != 200 or not isinstance(data, dict):
+                raise ShopError(f"HTTP {status} (categoría)" if status != 200 else "la respuesta no era la esperada (sin categoría)")
+        else:
             raise ShopError("la respuesta no era la esperada (sin categoría)")
-        ids = category_ids(category.data)[: crawl.max_products(self.key)]
+        ids = category_ids(data)[: crawl.max_products(self.key)]
+        wanted = set(ids)
         products: dict[str, dict] = {}
         template = None
         for response in responses:
             if self._is_array(response.url) and isinstance(response.data, dict):
                 template = template or response.url
                 for product in response.data.get("products") or []:
-                    if isinstance(product, dict) and product.get("id") is not None:
+                    # Solo los de esta sección: la página puede pedir fichas de otras cosas (recomendados).
+                    if isinstance(product, dict) and product.get("id") is not None and str(product["id"]) in wanted:
                         products.setdefault(str(product["id"]), product)
         left = [i for i in ids if i not in products]
         crawl.section_total(1 + math.ceil(len(left) / BATCH))
         crawl.page_read(len(products))
-        template = template or array_url(category.url)
+        template = template or array_url(category_link)
         order = {product_id: index for index, product_id in enumerate(ids)}
 
         def parsed() -> list[ShopProduct]:

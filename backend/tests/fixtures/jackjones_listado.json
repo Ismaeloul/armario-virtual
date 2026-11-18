@@ -1,0 +1,624 @@
+{
+ "_fuente": "window.__INITIAL_STATE__['$getProducts-fr-fr-1u2m035'] de https://www.jackjones.com/fr-fr/t-shirts (18-11-2026), recortado a 3 productos",
+ "$getProducts-fr-fr-1u2m035": {
+  "results": [
+   {
+    "price": {
+     "percentage": 0,
+     "id": "eur_fr",
+     "salesPrice": {
+      "amount": 12.99,
+      "currency": "EUR"
+     },
+     "displayScheduledDiscount": false,
+     "vatAmount": {
+      "amount": 2.16,
+      "currency": "EUR"
+     },
+     "vatAmount2": {
+      "currency": "XXX"
+     },
+     "vatRate": 20,
+     "vatRate2": 0,
+     "from": "0001-01-01T00:00:00+00:00",
+     "to": "2026-11-26T23:30:00+00:00",
+     "schedule": {
+      "from": "0001-01-01T00:00:00+00:00",
+      "to": "2026-11-26T23:30:00+00:00"
+     }
+    },
+    "frontImage": "https://images.jackjones.com/12308540/5146284/008/jackjones-jjelogoteesso-neck2colss27sn-grey.jpg?v=40d7938e0deb2a204e3745fa0504491f",
+    "backImage": "https://images.jackjones.com/12308540/5146284/004/jackjones-jjelogoteesso-neck2colss27sn-grey.jpg?v=45459c665aa250dabcaef39b83d5d05e",
+    "images": {
+     "urlTemplate": "https://images.jackjones.com/12308540/5146284/{0}/jackjones-jjelogoteesso-neck2colss27sn-grey.{1}?v=afd49a830bfa8d5168d6a4aefb055e61",
+     "indexes": [
+      {
+       "index": "008",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "004",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "003",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "001",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "002",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "005",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "006",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "007",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "015",
+       "format": "png",
+       "aiGenerated": true
+      }
+     ]
+    },
+    "subBrand": "JACK&JONES ESSENTIALS",
+    "inStock": true,
+    "isNew": true,
+    "badges": [
+     "no-sale",
+     "sub-brand-jack-jones-essentials"
+    ],
+    "calloutAttributes": {
+     "callout": "",
+     "disclaimer": "",
+     "calloutBackgroundColor": "",
+     "calloutColor": "",
+     "hasAccordion": false,
+     "calloutIcon": "",
+     "enableClipboardIcon": false,
+     "clipboardCode": "",
+     "clipboardTitle": "",
+     "hideDiscountPrice": false,
+     "hideDiscountPercentage": false,
+     "discountPriceColor": "",
+     "discountPercentageColor": "",
+     "alternatePromotionName": ""
+    },
+    "callout": "",
+    "disclaimer": "",
+    "brand": "Jack & Jones",
+    "ean": "5715945478115",
+    "colourFamilyName": "Grise",
+    "sizeName": "L",
+    "lengthName": "",
+    "isDigital": false,
+    "rank": 0,
+    "productRelations": [],
+    "id": "12308540_2036",
+    "name": "T-shirt",
+    "url": "/fr-fr/product/12308540_2036/t-shirts-standard-fit-col-rond",
+    "ediCategory": "T-Shirts et tops",
+    "ediSubCategory": "T-shirts",
+    "styleOptionCount": 6,
+    "styleColours": [
+     "#282d3c",
+     "#f4f5f0",
+     "#8a9691",
+     "#9eb4d3",
+     "#58646d",
+     "#af9294"
+    ],
+    "hasCompleteTheLook": true,
+    "isProductSet": false,
+    "productSetOptionsCount": 0,
+    "masterColourNames": [
+     "Stormy Weather",
+     "Navy Blazer",
+     "Deauville Mauve",
+     "Bright White",
+     "Slate Gray",
+     "Chambray Blue"
+    ],
+    "colourName": "Stormy Weather",
+    "hasEcom": true,
+    "hasRetail": false,
+    "isPreorder": false,
+    "comingSoonProduct": false,
+    "onlineFrom": "0001-01-01T00:00:00Z",
+    "isInDeliverySet": false,
+    "alternatePrice": {
+     "percentage": 0,
+     "id": "eur_fr|clubmember",
+     "salesPrice": {
+      "amount": 12.99,
+      "currency": "EUR"
+     },
+     "displayScheduledDiscount": false,
+     "vatAmount": {
+      "amount": 2.16,
+      "currency": "EUR"
+     },
+     "vatAmount2": {
+      "currency": "XXX"
+     },
+     "vatRate": 20,
+     "vatRate2": 0,
+     "from": "0001-01-01T00:00:00+00:00",
+     "to": "2026-11-26T23:30:00+00:00",
+     "schedule": {
+      "from": "0001-01-01T00:00:00+00:00",
+      "to": "2026-11-26T23:30:00+00:00"
+     }
+    },
+    "styleName": "JJELOGO TEE SS O-NECK 2 COL SS27 SN",
+    "englishColourFamily": "Grey",
+    "englishCategory": "T-Shirts & Tops",
+    "gender": "Male",
+    "aiGenerated": false
+   },
+   {
+    "price": {
+     "percentage": 0,
+     "id": "eur_fr",
+     "salesPrice": {
+      "amount": 12.99,
+      "currency": "EUR"
+     },
+     "displayScheduledDiscount": false,
+     "vatAmount": {
+      "amount": 2.16,
+      "currency": "EUR"
+     },
+     "vatAmount2": {
+      "currency": "XXX"
+     },
+     "vatRate": 20,
+     "vatRate2": 0,
+     "from": "0001-01-01T00:00:00+00:00",
+     "to": "2026-11-26T23:30:00+00:00",
+     "schedule": {
+      "from": "0001-01-01T00:00:00+00:00",
+      "to": "2026-11-26T23:30:00+00:00"
+     }
+    },
+    "frontImage": "https://images.jackjones.com/12308540/5146283/008/jackjones-jjelogoteesso-neck2colss27sn-blue.jpg?v=6bc7dd76f180d43ff20fca97bad89ec1",
+    "backImage": "https://images.jackjones.com/12308540/5146283/004/jackjones-jjelogoteesso-neck2colss27sn-blue.jpg?v=57f480cb93b6f2f4de8c692c9b03eb8b",
+    "images": {
+     "urlTemplate": "https://images.jackjones.com/12308540/5146283/{0}/jackjones-jjelogoteesso-neck2colss27sn-blue.{1}?v=52ff35e228a92f8fa728af9e2f67c880",
+     "indexes": [
+      {
+       "index": "008",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "004",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "003",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "001",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "002",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "005",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "006",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "007",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "015",
+       "format": "png",
+       "aiGenerated": true
+      }
+     ]
+    },
+    "subBrand": "JACK&JONES ESSENTIALS",
+    "inStock": true,
+    "isNew": true,
+    "badges": [
+     "no-sale",
+     "sub-brand-jack-jones-essentials"
+    ],
+    "calloutAttributes": {
+     "callout": "",
+     "disclaimer": "",
+     "calloutBackgroundColor": "",
+     "calloutColor": "",
+     "hasAccordion": false,
+     "calloutIcon": "",
+     "enableClipboardIcon": false,
+     "clipboardCode": "",
+     "clipboardTitle": "",
+     "hideDiscountPrice": false,
+     "hideDiscountPercentage": false,
+     "discountPriceColor": "",
+     "discountPercentageColor": "",
+     "alternatePromotionName": ""
+    },
+    "callout": "",
+    "disclaimer": "",
+    "brand": "Jack & Jones",
+    "ean": "5715945478030",
+    "colourFamilyName": "Bleue",
+    "sizeName": "L",
+    "lengthName": "",
+    "isDigital": false,
+    "rank": 0,
+    "productRelations": [],
+    "id": "12308540_1966",
+    "name": "T-shirt",
+    "url": "/fr-fr/product/12308540_1966/t-shirts-standard-fit-col-rond",
+    "ediCategory": "T-Shirts et tops",
+    "ediSubCategory": "T-shirts",
+    "styleOptionCount": 6,
+    "styleColours": [
+     "#282d3c",
+     "#f4f5f0",
+     "#8a9691",
+     "#9eb4d3",
+     "#58646d",
+     "#af9294"
+    ],
+    "hasCompleteTheLook": true,
+    "isProductSet": false,
+    "productSetOptionsCount": 0,
+    "masterColourNames": [
+     "Stormy Weather",
+     "Navy Blazer",
+     "Deauville Mauve",
+     "Bright White",
+     "Slate Gray",
+     "Chambray Blue"
+    ],
+    "colourName": "Chambray Blue",
+    "hasEcom": true,
+    "hasRetail": false,
+    "isPreorder": false,
+    "comingSoonProduct": false,
+    "onlineFrom": "0001-01-01T00:00:00Z",
+    "isInDeliverySet": false,
+    "alternatePrice": {
+     "percentage": 0,
+     "id": "eur_fr|clubmember",
+     "salesPrice": {
+      "amount": 12.99,
+      "currency": "EUR"
+     },
+     "displayScheduledDiscount": false,
+     "vatAmount": {
+      "amount": 2.16,
+      "currency": "EUR"
+     },
+     "vatAmount2": {
+      "currency": "XXX"
+     },
+     "vatRate": 20,
+     "vatRate2": 0,
+     "from": "0001-01-01T00:00:00+00:00",
+     "to": "2026-11-26T23:30:00+00:00",
+     "schedule": {
+      "from": "0001-01-01T00:00:00+00:00",
+      "to": "2026-11-26T23:30:00+00:00"
+     }
+    },
+    "styleName": "JJELOGO TEE SS O-NECK 2 COL SS27 SN",
+    "englishColourFamily": "Blue",
+    "englishCategory": "T-Shirts & Tops",
+    "gender": "Male",
+    "aiGenerated": false
+   },
+   {
+    "price": {
+     "percentage": 0,
+     "id": "eur_fr",
+     "salesPrice": {
+      "amount": 29.99,
+      "currency": "EUR"
+     },
+     "displayScheduledDiscount": false,
+     "vatAmount": {
+      "amount": 5,
+      "currency": "EUR"
+     },
+     "vatAmount2": {
+      "currency": "XXX"
+     },
+     "vatRate": 20,
+     "vatRate2": 0,
+     "from": "0001-01-01T00:00:00+00:00",
+     "to": "2026-11-26T23:30:00+00:00",
+     "schedule": {
+      "from": "0001-01-01T00:00:00+00:00",
+      "to": "2026-11-26T23:30:00+00:00"
+     }
+    },
+    "frontImage": "https://images.jackjones.com/12308757/5143630/008/jackjones-jjecooperteelsln-white.jpg?v=955cfc528feecca44e72372055450f5f",
+    "backImage": "https://images.jackjones.com/12308757/5143630/004/jackjones-jjecooperteelsln-white.jpg?v=d8bb0d93a1cc30a6487b000bbb655075",
+    "images": {
+     "urlTemplate": "https://images.jackjones.com/12308757/5143630/{0}/jackjones-jjecooperteelsln-white.{1}?v=8530a498c25648bada1a0d525fc39b74",
+     "indexes": [
+      {
+       "index": "008",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "004",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "003",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "001",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "002",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "005",
+       "format": "jpg",
+       "aiGenerated": true
+      },
+      {
+       "index": "006",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "007",
+       "format": "png",
+       "aiGenerated": false
+      },
+      {
+       "index": "015",
+       "format": "png",
+       "aiGenerated": true
+      }
+     ]
+    },
+    "subBrand": "JACK&JONES ESSENTIALS",
+    "inStock": true,
+    "isNew": true,
+    "badges": [
+     "no-sale",
+     "sub-brand-jack-jones-essentials"
+    ],
+    "calloutAttributes": {
+     "callout": "",
+     "disclaimer": "",
+     "calloutBackgroundColor": "",
+     "calloutColor": "",
+     "hasAccordion": false,
+     "calloutIcon": "",
+     "enableClipboardIcon": false,
+     "clipboardCode": "",
+     "clipboardTitle": "",
+     "hideDiscountPrice": false,
+     "hideDiscountPercentage": false,
+     "discountPriceColor": "",
+     "discountPercentageColor": "",
+     "alternatePromotionName": ""
+    },
+    "callout": "",
+    "disclaimer": "",
+    "brand": "Jack & Jones",
+    "ean": "5715953460591",
+    "colourFamilyName": "Blanche",
+    "sizeName": "M",
+    "lengthName": "",
+    "isDigital": false,
+    "rank": 0,
+    "productRelations": [],
+    "id": "12308757_6",
+    "name": "t-shirt à manches longues",
+    "url": "/fr-fr/product/12308757_6/t-shirts-relaxed-fit-col-rond",
+    "ediCategory": "T-Shirts et tops",
+    "ediSubCategory": "T-shirts",
+    "styleOptionCount": 3,
+    "styleColours": [
+     "#f0eee9",
+     "#282d3c",
+     "#746c57"
+    ],
+    "hasCompleteTheLook": true,
+    "isProductSet": false,
+    "productSetOptionsCount": 0,
+    "masterColourNames": [
+     "Dusky Green",
+     "Navy Blazer",
+     "Cloud Dancer"
+    ],
+    "colourName": "Cloud Dancer",
+    "hasEcom": true,
+    "hasRetail": false,
+    "isPreorder": false,
+    "comingSoonProduct": false,
+    "onlineFrom": "0001-01-01T00:00:00Z",
+    "isInDeliverySet": false,
+    "alternatePrice": {
+     "percentage": 0,
+     "id": "eur_fr|clubmember",
+     "salesPrice": {
+      "amount": 29.99,
+      "currency": "EUR"
+     },
+     "displayScheduledDiscount": false,
+     "vatAmount": {
+      "amount": 5,
+      "currency": "EUR"
+     },
+     "vatAmount2": {
+      "currency": "XXX"
+     },
+     "vatRate": 20,
+     "vatRate2": 0,
+     "from": "0001-01-01T00:00:00+00:00",
+     "to": "2026-11-26T23:30:00+00:00",
+     "schedule": {
+      "from": "0001-01-01T00:00:00+00:00",
+      "to": "2026-11-26T23:30:00+00:00"
+     }
+    },
+    "styleName": "JJECOOPER TEE LS LN",
+    "englishColourFamily": "White",
+    "englishCategory": "T-Shirts & Tops",
+    "gender": "Male",
+    "aiGenerated": false
+   }
+  ],
+  "startingFrom": 0,
+  "totalResults": 988,
+  "facets": [
+   {
+    "id": "brand",
+    "values": [
+     {
+      "value": "JACK&JONES ESSENTIALS",
+      "count": 308,
+      "selected": false
+     },
+     {
+      "value": "JACK&JONES ORIGINALS",
+      "count": 301,
+      "selected": false
+     },
+     {
+      "value": "JACK&JONES CORE",
+      "count": 119,
+      "selected": false
+     },
+     {
+      "value": "JACK&JONES PREMIUM",
+      "count": 107,
+      "selected": false
+     },
+     {
+      "value": "JACK&JONES",
+      "count": 87,
+      "selected": false
+     },
+     {
+      "value": "R.D.D. ROYAL DENIM DIVISION",
+      "count": 35,
+      "selected": false
+     },
+     {
+      "value": "JACK&JONES ADDITIONALS",
+      "count": 31,
+      "selected": false
+     }
+    ]
+   }
+  ],
+  "priceFacet": {
+   "id": "price",
+   "values": [
+    {
+     "available": {
+      "lowerBoundingValue": {
+       "amount": 6.5,
+       "currency": "EUR"
+      },
+      "upperBoundingValue": {
+       "amount": 79.99,
+       "currency": "EUR"
+      }
+     },
+     "selected": {
+      "lowerBoundingValue": {
+       "amount": 6.5,
+       "currency": "EUR"
+      },
+      "upperBoundingValue": {
+       "amount": 79.99,
+       "currency": "EUR"
+      }
+     },
+     "count": 988
+    }
+   ]
+  },
+  "sortings": [
+   {
+    "id": "",
+    "selected": true
+   },
+   {
+    "id": "name",
+    "selected": false
+   },
+   {
+    "id": "price_asc",
+    "selected": false
+   },
+   {
+    "id": "price_desc",
+    "selected": false
+   },
+   {
+    "id": "new_in",
+    "selected": false
+   },
+   {
+    "id": "relevance",
+    "selected": false
+   },
+   {
+    "id": "highest_discount",
+    "selected": false
+   }
+  ],
+  "searchTerms": "",
+  "searchTermPredictions": [],
+  "categorySearch": [],
+  "contentSearch": [],
+  "secondaryTotalHits": 0
+ }
+}

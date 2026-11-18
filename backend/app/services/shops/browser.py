@@ -389,6 +389,30 @@ class Session:
         finally:
             self._last = time.monotonic()
 
+    def page_html(self, store: str, url: str) -> tuple[int | None, str | None]:
+        """Abre una página de la tienda y devuelve (estado, HTML de la página ya cargada). Es para las
+        tiendas que hoy se leen sin navegador (Nike, Jack & Jones, Carhartt WIP) si un día dejan de
+        responder a un cliente normal: su conector lee del HTML lo mismo que lee ahora. Un 404 o un 410
+        se devuelven tal cual, con None. Lanza BlockedError si la tienda bloquea o pide un captcha."""
+        page = self._start()
+        self._wait_turn()
+        self.pages += 1
+        try:
+            try:
+                main = page.goto(url, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
+            except Exception as exc:
+                raise ShopError(f"la página no cargó ({type(exc).__name__})") from exc
+            status = main.status if main else None
+            if status in (404, 410):
+                return status, None
+            self._check(store, page, status)
+            try:
+                return status, page.content()
+            except Exception as exc:
+                raise ShopError(f"la página no se pudo leer ({type(exc).__name__})") from exc
+        finally:
+            self._last = time.monotonic()
+
     def fetch_json(self, store: str, url: str) -> tuple[int, object]:
         """Pide `url` desde dentro de la página abierta (mismo origen, como hace la propia web).
         Devuelve (estado, JSON o None). Lanza BlockedError si la tienda bloquea."""

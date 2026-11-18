@@ -28,23 +28,29 @@ _NOT_A_GARMENT = re.compile(
     r"pijama|banador|guante|cartera|gafas|panuelo|rinonera|sombrero|llavero|slip|"
     r"chaussette|casquette|bonnet|echarpe|ceinture|sacs?\b|sacoche|parfum|eau de toilette|cravate|"
     r"calecon|maillot de bain|gants?\b|portefeuille|lunettes|porte-cles|chapeau|bandana|claquette|tongs?\b|"
-    r"chausson|pantoufle|socks?\b|beanie|backpack|bags?\b)"
+    r"chausson|pantoufle|socks?\b|beanie|backpack|bags?\b|"
+    # En inglés (Carhartt WIP, Nike): gorras, cinturones, carteras, bañadores…
+    r"caps?\b|hats?\b|belts?\b|wallets?\b|keychains?|scarf|scarves|totes?\b|briefs\b|swim|underwear|gloves?\b)"
 )
 
-# Palabra del nombre -> tipo. Gana la que aparece antes en el nombre («POLO PUNTO» es un polo).
+# Palabra del nombre -> tipo. Gana la que aparece antes en el nombre («POLO PUNTO» es un polo); si dos
+# empiezan en el mismo sitio, la más larga («Shirt Jac» es una sobrecamisa, no una camisa; «Sweat Pant»,
+# un chándal). En español, francés e inglés (Nike y Carhartt WIP nombran en inglés: «Hooded Jacket»).
 _TYPE_WORDS = [
-    (r"sobrecamisas?|surchemises?|overshirts?", "sobrecamisa"),
-    (r"camisetas?|t-?shirts?|tee-?shirts?|debardeurs?", "camiseta"),
-    (r"camisas?|chemises?", "camisa"),
+    (r"sobrecamisas?|surchemises?|overshirts?|shirt[- ]?jac(?:ket)?s?|shackets?", "sobrecamisa"),
+    (r"camisetas?|t-?shirts?|tee-?shirts?|debardeurs?|tees?|tank[- ]?tops?|longsleeves?", "camiseta"),
+    (r"camisas?|chemises?|shirts?", "camisa"),
     (r"polos?", "polo"),
     (r"sudaderas?|hoodies?|sweats?|sweat-?shirts?", "sudadera"),
-    (r"jersey|jerseis|cardigans?|sueter|pulls?|pull-?overs?|maille", "jersey"),
-    (r"abrigo|gabardina|trench|parkas?|anorak|plumifero|manteaux?|doudounes?|caban", "abrigo"),
-    (r"cazadora|chaqueta|bombers?|blazers?|americana|chaleco|vestes?|blousons?", "chaqueta"),
+    (r"jersey|jerseis|cardigans?|sueter|pulls?|pull-?overs?|maille|sweaters?|jumpers?", "jersey"),
+    (r"abrigo|gabardina|trench|parkas?|anorak|plumifero|manteaux?|doudounes?|caban|coats?|overcoats?|"
+     r"puffers?|down jackets?", "abrigo"),
+    (r"cazadora|chaqueta|bombers?|blazers?|americana|chaleco|vestes?|blousons?|jackets?|vests?|"
+     r"windbreakers?", "chaqueta"),
     (r"bermudas?|shorts?", "pantalón corto"),
     (r"jeans?|vaqueros?", "vaquero"),
-    (r"joggers?|chandal|joggings?|survetements?", "chándal"),
-    (r"pantalon|pantalones|pantalons", "pantalón"),
+    (r"joggers?|chandal|joggings?|survetements?|sweat ?pants?|track ?pants?|tracksuits?", "chándal"),
+    (r"pantalon|pantalones|pantalons|pants?|trousers?", "pantalón"),
     (r"chinos?", "chino"),
     (r"zapatillas?|sneakers?|deportivas?|baskets?|trainers?", "zapatillas"),
     (r"botas?|botin|botines|bottes?|bottines?|boots?|chukkas?", "botas"),
@@ -62,15 +68,15 @@ def estimate_type(name: str, default: str | None = None) -> str | None:
     text = norm(name)
     if _NOT_A_GARMENT.search(text):
         return None
-    found = [(m.start(), garment_type) for rx, garment_type in _TYPE_RE if (m := rx.search(text))]
-    garment_type = min(found)[1] if found else default
+    found = [(m.start(), -len(m.group()), garment_type) for rx, garment_type in _TYPE_RE if (m := rx.search(text))]
+    garment_type = min(found)[2] if found else default
     if garment_type == "pantalón" or (garment_type == "vaquero" and not found):
         # «PANTALÓN CHINO», «PANTALÓN JOGGER», «PANTALÓN CORTO»: lo que manda es el apellido.
         if re.search(r"\b(cortos?|courts?|bermudas?|shorts?)\b", text):
             return "pantalón corto"
         if re.search(r"\bchinos?\b", text):
             return "chino"
-        if re.search(r"\b(joggers?|joggings?|chandal|survetements?)\b", text):
+        if re.search(r"\b(joggers?|joggings?|chandal|survetements?|sweat ?pants?|track ?pants?)\b", text):
             return "chándal"
         if re.search(r"\b(jeans?|vaqueros?|denim)\b", text):
             return "vaquero"
@@ -80,28 +86,30 @@ def estimate_type(name: str, default: str | None = None) -> str | None:
 # Texto de la tienda -> nuestra paleta. De lo más concreto a lo más general: «Rojo burgundy» es burdeos.
 # En español, francés (Zara Francia, Courir, JD Sports) e inglés (los colores de las zapatillas).
 _COLOR_WORDS = [
-    (r"multicolor|varios|combinad|estampad|\bmulti\b", "multicolor"),
+    (r"multicolor|varios|combinad|combine|estampad|\bmulti\b", "multicolor"),
     (r"azul hielo|bleu glace|ice blue", "celeste"),
     # «Glace» a secas (Pull&Bear, Bershka) es un blanco hielo tirando a beige muy claro, no un azul: un
     # pantalón «Glace» claramente beige claro salía como celeste (visto por el usuario, 18-11-2026).
     (r"blanco roto|blanco hueso|off white|off-white|crudo|ecru|hueso|marfil|nata|crema|tiza|mantequilla|"
-     r"blanc casse|creme|cream|ivoire|ivory|coquille|\bsail\b|vanille|vanilla|\bglace\b", "crudo"),
-    (r"marino|navy|azul oscuro|azul noche|tinta|marine|bleu nuit|bleu fonce|midnight", "azul marino"),
+     r"blanc casse|creme|cream|ivoire|ivory|coquille|\bsail\b|vanille|vanilla|\bglace\b|\bbone\b|\bsalt\b|"
+     r"\bnatural\b|\bcru\b", "crudo"),
+    (r"marino|navy|azul oscuro|azul noche|tinta|marine|bleu nuit|bleu fonce|midnight|obsidian", "azul marino"),
     (r"azul claro|azul cielo|azul palido|celeste|bleu clair|bleu ciel|bleu pale|light blue|sky blue|"
      r"baby blue|\bciel\b", "celeste"),
-    (r"oliva|khaki|kaki|caqui|militar|musgo|olive", "verde oliva"),
-    (r"burdeos|burgundy|granate|vino|berenjena|bordeaux|maroon|\bwine\b|aubergine", "burdeos"),
+    (r"oliva|khaki|kaki|caqui|militar|musgo|olive|\bmousse\b", "verde oliva"),
+    (r"burdeos|burgundy|granate|vino|berenjena|bordeaux|maroon|\bwine\b|aubergine|grenat", "burdeos"),
     (r"marron|chocolate|conac|tabaco|cuero|tostado|caramelo|camel|taupe|topo|moka|cafe|castano|avellana|cobre|"
-     r"\bbrun|brown|chocolat|cognac|\btan\b|noisette|bronze|cuivre|\bmiel\b|wheat", "marrón"),
+     r"\bbrun|brown|chocolat|cognac|\btan\b|noisette|bronze|cuivre|\bmiel\b|wheat|tobacco|\bcuir\b", "marrón"),
     (r"beige|arena|piedra|vison|nude|\bsable\b|\bsand\b|stone|\bpierre\b", "beige"),
     (r"gris|antracita|plomo|plata|marengo|ceniza|humo|grafito|carbon|grey|gray|argent|silver|anthracite|"
-     r"charcoal", "gris"),
+     r"charcoal|graphite|\bash\b|plomb|acier|ardoise|slate", "gris"),
     (r"negro|black|noir", "negro"),
     (r"blanco|white|blanc", "blanco"),
-    (r"azul|indigo|anil|petroleo|denim|cobalto|turquesa|bleu|blue|turquoise|royal", "azul"),
-    (r"verde|verdos|botella|bouteille|menta|esmeralda|\bvert|green|\bmint|menthe|sapin", "verde"),
+    (r"azul|indigo|anil|petroleo|petrole|denim|cobalto|turquesa|bleu|blue|turquoise|royal", "azul"),
+    (r"verde|verdos|botella|bouteille|menta|esmeralda|\bvert|green|\bmint|menthe|sapin|\bsage\b|\bfir\b|\bleaf\b|\bforest\b|"
+     r"\bpine\b|\bmoss\b", "verde"),
     (r"rojo|rojiz|coral|rouge|\bred\b|corail", "rojo"),
-    (r"amarillo|mostaza|vainilla|lima|ocre|jaune|yellow|moutarde|\bor\b|\bdore|gold", "amarillo"),
+    (r"amarillo|mostaza|vainilla|lima|ocre|jaune|yellow|moutarde|\bor\b|\bdore|gold|\bvolt\b", "amarillo"),
     (r"naranja|teja|terracota|ladrillo|oxido|calabaza|orange|rouille|brique", "naranja"),
     (r"rosa|fucsia|salmon|maquillaje|\brose\b|pink|fuchsia|saumon", "rosa"),
     (r"morado|lila|malva|violeta|lavanda|purpura|violet|purple|lilas|mauve|lavande|prune", "morado"),
@@ -134,15 +142,20 @@ _DOUBTFUL = {
     "taupe", "plomo", "plata", "argent", "silver", "botella", "bouteille", "sapin", "maquillaje", "royal",
     "petroleo", "lima", "ocre", "or", "dore", "gold", "bronze", "cuivre", "cobre", "oxido", "rouille", "teja",
     "ladrillo", "brique", "calabaza", "prune", "berenjena", "aubergine", "vino", "wine", "moka", "cafe",
-    "avellana", "noisette", "castano",
+    "avellana", "noisette", "castano", "bone", "obsidian", "sage", "volt", "ash", "salt", "natural", "tobacco",
+    "fir", "leaf", "forest", "pine", "moss", "mousse", "cuir", "petrole",
 }
+
+# El color aún no se sabe: la tienda no lo dice en el listado (Courir) o lo dice con palabras que no
+# conocemos y sin tono. No es «multicolor»: no suma ni resta en la nota hasta que llegue la ficha.
+UNKNOWN_COLOR = ""
 
 
 def estimate_color(store_color: str | None, hex_color: str | None = None) -> str:
     """Del texto de la tienda («Marino», «Khaki», «Gris vigoré») a nuestra paleta.
 
-    Si el texto no dice nada conocido, el tono más cercano; sin tono, multicolor. Si solo lo dice una
-    palabra dudosa (`_DOUBTFUL`: «Glace», «Tiza», «Piedra») y la tienda da el tono, manda el tono.
+    Si el texto no dice nada conocido, el tono más cercano; sin tono, `UNKNOWN_COLOR` (""). Si solo lo
+    dice una palabra dudosa (`_DOUBTFUL`: «Glace», «Tiza», «Piedra») y la tienda da el tono, manda el tono.
     """
     text = norm(store_color)
     # «Noir/Blanc», «marron/blanc», «Black/White»: el primero es el principal.
@@ -153,7 +166,7 @@ def estimate_color(store_color: str | None, hex_color: str | None = None) -> str
                 if match.group().strip() in _DOUBTFUL and nearest_color(hex_color):
                     return nearest_color(hex_color)
                 return color
-    return nearest_color(hex_color) or "multicolor"
+    return nearest_color(hex_color) or UNKNOWN_COLOR
 
 
 def estimate_pattern(name: str) -> str:
@@ -164,7 +177,7 @@ def estimate_pattern(name: str) -> str:
         return "cuadros"
     if re.search(r"colou?r ?block|\bbloques?\b", text):
         return "bloques de color"
-    if re.search(r"estampad|\bprint|grafic|graphique|ilustracion|\btexto\b|slogan|dibujo|imprim|\bmotifs?\b", text):
+    if re.search(r"estampad|\bprint|grafic|graphique|ilustracion|\btext[oe]\b|slogan|dibujo|imprim|\bmotifs?\b", text):
         return "gráfico"
     if re.search(
         r"\b(textura|texturizad[oa]|estructura|pana|borreguito|trenzad[oa]|canale|texture(e|s|es)?|"

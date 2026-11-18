@@ -54,6 +54,8 @@ from .shops import BlockedError, BrowserUnavailable, Cancelled, NeedsBrowser, No
 from .shops import ShopError
 from .shops.estimate import brand_family, estimate_color, norm
 
+UNKNOWN_HEX = "#9e9e9e"  # el circulito de un color que no se sabe: un gris medio, sin decir nada
+
 log = logging.getLogger("armario.compras")
 
 # «candidato»: está en el catálogo de la tienda pero no se ha enseñado (no tiene fotos).
@@ -173,6 +175,7 @@ K_STATUS = "shop_status"  # tienda -> cómo fue su última consulta (ver `store_
 K_MORE = "shop_more"  # cómo fue el último «Ver más» (ver `more`); None tras cada consulta semanal
 K_NIGHT = "shop_night_time"  # a qué hora (local, «HH:MM») se hace la consulta automática
 K_ENABLED_AT = "shop_enabled_at"  # tienda -> cuándo se activó (UTC): la primera consulta es esa noche
+K_NIGHT_RUNS = "shop_night_runs"  # {"night": día, "stores": [...]}: las que ya salieron esa noche (ver `tonight`)
 DEFAULT_NIGHT = "03:30"
 _HHMM = re.compile(r"([01]\d|2[0-3]):([0-5]\d)")
 
@@ -362,6 +365,56 @@ def due_stores(db: Session, today: date | None = None, now: datetime | None = No
     return [store for store in enabled_stores(db) if is_due(db, store, today, now)]
 
 
+def night_of(db: Session, now: datetime) -> date:
+    """La noche a la que pertenece un momento (hora local): de la hora de la consulta de un día a la
+    misma hora del siguiente. Así lo que arranca tarde (la app estaba apagada) cuenta en esa noche."""
+    return now.date() if now.time() >= _clock(db) else now.date() - timedelta(days=1)
+
+
+def tonight(db: Session, now: datetime | None = None) -> list[str]:
+    """Las tiendas que se consultan ahora en la tanda automática, en orden: de las que ya toca, primero
+    las que más llevan esperando, sin pasar de `SHOP_STORES_PER_NIGHT` por noche ni de
+    `SHOP_HEAVY_PER_NIGHT` pesadas (ver shops/__init__.py). Las que no caben esperan a la noche siguiente:
+    siguen tocando, y entonces van las primeras. «Consultar ahora» no pasa por aquí."""
+    now = now or local_now()
+    due = due_stores(db, now=now)
+    if not due:
+        return []
+    night = night_of(db, now).isoformat()
+    runs = _get(db, K_NIGHT_RUNS, {}) or {}
+    ran = [s for s in runs.get("stores") or [] if isinstance(s, str)] if runs.get("night") == night else []
+    order = list(shops.CONNECTORS)
+    waiting = sorted(due, key=lambda s: (due_at(db, s, now.date()) or now, order.index(s)))
+    picked: list[str] = []
+    for store in waiting:
+        if store in ran:
+            continue
+        if len(ran) + len(picked) >= config.SHOP_STORES_PER_NIGHT:
+            break
+        if shops.heavy(store) and sum(map(shops.heavy, ran + picked)) >= config.SHOP_HEAVY_PER_NIGHT:
+            continue
+        picked.append(store)
+    return picked
+
+
+def note_tonight(db: Session, stores: list[str], now: datetime | None = None) -> None:
+    """Apunta que estas tiendas ya han salido esta noche (para el tope de `tonight`)."""
+    now = now or local_now()
+    night = night_of(db, now).isoformat()
+    runs = _get(db, K_NIGHT_RUNS, {}) or {}
+    ran = list(runs.get("stores") or []) if runs.get("night") == night else []
+    _set(db, K_NIGHT_RUNS, {"night": night, "stores": ran + [s for s in stores if s not in ran]})
+    db.commit()
+
+
+def week_plan() -> list[list[str]]:
+    """El reparto de la semana, para el panel: por día (lunes = 0), las tiendas que se consultan."""
+    plan: list[list[str]] = [[] for _ in range(7)]
+    for key, connector in shops.CONNECTORS.items():
+        plan[int(getattr(connector, "refresh_weekday", 0)) % 7].append(key)
+    return plan
+
+
 def next_check(db: Session, store: str, today: date | None = None) -> date:
     """Qué día se consultará la tienda por su cuenta (hoy si ya toca)."""
     today = today or outfits.local_today()
@@ -431,9 +484,10 @@ class ShopTaste:
         by_type, by_color, by_price, by_word = (strength * part for part in blame)
         votes = [
             (self.types, item.type, by_type),
-            (self.colors, item.color, by_color),
             (self.prices, price_band(item.price_cents), by_price),
         ]
+        if item.color:  # un color aún desconocido no enseña nada
+            votes.append((self.colors, item.color, by_color))
         votes += [(self.words, word, by_word) for word in name_words(item.name)]
         family = brand_family(getattr(item, "brand", None))
         if family:
@@ -575,8 +629,8 @@ _SUMMER_TEXT = re.compile(
     r"\b(tirantes|sin mangas|lino|bermudas?|shorts?|banador|sandalias?|chanclas?|"
     r"sans manches|debardeurs?|lin|maillot de bain|sandales?|claquettes?|tongs)\b"
 )
-_SHORT_SLEEVE = re.compile(r"\bmangas? cortas?\b|\bmanches? courtes?\b")
-_LONG_SLEEVE = re.compile(r"\bmangas? largas?\b|\bmanches? longues?\b")
+_SHORT_SLEEVE = re.compile(r"\bmangas? cortas?\b|\bmanches? courtes?\b|\bshort[- ]sleeves?\b|(?<![a-z])s/s(?![a-z])")
+_LONG_SLEEVE = re.compile(r"\bmangas? largas?\b|\bmanches? longues?\b|\blong[- ]?sleeves?\b|(?<![a-z])l/s(?![a-z])")
 
 
 def summer_text(text: str | None) -> bool:
@@ -600,8 +654,12 @@ def out_of_season(product, today: date) -> bool:
 
 
 def score(product, wardrobe: list[outfits.Item], taste=None, prefs: ShopTaste | None = None) -> tuple[float, list[dict]]:
-    """La nota de un producto contra el armario (0-100) y los motivos, legibles, a favor y en contra."""
+    """La nota de un producto contra el armario (0-100) y los motivos, legibles, a favor y en contra.
+
+    Si el color aún no se sabe ("": Courir no lo dice en el listado, llega con la ficha), lo que depende
+    del color ni suma ni resta: ni gustos de color, ni paleta, ni repetidos de ese color."""
     candidate = candidate_item(product)
+    known_color = bool(candidate.color)
     reasons: list[dict] = []
     total = BASE
 
@@ -613,7 +671,7 @@ def score(product, wardrobe: list[outfits.Item], taste=None, prefs: ShopTaste | 
         plural, feminine = _TYPE_FORMS[candidate.type]
         article = "las" if feminine else "los"
         by_type = prefs.opinion(prefs.types, candidate.type)
-        by_color = prefs.opinion(prefs.colors, candidate.color)
+        by_color = prefs.opinion(prefs.colors, candidate.color) if known_color else 0.0
         by_price = prefs.opinion(prefs.prices, price_band(product.price_cents))
         by_word = {w: prefs.opinion(prefs.words, w) for w in sorted(name_words(product.name))}
         total += W_PREF_TYPE * by_type + W_PREF_COLOR * by_color + W_PREF_PRICE * by_price
@@ -665,7 +723,7 @@ def score(product, wardrobe: list[outfits.Item], taste=None, prefs: ShopTaste | 
     alike = [g for g in in_category if (g.type == "pantalón corto") == (candidate.type == "pantalón corto")]
     neutral = style_rules.is_neutral(candidate)
     off_category = False
-    if wardrobe:
+    if wardrobe and known_color:
         share_all = sum(1 for g in wardrobe if g.color == candidate.color) / len(wardrobe)
         share_here = share_all
         if len(alike) >= FEW_IN_CATEGORY:
@@ -700,7 +758,7 @@ def score(product, wardrobe: list[outfits.Item], taste=None, prefs: ShopTaste | 
 
     # 3. Huecos del armario y repetidos: desempate.
     same_type = [g for g in wardrobe if g.type == candidate.type]
-    same = sum(1 for g in same_type if g.color == candidate.color)
+    same = sum(1 for g in same_type if g.color == candidate.color) if known_color else 0
     if not same_type:
         total += GAP_TYPE
         reason(_none(candidate.type))
@@ -921,7 +979,7 @@ def colors_of(item: ShopItem) -> list[dict] | None:
             "product_ref": sibling["product_ref"],
             "name": color_name(sibling.get("name"), sibling.get("name_es"), foreign),
             # Sin tono de la tienda, el de nuestra paleta que mejor le va al nombre.
-            "hex": sibling.get("hex") or catalog.COLOR_HEX[estimate_color(sibling.get("name"))],
+            "hex": sibling.get("hex") or catalog.COLOR_HEX.get(estimate_color(sibling.get("name")), UNKNOWN_HEX),
             "current": sibling["product_ref"] == item.product_ref,
             "available": ready is None or sibling["product_ref"] == item.product_ref or sibling["product_ref"] in ready,
             "url": sibling.get("url") or item.url,
@@ -1023,8 +1081,9 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
     else:
         saved_draft = None
         fields = dict(
-            name=item.name[:120], type=item.type, color_primary=item.color,
-            color_primary_hex=item.store_color_hex or catalog.COLOR_HEX[item.color], colors_secondary=[],
+            # Un color que nunca se llegó a saber: «multicolor», el único de la paleta que no dice nada.
+            name=item.name[:120], type=item.type, color_primary=item.color or "multicolor",
+            color_primary_hex=item.store_color_hex or catalog.COLOR_HEX[item.color or "multicolor"], colors_secondary=[],
             pattern=item.pattern, style=item.style, details="", season=item.season, notes="",
         )
 
@@ -1321,6 +1380,8 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
             continue
         row.status, row.batch, row.photos = NEW, today, photos
         _detail_color(row, detail)
+        if not row.color and detail.color_hex:  # el listado no lo decía; la ficha trae el tono
+            row.color = estimate_color(row.store_color, detail.color_hex)
         row.price_cents = detail.price_cents or row.price_cents
         row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, True
         row.first_seen_at = now_utc()
@@ -2019,7 +2080,7 @@ def _mark_searched(db: Session, row: ShopItem, before: str | None, detail, photo
     row.price_cents = detail.price_cents or row.price_cents
     row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, detail.in_stock
     _detail_color(row, detail)
-    if row.color == "multicolor" and detail.color_hex:
+    if row.color in ("", "multicolor") and detail.color_hex:
         # El nombre del color no decía nada conocido («Bronce»): con la ficha ya se sabe el tono.
         row.color = estimate_color(row.store_color, detail.color_hex)
     row.first_seen_at = row.last_checked_at = now_utc()
@@ -2611,10 +2672,13 @@ def _loop() -> None:
         try:
             with SessionLocal() as db:
                 clean_lookups(db)
-                due = [] if _crawl_running.is_set() else due_stores(db)
+                # Como mucho dos tiendas por noche y una pesada: las demás, la noche siguiente.
+                due = [] if _crawl_running.is_set() else tonight(db)
             translate_soon()  # lo que se quedara sin traducir (la IA falló o estaba ocupada)
             if due:
-                start_refresh(due, night=True)
+                if start_refresh(due, night=True):
+                    with SessionLocal() as db:
+                        note_tonight(db, due)
             else:
                 top_up_soon()
         except Exception:

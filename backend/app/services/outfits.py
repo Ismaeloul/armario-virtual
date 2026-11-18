@@ -149,8 +149,9 @@ def warm_months(today: date) -> bool:
 
 # La IA escribe tanto «manga corta» como «mangas cortas amplias». Las tiendas de Francia, en francés:
 # «manches courtes» / «manches longues».
-_SHORT_SLEEVE = re.compile(r"mangas? cortas?|manches? courtes?")
-_LONG_SLEEVE = re.compile(r"mangas? largas?|manches? longues?")
+# Y en inglés (Nike, Carhartt WIP): «S/S T-Shirt», «L/S Shirt», «long sleeve».
+_SHORT_SLEEVE = re.compile(r"mangas? cortas?|manches? courtes?|short[- ]sleeves?|(?<![a-z])s/s(?![a-z])")
+_LONG_SLEEVE = re.compile(r"mangas? largas?|manches? longues?|long[- ]?sleeves?|(?<![a-z])l/s(?![a-z])")
 
 
 def summer_only(item) -> bool:

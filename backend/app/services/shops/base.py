@@ -87,9 +87,15 @@ class ShopDetail:
     store_color: str = ""
     # Datos que la ficha sabe y el listado no (el código de fabricante en Courir): se añaden a `store_data`.
     store_data: dict = field(default_factory=dict)
+    # False si la página no dice qué tallas quedan (Nike: lo dice una API interna que no se llama). Entonces
+    # el producto sale sin tallas y cuenta como disponible mientras la tienda lo venda (`sold_out`).
+    stock_known: bool = True
+    sold_out: bool = False
 
     @property
     def in_stock(self) -> bool:
+        if not self.stock_known:
+            return not self.sold_out
         return any(size["in_stock"] for size in self.sizes)
 
 
@@ -104,6 +110,13 @@ class ShopConnector(Protocol):
     # Opcional: True si la tienda solo se deja leer con un navegador de verdad (Pull&Bear, Bershka, JD Sports).
     # Esas solo hablan con la tienda en el hilo de las consultas (ver shops/browser.py).
     # needs_browser: bool
+    # Opcional: si es de las «pesadas» para el reparto de noches (por defecto, las de navegador): de esas
+    # se consulta como mucho una por noche (ver shopping.tonight). JD Sports, con navegador pero solo
+    # unas pocas páginas de zapatillas, no lo es.
+    # heavy: bool
+    # Opcional: el tipo de prenda que trae cada sección ({"t-shirts-n6323": "camiseta"}), para saber qué
+    # clase de ropa vende la tienda (el aviso de Descubrir no promete chaquetas de una tienda de zapatillas).
+    # section_types: dict[str, str]
 
     # Opcional: secciones que ya están dentro de otras ({"nike": ("baskets",)}). Si las que la contienen
     # están activas y se han leído enteras, esta no se vuelve a recorrer.

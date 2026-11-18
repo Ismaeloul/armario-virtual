@@ -1,0 +1,124 @@
+{
+ "searchTerm": null,
+ "canonicalUrl": null,
+ "title": null,
+ "primaryHeading": null,
+ "attributeIds": [
+  "0f64ecc7-d624-4e91-b171-b83a03dd8550",
+  "16633190-45e5-4830-a068-232ac7aea82c"
+ ],
+ "consumerChannelId": "d9a5bc42-4b9c-4976-858a-f159cf99c647",
+ "marketplace": "FR",
+ "locationId": null,
+ "language": "fr",
+ "selectedFiltersCount": null,
+ "analyzer": null,
+ "contentData": null,
+ "navigation": null,
+ "productGroupings": [
+  {
+   "cardType": "default",
+   "properties": null,
+   "products": [
+    {
+     "groupKey": "KsKulLnt",
+     "productCode": "IM9624-001",
+     "productType": "FOOTWEAR",
+     "productSubType": "STANDARD",
+     "globalProductId": "280612a3-21ca-4a82-85f1-8dc214037b8b",
+     "internalPid": "1015920446",
+     "merchProductId": "69fb918a-efd9-5b13-8da2-52a8bc13c792",
+     "consumerChannelId": "d9a5bc42-4b9c-4976-858a-f159cf99c647",
+     "copy": {
+      "title": "Nike Air Max Plus Premium \"Scorpion\"",
+      "subTitle": "Chaussure pour homme"
+     },
+     "displayColors": {
+      "simpleColor": {
+       "label": "Noir",
+       "hex": "27292B"
+      },
+      "colorDescription": "Noir/Chrome/Gamma Blue"
+     },
+     "prices": {
+      "currency": "EUR",
+      "currentPrice": 132.99,
+      "employeePrice": 132.99,
+      "initialPrice": 189.99,
+      "discountPercentage": 30,
+      "employeeDiscountPercentage": 30
+     },
+     "colorwayImages": {
+      "portraitURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/ecca17f7-b88a-4459-a8f6-c7d13a1511ea/NIKE+AIR+MAX+PLUS+OG+PRM+1.png",
+      "squarishURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/9339fefa-fd19-4e0b-996a-86d8afcc4e97/NIKE+AIR+MAX+PLUS+OG+PRM+1.png"
+     },
+     "featuredAttributes": null,
+     "pdpUrl": {
+      "url": "https://www.nike.com/fr/t/chaussure-nike-air-max-plus-premium-scorpion-pour-homme-KsKulLnt/IM9624-001",
+      "path": "/fr/t/chaussure-nike-air-max-plus-premium-scorpion-pour-homme-KsKulLnt/IM9624-001"
+     },
+     "isNewUntil": null,
+     "promotions": null,
+     "customization": null,
+     "badgeAttribute": null,
+     "badgeLabel": null
+    }
+   ]
+  },
+  {
+   "cardType": "default",
+   "properties": null,
+   "products": [
+    {
+     "groupKey": "XruaDVkM",
+     "productCode": "IX7726-068",
+     "productType": "FOOTWEAR",
+     "productSubType": "STANDARD",
+     "globalProductId": "bdf683ed-b54a-4d42-8fd2-770be5f4d3e9",
+     "internalPid": "1016003223",
+     "merchProductId": "a38649fb-1959-5973-bff9-ae0f1a753f76",
+     "consumerChannelId": "d9a5bc42-4b9c-4976-858a-f159cf99c647",
+     "copy": {
+      "title": "Nike Air Max 90",
+      "subTitle": "Chaussure pour homme"
+     },
+     "displayColors": {
+      "simpleColor": {
+       "label": "Gris",
+       "hex": "808080"
+      },
+      "colorDescription": "Iron Grey/Anthracite/Cool Grey/Metallic Silver"
+     },
+     "prices": {
+      "currency": "EUR",
+      "currentPrice": 149.99,
+      "employeePrice": 149.99,
+      "initialPrice": 149.99,
+      "discountPercentage": 0,
+      "employeeDiscountPercentage": 0
+     },
+     "colorwayImages": {
+      "portraitURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/01727a1a-b094-40cc-874b-0236e389a534/AIR+MAX+90.png",
+      "squarishURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/38accf14-cfe1-42aa-a977-a751940ef90e/AIR+MAX+90.png"
+     },
+     "featuredAttributes": null,
+     "pdpUrl": {
+      "url": "https://www.nike.com/fr/t/chaussure-nike-air-max-90-pour-homme-XruaDVkM/IX7726-068",
+      "path": "/fr/t/chaussure-nike-air-max-90-pour-homme-XruaDVkM/IX7726-068"
+     },
+     "isNewUntil": null,
+     "promotions": null,
+     "customization": null,
+     "badgeAttribute": null,
+     "badgeLabel": null
+    }
+   ]
+  }
+ ],
+ "pages": {
+  "next": "/discover/product_wall/v1/marketplace/FR/language/fr/consumerChannelId/d9a5bc42-4b9c-4976-858a-f159cf99c647?path=/fr/w/hommes-chaussures-nik1zy7ok&attributeIds=0f64ecc7-d624-4e91-b171-b83a03dd8550,16633190-45e5-4830-a068-232ac7aea82c&queryType=PRODUCTS&anchor=72&count=24",
+  "prev": "/discover/product_wall/v1/marketplace/FR/language/fr/consumerChannelId/d9a5bc42-4b9c-4976-858a-f159cf99c647?path=/fr/w/hommes-chaussures-nik1zy7ok&attributeIds=0f64ecc7-d624-4e91-b171-b83a03dd8550,16633190-45e5-4830-a068-232ac7aea82c&queryType=PRODUCTS&anchor=24&count=24",
+  "totalPages": 33,
+  "totalResources": 786
+ }
+}

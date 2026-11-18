@@ -6,17 +6,19 @@ Bershka, de sus CDN). Zara tiene el suyo (es anterior y responde JSON).
 - Una petición cada vez (cerrojo) y una pausa mínima entre ellas.
 - Sin cookies: cada petición sale limpia. Courir respondía 403 a la segunda petición si se le
   devolvían las cookies de la primera; sin ellas, 200.
-- Si la tienda bloquea (un 429, una página de comprobación o dos 403 seguidos), el conector se da
-  por bloqueado un rato: las siguientes peticiones fallan al momento con el mismo mensaje, sin
-  tocar la tienda. Así un bloqueo se apunta como fallo de la tienda (panel «Tiendas») y no se insiste.
+- Si la tienda bloquea (un 429, una página de comprobación o dos 403 seguidos), se da por bloqueada
+  HASTA MAÑANA (lo mismo que con el navegador: `browser.block`): las siguientes peticiones fallan al
+  momento con BlockedError, sin tocar la tienda, y el panel «Tiendas» lo enseña. No se insiste.
 """
+import json
 import threading
 import time
 from dataclasses import dataclass
 
 import httpx
 
-from .base import ShopError
+from . import browser
+from .base import BlockedError, ShopError
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
@@ -36,6 +38,35 @@ class Page:
     @property
     def text(self) -> str:
         return self.content.decode("utf-8", "replace")
+
+
+JSON = "application/json"
+
+
+def read_html(connector, url: str) -> tuple[int, str]:
+    """(estado, HTML) de una página de la tienda por su camino: un cliente normal (`connector.fetcher`) o,
+    si la tienda pasa a leerse con navegador (`needs_browser = True`: lo que hubo que hacer con JD Sports
+    cuando el Umbrel empezó a recibir 403), la misma página abierta en él. El conector lee lo mismo de
+    los dos: el JSON que la página trae dentro."""
+    if getattr(connector, "needs_browser", False):
+        status, text = browser.require(connector.key).page_html(connector.key, url)
+        return status or 0, text or ""
+    page = connector.fetcher.get(url)
+    return page.status, page.text
+
+
+def read_json(connector, url: str) -> tuple[int, object]:
+    """(estado, JSON) de una dirección que la propia web pide (la paginación de Nike), por el mismo camino
+    que `read_html`: con navegador, pedida desde dentro de la página."""
+    if getattr(connector, "needs_browser", False):
+        return browser.require(connector.key).fetch_json(connector.key, url)
+    page = connector.fetcher.get(url, accept=JSON)
+    if page.status != 200:
+        return page.status, None
+    try:
+        return page.status, json.loads(page.content)
+    except ValueError:
+        return page.status, None
 
 
 class Fetcher:
@@ -59,7 +90,10 @@ class Fetcher:
         410 se devuelven tal cual (el producto ya no existe: no es un fallo)."""
         with self._lock:
             if time.monotonic() < self._blocked_until:
-                raise ShopError(self._blocked_why)
+                raise BlockedError(self._blocked_why)
+            already = browser.blocked(self.store)
+            if already:
+                raise BlockedError(already)
             wait = self._last + (self.pause if pause is None else pause) - time.monotonic()
             if wait > 0:
                 time.sleep(wait)
@@ -90,8 +124,9 @@ class Fetcher:
 
     def _block(self, why: str) -> None:
         self._blocked_until = time.monotonic() + BLOCK_SECONDS
-        self._blocked_why = f"{why}: no se insiste hasta dentro de un rato"
-        raise ShopError(self._blocked_why)
+        error = browser.block(self.store, f"{why}: no se insiste")
+        self._blocked_why = str(error)
+        raise error
 
     def _check(self, page: Page) -> None:
         if page.status == 429:

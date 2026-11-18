@@ -272,12 +272,14 @@ def test_el_tipo_sale_del_nombre_y_si_no_de_la_categoria(name, default, expected
         ("Negro", "negro"), ("Marino", "azul marino"), ("Azul marino", "azul marino"), ("Khaki", "verde oliva"),
         ("Crudo", "crudo"), ("Blanco Hueso", "crudo"), ("Gris vigoré", "gris"), ("Marrón chocolate", "marrón"),
         ("Rojo Burgundy", "burdeos"), ("Azul claro", "celeste"), ("Tostado", "marrón"), ("Arena", "beige"),
-        ("Azul", "azul"), ("Verde botella", "verde"), ("Mostaza", "amarillo"), ("Color raro", "multicolor"),
+        ("Azul", "azul"), ("Verde botella", "verde"), ("Mostaza", "amarillo"),
+        # Sin palabra conocida ni tono: desconocido (""), no «multicolor» (no debe restar al ordenar).
+        ("Color raro", ""), ("Multicolor", "multicolor"),
     ],
 )
 def test_el_color_de_la_tienda_se_pasa_a_la_paleta(store_color, expected):
     assert estimate.estimate_color(store_color) == expected
-    assert expected in catalog.COLORS
+    assert expected in catalog.COLORS or expected == estimate.UNKNOWN_COLOR
 
 
 def test_estimacion_de_estampado_estilo_temporada_y_color_por_tono():
@@ -699,9 +701,18 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
     assert [(s["key"], s["name"], s["enabled"], s["weekday"]) for s in state["stores"]] == [
         ("zara", "Zara", False, 4), ("courir", "Courir", False, 1), ("jdsports", "JD Sports", False, 2),
         ("pullandbear", "Pull&Bear", False, 0), ("bershka", "Bershka", False, 3),
+        ("massimodutti", "Massimo Dutti", False, 1), ("lefties", "Lefties", False, 5), ("nike", "Nike", False, 3),
+        ("jackjones", "Jack & Jones", False, 0), ("carhartt", "Carhartt WIP", False, 2),
     ]
-    assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 5  # el falso no lo dice
-    assert [s["browser"] for s in state["stores"]] == [False, False, True, True, True]
+    assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 10  # el falso no lo dice
+    assert [s["browser"] for s in state["stores"]] == [False, False, True, True, True, True, True, False, False, False]
+    assert [s["key"] for s in state["stores"] if s["heavy"]] == ["pullandbear", "bershka", "massimodutti", "lefties"]
+    # El reparto de la semana, de lunes a domingo, y su tope por noche.
+    assert state["week"] == [
+        ["pullandbear", "jackjones"], ["courir", "massimodutti"], ["jdsports", "carhartt"], ["bershka", "nike"],
+        ["zara"], ["lefties"], [],
+    ]
+    assert (state["per_night"], state["heavy_per_night"]) == (2, 1)
     assert all(c["enabled"] for c in state["stores"][0]["categories"])
     assert state["running"] is False and state["pending"] == 0
     assert state["stores"][0]["weekday"] == 4 and state["stores"][0]["next_check"] is None

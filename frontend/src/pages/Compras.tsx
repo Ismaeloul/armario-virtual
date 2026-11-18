@@ -733,10 +733,17 @@ function activity(
   const section = Math.min(crawl.sections_total, crawl.sections_done + 1) || 1;
   const total = Math.max(crawl.sections_total, 1);
   const filtered = filter.category !== null || filter.store !== null;
+  // Solo se promete «traeré más …» si la tienda que se consulta trae eso: ni chaquetas de una tienda de
+  // zapatillas, ni cosas de Zara mientras se consulta Courir.
+  const crawling = state.stores.find((s) => s.key === crawl.store);
+  const brings =
+    (filter.store === null || filter.store === crawl.store) &&
+    (filter.category === null || (crawling?.kinds ?? []).includes(filter.category));
   return {
-    text: filtered
-      ? t.compras.ocupado.consultando(crawl.store_name, section, total, what)
-      : t.compras.ocupado.consultandoSinFiltro(crawl.store_name, section, total),
+    text:
+      filtered && brings
+        ? t.compras.ocupado.consultando(crawl.store_name, section, total, what)
+        : t.compras.ocupado.consultandoSinFiltro(crawl.store_name, section, total),
     crawl: true,
   };
 }
@@ -2466,6 +2473,42 @@ function SearchResult({
 
 // ---------- Tiendas
 
+/**
+ * El reparto de la semana: qué tiendas se consultan cada noche. Las activadas, en su color de texto; las
+ * desactivadas, apagadas. Debajo, el tope por noche (las que no caben pasan a la noche siguiente).
+ */
+function WeekPlan({ state }: { state: ShopState }) {
+  const names = new Map(state.stores.map((store) => [store.key, store]));
+  return (
+    <section className="card flex flex-col gap-2 p-4" aria-label={t.compras.panel.semana}>
+      <span className="font-display text-base font-semibold">{t.compras.panel.semana}</span>
+      <ul className="flex flex-col gap-1 text-xs">
+        {state.week.map((keys, day) => (
+          <li key={day} className="flex gap-3">
+            <span className="w-8 shrink-0 font-semibold text-text-2">{t.compras.diasCortos[day]}</span>
+            <span className="min-w-0">
+              {keys.length === 0 ? (
+                <span className="text-text-3">{t.compras.panel.libre}</span>
+              ) : (
+                keys.map((key, index) => {
+                  const store = names.get(key);
+                  return (
+                    <span key={key} className={store?.enabled ? "text-text" : "text-text-3"}>
+                      {index > 0 ? " · " : ""}
+                      {store?.name ?? key}
+                    </span>
+                  );
+                })
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-text-2">{t.compras.panel.repartoTexto(state.per_night, state.heavy_per_night)}</p>
+    </section>
+  );
+}
+
 const STATUS_DOT: Record<string, string> = { ok: "bg-ok", failed: "bg-danger", never: "bg-text-3" };
 const STATUS_TEXT: Record<string, string> = { ok: "text-ok", failed: "text-danger", never: "text-text-2" };
 
@@ -2482,6 +2525,23 @@ function StoresPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
+  // Con diez (y luego veinte) tiendas, cada una es una fila que se despliega al tocarla. Las activadas van
+  // primero; el orden se fija al abrir el panel para que una tienda no salte de sitio al activarla.
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const toggle = (key: string) =>
+    setExpanded((before) => {
+      const next = new Set(before);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  const [order] = useState(() =>
+    [...state.stores].sort((a, b) => Number(b.enabled) - Number(a.enabled)).map((store) => store.key),
+  );
+  const ordered = [
+    ...order.map((key) => state.stores.find((store) => store.key === key)).filter((store): store is ShopStore => !!store),
+    ...state.stores.filter((store) => !order.includes(store.key)),
+  ];
 
   useEffect(() => {
     closeButton.current?.focus();
@@ -2566,110 +2626,145 @@ function StoresPanel({
               {error}
             </p>
           )}
-          {state.stores.map((store) => {
+          <WeekPlan state={state} />
+          {ordered.map((store) => {
             const status = store.status;
             const crawl = state.crawl?.store === store.key ? state.crawl : null;
             const hour = store.next_check_at ? store.next_check_at.slice(11, 16).replace(/^0/, "") : null;
+            const open = expanded.has(store.key);
             return (
-              <section key={store.key} className="card flex flex-col gap-3.5 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-display text-base font-semibold">{store.name}</h3>
-                    <p className={`flex items-center gap-1.5 text-xs font-semibold ${STATUS_TEXT[status.state]}`}>
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_DOT[status.state]}`} />
-                      {t.compras.panel.estado[status.state]}
-                    </p>
+              <section key={store.key} className="card flex flex-col p-1">
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    aria-controls={`tienda-${store.key}`}
+                    onClick={() => toggle(store.key)}
+                    className="flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-xl px-3 py-2 text-left active:opacity-60"
+                  >
+                    <Icon
+                      name="expand_less"
+                      size={18}
+                      className={`shrink-0 text-text-2 transition-transform ${open ? "" : "rotate-180"}`}
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate font-display text-base font-semibold">{store.name}</span>
+                      <span className={`flex items-center gap-1.5 text-xs font-semibold ${STATUS_TEXT[status.state]}`}>
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_DOT[status.state]}`} />
+                        <span className="truncate">
+                          {crawl
+                            ? t.compras.panel.leyendo
+                            : [
+                                t.compras.panel.estado[status.state],
+                                store.unavailable ? t.compras.panel.noDisponible : null,
+                                t.compras.diasCortos[store.weekday] ?? "",
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                  <div className="shrink-0 pr-3">
+                    <Switch
+                      checked={store.enabled}
+                      label={t.compras.panel.activada(store.name)}
+                      onChange={() =>
+                        !busy &&
+                        act(api.shopSettings({ store: store.key, enabled: !store.enabled }), t.compras.panel.errorGuardar)
+                      }
+                    />
                   </div>
-                  <Switch
-                    checked={store.enabled}
-                    label={t.compras.panel.activada(store.name)}
-                    onChange={() =>
-                      !busy &&
-                      act(api.shopSettings({ store: store.key, enabled: !store.enabled }), t.compras.panel.errorGuardar)
-                    }
-                  />
                 </div>
-
-                {crawl && (
-                  <div className="flex flex-col gap-2 rounded-xl bg-card-2 p-3">
-                    <span className="label-caps text-text-2">{t.compras.panel.leyendo}</span>
+                {crawl && !open && (
+                  <div className="px-3 pb-3">
                     <CrawlProgress crawl={crawl} />
-                    <SecondaryButton
-                      onClick={() => !crawl.cancelling && act(api.shopCancel(), t.compras.panel.errorGuardar)}
-                    >
-                      <Icon name="close" size={18} />
-                      {crawl.cancelling ? t.compras.panel.cancelando : t.compras.panel.cancelar}
-                    </SecondaryButton>
                   </div>
                 )}
+                {open && (
+                  <div id={`tienda-${store.key}`} className="flex flex-col gap-3.5 px-3 pt-1 pb-3">
+                    {crawl && (
+                      <div className="flex flex-col gap-2 rounded-xl bg-card-2 p-3">
+                        <span className="label-caps text-text-2">{t.compras.panel.leyendo}</span>
+                        <CrawlProgress crawl={crawl} />
+                        <SecondaryButton
+                          onClick={() => !crawl.cancelling && act(api.shopCancel(), t.compras.panel.errorGuardar)}
+                        >
+                          <Icon name="close" size={18} />
+                          {crawl.cancelling ? t.compras.panel.cancelando : t.compras.panel.cancelar}
+                        </SecondaryButton>
+                      </div>
+                    )}
 
-                <div className="flex flex-col gap-1 text-xs text-text-2">
-                  {status.at && (
-                    <>
-                      <p>{t.compras.panel.ultima(dateTime(status.at))}</p>
-                      <p>
-                        {t.compras.panel.trajo(status.found, status.added)}
-                        {status.pages > 0 ? ` · ${t.compras.panel.recorrido(status.pages, status.seconds)}` : ""}
-                      </p>
-                      {status.cancelled && <p>{t.compras.panel.cancelada}</p>}
-                      {status.resume && !crawl && (
-                        <p className="text-text">{t.compras.panel.incompleta(status.sections, status.sections_total)}</p>
+                    <div className="flex flex-col gap-1 text-xs text-text-2">
+                      {status.at && (
+                        <>
+                          <p>{t.compras.panel.ultima(dateTime(status.at))}</p>
+                          <p>
+                            {t.compras.panel.trajo(status.found, status.added)}
+                            {status.pages > 0 ? ` · ${t.compras.panel.recorrido(status.pages, status.seconds)}` : ""}
+                          </p>
+                          {status.cancelled && <p>{t.compras.panel.cancelada}</p>}
+                          {status.resume && !crawl && (
+                            <p className="text-text">{t.compras.panel.incompleta(status.sections, status.sections_total)}</p>
+                          )}
+                          <p className={status.failed > 0 ? "text-danger" : ""}>
+                            {status.failed > 0 ? t.compras.panel.fallaron(status.failed) : t.compras.panel.sinFallos}
+                          </p>
+                        </>
                       )}
-                      <p className={status.failed > 0 ? "text-danger" : ""}>
-                        {status.failed > 0 ? t.compras.panel.fallaron(status.failed) : t.compras.panel.sinFallos}
+                      {store.unavailable && <p className="font-semibold text-danger">{store.unavailable}</p>}
+                      {status.error && (
+                        <p className="rounded-lg bg-card-2 px-3 py-2 font-mono text-[11px] break-words text-text">
+                          <span className="font-sans font-semibold">{t.compras.panel.error}: </span>
+                          {status.error}
+                        </p>
+                      )}
+                      <p>
+                        {store.weekday_after_release
+                          ? t.compras.panel.dia(t.compras.dias[store.weekday] ?? "")
+                          : t.compras.panel.diaSinDato(t.compras.dias[store.weekday] ?? "")}
                       </p>
-                    </>
-                  )}
-                  {store.unavailable && <p className="font-semibold text-danger">{store.unavailable}</p>}
-                  {status.error && (
-                    <p className="rounded-lg bg-card-2 px-3 py-2 font-mono text-[11px] break-words text-text">
-                      <span className="font-sans font-semibold">{t.compras.panel.error}: </span>
-                      {status.error}
-                    </p>
-                  )}
-                  <p>
-                    {store.weekday_after_release
-                      ? t.compras.panel.dia(t.compras.dias[store.weekday] ?? "")
-                      : t.compras.panel.diaSinDato(t.compras.dias[store.weekday] ?? "")}
-                  </p>
-                  {store.browser && <p className="text-text-3">{t.compras.panel.conNavegador}</p>}
-                  <p>
-                    {store.enabled && store.next_check
-                      ? t.compras.panel.proxima(
-                          [dayLabel(store.next_check), hour ? t.compras.panel.a(hour) : ""].filter(Boolean).join(" "),
-                        )
-                      : t.compras.panel.desactivadaTexto}
-                  </p>
-                </div>
+                      {store.browser && <p className="text-text-3">{t.compras.panel.conNavegador}</p>}
+                      <p>
+                        {store.enabled && store.next_check
+                          ? t.compras.panel.proxima(
+                              [dayLabel(store.next_check), hour ? t.compras.panel.a(hour) : ""].filter(Boolean).join(" "),
+                            )
+                          : t.compras.panel.desactivadaTexto}
+                      </p>
+                    </div>
 
-                <div className="flex flex-col gap-2">
-                  <span className="label-caps text-text-2">{t.compras.panel.categorias}</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {store.categories.map((c) => (
-                      <button
-                        key={c.slug}
-                        type="button"
-                        aria-pressed={c.enabled}
-                        disabled={busy}
-                        onClick={() => toggleCategory(store, c.slug)}
-                        className={`min-h-11 rounded-full border px-3 py-2 text-xs font-medium ${
-                          c.enabled ? "border-primary bg-primary text-on-primary" : "border-line bg-card-2 text-text-2"
-                        }`}
-                      >
-                        {c.label}
-                      </button>
-                    ))}
+                    <div className="flex flex-col gap-2">
+                      <span className="label-caps text-text-2">{t.compras.panel.categorias}</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {store.categories.map((c) => (
+                          <button
+                            key={c.slug}
+                            type="button"
+                            aria-pressed={c.enabled}
+                            disabled={busy}
+                            onClick={() => toggleCategory(store, c.slug)}
+                            className={`min-h-11 rounded-full border px-3 py-2 text-xs font-medium ${
+                              c.enabled ? "border-primary bg-primary text-on-primary" : "border-line bg-card-2 text-text-2"
+                            }`}
+                          >
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <PrimaryButton
+                      disabled={busy || state.running || !store.enabled || store.unavailable !== null}
+                      onClick={() => act(api.shopRefresh(store.key), t.compras.panel.errorConsultar)}
+                    >
+                      <Icon name="refresh" size={20} />
+                      {state.running ? t.compras.panel.consultando : t.compras.panel.consultar}
+                    </PrimaryButton>
+                    <p className="-mt-1.5 text-center text-[11px] text-text-3">{t.compras.panel.consultarAviso}</p>
                   </div>
-                </div>
-
-                <PrimaryButton
-                  disabled={busy || state.running || !store.enabled || store.unavailable !== null}
-                  onClick={() => act(api.shopRefresh(store.key), t.compras.panel.errorConsultar)}
-                >
-                  <Icon name="refresh" size={20} />
-                  {state.running ? t.compras.panel.consultando : t.compras.panel.consultar}
-                </PrimaryButton>
-                <p className="-mt-1.5 text-center text-[11px] text-text-3">{t.compras.panel.consultarAviso}</p>
+                )}
               </section>
             );
           })}

@@ -1,0 +1,635 @@
+{
+ "_fuente": "window.__INITIAL_STATE__['$initialContentResponse-/fr-fr/product/...'].product de https://www.jackjones.com/fr-fr/product/12308540_2036/t-shirts-standard-fit-col-rond (styleOptions recortado a 2)",
+ "product": {
+  "images": [
+   "https://images.jackjones.com/12308540/5146284/003/jackjones-jjelogoteesso-neck2colss27sn-grise.jpg?v=afd49a830bfa8d5168d6a4aefb055e61",
+   "https://images.jackjones.com/12308540/5146284/004/jackjones-jjelogoteesso-neck2colss27sn-grise.jpg?v=45459c665aa250dabcaef39b83d5d05e",
+   "https://images.jackjones.com/12308540/5146284/001/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=f9be297e7ef4669faa78636fc8910fc0",
+   "https://images.jackjones.com/12308540/5146284/002/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=494e0f23c60610d4505457e4a74ba2d7",
+   "https://images.jackjones.com/12308540/5146284/005/jackjones-jjelogoteesso-neck2colss27sn-grise.jpg?v=49f4381cba16a8c150e46a2689ac06e7",
+   "https://images.jackjones.com/12308540/5146284/006/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=374efdffd16b56e940b233043ff10263",
+   "https://images.jackjones.com/12308540/5146284/007/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=f66f7ace56ac62c511313c451f93a8f4",
+   "https://images.jackjones.com/12308540/5146284/008/jackjones-jjelogoteesso-neck2colss27sn-grise.jpg?v=40d7938e0deb2a204e3745fa0504491f",
+   "https://images.jackjones.com/12308540/5146284/015/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=3034aaf148699970f02e5273e299c90a"
+  ],
+  "price": {
+   "percentage": 0,
+   "id": "eur_fr",
+   "salesPrice": {
+    "amount": 12.99,
+    "currency": "EUR"
+   },
+   "displayScheduledDiscount": false,
+   "vatAmount": {
+    "amount": 2.16,
+    "currency": "EUR"
+   },
+   "vatAmount2": {
+    "currency": "XXX"
+   },
+   "vatRate": 20,
+   "vatRate2": 0,
+   "from": "0001-01-01T00:00:00Z",
+   "to": "2026-11-26T23:30:00Z",
+   "schedule": {
+    "from": "0001-01-01T00:00:00Z",
+    "to": "2026-11-26T23:30:00Z"
+   }
+  },
+  "description": "Il n'y a rien de plus simple qu'un t-shirt. Vous pourrez le porter avec n'importe quel vêtement de votre garde-robe.\nLe coton est une fibre naturelle connue pour ses propriétés douces et respirantes.\n - Type d'article : T-shirt\n - Col : Col rond\n - Manches : Manches courtes\n - Manches : Manches montées\n - Type d'imprimés : Imprimé sur le devant de l'article\n - Coupe : Standard Fit\n - Mode de vie : Loisir",
+  "careInstructions": [
+   {
+    "id": "Washing",
+    "description": "Température maximale 40°C programme très doux"
+   },
+   {
+    "id": "Bleaching",
+    "description": "Ne pas blanchir"
+   },
+   {
+    "id": "Ironing",
+    "description": "Repasser à la température maximale de 150°C"
+   },
+   {
+    "id": "NaturalDrying",
+    "description": "Séchage sur fil"
+   },
+   {
+    "id": "TumbleDrying",
+    "description": "Séchage en tambour interdit"
+   },
+   {
+    "id": "DryCleaning",
+    "description": "Ne pas nettoyer à sec"
+   },
+   {
+    "id": "AdditionalCare1",
+    "description": "Laver avec des couleurs similaires"
+   },
+   {
+    "id": "AdditionalCare2",
+    "description": "Ne pas repasser la décoration"
+   },
+   {
+    "id": "AdditionalCare3",
+    "description": "Ne laver qu’en cas de nécessité"
+   }
+  ],
+  "sustainabilityReasons": [],
+  "sustainabilityText": "Le matériau principal de ce produit contient un minimum de 50 % de coton biologique Direct to Farm.",
+  "discountPercentage": 0,
+  "styleOptionNumber": "5146284",
+  "badges": [
+   "no-sale",
+   "sub-brand-jack-jones-essentials"
+  ],
+  "styleName": "JJELOGO TEE SS O-NECK 2 COL SS27 SN",
+  "styleNumber": "12308540",
+  "fabricComposition": "100% Coton",
+  "englishFabricComposition": "100% Cotton",
+  "media": [
+   {
+    "isFrontImage": true,
+    "isBackImage": false,
+    "id": "003",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/003/jackjones-jjelogoteesso-neck2colss27sn-grise.jpg?v=afd49a830bfa8d5168d6a4aefb055e61",
+    "mimeType": "image/jpeg",
+    "width": 3602,
+    "height": 4802,
+    "aiGenerated": true
+   },
+   {
+    "isFrontImage": false,
+    "isBackImage": true,
+    "id": "004",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/004/jackjones-jjelogoteesso-neck2colss27sn-grise.jpg?v=45459c665aa250dabcaef39b83d5d05e",
+    "mimeType": "image/jpeg",
+    "width": 3617,
+    "height": 4823,
+    "aiGenerated": true
+   },
+   {
+    "isFrontImage": false,
+    "isBackImage": false,
+    "id": "001",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/001/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=f9be297e7ef4669faa78636fc8910fc0",
+    "mimeType": "image/png",
+    "width": 0,
+    "height": 0,
+    "aiGenerated": false
+   },
+   {
+    "isFrontImage": false,
+    "isBackImage": false,
+    "id": "002",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/002/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=494e0f23c60610d4505457e4a74ba2d7",
+    "mimeType": "image/png",
+    "width": 0,
+    "height": 0,
+    "aiGenerated": false
+   },
+   {
+    "isFrontImage": false,
+    "isBackImage": false,
+    "id": "005",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/005/jackjones-jjelogoteesso-neck2colss27sn-grise.jpg?v=49f4381cba16a8c150e46a2689ac06e7",
+    "mimeType": "image/jpeg",
+    "width": 3608,
+    "height": 4810,
+    "aiGenerated": true
+   },
+   {
+    "isFrontImage": false,
+    "isBackImage": false,
+    "id": "006",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/006/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=374efdffd16b56e940b233043ff10263",
+    "mimeType": "image/png",
+    "width": 0,
+    "height": 0,
+    "aiGenerated": false
+   },
+   {
+    "isFrontImage": false,
+    "isBackImage": false,
+    "id": "007",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/007/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=f66f7ace56ac62c511313c451f93a8f4",
+    "mimeType": "image/png",
+    "width": 0,
+    "height": 0,
+    "aiGenerated": false
+   },
+   {
+    "isFrontImage": false,
+    "isBackImage": false,
+    "id": "008",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/008/jackjones-jjelogoteesso-neck2colss27sn-grise.jpg?v=40d7938e0deb2a204e3745fa0504491f",
+    "mimeType": "image/jpeg",
+    "width": 3584,
+    "height": 4800,
+    "aiGenerated": true
+   },
+   {
+    "isFrontImage": false,
+    "isBackImage": false,
+    "id": "015",
+    "imageUrl": "https://images.jackjones.com/12308540/5146284/015/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=3034aaf148699970f02e5273e299c90a",
+    "mimeType": "image/png",
+    "width": 3584,
+    "height": 4800,
+    "aiGenerated": true
+   }
+  ],
+  "relations": {
+   "styleoption": [
+    "12308540_2078",
+    "12308540_5",
+    "12308540_1466",
+    "12308540_1966",
+    "12308540_2036",
+    "12308540_992"
+   ]
+  },
+  "isNew": true,
+  "subBrand": "JACK&JONES ESSENTIALS",
+  "brand": "Jack & Jones",
+  "colour": {
+   "base": {
+    "id": "9",
+    "name": "Grise",
+    "hexCode": "#858585"
+   },
+   "nuance": {
+    "id": "16",
+    "name": "Gris foncé"
+   },
+   "alternateColours": [],
+   "pantoneHexCode": "#58646d",
+   "id": "2036",
+   "name": "Stormy Weather",
+   "hexCode": "#858585"
+  },
+  "variants": [
+   {
+    "id": "12308540_2036,65",
+    "name": "T-shirt",
+    "size": {
+     "sizeId": "65",
+     "name": "M"
+    },
+    "ean": "5715953458444",
+    "inStock": true,
+    "inStockEcom": true,
+    "inStockRetail": false,
+    "inDeliveryDateSet": true
+   },
+   {
+    "id": "12308540_2036,59",
+    "name": "T-shirt",
+    "size": {
+     "sizeId": "59",
+     "name": "XS"
+    },
+    "ean": "5715953458697",
+    "inStock": true,
+    "inStockEcom": true,
+    "inStockRetail": false,
+    "inDeliveryDateSet": true
+   },
+   {
+    "id": "12308540_2036,62",
+    "name": "T-shirt",
+    "size": {
+     "sizeId": "62",
+     "name": "L"
+    },
+    "ean": "5715945478115",
+    "inStock": true,
+    "inStockEcom": true,
+    "inStockRetail": false,
+    "inDeliveryDateSet": true
+   },
+   {
+    "id": "12308540_2036,60",
+    "name": "T-shirt",
+    "size": {
+     "sizeId": "60",
+     "name": "S"
+    },
+    "ean": "5715953458451",
+    "inStock": true,
+    "inStockEcom": true,
+    "inStockRetail": false,
+    "inDeliveryDateSet": true
+   },
+   {
+    "id": "12308540_2036,63",
+    "name": "T-shirt",
+    "size": {
+     "sizeId": "63",
+     "name": "XL"
+    },
+    "ean": "5715953458437",
+    "inStock": true,
+    "inStockEcom": true,
+    "inStockRetail": false,
+    "inDeliveryDateSet": true
+   },
+   {
+    "id": "12308540_2036,41",
+    "name": "T-shirt",
+    "size": {
+     "sizeId": "41",
+     "name": "XXL"
+    },
+    "ean": "5715953458611",
+    "inStock": true,
+    "inStockEcom": true,
+    "inStockRetail": false,
+    "inDeliveryDateSet": true
+   }
+  ],
+  "id": "12308540_2036",
+  "url": "/fr-fr/product/12308540_2036/t-shirts-standard-fit-col-rond",
+  "name": "T-shirt",
+  "tags": [
+   "no-markdown",
+   "style-option-5146284",
+   "gender-male",
+   "jack",
+   "grey"
+  ],
+  "styleOptions": [
+   {
+    "subGroup": "",
+    "price": {
+     "percentage": 0,
+     "id": "eur_fr",
+     "salesPrice": {
+      "amount": 12.99,
+      "currency": "EUR"
+     },
+     "displayScheduledDiscount": false,
+     "vatAmount": {
+      "amount": 2.16,
+      "currency": "EUR"
+     },
+     "vatAmount2": {
+      "currency": "XXX"
+     },
+     "vatRate": 20,
+     "vatRate2": 0,
+     "from": "0001-01-01T00:00:00Z",
+     "to": "2026-11-26T23:30:00Z",
+     "schedule": {
+      "from": "0001-01-01T00:00:00Z",
+      "to": "2026-11-26T23:30:00Z"
+     }
+    },
+    "image": "https://images.jackjones.com/12308540/5146282/001/jackjones-jjelogoteesso-neck2colss27sn-grise.png?v=f08c1f3a087e58f549a47a1e50b5c18a",
+    "colour": {
+     "base": {
+      "id": "9",
+      "name": "Grise",
+      "hexCode": "#858585"
+     },
+     "nuance": {
+      "id": "13",
+      "name": "Gris moyen"
+     },
+     "alternateColours": [],
+     "pantoneHexCode": "#8a9691",
+     "id": "1466",
+     "name": "Slate Gray",
+     "hexCode": "#858585"
+    },
+    "variants": [
+     {
+      "id": "12308540_1466,63",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "63",
+       "name": "XL"
+      },
+      "ean": "5715953458420",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1466,59",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "59",
+       "name": "XS"
+      },
+      "ean": "5715953458680",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1466,60",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "60",
+       "name": "S"
+      },
+      "ean": "5715953458406",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1466,41",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "41",
+       "name": "XXL"
+      },
+      "ean": "5715953458604",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1466,62",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "62",
+       "name": "L"
+      },
+      "ean": "5715945478108",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1466,65",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "65",
+       "name": "M"
+      },
+      "ean": "5715953458413",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     }
+    ],
+    "inStock": true,
+    "isNew": true,
+    "id": "12308540_1466",
+    "name": "T-shirt",
+    "url": "/fr-fr/product/12308540_1466/t-shirts-standard-fit-col-rond",
+    "inDeliveryDateSet": true
+   },
+   {
+    "subGroup": "",
+    "price": {
+     "percentage": 0,
+     "id": "eur_fr",
+     "salesPrice": {
+      "amount": 12.99,
+      "currency": "EUR"
+     },
+     "displayScheduledDiscount": false,
+     "vatAmount": {
+      "amount": 2.16,
+      "currency": "EUR"
+     },
+     "vatAmount2": {
+      "currency": "XXX"
+     },
+     "vatRate": 20,
+     "vatRate2": 0,
+     "from": "0001-01-01T00:00:00Z",
+     "to": "2026-11-26T23:30:00Z",
+     "schedule": {
+      "from": "0001-01-01T00:00:00Z",
+      "to": "2026-11-26T23:30:00Z"
+     }
+    },
+    "image": "https://images.jackjones.com/12308540/5146283/001/jackjones-jjelogoteesso-neck2colss27sn-bleue.png?v=dc10711b3ad84593264b3d17edf8d3a2",
+    "colour": {
+     "base": {
+      "id": "2",
+      "name": "Bleue",
+      "hexCode": "#1500ff"
+     },
+     "nuance": {
+      "id": "32",
+      "name": "Bleu moyen"
+     },
+     "alternateColours": [],
+     "pantoneHexCode": "#9eb4d3",
+     "id": "1966",
+     "name": "Chambray Blue",
+     "hexCode": "#1500ff"
+    },
+    "variants": [
+     {
+      "id": "12308540_1966,60",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "60",
+       "name": "S"
+      },
+      "ean": "5715953458475",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1966,63",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "63",
+       "name": "XL"
+      },
+      "ean": "5715953458482",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1966,41",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "41",
+       "name": "XXL"
+      },
+      "ean": "5715953458628",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1966,62",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "62",
+       "name": "L"
+      },
+      "ean": "5715945478030",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1966,59",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "59",
+       "name": "XS"
+      },
+      "ean": "5715953458734",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     },
+     {
+      "id": "12308540_1966,65",
+      "name": "T-shirt",
+      "size": {
+       "sizeId": "65",
+       "name": "M"
+      },
+      "ean": "5715953458468",
+      "inStock": true,
+      "inStockEcom": true,
+      "inStockRetail": false,
+      "inDeliveryDateSet": true
+     }
+    ],
+    "inStock": true,
+    "isNew": true,
+    "id": "12308540_1966",
+    "name": "T-shirt",
+    "url": "/fr-fr/product/12308540_1966/t-shirts-standard-fit-col-rond",
+    "inDeliveryDateSet": true
+   }
+  ],
+  "ediCategory": "T-Shirts et tops",
+  "ediSubCategory": "T-shirts",
+  "calloutAttributes": {
+   "callout": "",
+   "disclaimer": "",
+   "calloutBackgroundColor": "",
+   "calloutColor": "",
+   "hasAccordion": false,
+   "calloutIcon": "",
+   "enableClipboardIcon": false,
+   "clipboardCode": "",
+   "clipboardTitle": "",
+   "hideDiscountPrice": false,
+   "hideDiscountPercentage": false,
+   "discountPriceColor": "",
+   "discountPercentageColor": "",
+   "alternatePromotionName": ""
+  },
+  "callout": "",
+  "disclaimer": "",
+  "isDigital": false,
+  "isDiscountable": true,
+  "isNoos": true,
+  "allowInStockNotifications": true,
+  "completeTheLook": [
+   "12308540_2036",
+   "12299048_1972"
+  ],
+  "shopTheLook": [
+   "12308540_2036",
+   "12299048_1972"
+  ],
+  "hasCompleteTheLook": false,
+  "productSetOptions": [],
+  "isProductSet": false,
+  "styleOptionsCount": 0,
+  "productSetOptionsCount": 0,
+  "targetGroup": "Adult",
+  "hasEcom": true,
+  "hasRetail": false,
+  "subGroup": "",
+  "isPreorder": false,
+  "comingSoonProduct": false,
+  "alternatePrice": {
+   "percentage": 0,
+   "id": "eur_fr|clubmember",
+   "salesPrice": {
+    "amount": 12.99,
+    "currency": "EUR"
+   },
+   "displayScheduledDiscount": false,
+   "vatAmount": {
+    "amount": 2.16,
+    "currency": "EUR"
+   },
+   "vatAmount2": {
+    "currency": "XXX"
+   },
+   "vatRate": 20,
+   "vatRate2": 0,
+   "from": "0001-01-01T00:00:00Z",
+   "to": "2026-11-26T23:30:00Z",
+   "schedule": {
+    "from": "0001-01-01T00:00:00Z",
+    "to": "2026-11-26T23:30:00Z"
+   }
+  },
+  "aiGenerated": true,
+  "englishColourFamily": "Grey",
+  "englishCategory": "T-Shirts & Tops",
+  "englishGender": "Male"
+ }
+}

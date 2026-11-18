@@ -1,0 +1,208 @@
+{
+ "props": {
+  "pageProps": {
+   "initialState": {
+    "Wall": {
+     "pageData": {
+      "next": "/discover/product_wall/v1/marketplace/FR/language/fr/consumerChannelId/d9a5bc42-4b9c-4976-858a-f159cf99c647?path=/fr/w/hommes-chaussures-nik1zy7ok&attributeIds=0f64ecc7-d624-4e91-b171-b83a03dd8550,16633190-45e5-4830-a068-232ac7aea82c&queryType=PRODUCTS&anchor=24&count=24",
+      "prev": "",
+      "totalPages": 33,
+      "totalResources": 787
+     },
+     "title": "Hommes Chaussures",
+     "canonicalUrl": "https://www.nike.com/fr/w/hommes-chaussures-nik1zy7ok",
+     "productGroupings": [
+      {
+       "cardType": "default",
+       "properties": null,
+       "products": [
+        {
+         "groupKey": "SMtmxlKz",
+         "productCode": "HM6803-019",
+         "productType": "FOOTWEAR",
+         "productSubType": "STANDARD",
+         "globalProductId": "4ecf18dc-29e1-4bef-940f-e370641099b7",
+         "internalPid": "1015929237",
+         "merchProductId": "1f55e328-eeec-5dd3-8cf8-155911758b53",
+         "consumerChannelId": "d9a5bc42-4b9c-4976-858a-f159cf99c647",
+         "copy": {
+          "title": "Nike Vomero 18",
+          "subTitle": "Chaussure de running sur route pour homme"
+         },
+         "displayColors": {
+          "simpleColor": {
+           "label": "Noir",
+           "hex": "27292B"
+          },
+          "colorDescription": "Noir/University Red/Anthracite/Bright Crimson"
+         },
+         "prices": {
+          "currency": "EUR",
+          "currentPrice": 95.99,
+          "employeePrice": 95.99,
+          "initialPrice": 159.99,
+          "discountPercentage": 40,
+          "employeeDiscountPercentage": 40
+         },
+         "colorwayImages": {
+          "portraitURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/3baa7541-e7e4-4cb4-a124-439b94bb09e1/NIKE+VOMERO+18.png",
+          "squarishURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/0288a840-1cf0-48c0-af96-a8205cfa5c05/NIKE+VOMERO+18.png"
+         },
+         "featuredAttributes": [
+          "BEST_SELLER"
+         ],
+         "pdpUrl": {
+          "url": "https://www.nike.com/fr/t/chaussure-de-running-sur-route-nike-vomero-18-pour-homme-SMtmxlKz/HM6803-019",
+          "path": "/fr/t/chaussure-de-running-sur-route-nike-vomero-18-pour-homme-SMtmxlKz/HM6803-019"
+         },
+         "isNewUntil": null,
+         "promotions": null,
+         "customization": null,
+         "badgeAttribute": "BEST_SELLER",
+         "badgeLabel": "Meilleure vente"
+        },
+        {
+         "groupKey": "SMtmxlKz",
+         "productCode": "HM6803-101",
+         "productType": "FOOTWEAR",
+         "productSubType": "STANDARD",
+         "globalProductId": "94474f64-183d-494a-a4d2-1931ba811c42",
+         "internalPid": "1015692742",
+         "merchProductId": "9bf964c4-73db-5b6c-86db-e5186b1efb61",
+         "consumerChannelId": "d9a5bc42-4b9c-4976-858a-f159cf99c647",
+         "copy": {
+          "title": "Nike Vomero 18",
+          "subTitle": "Chaussure de running sur route pour homme"
+         },
+         "displayColors": {
+          "simpleColor": {
+           "label": "Blanc",
+           "hex": "F0F4FF"
+          },
+          "colorDescription": "Summit White/Coconut Milk/Coconut Milk/Noir"
+         },
+         "prices": {
+          "currency": "EUR",
+          "currentPrice": 95.99,
+          "employeePrice": 95.99,
+          "initialPrice": 159.99,
+          "discountPercentage": 40,
+          "employeeDiscountPercentage": 40
+         },
+         "colorwayImages": {
+          "portraitURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/3a1a6fce-e35c-4a32-893c-9704f2868423/NIKE+VOMERO+18.png",
+          "squarishURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/14a27a5c-33ef-4f9e-bff8-5f7111ddb8fd/NIKE+VOMERO+18.png"
+         },
+         "featuredAttributes": null,
+         "pdpUrl": {
+          "url": "https://www.nike.com/fr/t/chaussure-de-running-sur-route-nike-vomero-18-pour-homme-SMtmxlKz/HM6803-101",
+          "path": "/fr/t/chaussure-de-running-sur-route-nike-vomero-18-pour-homme-SMtmxlKz/HM6803-101"
+         },
+         "isNewUntil": null,
+         "promotions": null,
+         "customization": null,
+         "badgeAttribute": null,
+         "badgeLabel": null
+        }
+       ]
+      },
+      {
+       "cardType": "default",
+       "properties": null,
+       "products": [
+        {
+         "groupKey": "vRcGAMSK",
+         "productCode": "HQ2592-017",
+         "productType": "FOOTWEAR",
+         "productSubType": "STANDARD",
+         "globalProductId": "9b23f847-3540-4e45-8189-2a8ac93d5591",
+         "internalPid": "1015929491",
+         "merchProductId": "2622e8db-f021-5a53-8017-a4ab7f1dbd72",
+         "consumerChannelId": "d9a5bc42-4b9c-4976-858a-f159cf99c647",
+         "copy": {
+          "title": "Nike Pegasus Premium",
+          "subTitle": "Chaussure de running sur route pour homme"
+         },
+         "displayColors": {
+          "simpleColor": {
+           "label": "Gris",
+           "hex": "808080"
+          },
+          "colorDescription": "Grey Mist/Mineral Slate/Work Blue/Dark Obsidian"
+         },
+         "prices": {
+          "currency": "EUR",
+          "currentPrice": 125.99,
+          "employeePrice": 125.99,
+          "initialPrice": 209.99,
+          "discountPercentage": 40,
+          "employeeDiscountPercentage": 40
+         },
+         "colorwayImages": {
+          "portraitURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/68792413-ee4c-4f01-8dcf-a6484393d3a3/NIKE+PEGASUS+PREMIUM.png",
+          "squarishURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/03cb47be-760e-492e-a2e2-bbbbe76fe911/NIKE+PEGASUS+PREMIUM.png"
+         },
+         "featuredAttributes": [
+          "BEST_SELLER"
+         ],
+         "pdpUrl": {
+          "url": "https://www.nike.com/fr/t/chaussure-de-running-sur-route-nike-pegasus-premium-pour-homme-vRcGAMSK/HQ2592-017",
+          "path": "/fr/t/chaussure-de-running-sur-route-nike-pegasus-premium-pour-homme-vRcGAMSK/HQ2592-017"
+         },
+         "isNewUntil": null,
+         "promotions": null,
+         "customization": null,
+         "badgeAttribute": "BEST_SELLER",
+         "badgeLabel": "Meilleure vente"
+        },
+        {
+         "groupKey": "vRcGAMSK",
+         "productCode": "HQ2592-110",
+         "productType": "FOOTWEAR",
+         "productSubType": "STANDARD",
+         "globalProductId": "ccbff696-6ef3-483d-bde9-8b663183bb78",
+         "internalPid": "1015929472",
+         "merchProductId": "b107316e-aa04-5edc-b12b-587992c0bb41",
+         "consumerChannelId": "d9a5bc42-4b9c-4976-858a-f159cf99c647",
+         "copy": {
+          "title": "Nike Pegasus Premium",
+          "subTitle": "Chaussure de running sur route pour homme"
+         },
+         "displayColors": {
+          "simpleColor": {
+           "label": "Blanc",
+           "hex": "F0F4FF"
+          },
+          "colorDescription": "Blanc/Midnight Navy/Green Spark"
+         },
+         "prices": {
+          "currency": "EUR",
+          "currentPrice": 125.99,
+          "employeePrice": 125.99,
+          "initialPrice": 209.99,
+          "discountPercentage": 40,
+          "employeeDiscountPercentage": 40
+         },
+         "colorwayImages": {
+          "portraitURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/31660b03-15ef-4e84-ae84-c7123354b8f5/NIKE+PEGASUS+PREMIUM.png",
+          "squarishURL": "https://static.nike.com/a/images/t_default/u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/5d70bd18-706c-419d-8631-e13d0260e4c9/NIKE+PEGASUS+PREMIUM.png"
+         },
+         "featuredAttributes": null,
+         "pdpUrl": {
+          "url": "https://www.nike.com/fr/t/chaussure-de-running-sur-route-nike-pegasus-premium-pour-homme-vRcGAMSK/HQ2592-110",
+          "path": "/fr/t/chaussure-de-running-sur-route-nike-pegasus-premium-pour-homme-vRcGAMSK/HQ2592-110"
+         },
+         "isNewUntil": null,
+         "promotions": null,
+         "customization": null,
+         "badgeAttribute": null,
+         "badgeLabel": null
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ }
+}
