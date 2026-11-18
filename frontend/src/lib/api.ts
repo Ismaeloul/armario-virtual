@@ -151,6 +151,14 @@ export type ShopItem = {
   expires_soon: boolean;
 };
 
+/** Un resultado del buscador por referencia: el producto y si ya estaba guardado. */
+export type ShopLookupItem = ShopItem & {
+  /** Ya estaba en Me gustan o en el armario. */
+  saved: "gustado" | "comprado" | null;
+  /** La prenda del armario, si ya estaba comprado. */
+  garment_id: number | null;
+};
+
 export type ShopStore = {
   key: string;
   name: string;
@@ -268,6 +276,8 @@ export const api = {
   shopReason: (id: number, reason: ShopDiscardReason) =>
     request<void>(`/api/shop/items/${id}/reason`, json("POST", { reason })),
   shopLiked: () => request<ShopItem[]>("/api/shop/liked"),
+  /** El buscador: una referencia, un enlace de producto o texto. Tarda unos segundos (habla con la tienda). */
+  shopLookup: (query: string) => request<ShopLookupItem[]>("/api/shop/lookup", json("POST", { query })),
   shopRemove: (id: number) => request<void>(`/api/shop/items/${id}`, { method: "DELETE" }),
   shopBought: (id: number, size: string | null) =>
     request<{ garment_id: number; analyzed: boolean }>(`/api/shop/items/${id}/bought`, json("POST", { size })),

@@ -24,6 +24,12 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   acabar la tanda (el catálogo entero se guarda como candidatos sin fotos). Tiendas mezcladas en una lista
   con filtros por tienda y por tipo de prenda (no separar por tienda). «Volver» deshace decisiones. Motivo
   opcional al descartar (quitado después: el usuario no quiere que se pregunte, y un descarte cuenta muy poco, 0,2 frente a 1 de un «me gusta», porque descartar no es decir que ese tipo de ropa no le gusta). El precio NO cuenta ni sale como motivo (el usuario no quiere). La temporada se lee también de la descripción. Codex NO analiza las finalistas.
+  Buscador por referencia (lupa en Compras, 18-11-2026): se pega una referencia de Zara (3918/300,
+  03918300…), un enlace de producto o texto libre, y cada resultado se puede guardar en Me gustan o meter
+  directo en el armario («Ya la tengo»). Las referencias van directas a la ficha; el texto libre usa el
+  buscador de Zara. Los resultados son `shop_items` en estado `buscado`, que se limpian a las 24 h.
+  Descubrir cabe en una pantalla sin scroll, con botones flotantes redondos tipo Tinder (X, corazón y
+  Volver) que animan la tarjeta; en Me gustan, tocar una prenda abre la foto en grande.
   Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
   va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se

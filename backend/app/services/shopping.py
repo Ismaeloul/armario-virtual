@@ -18,16 +18,21 @@ candidatos con los gustos de ese momento y baja la tanda siguiente.
 
 La IA solo entra cuando el usuario marca «La he comprado»: entonces se analizan las fotos guardadas
 y la prenda pasa al armario. La app nunca compra ni guarda datos de pago: solo enlaza a la tienda.
+
+Aparte está el buscador (`lookup`): el usuario da una referencia, un enlace o un texto, y lo que
+sale se guarda como «buscado» con sus fotos, listo para pasar a Me gustan o al armario. Un «buscado»
+no es una propuesta: no sale en Descubrir ni enseña nada hasta que se guarda o se compra.
 """
 import json
 import logging
 import math
 import re
 import threading
+import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from .. import catalog, config
@@ -35,14 +40,24 @@ from ..db import SessionLocal
 from ..models import Garment, Setting, ShopItem, now_utc
 from . import ai, outfits, shops, storage, style_rules
 from .ai.base import build_prompt
-from .shops import ShopError
-from .shops.estimate import norm
+from .shops import NotThisStore, SearchError, ShopError
+from .shops.estimate import estimate_color, norm
 
 log = logging.getLogger("armario.compras")
 
 # «candidato»: está en el catálogo de la tienda pero no se ha enseñado (no tiene fotos).
 CANDIDATE = "candidato"
 NEW, LIKED, DISCARDED, BOUGHT, EXPIRED = "nuevo", "gustado", "descartado", "comprado", "caducado"
+# «buscado»: lo trajo el buscador y aún no se ha hecho nada con él. Tiene fotos, pero no es una
+# propuesta: no sale en Descubrir, no es candidato y no enseña nada. Si no se guarda ni se compra,
+# se limpia solo (`clean_lookups`).
+SEARCHED = "buscado"
+
+LOOKUP_MAX = 12  # resultados del buscador, como mucho (un producto con muchos colores)
+LOOKUP_SECONDS = 40.0  # a partir de aquí no se piden más fichas: se enseña lo que haya
+LOOKUP_KEEP = timedelta(hours=24)  # lo que dura un «buscado» con el que no se hace nada
+# La consulta semanal también los limpia, salvo los de hace un momento: puede haber una búsqueda abierta.
+LOOKUP_KEEP_ON_REFRESH = timedelta(hours=1)
 
 LIKED_DAYS = 30  # lo que dura un «me gusta» antes de caducar
 BOUGHT_WEIGHT = 3.0  # una compra enseña tanto como tres «me gusta»
@@ -317,14 +332,20 @@ def load_shop_taste(db: Session) -> ShopTaste:
     (`LAPSED_WEIGHT`) y un descarte, casi nada (`_BLAME`). Lo caducado sin valorar no dice nada, y lo
     deshecho con «Volver» tampoco: vuelve a estar pendiente."""
     learned = ShopTaste()
-    for item in db.scalars(select(ShopItem).where(ShopItem.status.in_((LIKED, DISCARDED, BOUGHT, EXPIRED)))):
-        if item.status == BOUGHT:
+    counted = or_(ShopItem.status.in_((LIKED, DISCARDED, BOUGHT, EXPIRED)), ShopItem.prev_status.is_not(None))
+    for item in db.scalars(select(ShopItem).where(counted)):
+        # Un «buscado» no enseña nada. Si ya existía (descartado, caducado…), sigue contando como lo
+        # que era: volver a buscar algo no borra lo que se dijo de ello.
+        status = item.prev_status if item.status == SEARCHED else item.status
+        if status == BOUGHT:
             learned.learn(item, True, strength=BOUGHT_WEIGHT)
-        elif item.status == LIKED:
+        elif status == LIKED:
             learned.learn(item, True)
+        elif status not in (DISCARDED, EXPIRED):
+            continue
         elif item.liked_at is not None:  # gustó, pero caducó o lo quitó sin comprarlo
             learned.learn(item, True, strength=LAPSED_WEIGHT)
-        elif item.status == DISCARDED:
+        elif status == DISCARDED:
             learned.learn(item, False, item.discard_reason)
     return learned
 
@@ -612,11 +633,14 @@ def expire_old(db: Session, now: datetime | None = None) -> int:
 
 
 def like(db: Session, item: ShopItem) -> None:
+    """A «Me gustan», con su caducidad. Vale para una propuesta de Descubrir y para un «buscado»."""
     now = now_utc()
+    # «Volver» es cosa de Descubrir: lo que entra por el buscador no pasa por ahí.
+    item.can_undo = item.status == NEW
     item.status = LIKED
+    item.prev_status = item.discard_reason = None
     item.liked_at = item.decided_at = now
     item.expires_at = now + timedelta(days=LIKED_DAYS)
-    item.can_undo = True
     db.commit()
     rescore_pending(db)
 
@@ -701,7 +725,8 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
     photos = [p for p in (item.photos or []) if storage.exists(p)]
     if not photos:
         raise CannotBuy("Las fotos de este producto ya no están; no se puede pasar al armario")
-    in_stock = [s["name"] for s in item.sizes or [] if s.get("in_stock")]
+    # De un «buscado» puede que ya tenga la prenda en casa: vale cualquier talla que exista, quede o no.
+    in_stock = [s["name"] for s in item.sizes or [] if s.get("in_stock") or item.status == SEARCHED]
     if size and in_stock and size not in in_stock:
         raise CannotBuy("Esa talla no está entre las disponibles")
     front, back, extra = (photos + [None, None])[:3]
@@ -751,6 +776,7 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
     db.add(garment)
     db.flush()
     item.status = BOUGHT
+    item.prev_status = None
     item.garment_id = garment.id
     item.liked_at = item.liked_at or now_utc()
     item.can_undo = False
@@ -1026,6 +1052,7 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
 def refresh(db: Session, today: date | None = None, limit: int | None = None, stores: list[str] | None = None) -> dict:
     """Una tanda: consulta las tiendas indicadas (por defecto, todas las activadas), una detrás de otra."""
     total = {"ok": False, "found": 0, "added": 0, "expired": expire_old(db), "failed": 0, "errors": []}
+    clean_lookups(db, LOOKUP_KEEP_ON_REFRESH)  # antes de mirar qué se ha enseñado ya: un «buscado» no cuenta
     for store in stores if stores is not None else enabled_stores(db):
         if store not in shops.CONNECTORS:
             continue
@@ -1083,6 +1110,164 @@ def more(db: Session, store: str | None = None, category: str | None = None, lim
 def last_more(db: Session) -> dict | None:
     """Cómo fue el último «Ver más» desde la última consulta semanal, o None si no ha habido."""
     return _get(db, K_MORE)
+
+
+# ---------- El buscador por referencia
+
+
+class LookupFailed(Exception):
+    """El buscador no tiene nada que enseñar. El mensaje va tal cual a la pantalla.
+
+    `reason`: «nada» (no existe o no se entiende lo que se busca), «tienda» (la tienda no responde)
+    u «ocupado» (hay una consulta del catálogo en marcha).
+    """
+
+    def __init__(self, message: str, reason: str = "nada"):
+        super().__init__(message)
+        self.reason = reason
+
+
+def clean_lookups(db: Session, keep: timedelta = LOOKUP_KEEP, now: datetime | None = None) -> int:
+    """Quita los «buscados» con los que no se ha hecho nada en `keep`, con sus fotos. El que ya
+    existía antes de buscarlo (descartado, caducado…) vuelve a lo que era; el resto se borra, como
+    si no se hubiera buscado nunca."""
+    now = now or now_utc()
+    cleaned = 0
+    for item in db.scalars(select(ShopItem).where(ShopItem.status == SEARCHED)):
+        seen = _aware(item.first_seen_at)
+        if seen and now - seen < keep:
+            continue
+        _drop_photos(item)
+        if item.prev_status:
+            item.status, item.prev_status, item.can_undo = item.prev_status, None, False
+        else:
+            db.delete(item)
+        cleaned += 1
+    if cleaned:
+        db.commit()
+    return cleaned
+
+
+def already(db: Session, item: ShopItem) -> str | None:
+    """Si un resultado del buscador ya estaba guardado: «gustado», «comprado» (y la prenda sigue en
+    el armario) o None."""
+    if item.status == LIKED:
+        return LIKED
+    if item.status == BOUGHT and item.garment_id and db.get(Garment, item.garment_id) is not None:
+        return BOUGHT
+    return None
+
+
+def _search_stores(query: str) -> list[tuple[object, object]]:
+    """Pregunta a cada tienda que sepa buscar. Devuelve (conector, producto) o lanza LookupFailed.
+
+    Se busca en todas, estén activadas o no: activar una tienda es pedirle novedades cada semana, y
+    quien escribe una referencia ya sabe lo que quiere.
+    """
+    found: list[tuple[object, object]] = []
+    nothing: list[str] = []
+    down: list[str] = []
+    for connector in shops.CONNECTORS.values():
+        search = getattr(connector, "search", None)
+        if search is None:
+            continue
+        try:
+            found += [(connector, product) for product in search(query, LOOKUP_MAX)]
+        except NotThisStore:
+            continue
+        except SearchError as exc:
+            nothing.append(str(exc))
+        except ShopError as exc:
+            down.append(f"{connector.name} no responde ahora ({exc})")
+        except Exception:
+            log.exception("Compras: error inesperado al buscar en %s", connector.key)
+            down.append(f"No se pudo buscar en {connector.name}: error inesperado")
+    if found:
+        return found[:LOOKUP_MAX]
+    if down:
+        raise LookupFailed(down[0], "tienda")
+    raise LookupFailed(nothing[0] if nothing else "Todavía no sé buscar en esa tienda")
+
+
+def lookup(db: Session, query: str, today: date | None = None) -> list[ShopItem]:
+    """El buscador: de una referencia, un enlace o un texto a productos guardados con sus fotos.
+
+    Es síncrono (unos segundos). Lo nuevo se guarda como «buscado». Lo que ya existía se reutiliza
+    en vez de duplicarse: lo que está en Descubrir, en Me gustan o comprado se devuelve tal cual
+    (ver `already`), y lo descartado o caducado se vuelve a traer para poder guardarlo otra vez.
+    Lanza LookupFailed, con el mensaje ya escrito, si no hay nada que enseñar.
+    """
+    query = " ".join((query or "").split())
+    if not query:
+        raise LookupFailed("Escribe una referencia, un enlace o qué prenda buscas")
+    # El mismo cerrojo que las tandas: una sola cosa a la vez hablando con las tiendas.
+    if not _lock.acquire(blocking=False):
+        raise LookupFailed("Ahora mismo estoy consultando el catálogo. Prueba dentro de un minuto.", "ocupado")
+    try:
+        return _lookup(db, query, today or outfits.local_today())
+    finally:
+        _lock.release()
+
+
+def _has_photos(item: ShopItem) -> bool:
+    return bool(item.photos) and storage.exists(item.photos[0])
+
+
+def _lookup(db: Session, query: str, today: date) -> list[ShopItem]:
+    started = time.monotonic()
+    clean_lookups(db)
+    found = _search_stores(query)
+    context = Context.load(db)
+    items: list[ShopItem] = []
+    down: list[str] = []
+    for connector, product in found:
+        row = db.scalars(select(ShopItem).where(ShopItem.product_ref == product.product_ref)).first()
+        if row is not None and (already(db, row) or (row.status in (NEW, SEARCHED) and _has_photos(row))):
+            if row.status == SEARCHED:
+                row.first_seen_at = now_utc()  # se ha vuelto a buscar: el plazo empieza otra vez
+                db.commit()
+            items.append(row)
+            continue
+        if time.monotonic() - started > LOOKUP_SECONDS:
+            break
+        try:
+            detail = connector.detail(product.store_data)
+            if detail is None or not detail.photo_urls:
+                continue  # sin foto de producto no hay nada que guardar ni que analizar
+            photos = _save_photos(connector, detail.photo_urls)
+        except Exception as exc:
+            if isinstance(exc, ShopError):
+                down.append(f"{connector.name} no responde ahora ({exc})")
+            else:
+                log.exception("Compras: error inesperado al buscar %s", product.product_ref)
+                down.append(f"No se pudo traer «{product.name}»: error inesperado")
+            continue
+        before = row.status if row is not None else None
+        row = _store_candidate(db, row, product, today)
+        _drop_photos(row)  # las que pudiera tener de antes
+        row.status, row.batch, row.photos = SEARCHED, today, photos
+        # Lo que ya se había valorado vuelve a su estado si no se hace nada con ello.
+        if before in (DISCARDED, EXPIRED, BOUGHT):
+            row.prev_status = before
+        row.can_undo = False
+        row.price_cents = detail.price_cents or row.price_cents
+        row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, detail.in_stock
+        if row.color == "multicolor" and detail.color_hex:
+            # El nombre del color no decía nada conocido («Bronce»): con la ficha ya se sabe el tono.
+            row.color = estimate_color(row.store_color, detail.color_hex)
+        row.first_seen_at = row.last_checked_at = now_utc()
+        description = " ".join((detail.description or "").split())[:DESCRIPTION_MAX]
+        if description and description not in (row.details or ""):
+            row.details = f"{row.details or ''} {description}".strip()
+        row.score, row.reasons = context.score(row)
+        db.commit()
+        items.append(row)
+    if not items:
+        if down:
+            raise LookupFailed(down[0], "tienda")
+        raise LookupFailed("Lo he encontrado, pero la tienda no tiene fotos de producto: no lo puedo guardar")
+    log.info("Compras: búsqueda de «%s» (%s resultados, %.1f s)", query[:60], len(items), time.monotonic() - started)
+    return items
 
 
 # ---------- En segundo plano
@@ -1151,6 +1336,7 @@ def _loop() -> None:
         delay = CHECK_EVERY_SECONDS
         try:
             with SessionLocal() as db:
+                clean_lookups(db)
                 due = due_stores(db)
             if due and _lock.acquire(blocking=False):
                 _job = "consulta"

@@ -142,7 +142,8 @@ class ShopItem(Base):
     photos: Mapped[list] = mapped_column(JSON, default=list)
     score: Mapped[float] = mapped_column(Float, default=0.0)
     reasons: Mapped[list] = mapped_column(JSON, default=list)  # [{"text": …, "kind": "pro" | "contra"}]
-    # candidato (en el catálogo, sin enseñar) · nuevo · gustado · descartado · comprado · caducado
+    # candidato (en el catálogo, sin enseñar) · nuevo · gustado · descartado · comprado · caducado ·
+    # buscado (traído por el buscador de referencias y aún sin guardar: no sale en Descubrir)
     status: Mapped[str] = mapped_column(String(20), index=True)
     batch: Mapped[date] = mapped_column(Date, index=True)  # la tanda en la que llegó
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
@@ -153,6 +154,8 @@ class ShopItem(Base):
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     can_undo: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
     discard_reason: Mapped[str | None] = mapped_column(String(20), nullable=True)  # estilo · color · caro · ya_tengo
+    # En un «buscado» que ya existía (descartado, caducado…): el estado al que vuelve si no se hace nada.
+    prev_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
     in_stock: Mapped[bool] = mapped_column(Boolean, default=True)
     sizes: Mapped[list] = mapped_column(JSON, default=list)  # [{"name": "M", "in_stock": true}]
     garment_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # si se compró

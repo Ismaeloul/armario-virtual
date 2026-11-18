@@ -16,6 +16,15 @@ class ShopError(Exception):
     así que va en claro: «HTTP 403», «tiempo agotado», «la respuesta no era la esperada»."""
 
 
+class SearchError(ShopError):
+    """El buscador no puede dar nada con lo que se le ha pedido (la referencia no existe, no tiene
+    forma de referencia…). No es un fallo de la tienda, y el mensaje ya va escrito para el usuario."""
+
+
+class NotThisStore(SearchError):
+    """Lo que se busca es un enlace de otra tienda: este conector no tiene nada que decir."""
+
+
 @dataclass
 class ShopProduct:
     """Un producto del listado de una categoría, ya normalizado."""
@@ -69,3 +78,9 @@ class ShopConnector(Protocol):
 
     def download(self, url: str) -> bytes:
         """Los bytes de una foto. Lanza ShopError si falla."""
+
+    def search(self, query: str, limit: int) -> list[ShopProduct]:
+        """El buscador: lo que el usuario escribe en un solo campo (una referencia, un enlace de
+        producto o texto libre) -> productos, uno por color y como mucho `limit`. Lanza SearchError
+        si no hay nada que enseñar (NotThisStore si es un enlace de otra tienda) y ShopError si la
+        tienda falla. Es opcional: un conector sin `search` no entra en el buscador."""

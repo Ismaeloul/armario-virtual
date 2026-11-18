@@ -1,0 +1,127 @@
+{
+ "product": {
+  "id": 548227733,
+  "type": "Product",
+  "kind": "Wear",
+  "name": "CAZADORA TÉCNICA COMBINADO POLAR",
+  "sectionName": "MAN",
+  "familyName": "CAZADORA",
+  "subfamilyName": "B. Cazadora",
+  "seo": {
+   "keyword": "cazadora-tecnica-combinado-polar",
+   "description": "Cazadora relaxed fit confeccionada en tejido técnico compacto con el interior en tejido tipo forro polar. Cuello subido con capucha ajustable y manga larga acabada en puño ajustable con tira adherente. Bolsillos con cierre de cremallera en pecho y cadera. Detalle de bolsillo interior. Bajo ajustable en laterlaes con elásticos interiores. Cierre frontal con cremallera.",
+   "seoProductId": "03918300",
+   "discernProductId": 548232269
+  },
+  "detail": {
+   "reference": "03918300-I2026",
+   "displayReference": "3918/300",
+   "colors": [
+    {
+     "id": "505",
+     "hexCode": "#564A31",
+     "productId": 548232269,
+     "name": "Khaki",
+     "price": 3995,
+     "description": "Cazadora relaxed fit confeccionada en tejido técnico compacto con el interior en tejido tipo forro polar. Cuello subido con capucha ajustable y manga larga acabada en puño ajustable con tira adherente. Bolsillos con cierre de cremallera en pecho y cadera. Detalle de bolsillo interior. Bajo ajustable en laterlaes con elásticos interiores. Cierre frontal con cremallera.",
+     "sizes": [
+      {
+       "name": "S",
+       "availability": "in_stock"
+      },
+      {
+       "name": "M",
+       "availability": "in_stock"
+      },
+      {
+       "name": "L",
+       "availability": "in_stock"
+      },
+      {
+       "name": "XL",
+       "availability": "in_stock"
+      },
+      {
+       "name": "XXL",
+       "availability": "in_stock"
+      }
+     ],
+     "xmedia": [
+      {
+       "name": "03918309505-p",
+       "path": "/assets/public/366a/ab0c/96404a90ae16/ccb70da33b7b/03918309505-p",
+       "type": "image"
+      },
+      {
+       "name": "03918309505-a1",
+       "path": "/assets/public/0d42/b5b7/d8c04bcdad83/7fb24693f203/03918309505-a1",
+       "type": "image"
+      },
+      {
+       "name": "03918309505-e1",
+       "path": "/assets/public/d836/7ff1/48694a849dcd/4aba47193456/03918309505-e1",
+       "type": "image"
+      },
+      {
+       "name": "03918309505-e2",
+       "path": "/assets/public/632a/6e19/d090479e9caf/32e3263b1185/03918309505-e2",
+       "type": "image"
+      }
+     ]
+    },
+    {
+     "id": "800",
+     "hexCode": "#242524",
+     "productId": 548232268,
+     "name": "Negro",
+     "price": 3995,
+     "description": "Altura modelo: 185 cm\n\nCazadora relaxed fit confeccionada en tejido técnico compacto con el interior en tejido tipo forro polar. Cuello subido con capucha ajustable y manga larga acabada en puño ajustable con tira adherente. Bolsillos con cierre de cremallera en pecho y cadera. Detalle de bolsillo interior. Bajo ajustable en laterlaes con elásticos interiores. Cierre frontal con cremallera.",
+     "sizes": [
+      {
+       "name": "S",
+       "availability": "in_stock"
+      },
+      {
+       "name": "M",
+       "availability": "in_stock"
+      },
+      {
+       "name": "L",
+       "availability": "in_stock"
+      },
+      {
+       "name": "XL",
+       "availability": "in_stock"
+      },
+      {
+       "name": "XXL",
+       "availability": "in_stock"
+      }
+     ],
+     "xmedia": [
+      {
+       "name": "03918300800-p",
+       "path": "/assets/public/8471/5e2c/3e2f45b3ba79/c1dab0b0f523/03918300800-p",
+       "type": "image"
+      },
+      {
+       "name": "03918300800-a1",
+       "path": "/assets/public/7b95/56d9/13e0434c98e6/2868d50ad243/03918300800-a1",
+       "type": "image"
+      },
+      {
+       "name": "03918309800-e1",
+       "path": "/assets/public/9d93/5b76/21854180b4c3/7b9f4ec61d26/03918309800-e1",
+       "type": "image"
+      },
+      {
+       "name": "03918309800-e2",
+       "path": "/assets/public/ff2d/6622/822d4edca760/23ab0819fa6b/03918309800-e2",
+       "type": "image"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

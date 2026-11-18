@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from .. import catalog
 from ..db import get_db
-from ..models import ShopItem
+from ..models import Garment, ShopItem
 from ..schemas import Photo
 from ..services import shopping, shops, storage
 from .settings import read_settings
@@ -49,6 +49,17 @@ class ShopItemOut(BaseModel):
     liked_at: datetime | None
     expires_at: datetime | None
     expires_soon: bool
+
+
+class ShopLookupOut(ShopItemOut):
+    """Un resultado del buscador por referencia."""
+
+    saved: Literal["gustado", "comprado"] | None  # ya estaba en Me gustan o en el armario
+    garment_id: int | None  # la prenda del armario, si ya estaba comprado
+
+
+class LookupIn(BaseModel):
+    query: str = Field(max_length=600)  # una referencia, un enlace de producto o texto libre
 
 
 class ShopCategoryOut(BaseModel):
@@ -288,11 +299,37 @@ def next_item(only: Filter = Depends(), db: Session = Depends(get_db)):
     return _next(db, only)
 
 
+_LOOKUP_STATUS = {"nada": 404, "ocupado": 409, "tienda": 503}
+
+
+@router.post("/lookup", response_model=list[ShopLookupOut])
+def lookup(body: LookupIn, db: Session = Depends(get_db)):
+    """El buscador: de una referencia, un enlace de producto o un texto a productos con sus fotos,
+    listos para «Me gusta» (`/items/{id}/like`) o «Ya la tengo» (`/items/{id}/bought`). Tarda unos
+    segundos: habla con la tienda antes de responder. Si no hay nada, el `detail` dice por qué."""
+    try:
+        items = shopping.lookup(db, body.query)
+    except shopping.LookupFailed as exc:
+        raise HTTPException(_LOOKUP_STATUS.get(exc.reason, 404), str(exc)) from exc
+    results = []
+    for item in items:
+        saved = shopping.already(db, item)
+        out = _to_out(item).model_dump()
+        if saved == shopping.BOUGHT:
+            # Sus fotos son ya las de la prenda del armario.
+            garment = db.get(Garment, item.garment_id)
+            ids = [garment.photo_front, garment.photo_back, garment.photo_extra]
+            out["photos"] = [storage.to_schema(photo_id) for photo_id in ids if photo_id]
+        results.append(ShopLookupOut(**out, saved=saved, garment_id=item.garment_id if saved == shopping.BOUGHT else None))
+    return results
+
+
 @router.post("/items/{item_id}/like", response_model=ShopNext)
 def like(item_id: int, only: Filter = Depends(), db: Session = Depends(get_db)):
-    """Me gusta: pasa a «Me gustan» y devuelve la siguiente propuesta."""
+    """Me gusta: pasa a «Me gustan» y devuelve la siguiente propuesta. Vale también para un resultado
+    del buscador."""
     item = _get_or_404(db, item_id)
-    if item.status == shopping.NEW:
+    if item.status in (shopping.NEW, shopping.SEARCHED):
         shopping.like(db, item)
     elif item.status != shopping.LIKED:  # un doble toque no es un error
         raise HTTPException(409, "Este producto ya no está entre las propuestas")
@@ -350,11 +387,12 @@ def remove(item_id: int, db: Session = Depends(get_db)):
 
 @router.post("/items/{item_id}/bought", response_model=BoughtOut)
 def bought(item_id: int, body: BoughtIn, db: Session = Depends(get_db)):
-    """«La he comprado»: analiza las fotos guardadas y pasa la prenda al armario con la talla elegida."""
+    """«La he comprado» o, desde el buscador, «Ya la tengo»: analiza las fotos guardadas y pasa la
+    prenda al armario con la talla elegida."""
     item = _get_or_404(db, item_id)
     if item.status == shopping.BOUGHT and item.garment_id:  # doble toque: la prenda ya está creada
         return BoughtOut(garment_id=item.garment_id, analyzed=item.ai_draft is not None)
-    if item.status not in (shopping.NEW, shopping.LIKED):
+    if item.status not in (shopping.NEW, shopping.LIKED, shopping.SEARCHED):
         raise HTTPException(409, "Este producto ya no está disponible")
     size = (body.size or "").strip() or None
     try:

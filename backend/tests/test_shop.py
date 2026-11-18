@@ -10,10 +10,10 @@ from sqlalchemy import select
 from app import catalog
 from app.db import SessionLocal
 from app.main import referenced_photos
-from app.models import ShopItem, now_utc
+from app.models import Garment, ShopItem, now_utc
 from app.services import outfits, shopping, shops, storage
 from app.services.ai.base import AnalysisError
-from app.services.shops import ShopDetail, ShopError, ShopProduct, estimate, zara
+from app.services.shops import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, estimate, zara
 
 FIXTURES = Path(__file__).parent / "fixtures"
 INVIERNO, VERANO = date(2026, 11, 18), date(2026, 7, 1)  # miércoles los dos
@@ -51,6 +51,7 @@ class FakeConnector:
         self.gone: set[str] = set()  # productos que ya no existen
         self.details: dict[str, ShopDetail] = {}
         self.calls: list[tuple[str, str]] = []
+        self.found: dict[str, list[ShopProduct] | Exception] = {}  # lo que da el buscador con cada texto
 
     def list_category(self, slug):
         self.calls.append(("lista", slug))
@@ -74,6 +75,13 @@ class FakeConnector:
     def download(self, url):
         self.calls.append(("foto", url))
         return self.photo
+
+    def search(self, query, limit):
+        self.calls.append(("busca", query))
+        answer = self.found.get(query, SearchError("No he encontrado nada con esa referencia"))
+        if isinstance(answer, Exception):
+            raise answer
+        return answer[:limit]
 
     def asked(self, kind: str) -> list[str]:
         return [what for k, what in self.calls if k == kind]
@@ -1174,3 +1182,370 @@ def test_cada_senal_pesa_lo_suyo_al_aprender(client):
         db.commit()
         net, total = shopping.load_shop_taste(db).types["camisa"]
     assert (net, total) == pytest.approx((3 + 1 + 0.5 + 0.5 - 0.2, 3 + 1 + 0.5 + 0.5 + 0.2))
+
+
+# ---------- El buscador por referencia
+
+
+@pytest.mark.parametrize(
+    ("texto", "seo_id", "color", "v1"),
+    [
+        ("3918/300", "03918300", None, None),
+        ("3918/300/800", "03918300", "800", None),
+        ("03918300", "03918300", None, None),
+        ("3918300", "03918300", None, None),
+        ("0391 8300 800", "03918300", "800", None),  # como viene en la etiqueta
+        ("REF. 3918/300", "03918300", None, None),
+        ("  ref: 3918-300  ", "03918300", None, None),
+        ("Referencia Nº 3918.300", "03918300", None, None),
+        ("https://www.zara.com/es/es/cazadora-tecnica-combinado-polar-p03918300.html?v1=565710389&v2=2432", "03918300",
+         None, "565710389"),
+        ("https://www.zara.com/es/es/cazadora-tecnica-combinado-polar-p03918300.html", "03918300", None, None),
+        ("www.zara.com/es/en/-p03918300.html?v1=1", "03918300", None, "1"),
+        ("zara.com/es/es/share/-p03918300.html?v1=565710389&utm_campaign=productShare", "03918300", None, "565710389"),
+        ("Mira esta cazadora en Zara: https://www.zara.com/es/es/share/cazadora-p03918300.html?v1=565710389.",
+         "03918300", None, "565710389"),
+        ("https://m.zara.com/fr/fr/veste-p03918300.html?v1=abc", "03918300", None, None),
+    ],
+)
+def test_el_buscador_entiende_las_referencias_y_los_enlaces_de_zara(texto, seo_id, color, v1):
+    query = zara.parse_query(texto)
+    assert (query.seo_id, query.color_id, query.v1, query.text) == (seo_id, color, v1, None)
+
+
+def test_el_buscador_distingue_el_texto_libre_la_basura_y_los_enlaces_de_otras_tiendas():
+    assert zara.parse_query("  cazadora   lana negra ") == zara.ZaraQuery(text="cazadora lana negra")
+    assert zara.parse_query("pantalón negro 100% algodón").text == "pantalón negro 100% algodón"
+    for basura in ("", "   ", "ref", "12", "3918", "3918/30", "3918/300/80", "123456789012", "#!?", "3918+300", "ab"):
+        with pytest.raises(SearchError) as error:
+            zara.parse_query(basura)
+        assert not isinstance(error.value, NotThisStore), basura
+    with pytest.raises(SearchError, match="7 cifras, tipo 3918/300"):
+        zara.parse_query("3918/30")
+    # Un enlace de Zara sin la referencia (la portada, una categoría, un enlace corto) no sirve…
+    for sin_ref in ("https://www.zara.com/es/", "https://www.zara.com/es/es/hombre-camisas-l737.html", "https://go.zara.com/x7Yz"):
+        with pytest.raises(SearchError, match="no lleva la referencia"):
+            zara.parse_query(sin_ref)
+    # … y el de otra tienda, tampoco: se dice que todavía no se sabe buscar ahí.
+    for otra in ("https://www.pullandbear.com/es/cazadora-l03918300.html", "https://vm.tiktok.com/ZNd123/",
+                 "bershka.com/es/sudadera-c0p101.html", "https://zara.com.tienda-falsa.es/-p03918300.html",
+                 "https://notzara.com/es/-p03918300.html"):
+        with pytest.raises(NotThisStore, match="Todavía no sé buscar en esa tienda"):
+            zara.parse_query(otra)
+
+
+def test_la_respuesta_del_buscador_de_zara_da_un_producto_por_color():
+    products = zara.parse_search(_fixture("zara_busqueda.json"), 12)
+
+    # Fuera el repetido y los calcetines; cada color de una misma referencia es un resultado.
+    assert [(p.name, p.store_color, p.product_ref) for p in products] == [
+        ("Cazadora técnica combinado polar", "Negro", "zara:03918300-800"),
+        ("Cazadora técnica combinado polar", "Khaki", "zara:03918300-505"),
+        ("Cazadora regular fit con lana", "Negro", "zara:08281765-800"),
+        ("Cazadora regular fit con lana", "Negro / Marrón", "zara:04517500-099"),
+        ("Cazadora cropped fit 100% lana", "Negro", "zara:08491305-800"),
+    ]
+    first = products[0]
+    assert (first.type, first.category, first.color, first.price_cents) == ("chaqueta", "capa_exterior", "negro", 3995)
+    assert first.url == "https://www.zara.com/es/es/cazadora-tecnica-combinado-polar-p03918300.html?v1=565710389"
+    assert first.store_data == {
+        "keyword": "cazadora-tecnica-combinado-polar", "seo_id": "03918300", "discern_id": 565710389, "color_id": "800",
+    }
+    assert first.section == "" and products[1].color == "verde oliva"
+    assert len(zara.parse_search(_fixture("zara_busqueda.json"), 2)) == 2
+    assert zara.parse_search({}, 12) == [] and zara.parse_search({"results": [{}, {"content": None}]}, 12) == []
+
+
+def test_la_ficha_de_una_referencia_da_un_resultado_por_color():
+    data = _fixture("zara_producto.json")
+    todos = zara.parse_product_page(data, zara.ZaraQuery(seo_id="03918300"), 12)
+    assert [(p.store_color, p.product_ref, p.store_data["discern_id"]) for p in todos] == [
+        ("Khaki", "zara:03918300-505", 548232269), ("Negro", "zara:03918300-800", 548232268),
+    ]
+    assert todos[0].name == "Cazadora técnica combinado polar" and todos[0].price_cents == 3995
+    assert todos[1].url.endswith("/cazadora-tecnica-combinado-polar-p03918300.html?v1=548232268")
+    # Con el color en la referencia, solo ese; con el del enlace, ese va primero; si no existe, todos.
+    solo = zara.parse_product_page(data, zara.ZaraQuery(seo_id="03918300", color_id="800"), 12)
+    assert [p.store_color for p in solo] == ["Negro"]
+    primero = zara.parse_product_page(data, zara.ZaraQuery(seo_id="03918300", v1="548232268"), 12)
+    assert [p.store_color for p in primero] == ["Negro", "Khaki"]
+    assert len(zara.parse_product_page(data, zara.ZaraQuery(seo_id="03918300", color_id="999"), 12)) == 2
+    assert len(zara.parse_product_page(data, zara.ZaraQuery(seo_id="03918300"), 1)) == 1
+    # Cada resultado encuentra luego sus fotos y sus tallas en esa misma ficha.
+    detail = zara.parse_detail(data, solo[0].store_data)
+    assert [url.rsplit("/", 1)[1] for url in detail.photo_urls] == ["03918309800-e1.jpg?w=1280", "03918309800-e2.jpg?w=1280"]
+    assert detail.sizes[0] == {"name": "S", "in_stock": True} and detail.color_hex == "#242524"
+
+    # Si el nombre no dice qué es, lo dice la familia de Zara; y lo que no cabe en el armario no sale.
+    data["product"]["name"] = "RELAXED FIT COMBINADO POLAR"
+    assert zara.parse_product_page(data, zara.ZaraQuery(seo_id="03918300"), 12)[0].type == "chaqueta"
+    data["product"].update(name="VESTIDO MIDI SATINADO", familyName="VESTIDO", subfamilyName="")
+    assert zara.parse_product_page(data, zara.ZaraQuery(seo_id="03918300"), 12) == []
+
+
+def test_zara_busca_una_referencia_en_su_ficha_y_el_texto_en_el_buscador(monkeypatch):
+    import httpx
+
+    connector = zara.ZaraConnector(pause=0)
+    buena = zara.BASE + "/cazadora-tecnica-combinado-polar-p03918300.html?ajax=true"
+    vestido = _fixture("zara_producto.json")
+    vestido["product"].update(name="VESTIDO MIDI SATINADO", familyName="VESTIDO", subfamilyName="")
+    answers = {
+        zara.BASE + "/-p03918300.html?ajax=true": httpx.Response(278, json={"location": buena, "body": {}}),
+        buena: httpx.Response(200, json=_fixture("zara_producto.json")),
+        # Una referencia que no existe manda a la portada.
+        zara.BASE + "/-p09999999.html?ajax=true": httpx.Response(278, json={"location": "https://www.zara.com/es/?ajax=true"}),
+        zara.BASE + "/-p01111111.html?ajax=true": httpx.Response(404, json={}),
+        zara.BASE + "/-p02222222.html?ajax=true": httpx.Response(403, text="Access Denied"),
+        zara.BASE + "/-p03333333.html?ajax=true": httpx.Response(200, json=vestido),
+    }
+    asked = []
+
+    def fake_get(self, url, pause, headers=None):
+        asked.append(url)
+        if url.startswith(zara.SEARCH):
+            return httpx.Response(200, json=_fixture("zara_busqueda.json") if "cazadora" in url else {"results": []})
+        return answers[url]
+
+    monkeypatch.setattr(zara.ZaraConnector, "_get", fake_get)
+
+    found = connector.search("3918/300/800", 12)
+    assert [p.product_ref for p in found] == ["zara:03918300-800"] and asked == [zara.BASE + "/-p03918300.html?ajax=true", buena]
+    # La ficha ya trae las fotos y las tallas: pedir el detalle de sus colores no gasta otra petición.
+    assert connector.detail(found[0].store_data).photo_urls and len(asked) == 2
+    assert len(connector.search("https://www.zara.com/es/es/x-p03918300.html?v1=548232268", 12)) == 2
+
+    for texto in ("9999999", "1111111"):
+        with pytest.raises(SearchError, match="No he encontrado nada con esa referencia"):
+            connector.search(texto, 12)
+    with pytest.raises(SearchError, match="«Vestido midi satinado» no es un tipo de prenda que quepa en el armario"):
+        connector.search("3333333", 12)
+    with pytest.raises(ShopError, match="HTTP 403") as error:
+        connector.search("2222222", 12)
+    assert not isinstance(error.value, SearchError)  # eso sí es un fallo de la tienda
+
+    # El texto libre va al buscador de la web, solo en hombre y con pocos resultados.
+    asked.clear()
+    found = connector.search("cazadora lana negra", 12)
+    assert len(found) == 5 and len(connector.search("cazadora lana negra", 3)) == 3
+    assert "query=cazadora%20lana%20negra" in asked[0] and "section=MAN" in asked[0]
+    with pytest.raises(SearchError, match="No he encontrado nada en Zara con «xyzzy»"):
+        connector.search("xyzzy", 12)
+
+
+def _lookup(query: str) -> list[ShopItem]:
+    with SessionLocal() as db:
+        return shopping.lookup(db, query)
+
+
+def _status(ref: str) -> str | None:
+    with SessionLocal() as db:
+        return db.scalar(select(ShopItem.status).where(ShopItem.product_ref == ref))
+
+
+def test_el_buscador_guarda_lo_que_encuentra_como_buscado_y_no_es_una_propuesta(client, tienda, photo_bytes):
+    _garment(client, photo_bytes, name="Vaquero azul", type="vaquero", color_primary={"name": "azul", "hex": "#2f5fa8"})
+    connector = tienda(camisas=[product("a")])
+    with SessionLocal() as db:
+        shopping.set_store(db, "zara", False, None)  # se busca también con la tienda desactivada
+    connector.found["3918/300"] = [product("negra", "chaqueta", "negro", price=3995), product("caqui", "chaqueta", "verde oliva")]
+
+    found = client.post("/api/shop/lookup", json={"query": "  3918/300 "})
+    assert found.status_code == 200 and connector.asked("busca") == ["3918/300"]
+    negra, caqui = found.json()
+    assert (negra["name"], negra["status"], negra["saved"], negra["garment_id"]) == ("Chaqueta negra", "buscado", None, None)
+    assert negra["price_cents"] == 3995 and negra["store_name"] == "Zara" and negra["reasons"]
+    assert negra["sizes"] == [{"name": "M", "in_stock": True}, {"name": "L", "in_stock": False}]
+    assert len(negra["photos"]) == 2 and client.get(negra["photos"][0]["url"]).status_code == 200
+    assert set(_items("buscado")[0].photos) <= referenced_photos()  # la limpieza de huérfanas no las toca
+    assert "Manga larga." in _items("buscado")[0].details
+
+    # No es una propuesta: ni en Descubrir, ni en los contadores, ni entre los candidatos, ni al aprender.
+    with SessionLocal() as db:
+        shopping.set_store(db, "zara", True, None)
+    assert client.get("/api/shop/next").json() == {"item": None, "remaining": 0, "more": 0, "can_undo": False}
+    state = client.get("/api/shop/state").json()
+    assert (state["pending"], state["liked"]) == (0, 0) and client.get("/api/shop/liked").json() == []
+    assert _taste() == shopping.ShopTaste()
+    assert client.post(f"/api/shop/items/{negra['id']}/dislike").status_code == 409  # eso es cosa de Descubrir
+    assert client.post("/api/shop/undo").status_code == 409
+
+    # Buscar lo mismo otra vez no duplica nada ni vuelve a bajar las fotos.
+    connector.calls.clear()
+    again = client.post("/api/shop/lookup", json={"query": "3918/300"}).json()
+    assert [i["id"] for i in again] == [negra["id"], caqui["id"]]
+    assert connector.asked("detalle") == [] and connector.asked("foto") == [] and len(_items("buscado")) == 2
+
+
+def test_el_buscador_dice_en_claro_por_que_no_hay_nada(client, tienda):
+    connector = tienda()
+    connector.found["otra-tienda"] = NotThisStore("Todavía no sé buscar en esa tienda")
+    connector.found["caida"] = ShopError("HTTP 403")
+    connector.found["rota"] = KeyError("un fallo de programación")
+    connector.found["sin-foto"] = [product("sin-foto")]
+    connector.found["lenta"] = [product("lenta")]
+    connector.details["sin-foto"] = ShopDetail(price_cents=1000, sizes=[], photo_urls=[])
+
+    def falla(query, codigo):
+        response = client.post("/api/shop/lookup", json={"query": query})
+        assert response.status_code == codigo, response.text
+        return response.json()["detail"]
+
+    assert falla("9999/999", 404) == "No he encontrado nada con esa referencia"
+    assert falla("otra-tienda", 404) == "Todavía no sé buscar en esa tienda"
+    assert falla("   ", 404) == "Escribe una referencia, un enlace o qué prenda buscas"
+    assert falla("caida", 503) == "Zara no responde ahora (HTTP 403)"
+    assert falla("rota", 503) == "No se pudo buscar en Zara: error inesperado"
+    assert "no tiene fotos de producto" in falla("sin-foto", 404)
+    connector.detail = lambda store_data: (_ for _ in ()).throw(ShopError("tiempo agotado (20 s)"))
+    assert falla("lenta", 503) == "Zara no responde ahora (tiempo agotado (20 s))"
+    assert client.post("/api/shop/lookup", json={"query": "x" * 601}).status_code == 422
+    assert _items() == []  # nada de eso deja rastro
+
+    # Con una consulta del catálogo en marcha no se busca: se dice y ya.
+    assert shopping._lock.acquire(blocking=False)
+    try:
+        assert "consultando el catálogo" in falla("9999/999", 409)
+    finally:
+        shopping._lock.release()
+
+
+def test_el_buscador_reutiliza_lo_que_ya_existia_sea_cual_sea_su_estado(client, tienda, analyzers):
+    connector = tienda(camisas=[product(ref) for ref in ("pendiente", "gustada", "descartada", "comprada", "zcandidata")])
+    _refresh(limit=4)
+    by_ref = {i.product_ref: i for i in _items()}
+    assert len(by_ref) == 4 and _status("zara:zcandidata") == "candidato"
+    analyzers(FakeAnalyzer("codex", json.dumps(VALID_DRAFT)), FakeAnalyzer("claude"))
+    client.post(f"/api/shop/items/{by_ref['zara:gustada'].id}/like")
+    client.post(f"/api/shop/items/{by_ref['zara:descartada'].id}/dislike")
+    client.post(f"/api/shop/items/{by_ref['zara:descartada'].id}/reason", json={"reason": "color"})
+    garment_id = client.post(f"/api/shop/items/{by_ref['zara:comprada'].id}/bought", json={"size": "M"}).json()["garment_id"]
+    _refresh(today=INVIERNO + timedelta(days=7), limit=0)  # se cierra la tanda: lo descartado suelta sus fotos
+    assert _status("zara:pendiente") == "caducado" and _items("descartado")[0].photos == []
+    antes = _taste()
+    assert antes.colors["blanco"] == pytest.approx([3 + 1 - 1, 3 + 1 + 1])  # comprada, gustada y descartada por el color
+
+    connector.found["todo"] = [product(ref) for ref in ("pendiente", "gustada", "descartada", "comprada", "zcandidata", "nueva")]
+    connector.calls.clear()
+    found = {i["name"].split()[-1]: i for i in client.post("/api/shop/lookup", json={"query": "todo"}).json()}
+    with SessionLocal() as db:
+        assert len(list(db.scalars(select(ShopItem)))) == 6  # ninguna fila repetida
+    assert {ref: (i["status"], i["saved"]) for ref, i in found.items()} == {
+        "pendiente": ("buscado", None), "gustada": ("gustado", "gustado"), "descartada": ("buscado", None),
+        "comprada": ("comprado", "comprado"), "zcandidata": ("buscado", None), "nueva": ("buscado", None),
+    }
+    assert all(i["id"] == by_ref[f"zara:{ref}"].id for ref, i in found.items() if f"zara:{ref}" in by_ref)
+    # De lo que ya está guardado o en el armario no se vuelve a pedir nada a la tienda.
+    assert sorted(connector.asked("detalle")) == ["descartada", "nueva", "pendiente", "zcandidata"]
+    assert found["comprada"]["garment_id"] == garment_id and found["gustada"]["garment_id"] is None
+    assert found["comprada"]["photos"][0]["id"] == client.get(f"/api/garments/{garment_id}").json()["photo_front"]["id"]
+    assert all(len(i["photos"]) == 2 for i in found.values())
+    # Volver a buscar algo no cambia lo que ya se dijo de ello.
+    assert _taste() == antes and client.get("/api/shop/state").json()["liked"] == 1
+
+    # Lo descartado se puede volver a guardar: pasa a Me gustan y deja de contar como descarte.
+    assert client.post(f"/api/shop/items/{found['descartada']['id']}/like").status_code == 200
+    guardada = next(i for i in _items("gustado") if i.product_ref == "zara:descartada")
+    assert (guardada.prev_status, guardada.discard_reason, guardada.can_undo) == (None, None, False)
+    assert guardada.expires_at and _taste().colors["blanco"] == pytest.approx([3 + 1 + 1, 3 + 1 + 1])
+    assert client.post("/api/shop/undo").status_code == 409  # «Volver» no deshace lo del buscador
+
+    # Si la prenda comprada ya no está en el armario, se puede volver a meter.
+    client.delete(f"/api/garments/{garment_id}")
+    otra_vez = {i["name"].split()[-1]: i for i in client.post("/api/shop/lookup", json={"query": "todo"}).json()}
+    assert (otra_vez["comprada"]["status"], otra_vez["comprada"]["saved"]) == ("buscado", None)
+    nueva = client.post(f"/api/shop/items/{otra_vez['comprada']['id']}/bought", json={"size": "L"})  # la L no queda: da igual
+    assert nueva.status_code == 200 and client.get(f"/api/garments/{nueva.json()['garment_id']}").json()["size"] == "L"
+
+
+def test_me_gusta_y_ya_la_tengo_sobre_un_resultado_del_buscador(client, tienda, analyzers):
+    connector = tienda()
+    connector.found["3918/300"] = [
+        product("gusta", "sobrecamisa", "negro", name="Sobrecamisa pana"),
+        product("tengo", "jersey", "gris", name="Jersey trenzado"),
+        product("agotada", "camisa", "blanco"),
+    ]
+    connector.details["agotada"] = ShopDetail(
+        price_cents=2995, sizes=[{"name": "M", "in_stock": False}], photo_urls=["https://fotos.test/x-e1.jpg"]
+    )
+    gusta, tengo, agotada = client.post("/api/shop/lookup", json={"query": "3918/300"}).json()
+    assert agotada["sizes"] == [{"name": "M", "in_stock": False}]  # aunque no quede ninguna talla, se enseña
+    codex, _ = analyzers(FakeAnalyzer("codex", json.dumps(VALID_DRAFT)), FakeAnalyzer("claude"))
+
+    # Me gusta: a Me gustan con su caducidad, y cuenta como cualquier otro me gusta.
+    assert client.post(f"/api/shop/items/{gusta['id']}/like").status_code == 200
+    liked = client.get("/api/shop/liked").json()
+    assert [(i["id"], i["status"]) for i in liked] == [(gusta["id"], "gustado")] and liked[0]["expires_at"]
+    assert client.get("/api/shop/state").json()["liked"] == 1
+    assert _taste().types == {"sobrecamisa": [1.0, 1.0]} and _taste().words == {"pana": [1.0, 1.0]}
+    assert client.post(f"/api/shop/items/{gusta['id']}/like").status_code == 200  # doble toque
+    again = client.post("/api/shop/lookup", json={"query": "3918/300"}).json()
+    assert [(i["status"], i["saved"]) for i in again] == [("gustado", "gustado"), ("buscado", None), ("buscado", None)]
+
+    # Ya la tengo: al armario con las fotos de la tienda, analizada, y cuenta como una compra.
+    assert client.post(f"/api/shop/items/{tengo['id']}/bought", json={"size": "XS"}).status_code == 409  # no existe
+    bought = client.post(f"/api/shop/items/{tengo['id']}/bought", json={"size": "L"})  # agotada en la tienda: vale
+    assert bought.status_code == 200 and bought.json()["analyzed"] is True and codex.calls == 1
+    garment = client.get(f"/api/garments/{bought.json()['garment_id']}").json()
+    assert (garment["brand"], garment["size"], garment["name"]) == ("Zara", "L", "Bomber negra")
+    assert garment["photo_front"]["id"] == tengo["photos"][0]["id"]
+    assert _status("zara:tengo") == "comprado" and _taste().types["jersey"] == [3.0, 3.0]
+    # Sin talla también vale, y desde Me gustan sigue pudiéndose comprar.
+    assert client.post(f"/api/shop/items/{agotada['id']}/bought", json={"size": None}).status_code == 200
+    assert client.post(f"/api/shop/items/{gusta['id']}/bought", json={"size": "M"}).status_code == 200
+    assert len(client.get("/api/garments").json()) == 3 and _items("buscado") == []
+
+
+def test_lo_buscado_y_no_guardado_se_limpia_solo(client, tienda):
+    connector = tienda(camisas=[product("vieja"), product("zcatalogo")])
+    _refresh(limit=1)
+    vieja = _items("nuevo")[0]
+    client.post(f"/api/shop/items/{vieja.id}/dislike")
+    _refresh(today=INVIERNO + timedelta(days=7), limit=0)
+    connector.found["ref"] = [product(vieja.product_ref.split(":")[1]), product("suelta"), product("guardada")]
+    descartada, suelta, guardada = _lookup("ref")
+    assert descartada.id == vieja.id and (descartada.status, descartada.prev_status) == ("buscado", "descartado")
+    client.post(f"/api/shop/items/{guardada.id}/like")
+    fotos = [*descartada.photos, *suelta.photos]
+    assert len(fotos) == 4 and all(storage.exists(p) for p in fotos)
+
+    # Antes de un día no se toca nada; pasado el día, fuera con sus fotos.
+    with SessionLocal() as db:
+        assert shopping.clean_lookups(db) == 0
+        assert shopping.clean_lookups(db, now=now_utc() + timedelta(hours=23)) == 0
+        assert shopping.clean_lookups(db, now=now_utc() + timedelta(hours=25)) == 2
+    assert not any(storage.exists(p) for p in fotos)
+    # Lo que era nuevo desaparece, como si no se hubiera buscado; lo descartado vuelve a estar descartado.
+    assert _status("zara:suelta") is None and _status(vieja.product_ref) == "descartado"
+    assert _items("descartado")[0].prev_status is None and _items("descartado")[0].photos == []
+    assert _status("zara:guardada") == "gustado" and all(storage.exists(p) for p in _items("gustado")[0].photos)
+
+    # La consulta semanal también los limpia (salvo los de hace un momento, por si hay una búsqueda
+    # abierta), y lo buscado que sigue en el catálogo vuelve a ser un candidato más.
+    connector.found["otra"] = [product("zcatalogo"), product("reciente")]
+    catalogo, reciente = _lookup("otra")
+    assert _status("zara:zcatalogo") == "buscado"  # era candidato: la misma fila
+    with SessionLocal() as db:
+        db.get(ShopItem, catalogo.id).first_seen_at = now_utc() - timedelta(hours=2)
+        db.commit()
+    _refresh(today=INVIERNO + timedelta(days=14), limit=0)
+    assert _status("zara:zcatalogo") == "candidato" and _status("zara:reciente") == "buscado"
+    assert not any(storage.exists(p) for p in catalogo.photos) and all(storage.exists(p) for p in reciente.photos)
+    assert client.get("/api/shop/next").json()["more"] == 1  # el buscado reciente no cuenta como candidato
+
+
+def test_la_columna_del_buscador_se_anade_a_una_base_de_datos_anterior():
+    from sqlalchemy import create_engine
+
+    from app import db as database
+
+    old = create_engine("sqlite://")
+    with old.begin() as conn:
+        conn.exec_driver_sql("CREATE TABLE shop_items (id INTEGER PRIMARY KEY, status VARCHAR(20), decided_at DATETIME)")
+    original, database.engine = database.engine, old
+    try:
+        database._add_missing_columns()
+    finally:
+        database.engine = original
+    with old.begin() as conn:
+        assert "prev_status" in {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(shop_items)")}

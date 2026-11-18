@@ -7,11 +7,13 @@ no es JSON, se lanza ShopError y quien llama sigue con lo demás.
 import re
 import threading
 import time
+from dataclasses import dataclass
+from urllib.parse import parse_qs, quote, urlsplit
 
 import httpx
 
 from ... import catalog, config
-from .base import ShopDetail, ShopError, ShopProduct
+from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
 from .estimate import (
     estimate_color,
     estimate_pattern,
@@ -23,6 +25,11 @@ from .estimate import (
 
 BASE = "https://www.zara.com/es/es"
 MEDIA = "https://static.zara.net"
+# El buscador de la web (10701 es la tienda de España). Solo se usa para el texto libre, y solo en
+# hombre: una referencia o un enlace van directos a la ficha, sea de la sección que sea.
+SEARCH = "https://www.zara.com/itxrest/1/search/store/10701/query"
+TEXT_RESULTS = 6  # de cada resultado de texto hay que pedir luego la ficha: pocos, para no hacer esperar
+PAGE_CACHE_SECONDS = 300  # lo que se recuerda la ficha recién buscada, para no pedirla otra vez por color
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -118,6 +125,111 @@ def _parse_product(item: dict, slug: str, default_type: str | None) -> ShopProdu
     )
 
 
+# ---------- El buscador: de lo que escribe el usuario a qué pedirle a Zara
+
+
+@dataclass
+class ZaraQuery:
+    """Lo que se busca: un producto concreto (por su referencia o su enlace) o texto libre."""
+
+    seo_id: str | None = None  # «03918300»: el modelo (4 cifras) y la calidad (3) con un cero delante
+    color_id: str | None = None  # «800», si la referencia lo trae
+    v1: str | None = None  # el id del color en el enlace (`?v1=`), si lo trae
+    text: str | None = None  # texto libre («cazadora lana negra»)
+
+
+_LINK = re.compile(r"(?:https?://|www\.)\S+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/\S*", re.IGNORECASE)
+_LINK_REF = re.compile(r"-p(\d{7,8})(?:\.html|\b)", re.IGNORECASE)
+_REF_WORDS = re.compile(r"\b(?:referencia|ref|art[ií]culo|art|modelo|n[uú]mero|num|zara)\b|[nN][ºo°]\.?")
+_NOT_A_REF = "Eso no parece una referencia de Zara: son 7 cifras, tipo 3918/300"
+
+
+def parse_query(text: str) -> ZaraQuery:
+    """De lo que el usuario escribe o pega a lo que se busca. Vale:
+
+    - una referencia en cualquiera de sus formas: «3918/300», «3918/300/800», «03918300»,
+      «0391 8300 800» (la de la etiqueta), «REF. 3918/300»;
+    - un enlace de producto de zara.com, también el que comparte la app, mientras lleve el
+      `-p03918300` (y el `v1` del color, si viene), aunque venga dentro de una frase;
+    - cualquier otra cosa con letras, como texto libre.
+
+    Lanza NotThisStore si es un enlace de otra tienda y SearchError si no hay por dónde cogerlo.
+    """
+    text = " ".join((text or "").split())
+    link = _LINK.search(text)
+    if link:
+        url = link.group().rstrip(".,;)")
+        parts = urlsplit(url if "://" in url else f"https://{url}")
+        host = (parts.hostname or "").lower()
+        if host != "zara.com" and not host.endswith(".zara.com"):
+            raise NotThisStore("Todavía no sé buscar en esa tienda")
+        ref = _LINK_REF.search(parts.path)
+        if not ref:
+            raise SearchError("Ese enlace de Zara no lleva la referencia del producto: escríbela a mano (tipo 3918/300)")
+        v1 = (parse_qs(parts.query).get("v1") or [""])[0]
+        return ZaraQuery(seo_id=ref.group(1).zfill(8), v1=v1 if v1.isdigit() else None)
+
+    bare = _REF_WORDS.sub(" ", text.lower())
+    if not re.search(r"[^\W\d_]", bare):  # no queda ninguna letra: solo puede ser una referencia
+        digits = re.sub(r"\D", "", bare)
+        if not digits:
+            raise SearchError("Escribe una referencia, un enlace de Zara o qué prenda buscas")
+        if re.search(r"[^\d\s/.\-_·:#]", bare):
+            raise SearchError(_NOT_A_REF)
+        if len(digits) in (7, 8):  # modelo + calidad, con o sin el cero de delante
+            return ZaraQuery(seo_id=digits.zfill(8))
+        if len(digits) in (10, 11):  # … y el color detrás
+            return ZaraQuery(seo_id=digits[:-3].zfill(8), color_id=digits[-3:])
+        raise SearchError(_NOT_A_REF)
+    if len(text) < 3:
+        raise SearchError("Escribe una referencia, un enlace de Zara o qué prenda buscas")
+    return ZaraQuery(text=text[:80])
+
+
+def _family_type(item: dict) -> str | None:
+    """El tipo que dice la familia de Zara («CAZADORA», «JERSEY»), por si el nombre no lo dice."""
+    return estimate_type(f"{item.get('familyName') or ''} {item.get('subfamilyName') or ''}")
+
+
+def parse_search(data: dict, limit: int) -> list[ShopProduct]:
+    """De la respuesta del buscador de Zara a productos. Cada resultado es un color de un producto,
+    con la misma forma que en el listado de una categoría."""
+    products: list[ShopProduct] = []
+    refs: set[str] = set()
+    for result in data.get("results") or []:
+        item = (result or {}).get("content") or {}
+        product = _parse_product(item, "", _family_type(item))
+        if product and product.product_ref not in refs:
+            refs.add(product.product_ref)
+            products.append(product)
+            if len(products) >= limit:
+                break
+    return products
+
+
+def parse_product_page(data: dict, wanted: ZaraQuery, limit: int) -> list[ShopProduct]:
+    """De la ficha de un producto a un resultado por color. Si se pidió un color (el de la
+    referencia) y existe, solo ese; el del enlace (`v1`) va el primero."""
+    product = data.get("product") or {}
+    seo = product.get("seo") or {}
+    colors = [c for c in (product.get("detail") or {}).get("colors") or [] if isinstance(c, dict)]
+    exact = [c for c in colors if wanted.color_id and str(c.get("id")) == wanted.color_id]
+    colors = exact or sorted(colors, key=lambda c: str(c.get("productId")) != str(wanted.v1))
+    default_type = _family_type(product)
+    found: list[ShopProduct] = []
+    for color in colors:
+        item = {
+            **product,
+            "price": color.get("price"),
+            "detail": {"colors": [color]},
+            "seo": {**seo, "discernProductId": color.get("productId") or seo.get("discernProductId")},
+        }
+        parsed = _parse_product(item, "", default_type)
+        if parsed and all(parsed.product_ref != other.product_ref for other in found):
+            found.append(parsed)
+    return found[:limit]
+
+
 def photo_url(media: dict) -> str:
     path = (media.get("path") or "").removeprefix("/assets/public/").strip("/")
     return f"{MEDIA}/assets/public/{path}/{media['name']}.jpg?w={PHOTO_WIDTH}"
@@ -189,6 +301,7 @@ class ZaraConnector:
         self._lock = threading.Lock()  # una petición cada vez
         self._last = 0.0
         self.requests = 0
+        self._pages: dict[str, tuple[float, dict]] = {}  # seo_id -> (cuándo, la ficha recién buscada)
 
     def _get(self, url: str, pause: float, headers: dict | None = None) -> httpx.Response:
         with self._lock:
@@ -243,7 +356,59 @@ class ZaraConnector:
             raise ShopError("HTTP 404 o 410: la categoría ya no existe")
         return parse_category(data, slug)
 
+    def _product_page(self, seo_id: str) -> dict | None:
+        """La ficha de un producto a partir solo de su referencia. None si Zara no la conoce.
+
+        `-p03918300.html` sin el nombre delante responde con un 278 hacia la dirección buena; si la
+        referencia no existe, el 278 manda a la portada.
+        """
+        response = self._get(f"{BASE}/-p{seo_id}.html?ajax=true", self.pause)
+        if response.status_code in (404, 410):
+            return None
+        if response.status_code == 278:
+            try:
+                location = response.json().get("location")
+            except (ValueError, AttributeError):
+                location = None
+            if not isinstance(location, str) or not location.startswith(BASE + "/") or f"-p{seo_id}." not in location:
+                return None
+            if "ajax=true" not in location:
+                location += ("&" if "?" in location else "?") + "ajax=true"
+            data = self._json(location, follow=False)
+        elif response.status_code == 200:
+            try:
+                data = response.json()
+            except ValueError as exc:
+                raise ShopError("la respuesta no era la esperada (no es JSON)") from exc
+        else:
+            raise ShopError(f"HTTP {response.status_code}")
+        return data if isinstance(data, dict) and isinstance(data.get("product"), dict) else None
+
+    def search(self, query: str, limit: int = 12) -> list[ShopProduct]:
+        wanted = parse_query(query)
+        if wanted.seo_id is None:
+            url = f"{SEARCH}?query={quote(wanted.text)}&locale=es_ES&section=MAN&offset=0&limit={TEXT_RESULTS * 2}"
+            products = parse_search(self._json(url, follow=False) or {}, min(limit, TEXT_RESULTS))
+            if not products:
+                raise SearchError(f"No he encontrado nada en Zara con «{wanted.text}»")
+            return products
+        data = self._product_page(wanted.seo_id)
+        if data is None:
+            raise SearchError("No he encontrado nada con esa referencia")
+        products = parse_product_page(data, wanted, limit)
+        if not products:
+            name = sentence_case((data["product"].get("name") or "").strip()) or "Eso"
+            raise SearchError(f"«{name}» no es un tipo de prenda que quepa en el armario")
+        # La ficha trae ya las tallas y las fotos de todos los colores: se guarda un rato para `detail`.
+        now = time.monotonic()
+        self._pages = {k: v for k, v in self._pages.items() if now - v[0] < PAGE_CACHE_SECONDS}
+        self._pages[wanted.seo_id] = (now, data)
+        return products
+
     def detail(self, store_data: dict) -> ShopDetail | None:
+        cached = self._pages.get(str(store_data.get("seo_id")))
+        if cached and time.monotonic() - cached[0] < PAGE_CACHE_SECONDS:
+            return parse_detail(cached[1], store_data)
         url = product_url(store_data["keyword"], store_data["seo_id"], store_data["discern_id"]) + "&ajax=true"
         data = self._json(url)
         return parse_detail(data, store_data) if data is not None else None

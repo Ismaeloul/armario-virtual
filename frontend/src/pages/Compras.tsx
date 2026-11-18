@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Pointer
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
+import { inputClass, PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
@@ -13,6 +13,7 @@ import {
   type ShopDiscardReason,
   type ShopFilter,
   type ShopItem,
+  type ShopLookupItem,
   type ShopNext,
   type ShopState,
   type ShopStore,
@@ -25,6 +26,8 @@ const REASON_DONE_MS = 1500;
 // «Es caro» no se ofrece: el usuario no quiere que el precio sea un motivo.
 const REASONS: ShopDiscardReason[] = ["estilo", "color", "ya_tengo"];
 const NO_FILTER: ShopFilter = { store: null, category: null };
+const topButton =
+  "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-line bg-control text-text active:scale-[0.98] disabled:opacity-40";
 
 /** «viernes, 20 de noviembre, 9:41» a partir de una fecha con hora. */
 const dateTime = (iso: string) =>
@@ -67,6 +70,17 @@ export default function Compras() {
   }, []);
   useEffect(load, [load]);
   const closeStores = useCallback(() => setStoresOpen(false), []);
+  // El buscador por referencia. Si en él se guarda o se compra algo, al cerrarlo se pone todo al día.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchChanged = useRef(false);
+  const [likedVersion, setLikedVersion] = useState(0);
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    if (!searchChanged.current) return;
+    searchChanged.current = false;
+    setLikedVersion((n) => n + 1);
+    load();
+  }, [load]);
 
   const changeFilter = useCallback((value: ShopFilter) => {
     setFilter(value);
@@ -116,16 +130,27 @@ export default function Compras() {
                 onChange={setView}
               />
             </div>
+            {/* Solo icono: con el texto, la fila no cabe en un móvil de 375 px. */}
             <button
               type="button"
+              aria-label={t.compras.buscador.abrir}
+              title={t.compras.buscador.abrir}
+              onClick={() => setSearchOpen(true)}
+              className={topButton}
+            >
+              <Icon name="search" size={20} />
+            </button>
+            <button
+              type="button"
+              aria-label={t.compras.tiendas}
+              title={t.compras.tiendas}
               onClick={() => setStoresOpen(true)}
               disabled={!state}
-              className="flex h-12 shrink-0 items-center gap-1.5 rounded-xl border border-line bg-control px-3.5 text-xs font-medium text-text active:scale-[0.98] disabled:opacity-40"
+              className={topButton}
             >
-              <Icon name="store" size={18} />
-              {t.compras.tiendas}
+              <Icon name="store" size={20} />
               {state?.stores.some((s) => s.enabled && s.status.state === "failed") && (
-                <span className="h-2 w-2 rounded-full bg-danger" />
+                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-danger" />
               )}
             </button>
           </div>
@@ -157,12 +182,13 @@ export default function Compras() {
             />
           )}
           {!failed && state && next && view === "gustados" && (
-            <Liked onChanged={() => api.shopState().then(setState).catch(() => undefined)} />
+            <Liked key={likedVersion} onChanged={() => api.shopState().then(setState).catch(() => undefined)} />
           )}
         </div>
       </Screen>
       <BottomNav />
       {storesOpen && state && <StoresPanel state={state} onState={setState} onClose={closeStores} />}
+      {searchOpen && <SearchPanel onChanged={() => (searchChanged.current = true)} onClose={closeSearch} />}
     </>
   );
 }
@@ -1198,6 +1224,345 @@ function Liked({ onChanged }: { onChanged: () => void }) {
         onCancel={() => setRemoving(null)}
       />
     </>
+  );
+}
+
+// ---------- Buscador por referencia
+
+/** Lo que se le dice a la tienda cuando el buscador falla y el servidor ya ha escrito el porqué. */
+const lookupMessage = (e: unknown) =>
+  e instanceof ApiError && [404, 409, 503].includes(e.status) && e.message ? e.message : t.compras.buscador.error;
+
+/**
+ * Panel «Buscar una prenda»: una referencia de Zara (o el enlace del producto) trae la prenda con las
+ * fotos de la tienda, para guardarla en Me gustan o meterla en el armario sin fotografiarla.
+ */
+function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: () => void }) {
+  const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<ShopLookupItem[] | null>(null);
+  const [viewing, setViewing] = useState<ShopItem | null>(null);
+  const viewingRef = useRef(false);
+  viewingRef.current = viewing !== null;
+  const input = useRef<HTMLInputElement>(null);
+  // Leer el portapapeles solo existe en https (o en localhost): por http a secas, el botón no sale.
+  const canPaste =
+    typeof navigator !== "undefined" && window.isSecureContext && typeof navigator.clipboard?.readText === "function";
+
+  useEffect(() => {
+    input.current?.focus();
+    // Con la foto en grande abierta, Escape cierra la foto (lo hace ella), no el panel.
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !viewingRef.current && onClose();
+    document.addEventListener("keydown", onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [onClose]);
+
+  const search = (text: string) => {
+    const wanted = text.trim();
+    if (!wanted || busy) return;
+    setBusy(true);
+    setError(null);
+    setResults(null);
+    api
+      .shopLookup(wanted)
+      .then(setResults)
+      .catch((e) => setError(lookupMessage(e)))
+      .finally(() => setBusy(false));
+  };
+
+  const paste = () => {
+    navigator.clipboard
+      .readText()
+      .then((text) => {
+        const pasted = text.trim().slice(0, 600);
+        if (!pasted) return setError(t.compras.buscador.portapapelesVacio);
+        setQuery(pasted);
+        search(pasted);
+      })
+      .catch(() => setError(t.compras.buscador.errorPegar));
+  };
+
+  const update = (item: ShopLookupItem) => {
+    setResults((list) => list?.map((other) => (other.id === item.id ? item : other)) ?? null);
+    onChanged();
+  };
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-scrim backdrop-blur-[2px]"
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 2.5rem)" }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.compras.buscador.titulo}
+        className="flex max-h-full min-h-[60%] w-full max-w-md flex-col rounded-t-3xl border border-line bg-bg"
+      >
+        <div className="flex items-center justify-between gap-2 py-3 pr-2 pl-5">
+          <h2 className="font-display text-lg font-semibold tracking-tight">{t.compras.buscador.titulo}</h2>
+          <button
+            type="button"
+            aria-label={t.compras.panel.cerrar}
+            onClick={onClose}
+            className="flex h-11 w-11 items-center justify-center active:opacity-60"
+          >
+            <Icon name="close" size={22} />
+          </button>
+        </div>
+        <div
+          className="flex flex-col gap-4 overflow-y-auto px-5"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)" }}
+        >
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              search(query);
+            }}
+          >
+            <input
+              ref={input}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t.compras.buscador.placeholder}
+              aria-label={t.compras.buscador.placeholder}
+              maxLength={600}
+              enterKeyHint="search"
+              autoCapitalize="off"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              className={`${inputClass} h-12 min-w-0 flex-1`}
+            />
+            {canPaste && (
+              <button
+                type="button"
+                aria-label={t.compras.buscador.pegar}
+                title={t.compras.buscador.pegar}
+                disabled={busy}
+                onClick={paste}
+                className={topButton}
+              >
+                <Icon name="content_paste" size={20} />
+              </button>
+            )}
+            <button
+              type="submit"
+              aria-label={t.compras.buscador.buscar}
+              title={t.compras.buscador.buscar}
+              disabled={busy || !query.trim()}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary active:scale-[0.98] disabled:opacity-40"
+            >
+              <Icon name="search" size={20} />
+            </button>
+          </form>
+          <p className="text-xs text-text-2">{t.compras.buscador.ayuda}</p>
+
+          {busy && (
+            <p role="status" className="flex animate-pulse items-center justify-center gap-2 py-6 text-sm text-text-2">
+              <Icon name="search" size={18} />
+              {t.compras.buscador.buscando}
+            </p>
+          )}
+          {error && (
+            <p role="alert" className="flex items-start gap-2 rounded-xl bg-danger/10 px-3.5 py-3 text-sm text-danger">
+              <Icon name="error" size={18} className="mt-0.5" />
+              {error}
+            </p>
+          )}
+          {results && (
+            <>
+              <p className="label-caps text-text-2">{t.compras.buscador.resultados(results.length)}</p>
+              <ul className="flex flex-col gap-3">
+                {results.map((item) => (
+                  <SearchResult key={item.id} item={item} onUpdate={update} onView={() => setViewing(item)} />
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </div>
+      {viewing && <PhotoViewer item={viewing} onClose={() => setViewing(null)} />}
+    </div>,
+    document.body,
+  );
+}
+
+/** Un resultado del buscador: foto, nombre, color, precio y qué hacer con él. */
+function SearchResult({
+  item,
+  onUpdate,
+  onView,
+}: {
+  item: ShopLookupItem;
+  onUpdate: (item: ShopLookupItem) => void;
+  onView: () => void;
+}) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState<"gusta" | "tengo" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  // «Ya la tengo»: se está eligiendo talla. "" = sin talla.
+  const [choosing, setChoosing] = useState(false);
+  const [size, setSize] = useState<string | null>(null);
+  // Lo que ya tiene en casa puede estar agotado en la tienda: de un resultado nuevo vale cualquier talla.
+  const sizes = item.sizes.filter((s) => s.in_stock || item.status === "buscado").map((s) => s.name);
+
+  const like = () => {
+    setBusy("gusta");
+    setError(null);
+    api
+      .shopLike(item.id)
+      .then(() => onUpdate({ ...item, status: "gustado", saved: "gustado" }))
+      .catch(() => setError(t.compras.errorAccion))
+      .finally(() => setBusy(null));
+  };
+
+  const have = () => {
+    setBusy("tengo");
+    setError(null);
+    api
+      .shopBought(item.id, size || null)
+      .then((result) => {
+        setChoosing(false);
+        onUpdate({ ...item, status: "comprado", saved: "comprado", garment_id: result.garment_id });
+      })
+      .catch((e) => setError(e instanceof ApiError && e.status < 500 ? e.message : t.compras.gustados.errorComprar))
+      .finally(() => setBusy(null));
+  };
+
+  const chip = (selected: boolean) =>
+    `min-h-11 min-w-11 rounded-xl border px-3 text-sm font-medium ${
+      selected ? "border-primary bg-primary text-on-primary" : "border-line bg-card-2 text-text-2"
+    }`;
+
+  return (
+    <li className="card flex flex-col gap-3 p-3.5">
+      <div className="flex gap-3.5">
+        {item.photos[0] && (
+          <button
+            type="button"
+            aria-label={t.compras.gustados.verFoto(item.name)}
+            onClick={onView}
+            className="h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-card-2 active:opacity-80"
+          >
+            <img src={mediaUrl(item.photos[0].thumb_url)} alt="" className="h-full w-full object-cover" />
+          </button>
+        )}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="label-caps truncate text-text-2">
+            {[item.store_name, item.store_color].filter(Boolean).join(" · ")}
+          </span>
+          <h3 className="text-[15px] leading-snug font-medium">{item.name}</h3>
+          <span className="font-display text-base font-semibold">{t.compras.precio(item.price_cents)}</span>
+          <div className="mt-auto w-fit">
+            <StoreLink item={item} />
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      )}
+
+      {item.saved === "comprado" ? (
+        <div className="flex flex-col gap-2 border-t border-control pt-3">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-ok">
+            <Icon name="check_circle" size={16} />
+            {t.compras.buscador.enArmario}
+          </p>
+          {item.garment_id !== null && (
+            <SecondaryButton onClick={() => navigate(`/prenda/${item.garment_id}`)}>
+              {t.compras.buscador.verFicha}
+              <Icon name="chevron_right" size={18} />
+            </SecondaryButton>
+          )}
+        </div>
+      ) : choosing ? (
+        <div className="flex flex-col gap-3 border-t border-control pt-3">
+          {busy === "tengo" ? (
+            <p role="status" className="text-xs text-text-2">
+              {t.compras.gustados.analizandoTexto}
+            </p>
+          ) : (
+            <>
+              <span className="label-caps text-text-2">{t.compras.buscador.talla}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {sizes.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    aria-pressed={size === name}
+                    onClick={() => setSize(name)}
+                    className={chip(size === name)}
+                  >
+                    {name}
+                  </button>
+                ))}
+                <button type="button" aria-pressed={size === ""} onClick={() => setSize("")} className={chip(size === "")}>
+                  {t.compras.buscador.sinTalla}
+                </button>
+              </div>
+            </>
+          )}
+          <PrimaryButton disabled={busy !== null || size === null} onClick={have}>
+            {busy === "tengo" ? t.compras.gustados.analizando : t.compras.gustados.confirmar}
+          </PrimaryButton>
+          {busy === null && (
+            <button type="button" onClick={() => setChoosing(false)} className="h-11 text-xs font-medium text-text-2 underline">
+              {t.comun.cancelar}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {item.saved === "gustado" && (
+            <p className="flex items-center gap-1.5 text-xs font-medium text-ok">
+              <Icon name="favorite_fill" size={15} />
+              {t.compras.buscador.enMeGustan}
+            </p>
+          )}
+          <div className={`grid gap-2 ${item.saved === "gustado" ? "" : "grid-cols-2"}`}>
+            {item.saved !== "gustado" && (
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={like}
+                className="flex h-11 items-center justify-center gap-1.5 rounded-xl border border-line bg-control px-3 text-xs font-semibold text-text active:scale-[0.98] disabled:opacity-40"
+              >
+                <Icon name="favorite" size={18} />
+                {busy === "gusta" ? t.compras.buscador.guardando : t.compras.si}
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => {
+                setError(null);
+                // Sin tallas que elegir, va marcada «sin talla»; con una sola, esa.
+                setSize(sizes.length === 0 ? "" : sizes.length === 1 ? sizes[0] : null);
+                setChoosing(true);
+              }}
+              className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-semibold text-on-primary active:scale-[0.98] disabled:opacity-40"
+            >
+              <Icon name="check_circle" size={18} />
+              {t.compras.buscador.yaLaTengo}
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
   );
 }
 

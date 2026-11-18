@@ -1,0 +1,450 @@
+{
+ "status": "SUCCESS",
+ "results": [
+  {
+   "id": "565710389",
+   "position": 1,
+   "content": {
+    "id": 548227733,
+    "reference": "C03918300800030-I2026",
+    "type": "Product",
+    "kind": "Wear",
+    "name": "CAZADORA TÉCNICA COMBINADO POLAR",
+    "price": 3995,
+    "sectionName": "MAN",
+    "familyName": "CAZADORA",
+    "subfamilyName": "B. Cazadora",
+    "seo": {
+     "keyword": "cazadora-tecnica-combinado-polar",
+     "seoProductId": "03918300",
+     "discernProductId": 565710389
+    },
+    "availability": "in_stock",
+    "detail": {
+     "reference": "03918300-I2026",
+     "displayReference": "3918/300",
+     "colors": [
+      {
+       "id": "800",
+       "productId": 565710389,
+       "name": "Negro",
+       "price": 3995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "03918309800-f1",
+         "path": "/assets/public/b19f/8601/cb5147d38f0d/b48939b56a40/03918309800-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "505",
+       "productId": 548232269,
+       "name": "Khaki",
+       "price": 3995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "03918309800-f1",
+         "path": "/assets/public/b19f/8601/cb5147d38f0d/b48939b56a40/03918309800-f1",
+         "type": "image"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "548232269",
+   "position": 2,
+   "content": {
+    "id": 548227733,
+    "reference": "C03918300505000-I2026",
+    "type": "Product",
+    "kind": "Wear",
+    "name": "CAZADORA TÉCNICA COMBINADO POLAR",
+    "price": 3995,
+    "sectionName": "MAN",
+    "familyName": "CAZADORA",
+    "subfamilyName": "B. Cazadora",
+    "seo": {
+     "keyword": "cazadora-tecnica-combinado-polar",
+     "seoProductId": "03918300",
+     "discernProductId": 548232269
+    },
+    "availability": "in_stock",
+    "detail": {
+     "reference": "03918300-I2026",
+     "displayReference": "3918/300",
+     "colors": [
+      {
+       "id": "505",
+       "productId": 548232269,
+       "name": "Khaki",
+       "price": 3995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "03918309505-f1",
+         "path": "/assets/public/a1f5/f6e4/14d54177b719/55413a07ef64/03918309505-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "800",
+       "productId": 548232268,
+       "name": "Negro",
+       "price": 3995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "03918309505-f1",
+         "path": "/assets/public/a1f5/f6e4/14d54177b719/55413a07ef64/03918309505-f1",
+         "type": "image"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "557405764",
+   "position": 1,
+   "content": {
+    "id": 557404821,
+    "reference": "C08281765800000-I2026",
+    "type": "Product",
+    "kind": "Wear",
+    "name": "CAZADORA REGULAR FIT CON LANA",
+    "price": 5995,
+    "sectionName": "MAN",
+    "familyName": "CAZADORA",
+    "subfamilyName": "B. Cazadora",
+    "seo": {
+     "keyword": "cazadora-regular-fit-con-lana",
+     "seoProductId": "08281765",
+     "discernProductId": 557405764
+    },
+    "availability": "in_stock",
+    "detail": {
+     "reference": "08281765-I2026",
+     "displayReference": "8281/765",
+     "colors": [
+      {
+       "id": "800",
+       "productId": 557405764,
+       "name": "Negro",
+       "price": 5995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "08281765800-f1",
+         "path": "/assets/public/9f6c/0fbe/4d2047679300/d870f0bf65a3/08281765800-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "700",
+       "productId": 557405763,
+       "name": "Marrón",
+       "price": 5995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "08281765800-f1",
+         "path": "/assets/public/9f6c/0fbe/4d2047679300/d870f0bf65a3/08281765800-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "707",
+       "productId": 557405765,
+       "name": "Tostado",
+       "price": 5995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "08281765800-f1",
+         "path": "/assets/public/9f6c/0fbe/4d2047679300/d870f0bf65a3/08281765800-f1",
+         "type": "image"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "557850330",
+   "position": 2,
+   "content": {
+    "id": 557832322,
+    "reference": "C04517500099000-I2026",
+    "type": "Product",
+    "kind": "Wear",
+    "name": "CAZADORA REGULAR FIT CON LANA",
+    "price": 14900,
+    "sectionName": "MAN",
+    "familyName": "CAZADORA",
+    "subfamilyName": "F. Cazadora",
+    "seo": {
+     "keyword": "cazadora-regular-fit-con-lana",
+     "seoProductId": "04517500",
+     "discernProductId": 557850330
+    },
+    "availability": "in_stock",
+    "detail": {
+     "reference": "04517500-I2026",
+     "displayReference": "4517/500",
+     "colors": [
+      {
+       "id": "099",
+       "productId": 557850330,
+       "name": "Negro / Marrón",
+       "price": 14900,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "04517500099-f1",
+         "path": "/assets/public/8449/11f2/84704a3f9ab0/947218fd6120/04517500099-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "422",
+       "productId": 557850331,
+       "name": "Marino oscuro",
+       "price": 14900,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "04517500099-f1",
+         "path": "/assets/public/8449/11f2/84704a3f9ab0/947218fd6120/04517500099-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "700",
+       "productId": 557850332,
+       "name": "Marrón",
+       "price": 14900,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "04517500099-f1",
+         "path": "/assets/public/8449/11f2/84704a3f9ab0/947218fd6120/04517500099-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "803",
+       "productId": 557850333,
+       "name": "Gris vigoré",
+       "price": 14900,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "04517500099-f1",
+         "path": "/assets/public/8449/11f2/84704a3f9ab0/947218fd6120/04517500099-f1",
+         "type": "image"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "556059388",
+   "position": 3,
+   "content": {
+    "id": 556053575,
+    "reference": "C08491305800000-I2026",
+    "type": "Product",
+    "kind": "Wear",
+    "name": "CAZADORA CROPPED FIT 100% LANA",
+    "price": 10900,
+    "sectionName": "MAN",
+    "familyName": "CAZADORA",
+    "subfamilyName": "F. Cazadora",
+    "seo": {
+     "keyword": "cazadora-cropped-fit-100-lana",
+     "seoProductId": "08491305",
+     "discernProductId": 556059388
+    },
+    "availability": "in_stock",
+    "detail": {
+     "reference": "08491305-I2026",
+     "displayReference": "8491/305",
+     "colors": [
+      {
+       "id": "800",
+       "productId": 556059388,
+       "name": "Negro",
+       "price": 10900,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "08491305800-f1",
+         "path": "/assets/public/e4a0/41d9/d9fe4ff180af/b26065a0d277/08491305800-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "832",
+       "productId": 556059387,
+       "name": "Gris topo",
+       "price": 10900,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "08491305800-f1",
+         "path": "/assets/public/e4a0/41d9/d9fe4ff180af/b26065a0d277/08491305800-f1",
+         "type": "image"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "565710389",
+   "position": 1,
+   "content": {
+    "id": 548227733,
+    "reference": "C03918300800030-I2026",
+    "type": "Product",
+    "kind": "Wear",
+    "name": "CAZADORA TÉCNICA COMBINADO POLAR",
+    "price": 3995,
+    "sectionName": "MAN",
+    "familyName": "CAZADORA",
+    "subfamilyName": "B. Cazadora",
+    "seo": {
+     "keyword": "cazadora-tecnica-combinado-polar",
+     "seoProductId": "03918300",
+     "discernProductId": 565710389
+    },
+    "availability": "in_stock",
+    "detail": {
+     "reference": "03918300-I2026",
+     "displayReference": "3918/300",
+     "colors": [
+      {
+       "id": "800",
+       "productId": 565710389,
+       "name": "Negro",
+       "price": 3995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "03918309800-f1",
+         "path": "/assets/public/b19f/8601/cb5147d38f0d/b48939b56a40/03918309800-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "505",
+       "productId": 548232269,
+       "name": "Khaki",
+       "price": 3995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "03918309800-f1",
+         "path": "/assets/public/b19f/8601/cb5147d38f0d/b48939b56a40/03918309800-f1",
+         "type": "image"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "557405764",
+   "position": 1,
+   "content": {
+    "id": 557404821,
+    "reference": "C08281765800000-I2026",
+    "type": "Product",
+    "kind": "Wear",
+    "name": "PACK CALCETINES LANA",
+    "price": 5995,
+    "sectionName": "MAN",
+    "familyName": "CALCETINES",
+    "subfamilyName": "",
+    "seo": {
+     "keyword": "cazadora-regular-fit-con-lana",
+     "seoProductId": "01234567",
+     "discernProductId": 557405764
+    },
+    "availability": "in_stock",
+    "detail": {
+     "reference": "08281765-I2026",
+     "displayReference": "8281/765",
+     "colors": [
+      {
+       "id": "800",
+       "productId": 557405764,
+       "name": "Negro",
+       "price": 5995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "08281765800-f1",
+         "path": "/assets/public/9f6c/0fbe/4d2047679300/d870f0bf65a3/08281765800-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "700",
+       "productId": 557405763,
+       "name": "Marrón",
+       "price": 5995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "08281765800-f1",
+         "path": "/assets/public/9f6c/0fbe/4d2047679300/d870f0bf65a3/08281765800-f1",
+         "type": "image"
+        }
+       ]
+      },
+      {
+       "id": "707",
+       "productId": 557405765,
+       "name": "Tostado",
+       "price": 5995,
+       "availability": "in_stock",
+       "xmedia": [
+        {
+         "name": "08281765800-f1",
+         "path": "/assets/public/9f6c/0fbe/4d2047679300/d870f0bf65a3/08281765800-f1",
+         "type": "image"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "totalResults": 7,
+ "searchpass": "PART_NUMBER",
+ "isLastPage": true,
+ "universe": "MAN"
+}

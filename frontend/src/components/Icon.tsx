@@ -16,6 +16,7 @@ import done_all from "@tabler/icons/outline/checks.svg?raw";
 import arrow_back from "@tabler/icons/outline/chevron-left.svg?raw";
 import chevron_right from "@tabler/icons/outline/chevron-right.svg?raw";
 import check_circle from "@tabler/icons/outline/circle-check.svg?raw";
+import content_paste from "@tabler/icons/outline/clipboard.svg?raw";
 import schedule from "@tabler/icons/outline/clock.svg?raw";
 import rain from "@tabler/icons/outline/cloud-rain.svg?raw";
 import cloud from "@tabler/icons/outline/cloud.svg?raw";
@@ -73,6 +74,7 @@ const ICONS = {
   chevron_right,
   close,
   cloud,
+  content_paste,
   contrast,
   delete_icon,
   done_all,
