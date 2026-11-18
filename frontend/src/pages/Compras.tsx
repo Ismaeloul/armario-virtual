@@ -118,11 +118,7 @@ export default function Compras() {
             api
               .shopNext(filterRef.current)
               .then((n) =>
-                setNext((now) => {
-                  if (!now?.item || !n.item || now.item.id === n.item.id) return n;
-                  const others = [n.item, ...n.queue].filter((o) => o.id !== now.item?.id);
-                  return { ...n, item: now.item, queue: others.slice(0, 2) };
-                }),
+                setNext((now) => keepShown(now, n)),
               )
               .catch(() => undefined);
         })
@@ -214,6 +210,22 @@ export default function Compras() {
 
 // ---------- Descubrir
 
+/** Lo que dice el servidor, sin mover lo que ya se ve. El servidor ordena por nota, y al llegar
+ *  propuestas nuevas (una consulta en marcha, una reposición) la lista se reordena: las dos tarjetas
+ *  que hay en pantalla, la de arriba y la de debajo, se quedan donde están y lo nuevo entra detrás.
+ *  `skip` son las que se están decidiendo: no vuelven aunque la respuesta aún las traiga. */
+function keepShown(shown: ShopNext | null, answer: ShopNext, skip?: Set<number>): ShopNext {
+  const fresh = [answer.item, ...answer.queue].filter(
+    (other): other is ShopItem => other !== null && !skip?.has(other.id),
+  );
+  // Si el servidor ya no tiene nada pendiente, manda él.
+  const visible = fresh.length
+    ? [shown?.item, shown?.queue[0]].filter((other): other is ShopItem => other != null && !skip?.has(other.id))
+    : [];
+  const all = [...visible, ...fresh.filter((other) => !visible.some((seen) => seen.id === other.id))];
+  return { ...answer, item: all[0] ?? null, queue: all.slice(1, 3) };
+}
+
 function Discover({
   state,
   next,
@@ -296,19 +308,10 @@ function Discover({
   });
 
   /** Lo que dice el servidor, sin deshacer lo que ya se ve: la tarjeta de arriba se queda si sigue pendiente. */
-  const merge = (answer: ShopNext): ShopNext => {
-    const shown = latest.current.item;
-    const all = [answer.item, ...answer.queue].filter(
-      (other): other is ShopItem => other !== null && !deciding.current.has(other.id),
-    );
-    const top = shown && all.some((other) => other.id === shown.id) ? shown : (all[0] ?? null);
-    return {
-      ...answer,
-      item: top,
-      queue: all.filter((other) => other.id !== top?.id).slice(0, 2),
-      remaining: Math.max(0, answer.remaining - deciding.current.size),
-    };
-  };
+  const merge = (answer: ShopNext): ShopNext => ({
+    ...keepShown(latest.current, answer, deciding.current),
+    remaining: Math.max(0, answer.remaining - deciding.current.size),
+  });
 
   const decide = (liked: boolean) => {
     if (!item || colors.pending) return;
@@ -339,7 +342,7 @@ function Discover({
         deciding.current.delete(id);
         setError(t.compras.errorAccion);
         setAttempt((n) => n + 1);
-        return api.shopNext(filter).then((answer) => onNext(merge(answer))).catch(() => undefined);
+        return api.shopNext(filter).then((answer) => onNext(keepShown(null, answer, deciding.current))).catch(() => undefined);
       });
   };
 
