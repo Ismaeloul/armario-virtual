@@ -346,7 +346,7 @@ function Discover({
   );
 
   const round =
-    "flex items-center justify-center rounded-full shadow-[0_6px_16px_rgb(0_0_0/0.22)] transition-transform active:scale-95 disabled:[&>*]:opacity-40";
+    "flex items-center justify-center rounded-full shadow-[0_3px_10px_rgb(0_0_0/0.16)] transition-transform active:scale-95 disabled:[&>*]:opacity-40";
   const undoButton = (
     <button
       type="button"
@@ -667,7 +667,7 @@ function useFitHeight(shown: boolean) {
     const measure = () => {
       const el = ref.current;
       if (!el) return;
-      const gap = 10; // aire entre la vista y la barra inferior
+      const gap = 18; // aire entre la vista y la barra inferior: lo justo para que la sombra de los botones no la pise
       const nav = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
       const top = el.getBoundingClientRect().top + window.scrollY;
       // La pantalla reserva bajo el contenido más hueco del que ocupa la barra. Ese sobrante se
@@ -675,8 +675,9 @@ function useFitHeight(shown: boolean) {
       const main = el.closest("main");
       const reserved = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
       setStyle({
-        height: Math.round(window.innerHeight - top - nav - gap),
-        marginBottom: Math.min(0, Math.round(nav + gap - reserved)),
+        // Hacia abajo y con un píxel de margen: redondeando al alza la página medía uno de más y se movía.
+        height: Math.floor(window.innerHeight - top - nav - gap) - 1,
+        marginBottom: Math.min(0, Math.floor(nav + gap - reserved)),
       });
     };
     measure();
