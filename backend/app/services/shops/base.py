@@ -24,6 +24,16 @@ def maker_key(code) -> str | None:
     return text
 
 
+def old_price(current, before) -> int | None:
+    """El precio de antes de una oferta, en céntimos, solo si la tienda lo da y es MAYOR que el de ahora
+    (si no, no es una oferta). Nunca se deduce de lo apuntado otro día: sale de lo que dice la tienda."""
+    if not isinstance(current, int) or isinstance(current, bool) or current <= 0:
+        return None
+    if not isinstance(before, int) or isinstance(before, bool):
+        return None
+    return before if before > current else None
+
+
 class ShopError(Exception):
     """La tienda no respondió como se esperaba. El mensaje se enseña tal cual en el panel «Tiendas»,
     así que va en claro: «HTTP 403», «tiempo agotado», «la respuesta no era la esperada»."""
@@ -76,6 +86,11 @@ class ShopProduct:
     brand: str = ""  # la marca del producto, si la tienda vende varias (Nike, Adidas…); "" si es la propia tienda
     # Lo que el conector necesita para volver a pedir el detalle de este producto más adelante.
     store_data: dict = field(default_factory=dict)
+    # Ofertas: el precio de antes (tachado) si la TIENDA dice que está rebajado; None si no lo está o no lo
+    # dice. `old_price_known`: este listado sabe decir si hay rebaja (con None, es que no la hay). Si no lo
+    # sabe (False), un None no quita la rebaja que dijo otra fuente para ese mismo precio (ver `old_price`).
+    old_price_cents: int | None = None
+    old_price_known: bool = False
 
 
 @dataclass
@@ -104,6 +119,11 @@ class ShopDetail:
     # el producto sale sin tallas y cuenta como disponible mientras la tienda lo venda (`sold_out`).
     stock_known: bool = True
     sold_out: bool = False
+    # El precio de antes, si la tienda dice que está rebajado (como en ShopProduct). Solo cuenta junto a
+    # `price_cents`: una ficha sin precio no dice nada del precio. `old_price_known`: esta ficha sabe decir
+    # si hay rebaja (la de Courir o Carhartt WIP no: solo da el precio de ahora).
+    old_price_cents: int | None = None
+    old_price_known: bool = False
 
     @property
     def in_stock(self) -> bool:

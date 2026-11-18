@@ -24,7 +24,7 @@ from urllib.parse import urlsplit
 
 from ... import config
 from . import browser, crawl
-from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_shoe_type
 from .estimate import estimate_style
 from .fetch import IMAGE, Fetcher
@@ -103,6 +103,16 @@ def make_product(doc: dict, section: str) -> ShopProduct | None:
     shoe_type = estimate_shoe_type(title)
     if shoe_type is None:
         return None
+    # Rebajada: las tallas traen `compareAtPrice` (el de antes, en euros) mayor que `sale_price` (visto en
+    # los listados guardados: 135 con 180 antes). El más bajo de los que lo son.
+    compare = []
+    for variant in variants:
+        for value in (variant or {}).get("compareAtPrice") or []:
+            try:
+                compare.append(round(float(value) * 100))
+            except (TypeError, ValueError):
+                continue
+    before = min((c for c in compare if c > cents), default=None)
     url = f"{BASE}/products/{handle}"
     side = _side_photo(doc.get("images") or [])
     ref = _IMAGE_REF.search(side).group(1) if side else None
@@ -111,6 +121,8 @@ def make_product(doc: dict, section: str) -> ShopProduct | None:
         product_ref=f"size:{handle}",
         name=name,
         price_cents=cents,
+        old_price_cents=old_price(cents, before),
+        old_price_known=True,
         url=url,
         store_color="",  # el listado no dice el color: sale en la ficha
         section=section,
@@ -190,7 +202,12 @@ def parse_product_page(page: str, store_data: dict | None = None) -> ShopDetail 
     except ValueError:
         price = None
     sizes, seen = [], set()
-    for variant in _variants(page):
+    variants = _variants(page)
+    # Rebajada: en las variantes de Shopify, `compare_at_price` (céntimos) mayor que su `price`. Solo las que
+    # van al precio de la ficha; sin variantes, la ficha no sabe decir si hay rebaja.
+    before = [v.get("compare_at_price") for v in variants
+              if isinstance(v.get("compare_at_price"), int) and v.get("price") == price]
+    for variant in variants:
         name = " ".join(str(variant.get("option1") or variant.get("title") or "").split())
         if name and name not in seen:
             seen.add(name)
@@ -208,6 +225,8 @@ def parse_product_page(page: str, store_data: dict | None = None) -> ShopDetail 
     colour = " ".join(str(product.get("color") or "").split())
     return ShopDetail(
         price_cents=price if price and price > 0 else None,
+        old_price_cents=old_price(price, max(before)) if before else None,
+        old_price_known=bool(variants),
         sizes=sizes,
         photo_urls=[_photo(side)] if side else [],
         description=text[:400],

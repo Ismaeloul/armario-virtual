@@ -19,7 +19,7 @@ from urllib.parse import quote, urlsplit
 
 from ... import config
 from . import crawl
-from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season
 from .estimate import estimate_shoe_type, estimate_style, title_case
 from .fetch import IMAGE, Fetcher
@@ -58,6 +58,8 @@ _HREF = re.compile(r'class="product__link__overlay"\s+href="([^"]+)"')
 _FULL_PRICE = re.compile(r'js-product__default-price"[^>]*?data-value="EUR ([\d.]+)"', re.S)
 _PROMO_PRICE = re.compile(r'js-product__promotional-price"[^>]*?data-value="EUR ([\d.]+)"', re.S)
 _SKU_IN_URL = re.compile(r"-(\d{6,8})\.html")
+# La dirección de una ficha sin su número: «nike-air-force-1-low-nubuck» (marca, modelo y acabado).
+_MODEL_IN_URL = re.compile(r"/p/([^/?#]+)-\d{6,8}\.html")
 _LD_JSON = re.compile(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', re.S)
 _SIZE = re.compile(r"Taille:\s*([^'\"]*)['\"][^>]*?data-is-available=\"(\w+)\"")
 _COLOR_TEXT = re.compile(r'class="color-text">([^<]*)<')
@@ -91,8 +93,24 @@ def reference(store_data: dict) -> str | None:
     return str(store_data.get("model") or store_data.get("sku") or "") or None
 
 
+def model_slug(url: str | None) -> str:
+    """El modelo de una ficha según su dirección, sin el número de producto. "" si no es una ficha."""
+    match = _MODEL_IN_URL.search(url or "")
+    return match.group(1).lower() if match else ""
+
+
+def same_model(url: str | None, other_url: str | None) -> bool:
+    """¿Son la misma zapatilla en otro color? El bloque «Couleur» de una ficha enlaza toda la línea
+    (desde una Air Force 1 Low: la Luxe, la Mid Gore-Tex, la Low Tech, la de ante… hasta 41 productos,
+    cada uno con su nombre y su precio). Solo es otro color el que comparte dirección salvo el número:
+    «nike-air-force-1-low-1603614» y «nike-air-force-1-low-1227773» sí; «…-low-nubuck-1462216» no."""
+    slug = model_slug(url)
+    return bool(slug) and slug == model_slug(other_url)
+
+
 def make_product(*, sku: str, name: str, brand: str, url: str, price_cents: int, section: str,
-                 model: str | None, store_color: str = "") -> ShopProduct | None:
+                 model: str | None, store_color: str = "", old_price_cents: int | None = None,
+                 old_price_known: bool = False) -> ShopProduct | None:
     """Un producto de Courir normalizado. None si no es calzado del armario (chanclas, calcetines…)."""
     shown_brand = brand_name(brand)
     clean = _clean_name(name, shown_brand)
@@ -105,6 +123,8 @@ def make_product(*, sku: str, name: str, brand: str, url: str, price_cents: int,
         product_ref=f"courir:{sku}",
         name=clean,
         price_cents=price_cents,
+        old_price_cents=old_price(price_cents, old_price_cents),
+        old_price_known=old_price_known,
         url=url,
         store_color=store_color,
         section=section,
@@ -150,6 +170,9 @@ def parse_grid(page: str, section: str, only_shoes: bool = False) -> list[ShopPr
         product = make_product(
             sku=str(gtm.get("sku") or ""), name=str(gtm.get("name") or ""), brand=str(gtm.get("brand") or ""),
             url=url, price_cents=price, section=section, model=str(gtm.get("supplier_id") or "") or None,
+            # En rebaja, la tarjeta trae el precio de siempre (`default-price`, tachado) y el rebajado
+            # (`promotional-price`): visto en los listados guardados (210 € antes, 150 € ahora).
+            old_price_cents=_price_cents(full.group(1) if full else None) if promo else None, old_price_known=True,
         )
         if product and product.product_ref not in refs:
             refs.add(product.product_ref)
@@ -229,6 +252,9 @@ def parse_product_page(page: str) -> tuple[dict, ShopDetail] | None:
         })
     sku = str(product.get("sku") or gtm.get("sku") or "")
     url = str(offers.get("url") or product.get("url") or "")
+    # De todo lo que enlaza la ficha, solo los colores de esta misma zapatilla (ver `same_model`).
+    own = url if model_slug(url) else next((s["url"] for s in siblings if s["product_ref"] == f"courir:{sku}"), "")
+    siblings = [s for s in siblings if same_model(own, s["url"])]
     info = {
         "sku": sku,
         "name": str(product.get("name") or gtm.get("name") or ""),
@@ -244,7 +270,7 @@ def parse_product_page(page: str) -> tuple[dict, ShopDetail] | None:
         sizes=sizes,
         photo_urls=_photos(images if isinstance(images, list) else [images]),
         description=" ".join(html.unescape(str(product.get("description") or "")).split()),
-        siblings=siblings or None,
+        siblings=siblings if len(siblings) > 1 else [],
         store_color=store_color,
         store_data={"model": info_model} if (info_model := str(gtm.get("supplier_id") or "")) else {},
     )
@@ -289,6 +315,9 @@ class CourirConnector:
     covered_by = COVERED_BY
     section_types = {"nouveautes": "zapatillas", "sneakers": "zapatillas", "boots": "botas"}
     heavy = False
+    # Cada ficha enlaza solo a algunos de sus otros colores (la gris a cuatro, la beige solo a la gris):
+    # la familia se va completando con lo que dice cada una (ver `shopping._apply_detail`).
+    partial_colors = True
 
     def __init__(self, pause: float | None = None, timeout: float | None = None):
         self.fetcher = Fetcher(
@@ -369,6 +398,9 @@ class CourirConnector:
 
     def maker_code(self, store_data: dict) -> str | None:
         return str(store_data.get("model") or "") or None
+
+    def same_model(self, url: str | None, other_url: str | None) -> bool:
+        return same_model(url, other_url)
 
     def search(self, query: str, limit: int = 12) -> list[ShopProduct]:
         kind, value = parse_query(query)

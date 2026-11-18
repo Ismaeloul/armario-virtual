@@ -27,7 +27,7 @@ from urllib.parse import quote, urlsplit
 
 from ... import config
 from . import crawl
-from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, maker_key
+from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, maker_key, old_price
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_shoe_type
 from .estimate import estimate_style, title_case
 from .fetch import IMAGE, Fetcher
@@ -162,6 +162,9 @@ def make_product(item: dict, section: str, brands: list[str] = ()) -> ShopProduc
         product_ref=f"footlocker:{sku}",
         name=name,
         price_cents=price,
+        # El listado trae `originalPrice` junto a `price` (iguales si no hay rebaja).
+        old_price_cents=old_price(price, _cents((item.get("originalPrice") or {}).get("value"))),
+        old_price_known=True,
         url=product_url(sku),
         store_color=style[:60],
         section=section,
@@ -236,12 +239,15 @@ def parse_product(product_block: dict) -> tuple[dict, ShopDetail] | None:
         other = str((variant or {}).get("sku") or "")
         if not _SKU.fullmatch(other):
             continue
-        entry = by_sku.setdefault(other, {"color": str(variant.get("color") or ""), "price": None, "stock": False})
-        entry["price"] = entry["price"] or _cents(((variant.get("price") or {}).get("salePrice")))
+        entry = by_sku.setdefault(other, {"color": str(variant.get("color") or ""), "price": None, "old": None,
+                                          "stock": False})
+        if entry["price"] is None:
+            entry["price"] = _cents(((variant.get("price") or {}).get("salePrice")))
+            entry["old"] = old_price(entry["price"], _cents(((variant.get("price") or {}).get("listPrice"))))
         entry["stock"] = entry["stock"] or bool((variant.get("inventory") or {}).get("inventoryAvailable"))
     siblings = [
         {"product_ref": f"footlocker:{other}", "name": info["color"], "hex": None, "price_cents": info["price"],
-         "url": product_url(other), "store_data": {"sku": other}}
+         "old_price_cents": info["old"], "url": product_url(other), "store_data": {"sku": other}}
         for other, info in by_sku.items()
         if info["stock"] or other == sku
     ]
@@ -267,9 +273,13 @@ def parse_product(product_block: dict) -> tuple[dict, ShopDetail] | None:
     info = {
         "sku": sku, "name": str(model.get("name") or ""), "brand": str(model.get("brand") or ""),
         "style": str(style.get("color") or ""), "price": _cents(price.get("salePrice")),
+        # Rebajada: `listPrice` (el de antes) mayor que `salePrice` (visto: 189,99 con 150 ahora).
+        "old": old_price(_cents(price.get("salePrice")), _cents(price.get("listPrice"))),
     }
     detail = ShopDetail(
         price_cents=_cents(price.get("salePrice")),
+        old_price_cents=info["old"],
+        old_price_known=True,
         sizes=sizes,
         photo_urls=photos[:MAX_PHOTOS],
         description=description[:400],
@@ -402,6 +412,7 @@ class FootLockerConnector:
                 raise SearchError("No he encontrado esa zapatilla en Foot Locker")
             info, detail = parsed
             item = {"sku": info["sku"], "name": info["name"], "price": {"value": (info["price"] or 0) / 100},
+                    "originalPrice": {"value": (info["old"] or info["price"] or 0) / 100},
                     "baseOptions": [{"selected": {"style": info["style"]}}]}
             product = make_product(item, "", [info["brand"]] if info["brand"] else [])
             if product is None:

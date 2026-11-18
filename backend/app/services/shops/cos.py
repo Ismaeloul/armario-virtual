@@ -82,6 +82,10 @@ def entry(raw: dict) -> Entry | None:
         id=centra,
         name=fix_text(raw.get("name")),
         price_cents=euros(price),
+        # `priceBeforeDiscount` (el de antes de la rebaja) junto a `price`: iguales sin rebaja. Es la misma
+        # plataforma que Weekday, donde sí se vio uno rebajado; en COS, ninguno en los datos guardados.
+        old_price_cents=euros((raw.get("priceBeforeDiscount") or {}).get("value")),
+        old_price_known=True,
         url=url,
         # El nombre del color en francés es el de su muestra; el de `variant`, en inglés.
         color=fix_text((own or {}).get("name") or variant.get("name")),

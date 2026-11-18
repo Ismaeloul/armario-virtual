@@ -859,6 +859,8 @@ def like(db: Session, item: ShopItem) -> None:
     item.expires_at = now + timedelta(days=LIKED_DAYS)
     db.commit()
     rescore_pending(db)
+    if not _has_photos(item):
+        photos_soon()  # guardado sin foto (desde el buscador): se baja en segundo plano
     top_up_soon()  # quedan menos por ver: se repone la reserva en segundo plano
 
 
@@ -962,7 +964,7 @@ def colors_of(item: ShopItem) -> list[dict] | None:
     apagados, con el enlace a la tienda, y van detrás de los disponibles. En el resto, todos."""
     if item.siblings is None:
         return None
-    siblings = item.siblings
+    siblings = family_of(item)
     if len(siblings) < 2:
         return []
     ready: set[str] | None = None
@@ -1023,12 +1025,104 @@ def _note_code(row: ShopItem) -> None:
     row.maker_code = shops.maker_code(row.store, row.store_data or {})
 
 
+# ---------- La familia de colores de un producto
+#
+# La familia son los colores de LA MISMA prenda: mismo modelo, mismo nombre, otro color. Cada color es
+# un item aparte y cada item guarda la familia entera (`siblings`), él incluido. Reglas:
+# - Lo dice la tienda en la ficha del producto, y de lo que enlaza solo vale lo que es el mismo modelo
+#   (`same_model` del conector: Courir enlaza como «colores» toda la línea, hasta 41 productos).
+# - Elegir un color no cambia los circulitos: los dos items, el que se deja y el que se elige, se
+#   quedan con la misma familia (la unión de lo que sabía cada uno), así que volver atrás enseña lo mismo.
+# - Al releer una ficha manda la tienda (un color retirado desaparece), salvo en las tiendas donde cada
+#   ficha nombra solo a algunos de sus colores (`partial_colors`): ahí lo ya conocido se conserva.
+# - Un color que la tienda ya no tiene se quita de la familia en cuanto se comprueba (`_forget_color`).
+# Nunca se unen familias de productos distintos: sin el filtro del modelo la unión acaba siendo la
+# línea entera.
+
+
+def _same_model(store: str, url: str | None, own_ref: str | None, siblings: list[dict] | None) -> list[dict]:
+    """De una lista de colores hermanos, los que son el mismo modelo que el producto de `url`. Las
+    tiendas cuyo conector no dice nada (`same_model`) solo enlazan colores de verdad: todos."""
+    siblings = [s for s in siblings or [] if isinstance(s, dict) and s.get("product_ref")]
+    check = getattr(shops.CONNECTORS.get(store), "same_model", None)
+    if check is None:
+        return siblings
+    return [s for s in siblings if s["product_ref"] == own_ref or check(url, s.get("url"))]
+
+
+def family_of(item: ShopItem) -> list[dict]:
+    """Los colores de un item, él incluido: lo guardado, sin lo que no es el mismo modelo (las listas
+    guardadas antes de filtrar, que en Courir mezclaban la línea entera, se arreglan aquí al leerlas)."""
+    return _same_model(item.store, item.url, item.product_ref, item.siblings)
+
+
+def _own_sibling(row: ShopItem) -> dict:
+    """Un item visto como color de su familia, para cuando la lista de la tienda no lo nombra."""
+    return {
+        "product_ref": row.product_ref, "name": row.store_color or "", "hex": row.store_color_hex,
+        "url": row.url, "store_data": dict(row.store_data or {}),
+        **({"name_es": row.store_color_es} if row.store_color_es else {}),
+    }
+
+
 def _merge_siblings(known: list[dict] | None, more: list[dict] | None) -> list[dict]:
     """Los colores de `known` más los de `more` que falten, siempre en el mismo orden. Manda `known`
-    (lo más reciente que dijo la tienda de cada color)."""
+    (lo más reciente que dijo la tienda de cada color), pero la traducción del nombre no se pierde."""
     merged = {s["product_ref"]: s for s in more or [] if s.get("product_ref")}
-    merged.update({s["product_ref"]: s for s in known or [] if s.get("product_ref")})
+    for sibling in known or []:
+        ref = sibling.get("product_ref")
+        if not ref:
+            continue
+        before = merged.get(ref)
+        if before and before.get("name_es") and not sibling.get("name_es") and before.get("name") == sibling.get("name"):
+            sibling = {**sibling, "name_es": before["name_es"]}
+        merged[ref] = sibling
     return sorted(merged.values(), key=lambda sibling: sibling["product_ref"])
+
+
+def _share_family(item: ShopItem, target: ShopItem) -> None:
+    """Al pasar de un color a otro, los dos se quedan con la misma familia: la unión de lo que sabía
+    cada uno (solo del mismo modelo), con los dos dentro. Así los circulitos no cambian al tocar uno
+    ni al volver, aunque la ficha de uno nombre menos colores que la del otro."""
+    family = _merge_siblings(family_of(target), family_of(item))
+    family = _same_model(item.store, item.url, item.product_ref, family)
+    present = {s["product_ref"] for s in family}
+    # El que se ve y el que se deja, siempre: sin ellos no se podría volver.
+    family = _merge_siblings(family, [_own_sibling(row) for row in (item, target) if row.product_ref not in present])
+    for row in (item, target):
+        if row.siblings != family:
+            row.siblings = [dict(s) for s in family]
+
+
+def _forget_color(db: Session, item: ShopItem, product_ref: str) -> None:
+    """Ese color ya no existe en la tienda (o no tiene foto de producto): se quita de la familia de
+    todos los items que lo nombraban, para que el circulito no siga ahí dando el mismo error."""
+    rows = db.scalars(select(ShopItem).where(ShopItem.store == item.store, ShopItem.siblings.is_not(None)))
+    for row in rows:
+        if row.product_ref != product_ref and any(s.get("product_ref") == product_ref for s in row.siblings or []):
+            row.siblings = [s for s in row.siblings if s.get("product_ref") != product_ref]
+    db.commit()
+
+
+def _set_price(row: ShopItem, price: int | None, old: int | None, known: bool) -> None:
+    """El precio de ahora y, si la TIENDA dice que está rebajado, el de antes (`old_price_cents`, tachado).
+    Nunca se deduce comparando con lo apuntado otro día. `known`: esta fuente (listado o ficha) sabe decir si
+    hay rebaja; entonces manda, y un None es que la oferta ha terminado. Si no lo sabe (la ficha de Courir
+    solo da el precio de ahora), la rebaja que dijo otra fuente se conserva mientras el precio sea el mismo.
+    Sin precio (una ficha sacada de lo que guardó el listado), no se toca nada."""
+    if not price:
+        return
+    if known:
+        row.old_price_cents = shops.old_price(price, old)
+    elif row.price_cents != price or not shops.old_price(price, row.old_price_cents):
+        row.old_price_cents = None
+    row.price_cents = price
+
+
+def _price_from(row: ShopItem, source) -> None:
+    """El precio de un producto del listado o de una ficha (ShopProduct o ShopDetail), con su rebaja."""
+    _set_price(row, source.price_cents, getattr(source, "old_price_cents", None),
+               bool(getattr(source, "old_price_known", False)))
 
 
 def _apply_detail(row: ShopItem, detail) -> None:
@@ -1046,9 +1140,13 @@ def _apply_detail(row: ShopItem, detail) -> None:
         if before and before.get("name") == sibling.get("name"):
             sibling["name_es"] = before["name_es"]
         siblings.append(sibling)
-    # Los colores que ya se conocían y esta ficha no nombra se conservan: hay tiendas (Courir) donde
-    # cada color solo enlaza a unos pocos de sus hermanos, y al elegir uno desaparecían los demás.
-    row.siblings = _merge_siblings(siblings, row.siblings)
+    siblings = _same_model(row.store, row.url, row.product_ref, siblings)
+    if getattr(shops.CONNECTORS.get(row.store), "partial_colors", False):
+        # Donde cada ficha solo enlaza a algunos de sus colores (Courir: la gris a cuatro, la beige solo
+        # a la gris), los que ya se conocían y esta ficha no nombra se conservan. En el resto manda la
+        # ficha: un color que la tienda ha retirado deja de ofrecerse.
+        siblings = _merge_siblings(siblings, family_of(row))
+    row.siblings = sorted(siblings, key=lambda sibling: sibling["product_ref"])
     row.composition = " ".join((detail.composition or "").split())[:COMPOSITION_MAX] or None
 
 
@@ -1300,7 +1398,8 @@ def _store_candidate(db: Session, row: ShopItem | None, product, today: date) ->
     if row.name != name or row.store_color != product.store_color[:60]:
         row.name_es = row.store_color_es = None  # lo traducido era de otro texto
         row.translated = None
-    row.name, row.price_cents, row.url = name, product.price_cents, product.url
+    row.name, row.url = name, product.url
+    _price_from(row, product)
     row.brand = (getattr(product, "brand", "") or "")[:40] or None
     # Lo que solo dice la ficha (el código de fabricante en Snipes, size? y Foot Locker) no se pierde
     # porque el listado de la semana siguiente no lo traiga.
@@ -1393,7 +1492,9 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
             if detail is None or not detail.photo_urls or not detail.in_stock:
                 db.commit()
                 continue  # ya no existe, no tiene foto de producto o no queda ninguna talla
-            siblings = {s["product_ref"] for s in detail.siblings or [] if s.get("product_ref")} - {row.product_ref}
+            siblings = {
+                s["product_ref"] for s in _same_model(row.store, row.url, row.product_ref, detail.siblings)
+            } - {row.product_ref}
             if siblings & shown:
                 db.commit()
                 continue  # es otro color de algo que ya se está enseñando (y de lo que no se sabían los colores)
@@ -1432,7 +1533,7 @@ def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, t
         _detail_color(row, detail)
         if not row.color and detail.color_hex:  # el listado no lo decía; la ficha trae el tono
             row.color = estimate_color(row.store_color, detail.color_hex)
-        row.price_cents = detail.price_cents or row.price_cents
+        _price_from(row, detail)
         row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, True
         row.first_seen_at = now_utc()
         _apply_detail(row, detail)
@@ -1547,7 +1648,7 @@ def _shown_this_round(db: Session) -> tuple[set[str], set[str]]:
     family: set[str] = set()
     for row in rows:
         shown.add(row.product_ref)
-        family.update(s["product_ref"] for s in row.siblings or [] if s.get("product_ref"))
+        family.update(s["product_ref"] for s in family_of(row))
     return shown, family - shown
 
 
@@ -1806,6 +1907,7 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
             detail = None
             if listed is not None:
                 item.store_data = {**(item.store_data or {}), **(listed.store_data or {})}
+                _price_from(item, listed)  # el precio de esta semana, y si está rebajado, según el listado
                 detail = shops.cached_detail(store, item.store_data)
             if detail is None:
                 detail = connector.detail(item.store_data)
@@ -1828,7 +1930,7 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
             result["expired"] += 1
         else:
             item.sizes, item.in_stock = detail.sizes, True
-            item.price_cents = detail.price_cents or item.price_cents
+            _price_from(item, detail)
             _apply_detail(item, detail)  # de paso, los colores: los guardados antes de apuntarlos se ponen al día
             _detail_color(item, detail)  # y lo que la ficha sepa para volver a pedirla (Pull&Bear, Bershka)
         db.commit()
@@ -1980,7 +2082,7 @@ def prepare_colors(db: Session, items: list[ShopItem] | None = None, limit: int 
     for item in items:
         if item.store not in stores or not item.siblings or blocked_today(db, item.store):
             continue
-        others = [s["product_ref"] for s in item.siblings if s.get("product_ref") and s["product_ref"] != item.product_ref]
+        others = [s["product_ref"] for s in family_of(item) if s["product_ref"] != item.product_ref]
         if not others:
             continue
         rows = {row.product_ref: row for row in db.scalars(select(ShopItem).where(ShopItem.product_ref.in_(others)))}
@@ -2017,7 +2119,8 @@ def _color_ready(db: Session, row: ShopItem) -> bool:
 
 def _fill_photos(db: Session) -> int:
     """Lo que el buscador encontró en lo guardado sin poder bajar sus fotos (un producto de una tienda
-    de navegador sin datos del listado) y se guardó o se dejó buscado: si ya se puede, sus fotos."""
+    de navegador sin datos del listado) y se guardó o se dejó buscado: si ya se puede sin navegador (con lo
+    que guardó el listado), sus fotos. Lo que necesita el navegador lo baja `fetch_missing_photos`."""
     filled = 0
     waiting = db.scalars(select(ShopItem).where(ShopItem.status.in_((SEARCHED, LIKED))))
     for item in waiting:
@@ -2034,10 +2137,124 @@ def _fill_photos(db: Session) -> int:
             continue
         if not item.sizes:
             item.sizes = detail.sizes
+        _price_from(item, detail)
         _apply_detail(item, detail)
         db.commit()
         filled += 1
     return filled
+
+
+# ---------- Las fotos que faltan en lo guardado (tiendas de navegador)
+#
+# Lo que se guarda desde el buscador (o se busca y se queda sin foto) puede ser de una tienda que solo se lee
+# con navegador y cuyo listado no dejó lo necesario (un producto de una consulta antigua): entonces no tiene
+# foto. Un trabajo corto en segundo plano (`photos_soon`) abre el navegador SOLO para esas fichas, una cada
+# vez y con las pausas del propio navegador, y baja sus fotos, tallas y colores. Nunca dentro de una petición
+# HTTP ni con una consulta del catálogo en marcha. Si falla, se reintenta desde el bucle automático, cada vez
+# más espaciado; si la tienda bloquea, se respeta como en el resto (hasta mañana, y el panel lo dice).
+
+PHOTO_JOB_MAX = 8  # fichas por vuelta, como mucho: lo que quede, en la siguiente
+PHOTO_RETRY = timedelta(hours=3)  # tras un intento fallido, lo que se espera (se dobla con cada fallo)…
+PHOTO_RETRY_MAX = timedelta(days=2)  # …hasta este tope
+# item -> (intentos fallidos, último intento). En memoria: al reiniciar la app se prueba otra vez.
+_photo_tries: dict[int, tuple[int, datetime]] = {}
+
+
+def _photo_wait(item_id: int, now: datetime) -> bool:
+    """¿Falló hace poco y aún no toca reintentar?"""
+    tries, last = _photo_tries.get(item_id, (0, None))
+    if not tries or last is None:
+        return False
+    return now - last < min(PHOTO_RETRY * 2 ** (tries - 1), PHOTO_RETRY_MAX)
+
+
+def _photo_failed(item_id: int, now: datetime) -> None:
+    tries, _last = _photo_tries.get(item_id, (0, None))
+    _photo_tries[item_id] = (tries + 1, now)
+
+
+def missing_photos(db: Session, now: datetime | None = None) -> list[ShopItem]:
+    """Lo guardado (buscado o en Me gustan) que sigue sin foto y se puede intentar ya: de una tienda que hoy
+    responde (con navegador en este equipo y sin bloqueo), que no se esté consultando ahora y que no haya
+    fallado hace poco."""
+    now = now or now_utc()
+    crawling = _crawling_stores()
+    found = []
+    for item in db.scalars(select(ShopItem).where(ShopItem.status.in_((SEARCHED, LIKED))).order_by(ShopItem.id)):
+        if _has_photos(item) or item.store not in shops.CONNECTORS or item.store in crawling:
+            continue
+        if _photo_wait(item.id, now) or not reachable(db, item.store):
+            continue
+        found.append(item)
+    return found
+
+
+def fetch_missing_photos(db: Session, limit: int = PHOTO_JOB_MAX, stop=None, today: date | None = None) -> dict:
+    """Baja las fotos (y de paso tallas, colores y precio) de lo guardado que se quedó sin ellas, pidiendo
+    su ficha a la tienda: la que guardó el listado si la hay y, si no, la de verdad, con el navegador en las
+    tiendas que lo necesitan. Una ficha cada vez, como mucho `limit`. Abre su propia sesión de navegador
+    (solo se arranca si alguna ficha lo pide), así que SOLO se llama desde un trabajo en segundo plano
+    (`photos_soon`) o desde los tests. `stop()` corta entre ficha y ficha (ha empezado una consulta).
+
+    Si la tienda bloquea, no se le pide nada más y queda apuntado para el panel (`_note_blocks`). Si la ficha
+    dice que ya no existe, no se toca: la revisión semanal de los «me gusta» lo retira como siempre.
+    Devuelve {"photos": cuántos ya tienen foto, "failed", "errors"}."""
+    today = today or outfits.local_today()
+    result = {"photos": 0, "failed": 0, "errors": []}
+    failed = _failure_log(result)
+    stopped: set[str] = set()
+    with shops.browser.session():
+        for item in missing_photos(db)[:limit]:
+            if stop is not None and stop():
+                break
+            if item.store in stopped or not reachable(db, item.store, today):
+                continue
+            connector = shops.CONNECTORS[item.store]
+            now = now_utc()
+            photos: list[str] = []
+            try:
+                detail = _detail_for(item)
+                if detail is not None and detail.photo_urls:
+                    photos = _save_photos(connector, detail.photo_urls)
+            except (BlockedError, BrowserUnavailable) as exc:
+                stopped.add(item.store)
+                _photo_failed(item.id, now)
+                failed(connector.name, exc)
+                log.info("Compras: sin fotos de %s por ahora: %s", item.product_ref, exc)
+                continue
+            except Exception as exc:
+                if not isinstance(exc, ShopError):
+                    log.exception("Compras: error inesperado al traer las fotos de %s", item.product_ref)
+                _photo_failed(item.id, now)
+                failed(item.name, exc)
+                continue
+            db.refresh(item)  # mientras se hablaba con la tienda ha podido cambiar (quitado, comprado…)
+            if item.status not in (SEARCHED, LIKED) or _has_photos(item) or not photos:
+                for photo_id in photos:
+                    storage.delete(photo_id)
+                if not photos and item.status in (SEARCHED, LIKED) and not _has_photos(item):
+                    _photo_failed(item.id, now)  # ya no existe o no tiene foto de producto: más tarde
+                continue
+            item.photos = photos
+            if detail.sizes or not item.sizes:
+                item.sizes = detail.sizes
+            _price_from(item, detail)
+            _detail_color(item, detail)
+            if item.color in ("", "multicolor") and detail.color_hex:
+                item.color = estimate_color(item.store_color, detail.color_hex)
+            if detail.color_hex:
+                item.store_color_hex = detail.color_hex
+            description = " ".join((detail.description or "").split())[:DESCRIPTION_MAX]
+            if description and description not in (item.details or ""):
+                item.details = f"{item.details or ''} {description}".strip()
+            _apply_detail(item, detail)
+            _photo_tries.pop(item.id, None)
+            db.commit()
+            result["photos"] += 1
+    _note_blocks(db, today)
+    if result["photos"] or result["failed"]:
+        log.info("Compras: fotos que faltaban (%s bajadas, %s fallos)", result["photos"], result["failed"])
+    return result
 
 
 def needs_top_up(db: Session) -> bool:
@@ -2188,7 +2405,7 @@ def lookup(db: Session, query: str, today: date | None = None) -> list[ShopItem]
     finally:
         _lookup_lock.release()
     if any(not _has_photos(item) for item in items):
-        top_up_soon()  # lo que se ha quedado sin foto, en segundo plano en cuanto se pueda
+        photos_soon()  # lo que se ha quedado sin foto, en segundo plano en cuanto se pueda
     pending = [item.id for item in items if _foreign(item.store, item.url) and not item.translated]
     worker = translate_soon(pending) if pending else None
     if worker is not None:
@@ -2221,7 +2438,7 @@ def _mark_searched(db: Session, row: ShopItem, before: str | None, detail, photo
         # Un candidato del catálogo guardado vuelve a serlo (sin fotos) si no se hace nada con él.
         row.prev_status = before
     row.can_undo = False
-    row.price_cents = detail.price_cents or row.price_cents
+    _price_from(row, detail)
     row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, detail.in_stock
     _detail_color(row, detail)
     if row.color in ("", "multicolor") and detail.color_hex:
@@ -2271,7 +2488,7 @@ def ensure_colors(db: Session, item: ShopItem) -> ShopItem:
         _apply_detail(item, detail)
         if detail.sizes:
             item.sizes = detail.sizes
-        item.price_cents = detail.price_cents or item.price_cents
+        _price_from(item, detail)
     db.commit()
     return item
 
@@ -2282,6 +2499,9 @@ def _sibling_product(item: ShopItem, sibling: dict) -> shops.ShopProduct:
     return shops.ShopProduct(
         store=item.store, product_ref=sibling["product_ref"], name=item.name,
         price_cents=sibling.get("price_cents") or item.price_cents, url=sibling.get("url") or item.url,
+        # La rebaja de ese color, si la lista de colores la dice; si no, se sabrá con su ficha.
+        old_price_cents=sibling.get("old_price_cents") if sibling.get("price_cents") else None,
+        old_price_known=bool(sibling.get("price_cents")) and "old_price_cents" in sibling,
         store_color=name, section=item.section, type=item.type, category=item.category,
         color=estimate_color(name, sibling.get("hex")), pattern=item.pattern, style=item.style,
         season=item.season, details=item.details or "", store_data=dict(sibling.get("store_data") or {}),
@@ -2302,7 +2522,7 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
     today = today or outfits.local_today()
     if product_ref == item.product_ref:
         return item
-    sibling = next((s for s in item.siblings or [] if s.get("product_ref") == product_ref), None)
+    sibling = next((s for s in family_of(item) if s["product_ref"] == product_ref), None)
     if sibling is None:
         raise ColorFailed("Ese color no está entre los de esta prenda")
     target = db.scalars(select(ShopItem).where(ShopItem.product_ref == product_ref)).first()
@@ -2319,7 +2539,11 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
             if detail is None:
                 detail = connector.detail(sibling.get("store_data") or {})
             if detail is None or not detail.photo_urls:
-                raise ColorFailed("Ese color ya no está en la tienda")
+                # La tienda ha contestado y ese color no se puede enseñar: su circulito se quita.
+                _forget_color(db, item, product_ref)
+                if detail is None:
+                    raise ColorFailed("Ese color ya no está en la tienda")
+                raise ColorFailed("Ese color no tiene foto de producto en la tienda")
             photos = _save_photos(connector, detail.photo_urls)
         except ColorFailed:
             raise
@@ -2337,12 +2561,10 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
         if target is not None:  # lo que guardó el listado de ese color (su instantánea) no se pierde
             product.store_data = {**product.store_data, **(target.store_data or {})}
         target = _store_fetched(db, target, product, detail, photos, today, Context.load(db))
-    # Es la misma familia de colores: el que se elige enseña todos los que enseñaba el anterior, aunque
-    # su ficha en la tienda nombre menos.
-    family = _merge_siblings(target.siblings, item.siblings)
-    if family != (target.siblings or []):
-        target.siblings = family
-        db.commit()
+    # Es la misma familia de colores: el que se elige y el que se deja enseñan los mismos, aunque la
+    # ficha de uno nombre menos que la del otro.
+    _share_family(item, target)
+    db.commit()
     if item.status == NEW and target.status in (NEW, SEARCHED, VARIANT):
         target.status, target.batch, target.can_undo = NEW, item.batch, False
         item.status = VARIANT
@@ -2540,7 +2762,7 @@ def _lookup_saved(db: Session, query: str, today: date) -> list[ShopItem]:
     """El buscador mira primero en lo guardado. Lo que ya tiene fotos se devuelve tal cual; a lo demás
     (un candidato del catálogo, algo descartado o caducado) se le baja la ficha y las fotos como en el
     buscador normal. Si es de una tienda de navegador y el listado no guardó lo necesario, sale sin foto
-    (`photos` vacío): se bajan en segundo plano en cuanto se pueda (ver `_fill_photos`).
+    (`photos` vacío): se bajan en segundo plano en cuanto se pueda (ver `fetch_missing_photos`).
     [] si no hay nada guardado que encaje: entonces se pregunta a las tiendas."""
     found = saved_matches(db, query)
     if not found:
@@ -2673,8 +2895,9 @@ _running = threading.Event()  # hay un «Ver más» en marcha (la reserva no se 
 _stop = threading.Event()
 _worker: threading.Thread | None = None
 _scheduler: threading.Thread | None = None
-_job = "mas"  # qué trabajo corto está en marcha: un ver «mas» o la «reserva»
+_job = "mas"  # qué trabajo corto está en marcha: un ver «mas», la «reserva» o las «fotos» que faltan
 _reserve_filter: dict | None = None  # la reposición en marcha es la de este filtro de Descubrir
+_photos_wanted = threading.Event()  # se han pedido las fotos que faltan y aún no se ha lanzado el trabajo
 
 _crawl_lock = threading.Lock()
 _crawl_running = threading.Event()
@@ -2719,7 +2942,7 @@ def _run_locked(job, kind: str) -> None:
     reserva no (solo usa lo que guardó el listado)."""
     try:
         with SessionLocal() as db:
-            if kind == "mas":
+            if kind in ("mas", "fotos"):
                 with shops.browser.session():
                     job(db)
             else:
@@ -2732,6 +2955,8 @@ def _run_locked(job, kind: str) -> None:
         _running.clear()
         _lock.release()
     translate_soon()
+    if kind != "fotos" and _photos_wanted.is_set():
+        photos_soon()  # alguien pidió fotos mientras este trabajo tenía el cerrojo
 
 
 def refilling() -> dict | None:
@@ -2763,6 +2988,8 @@ def _run_crawl(stores: list[str] | None, night: bool) -> None:
         _crawl_lock.release()
     translate_soon()
     top_up_soon(force=True)  # los colores de las propuestas nuevas y lo que falte en la reserva
+    if _photos_wanted.is_set():
+        photos_soon()  # si la reserva tiene el cerrojo, se lanza cuando acabe (ver `_run_locked`)
 
 
 def start_refresh(stores: list[str] | None = None, night: bool = False) -> bool:
@@ -2792,6 +3019,35 @@ def cancel_refresh() -> bool:
 def start_more(store: str | None = None, category: str | None = None) -> bool:
     """Lanza un «Ver más» en un hilo aparte y vuelve ya. False si ya había un trabajo corto en marcha."""
     return _start(lambda db: more(db, store, category), "mas")
+
+
+def photos_soon() -> bool:
+    """Lanza en segundo plano el trabajo que baja las fotos que faltan en lo guardado (`fetch_missing_photos`),
+    si hay algo que bajar. Solo con el bucle automático encendido (`ARMARIO_SHOP_AUTO=0`: nada). Si hay otro
+    trabajo corto en marcha, queda pedido y se lanza al acabar ese; con una consulta del catálogo en marcha,
+    al acabar la consulta (no se abre un segundo navegador ni se le pisa). False si no se lanza ahora."""
+    if not config.SHOP_AUTO:
+        return False
+    _photos_wanted.set()
+    if _crawl_running.is_set():
+        return False
+    try:
+        with SessionLocal() as db:
+            if not missing_photos(db):
+                _photos_wanted.clear()
+                return False
+    except Exception:
+        log.exception("Compras: no se pudo mirar qué fotos faltan")
+        return False
+    if _start(lambda db: fetch_missing_photos(db, stop=_crawl_running.is_set), "fotos"):
+        _photos_wanted.clear()
+        return True
+    return False
+
+
+def photos_running() -> bool:
+    """¿Está en marcha el trabajo de las fotos que faltan (con el navegador quizá abierto)?"""
+    return _lock.locked() and _job == "fotos"
 
 
 def top_up_soon(force: bool = False, store: str | None = None, category: str | None = None) -> bool:
@@ -2833,8 +3089,9 @@ def _loop() -> None:
         try:
             with SessionLocal() as db:
                 clean_lookups(db)
-                # Como mucho dos tiendas por noche y una pesada: las demás, la noche siguiente.
-                due = [] if _crawl_running.is_set() else tonight(db)
+                # Como mucho dos tiendas por noche y una pesada: las demás, la noche siguiente. Si se están
+                # bajando las fotos que faltan (con el navegador), la consulta espera a la vuelta siguiente.
+                due = [] if _crawl_running.is_set() or photos_running() else tonight(db)
             translate_soon()  # lo que se quedara sin traducir (la IA falló o estaba ocupada)
             if due:
                 if start_refresh(due, night=True):
@@ -2842,6 +3099,7 @@ def _loop() -> None:
                         note_tonight(db, due)
             else:
                 top_up_soon()
+                photos_soon()  # lo guardado sin foto (si la reserva está en marcha, va detrás)
         except Exception:
             log.exception("Compras: fallo en el bucle de las consultas")
 

@@ -104,6 +104,10 @@ def entries(item: dict) -> list[Entry]:
             id=f"{product_id}-{group}-{code}",
             name=fix_text(item.get("name")),
             price_cents=price,
+            # Rebajado: `prices.promo` (el de ahora) por debajo de `prices.base` (el de siempre). Visto en los
+            # listados guardados (39,90 € con 49,90 € antes).
+            old_price_cents=euros((prices.get("base") or {}).get("value")) if prices.get("promo") else None,
+            old_price_known=True,
             url=link(code),
             color=fix_text(color.get("name")).capitalize(),
             photos=photos,

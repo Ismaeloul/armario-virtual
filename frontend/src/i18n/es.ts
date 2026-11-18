@@ -42,6 +42,13 @@ export const t = {
     meGustanN: (n: number) => (n > 0 ? `Me gustan (${n})` : "Me gustan"),
     tiendas: "Tiendas",
     precio: (centimos: number) => `${Math.floor(centimos / 100)},${String(centimos % 100).padStart(2, "0")} €`,
+    // Ofertas: solo cuando la tienda dice que está rebajado. Entre la cifra y el «%», un espacio que no se parte.
+    oferta: {
+      descuento: (porcentaje: number) => `−${porcentaje} %`,
+      aria: (antes: string, ahora: string, porcentaje: number) =>
+        `Rebajado un ${porcentaje} %: antes ${antes}, ahora ${ahora}`,
+      texto: (ahora: string, antes: string, porcentaje: number) => `${ahora} (antes ${antes}, −${porcentaje} %)`,
+    },
     verEn: (tienda: string) => `Ver en ${tienda}`,
     tallaEscrita: "O escríbela (M, 42…)",
     quedan: (n: number) => (n === 1 ? "Última propuesta" : `${n} propuestas por ver`),
@@ -174,6 +181,8 @@ export const t = {
       analizando: "Analizando las fotos…",
       analizandoTexto: "La IA rellena la ficha con las fotos de la tienda. Puede tardar unos segundos.",
       errorComprar: "No se pudo pasar al armario. Inténtalo de nuevo.",
+      fotoPendiente: "La foto está de camino: la bajo de la tienda en segundo plano y aparecerá aquí sola.",
+      sinFoto: "Foto pendiente",
     },
     panel: {
       titulo: "Tiendas",
@@ -235,7 +244,7 @@ export const t = {
       enMeGustan: "Está en Me gustan",
       enArmario: "Está en tu armario",
       verFicha: "Ver la ficha",
-      fotoPendiente: "La foto llegará en un rato: esta tienda solo se lee de noche.",
+      fotoPendiente: "La foto está de camino: la bajo de la tienda en segundo plano y aparecerá aquí sola.",
     },
     visor: {
       pista: "Desliza hacia arriba para ver los datos",
@@ -529,7 +538,7 @@ export const t = {
     olvidar: "Borrar lo aprendido",
     olvidarConfirmar: "Toca otra vez para confirmar",
     olvidado: "Hecho. El algoritmo empieza de cero.",
-    version: "Armario · v0.4.9",
+    version: "Armario · v0.4.10",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",

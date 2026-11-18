@@ -35,7 +35,7 @@ from urllib.parse import urlsplit
 
 from ... import config
 from . import browser, crawl
-from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_shoe_type
 from .estimate import estimate_style
 from .fetch import IMAGE, Fetcher, read_html
@@ -122,7 +122,8 @@ def make_product(item: dict, section: str) -> ShopProduct | None:
     copy = item.get("copy") or {}
     title = _clean(copy.get("title") or (item.get("productInfo") or {}).get("title"))
     subtitle = _clean(copy.get("subTitle") or (item.get("productInfo") or {}).get("subtitle"))
-    price = _cents((item.get("prices") or {}).get("currentPrice"))
+    prices = item.get("prices") or {}
+    price = _cents(prices.get("currentPrice"))
     pdp = item.get("pdpUrl") or {}
     url = str(pdp.get("url") if isinstance(pdp, dict) else pdp or "")
     if not _CODE.fullmatch(code) or not title or price is None or _NOT_SHOES.search(f"{title} {subtitle}"):
@@ -143,6 +144,9 @@ def make_product(item: dict, section: str) -> ShopProduct | None:
         product_ref=f"nike:{code}",
         name=name,
         price_cents=price,
+        # Rebajada: `initialPrice` (el de antes) mayor que `currentPrice` (con `discountPercentage`).
+        old_price_cents=old_price(price, _cents(prices.get("initialPrice"))),
+        old_price_known=True,
         url=url,
         store_color=description[:60],
         section=section,
@@ -283,8 +287,11 @@ def parse_product_page(data: dict) -> tuple[dict, ShopDetail] | None:
         "displayColors": {"colorDescription": selected.get("colorDescription")},
         "brand": brands[0] if brands else None,
     }
+    prices = selected.get("prices") or {}
     detail = ShopDetail(
-        price_cents=_cents((selected.get("prices") or {}).get("currentPrice")),
+        price_cents=_cents(prices.get("currentPrice")),
+        old_price_cents=old_price(_cents(prices.get("currentPrice")), _cents(prices.get("initialPrice"))),
+        old_price_known=True,
         sizes=[],  # la página no dice qué tallas quedan: sin tallas (ver arriba)
         photo_urls=_photos(selected.get("contentImages") or []),
         description=_clean(info.get("productDescription")),

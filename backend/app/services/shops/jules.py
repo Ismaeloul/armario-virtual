@@ -17,7 +17,7 @@ import html
 import re
 
 from .base import ShopDetail, ShopProduct
-from .sfra import SfraConnector, SfraSite, cents, color_values, make_product, sizes_of, text_of, tiles
+from .sfra import SfraConnector, SfraSite, cents, color_values, list_price, make_product, sizes_of, text_of, tiles
 
 ORIGIN = "https://www.jules.com"
 PHOTO = "sw=1300&sh=1500&sm=fit"
@@ -106,6 +106,8 @@ def parse_variation(product: dict, store_data: dict | None = None) -> ShopDetail
     composition = " ".join(str(product.get("composition") or "").split()).rstrip(".")
     return ShopDetail(
         price_cents=cents(sales),
+        old_price_cents=list_price(product),
+        old_price_known=True,
         sizes=sizes_of(product),
         photo_urls=photos,
         description=text_of(str(product.get("longDescription") or ""))[:400],

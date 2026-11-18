@@ -23,7 +23,7 @@ from urllib.parse import urlsplit
 
 from ... import catalog, config
 from . import browser, crawl
-from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_style, estimate_type
 from .estimate import sentence_case
 from .fetch import IMAGE, Fetcher
@@ -87,6 +87,10 @@ class Entry:
     hint: str = ""  # la categoría de la tienda, para el tipo si el nombre no lo dice
     color_hint: str = ""  # otra forma de decir el color («BLACK»), por si el nombre no dice nada conocido
     sold_out: bool = False
+    # Ofertas: el precio de antes si la tienda dice que está rebajado, y si su listado sabe decirlo (Uniqlo,
+    # COS, Weekday). En H&M y Mango no se ha visto ninguno rebajado: no se sabe qué campo lo diría.
+    old_price_cents: int | None = None
+    old_price_known: bool = False
 
 
 def snapshot(entry: Entry, now: float | None = None) -> dict:
@@ -125,6 +129,8 @@ def make_product(store: str, store_name: str, entry: Entry, section: str, defaul
         product_ref=f"{store}:{entry.id}",
         name=name,
         price_cents=entry.price_cents,
+        old_price_cents=old_price(entry.price_cents, entry.old_price_cents),
+        old_price_known=entry.old_price_known,
         url=entry.url,
         store_color=color,
         section=section,

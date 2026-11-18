@@ -1945,8 +1945,28 @@ def test_un_color_elegido_fuera_de_descubrir_llega_como_buscado_y_se_puede_guard
     connector.gone.add("gris")
     assert client.post(color, json={"product_ref": "zara:gris"}).status_code == 404
     connector.gone.clear()
+
+    # Un color que la tienda ya no tiene deja de ofrecerse, en todos los de su familia: el circulito no
+    # se queda ahí dando el mismo error. Vuelve cuando la ficha lo nombra otra vez (consulta semanal).
+    def circulitos(ref):
+        with SessionLocal() as db:
+            row = db.scalars(select(ShopItem).where(ShopItem.product_ref == ref)).one()
+            return [c["product_ref"] for c in shopping.colors_of(row)]
+
+    def releer():
+        with SessionLocal() as db:
+            row = db.get(ShopItem, blanca["id"])
+            shopping._apply_detail(row, connector.detail(row.store_data))
+            db.commit()
+
+    assert circulitos("zara:blanca") == circulitos("zara:negra") == ["zara:blanca", "zara:negra"]
+    releer()
+    assert circulitos("zara:blanca") == ["zara:blanca", "zara:gris", "zara:negra"]
     connector.details["gris"] = ShopDetail(price_cents=None, sizes=[], photo_urls=[])  # sin foto de producto
-    assert client.post(color, json={"product_ref": "zara:gris"}).status_code == 404
+    sin_foto = client.post(color, json={"product_ref": "zara:gris"})
+    assert sin_foto.status_code == 404 and "foto de producto" in sin_foto.json()["detail"]
+    assert circulitos("zara:blanca") == ["zara:blanca", "zara:negra"]
+    releer()
     connector.details["gris"] = ShopDetail(
         price_cents=4995, sizes=[{"name": "L", "in_stock": True}], photo_urls=["https://fotos.test/gris-e1.jpg"],
     )

@@ -148,10 +148,11 @@ def test_la_ficha_de_courir_da_fotos_de_producto_tallas_color_y_otros_colores():
     assert all("sw=1200&sh=1200" in u for u in detail.photo_urls)
     assert detail.sizes[:2] == [{"name": "40 2/3", "in_stock": True}, {"name": "41 1/3", "in_stock": True}]
     assert detail.price_cents == 9000 and detail.store_color == "marron/blanc" and detail.store_data == {"model": "IF6490"}
+    # De los cuatro enlaces de «Couleur», tres son esta zapatilla; el cuarto es otra (la de nobuk).
     assert [(s["product_ref"], s["name"]) for s in detail.siblings] == [
-        ("courir:1514875", "Marron"), ("courir:1603583", "Argenté"), ("courir:1608470", "Beige"),
-        ("courir:1608473", "Beige"),
+        ("courir:1514875", "Marron"), ("courir:1603583", "Argenté"), ("courir:1608473", "Beige"),
     ]
+    assert "handball-spezial-nubuck-1608470" in _texto("courir_producto.html")
     assert detail.description.startswith("Redécouvrez un classique")
     assert courir.parse_product_page("<html>nada</html>") is None
 

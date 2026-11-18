@@ -24,7 +24,7 @@ from urllib.parse import urlsplit
 
 from ... import config
 from . import browser, crawl
-from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_shoe_type
 from .estimate import estimate_style, title_case
 from .fetch import IMAGE, Fetcher
@@ -145,8 +145,16 @@ def listing_snapshot(hit: dict) -> dict:
     }
 
 
+def _euros(value) -> int | None:
+    try:
+        return round(float(value) * 100)
+    except (TypeError, ValueError):
+        return None
+
+
 def make_product(*, object_id: str, name: str, brand: str, colour: str, price: float | int | None, slug: str,
-                 section: str, product_ref: str | None, age_days=None, snap: dict | None = None) -> ShopProduct | None:
+                 section: str, product_ref: str | None, age_days=None, snap: dict | None = None,
+                 was_price: float | int | None = None) -> ShopProduct | None:
     shown_brand = brand_name(brand)
     clean = _clean_name(name, shown_brand)
     shoe_type = estimate_shoe_type(f"{name} {section}")
@@ -162,6 +170,9 @@ def make_product(*, object_id: str, name: str, brand: str, colour: str, price: f
         product_ref=f"jdsports:{object_id}",
         name=clean,
         price_cents=cents,
+        # Rebajada: el listado trae `wasPrice` (el de antes, en euros) junto a `price` y `discountPct`.
+        old_price_cents=old_price(cents, _euros(was_price)),
+        old_price_known=True,
         url=product_url(slug, object_id),
         store_color=colour[:1].upper() + colour[1:],
         section=section,
@@ -190,7 +201,7 @@ def parse_listing(results: dict, section: str) -> list[ShopProduct]:
             object_id=str(hit.get("objectID") or ""), name=str(hit.get("name") or ""), brand=brand,
             colour=str(hit.get("colour") or ""), price=hit.get("price"), slug=str(hit.get("slug") or ""),
             section=section, product_ref=str(hit.get("productRef") or "") or None, age_days=hit.get("ageDaysRound"),
-            snap=listing_snapshot(hit),
+            snap=listing_snapshot(hit), was_price=hit.get("wasPrice"),
         )
         if product and product.product_ref not in refs:
             refs.add(product.product_ref)
@@ -245,11 +256,14 @@ def parse_product(data: dict) -> ShopDetail | None:
             "url": BASE + path, "store_data": {"id": object_id, "slug": match.group(1), "ref": None},
         })
     price = (product.get("minPrice") or {}).get("centAmount")
+    was = (product.get("minWasPrice") or {}).get("centAmount")  # el de antes, si está rebajada
     code = str(product.get("productCode") or "")
     ref = code.rsplit("/", 1)[-1] if "/" in code else None
     colour = str(product.get("colour") or "")
     return ShopDetail(
         price_cents=price if isinstance(price, int) and price > 0 else None,
+        old_price_cents=old_price(price, was),
+        old_price_known=True,
         sizes=sizes,
         photo_urls=photos,
         description=" ".join(str(product.get("description") or "").replace("*", " ").split()),

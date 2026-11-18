@@ -60,6 +60,8 @@ class ShopItemOut(BaseModel):
     name: str  # en español si se ha podido traducir
     name_original: str | None  # el nombre como lo escribe la tienda, si se enseña traducido
     price_cents: int
+    # El precio de antes (tachado), solo si la tienda dice que está rebajado; None si no hay oferta.
+    old_price_cents: int | None = None
     url: str
     store_color: str  # en español: traducido o, mientras llega, el de nuestra paleta
     type: str
@@ -288,6 +290,7 @@ def _to_out(item: ShopItem) -> ShopItemOut:
         name=item.name_es or item.name,
         name_original=item.name if item.name_es and item.name_es != item.name else None,
         price_cents=item.price_cents,
+        old_price_cents=shops.old_price(item.price_cents, item.old_price_cents),
         url=item.url,
         store_color=shopping.shown_color(item),
         type=item.type,
@@ -523,6 +526,15 @@ def lookup(body: LookupIn, db: Session = Depends(get_db)):
 
 
 _COLOR_STATUS = {"nada": 404, "tienda": 503}
+
+
+@router.get("/items", response_model=list[ShopLookupOut])
+def items(ids: str = Query(max_length=400, pattern=r"^\d+(,\d+)*$"), db: Session = Depends(get_db)):
+    """Unos items concretos como están ahora (`?ids=3,8`), para ver si ya ha llegado la foto que faltaba
+    (`photo_pending`) sin volver a pedir la lista entera. Los que ya no existen no salen."""
+    wanted = list(dict.fromkeys(int(value) for value in ids.split(",")))[:50]
+    found = {item.id: item for item in db.scalars(select(ShopItem).where(ShopItem.id.in_(wanted)))}
+    return [_lookup_out(db, found[item_id]) for item_id in wanted if item_id in found]
 
 
 @router.post("/items/{item_id}/colors", response_model=ShopLookupOut)

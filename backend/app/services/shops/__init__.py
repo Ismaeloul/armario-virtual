@@ -24,7 +24,7 @@ from . import browser, crawl
 from .base import BlockedError, BrowserUnavailable, NeedsBrowser, NotThisStore, SearchError, ShopConnector, ShopDetail
 from .base import ShopError, ShopProduct
 from .crawl import Cancelled, Partial
-from .base import maker_key
+from .base import maker_key, old_price
 from .bershka import BershkaConnector
 from .bonobo import BonoboConnector
 from .carhartt import CarharttConnector
@@ -132,5 +132,5 @@ def cached_detail(key: str, store_data: dict):
 __all__ = [
     "CONNECTORS", "BlockedError", "BrowserUnavailable", "Cancelled", "NeedsBrowser", "NotThisStore", "Partial",
     "SearchError", "ShopConnector", "ShopDetail", "ShopError", "ShopProduct", "cached_detail", "crawl", "heavy",
-    "kinds", "maker_code", "maker_key", "needs_browser", "unavailable",
+    "kinds", "maker_code", "maker_key", "needs_browser", "old_price", "unavailable",
 ]

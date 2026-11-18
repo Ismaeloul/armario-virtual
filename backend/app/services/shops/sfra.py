@@ -22,7 +22,7 @@ from urllib.parse import urlsplit
 
 from ... import catalog, config
 from . import browser, crawl
-from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import estimate_color, estimate_pattern, estimate_season, estimate_style, estimate_type
 from .fetch import IMAGE, Fetcher
 
@@ -70,6 +70,14 @@ def cents(value) -> int | None:
     except (TypeError, ValueError):
         return None
     return price if price > 0 else None
+
+
+def list_price(product: dict) -> int | None:
+    """El precio de antes de la rebaja en la ficha (`Product-Variation`): `price.list` junto a `price.sales`
+    (el de ahora). Visto en Bonobo (59,99 € antes, 41,99 € ahora, con `percent`); en Jules el campo llega
+    a null cuando no hay rebaja. La rejilla no lo dice."""
+    price = (product or {}).get("price") or {}
+    return old_price(cents((price.get("sales") or {}).get("value")), cents((price.get("list") or {}).get("value")))
 
 
 def tiles(page: str) -> list[tuple[str, str]]:

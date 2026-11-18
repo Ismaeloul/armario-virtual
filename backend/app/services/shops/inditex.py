@@ -30,7 +30,7 @@ from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 
 from ... import catalog, config
 from . import browser, crawl
-from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import estimate_color, estimate_pattern, estimate_season, estimate_style, estimate_type
 from .estimate import sentence_case
 from .fetch import IMAGE, Fetcher
@@ -101,6 +101,24 @@ def _price(color: dict) -> int | None:
             continue
     prices = [p for p in prices if p > 0]
     return min(prices) if prices else None
+
+
+def _old_price(color: dict) -> int | None:
+    """El precio de antes de la rebaja, como lo dice la tienda: cada talla trae `price` y, si está rebajada,
+    `oldPrice` («3599» y «5999», visto en la misma plataforma con Stradivarius; en Pull&Bear, Bershka,
+    Massimo Dutti y Lefties el campo está, a null, en los listados guardados). El de las tallas que van al
+    precio de ahora (el más bajo); None si ninguna lo dice."""
+    current = _price(color)
+    olds = []
+    for size in color.get("sizes") or []:
+        try:
+            price = int(str((size or {}).get("price") or "").strip())
+            before = int(str((size or {}).get("oldPrice") or "").strip())
+        except ValueError:
+            continue
+        if price == current:
+            olds.append(before)
+    return old_price(current, max(olds)) if olds else None
 
 
 def _sizes(color: dict) -> list[list]:
@@ -186,6 +204,7 @@ def snapshot(product: dict, site: InditexSite, now: float | None = None) -> dict
             "id": color_id,
             "name": " ".join(str(color.get("name") or "").split()),
             "price": _price(color),
+            "old": _old_price(color),  # el de antes, si está rebajado (None si no)
             "sizes": _sizes(color),
             "photos": photos,
             "model": model,
@@ -258,6 +277,8 @@ def make_product(site: InditexSite, product: dict, section: str, default_type: s
         product_ref=f"{site.key}:{summary_id}-{color_id}",
         name=name,
         price_cents=price,
+        old_price_cents=_old_price(color),
+        old_price_known=True,
         url=product_url(site, page, bundle, color_id),
         store_color=store_color,
         section=section,
@@ -320,6 +341,8 @@ def detail_from(site: InditexSite, store_data: dict, snap: dict | None = None) -
             "name": c.get("name") or "",
             "hex": None,
             "price_cents": c.get("price"),
+            # Solo si la instantánea ya lo apuntaba (las guardadas antes de las ofertas no lo traen).
+            **({"old_price_cents": old_price(c.get("price"), c.get("old"))} if "old" in c else {}),
             "url": product_url(site, page, bundle, c["id"]),
             "store_data": {**base, "color": c["id"]},
         }
@@ -328,6 +351,8 @@ def detail_from(site: InditexSite, store_data: dict, snap: dict | None = None) -
     ]
     return ShopDetail(
         price_cents=color.get("price"),
+        old_price_cents=old_price(color.get("price"), color.get("old")),
+        old_price_known="old" in color,
         sizes=[{"name": name, "in_stock": bool(stock)} for name, stock in color.get("sizes") or []],
         photo_urls=[f"{site.media}{path}{'&' if '?' in path else '?'}w={PHOTO_WIDTH}" for path in color.get("photos") or []],
         description=snap.get("desc") or "",

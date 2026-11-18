@@ -94,7 +94,28 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.9** (19-11-2026): al elegir un color en Compras ya no desaparecen los
+- **Publicada en el Umbrel: 0.4.10** (19-11-2026). La 0.4.9 se etiquetó pero NO llegó a la tienda (su
+  arreglo de colores era malo). Lleva:
+  Colores de Compras bien definidos (agente con Fable): en Courir el bloque «Couleur» enlaza TODA la línea
+  del modelo (una Air Force 1 Luxe enlaza 41 productos distintos), no los colores de la zapatilla. Ahora
+  solo cuentan como colores los del mismo modelo (`courir.same_model`: misma dirección de ficha salvo el
+  número; `partial_colors = True`), todo pasa por `shopping.family_of`, y al cambiar de color los dos
+  items comparten familia (`_share_family`), así que volver al anterior no va a la tienda. Si un color no
+  tiene foto de producto lo dice y su circulito se quita (`_forget_color`). Las demás tiendas no cambian.
+  Pendiente: fotos `.png` de Courir (el conector solo reconoce `_101.jpg`; al probar una dio 403).
+  Fotos pendientes: lo guardado o buscado sin foto de una tienda de navegador las baja solo
+  (`shopping.photos_soon` / `fetch_missing_photos`: trabajo corto con su propia sesión de navegador, hasta
+  8 fichas, reintentos cada vez más espaciados; `GET /api/shop/items?ids=` y `usePendingPhotos` para que
+  la foto aparezca sin recargar). Motivo: una Air Force de JD Sports guardada desde el buscador en el
+  Umbrel se quedó sin foto. Sin probar con un navegador real.
+  Ofertas: `shop_items.old_price_cents`, solo de lo que dice la tienda (nunca comparando con otro día);
+  componente `Price` en Descubrir, Me gustan, buscador y visor (etiqueta «−30 %», anterior tachado, actual
+  en `text-danger`). No influye en la puntuación; en el armario no hay precios. Sin forzar consultas
+  (decisión del usuario): lo traen los productos según entran. Implementado en 16 tiendas; SIN precio
+  anterior en Zara, H&M, Mango y Jack & Jones porque no había nada rebajado en los datos para saber el
+  campo: repetir UNA petición a Zara cuando empiece el Black Friday (hacia el 26-11).
+  El botón del corazón de Descubrir va invertido (fondo blanco, corazón verde), a petición del usuario.
+- **Antes: 0.4.9** (solo etiqueta, 19-11-2026): al elegir un color en Compras ya no desaparecen los
   demás. En Courir la ficha de cada color solo enlaza a unos pocos hermanos (la Dunk gris nombra diez; la
   beige, dos), y la app se quedaba con la lista corta. Ahora los colores conocidos se conservan
   (`_merge_siblings` en `shopping.py`, en `switch_color` y en `_apply_detail`). Un color que deje de

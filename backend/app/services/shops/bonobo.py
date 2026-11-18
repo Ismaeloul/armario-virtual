@@ -19,7 +19,7 @@ import re
 from . import browser
 from .base import ShopDetail, ShopProduct
 from .estimate import norm, sentence_case
-from .sfra import SfraConnector, SfraSite, cents, color_values, make_product, sizes_of, text_of, tiles
+from .sfra import SfraConnector, SfraSite, cents, color_values, list_price, make_product, sizes_of, text_of, tiles
 
 ORIGIN = "https://www.bonoboplanet.com"
 IMAGES = f"{ORIGIN}/dw/image/v2/BCHM_PRD"
@@ -191,6 +191,8 @@ def parse_variation(product: dict, store_data: dict | None = None) -> ShopDetail
     sales = ((product.get("price") or {}).get("sales") or {}).get("value")
     return ShopDetail(
         price_cents=cents(sales),
+        old_price_cents=list_price(product),
+        old_price_known=True,
         sizes=sizes_of(product),
         photo_urls=photos,
         description=description[:400],

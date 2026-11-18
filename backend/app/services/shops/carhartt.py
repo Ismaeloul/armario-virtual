@@ -25,7 +25,7 @@ from urllib.parse import urlsplit
 
 from ... import catalog, config
 from . import crawl
-from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import estimate_color, estimate_pattern, estimate_season, estimate_style, estimate_type
 from .fetch import IMAGE, Fetcher, read_html
 
@@ -134,6 +134,9 @@ def make_product(tile: dict, section: str) -> ShopProduct | None:
     name = name or " ".join(str(tile.get("productTitle") or "").split())
     discounted = tile.get("discountedPrice")
     price = _cents(discounted) if isinstance(discounted, (int, float)) else None
+    # Con rebaja, `discountedPrice` es el precio de ahora y `price` el de siempre (el que se tacha); sin ella,
+    # `discountedPrice` llega como «$undefined». No se ha visto ninguna rebajada en los datos guardados.
+    old = old_price(price, _cents(tile.get("price"))) if price else None
     price = price or _cents(tile.get("price"))
     garment_type = _type(name, str(tile.get("categoryUrlAnalytics") or ""), section)
     if not name or garment_type is None or price is None:
@@ -144,6 +147,8 @@ def make_product(tile: dict, section: str) -> ShopProduct | None:
         product_ref=f"carhartt:{key}",
         name=name,
         price_cents=price,
+        old_price_cents=old,
+        old_price_known=True,
         url=url,
         store_color=colour[:60],
         section=section,
@@ -355,6 +360,7 @@ class CarharttConnector:
         product = make_product(tile, "")
         if product is None:
             raise SearchError("Eso no es una prenda que quepa en el armario")
+        product.old_price_known = False  # la ficha solo da el precio de ahora: no sabe si hay rebaja
         return [product]
 
     def download(self, url: str) -> bytes:

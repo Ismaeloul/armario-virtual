@@ -76,6 +76,10 @@ def entry(raw: dict) -> Entry | None:
         id=sku,
         name=fix_text(raw.get("name")),
         price_cents=euros(pricing.get("priceAsNumber")),
+        # Rebajado: `priceBeforeDiscountAsNumber` (el de antes de la rebaja, igual a `originalPrice`) mayor que
+        # `priceAsNumber`, con `isOnSale`. Visto en un listado guardado (45 € con 89,99 € antes).
+        old_price_cents=euros(pricing.get("priceBeforeDiscountAsNumber")),
+        old_price_known=True,
         url=BASE + str(raw.get("url") or ""),
         color=fix_text(raw.get("variantName")),
         hex=hex_color((media.get("swatch") or {}).get("hex")),

@@ -28,6 +28,7 @@ import {
 type View = "descubrir" | "gustados";
 
 const POLL_MS = 4000; // cada cuánto se pregunta cómo va la consulta (o el «Ver más») en marcha
+const PHOTO_POLL_MS = 20_000; // cada cuánto se mira si ha llegado la foto que faltaba (se baja en segundo plano)
 const REASON_DONE_MS = 1500;
 // «Es caro» no se ofrece: el usuario no quiere que el precio sea un motivo.
 const REASONS: ShopDiscardReason[] = ["estilo", "color", "ya_tengo"];
@@ -52,6 +53,32 @@ function dayLabel(iso: string): string {
 }
 
 const dayMonth = (iso: string) => new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "long" });
+
+/**
+ * Mientras alguno de `items` espera su foto (`photo_pending`: se está bajando en segundo plano), pregunta de vez
+ * en cuando por ESOS items y pasa a `onArrived` los que ya la tienen. No recarga la lista entera, y con la
+ * pestaña del navegador escondida no pregunta.
+ */
+function usePendingPhotos(items: ShopItem[] | null, onArrived: (fresh: ShopLookupItem[]) => void) {
+  const ids = (items ?? []).filter((item) => item.photo_pending).map((item) => item.id).join(",");
+  const arrived = useRef(onArrived);
+  arrived.current = onArrived;
+  useEffect(() => {
+    if (!ids) return;
+    const wanted = ids.split(",").map(Number);
+    const timer = window.setInterval(() => {
+      if (document.hidden) return;
+      api
+        .shopItems(wanted)
+        .then((fresh) => {
+          const ready = fresh.filter((item) => !item.photo_pending);
+          if (ready.length > 0) arrived.current(ready);
+        })
+        .catch(() => {}); // sin red: se vuelve a mirar en la siguiente vuelta
+    }, PHOTO_POLL_MS);
+    return () => window.clearInterval(timer);
+  }, [ids]);
+}
 
 /** Pestaña Compras: novedades de las tiendas puntuadas contra el armario. Solo enlaza; nunca compra. */
 export default function Compras() {
@@ -473,14 +500,17 @@ function Discover({
   );
 
   const round =
-    "flex items-center justify-center rounded-full shadow-[0_3px_10px_rgb(0_0_0/0.16)] transition-transform active:scale-95 disabled:[&>*]:opacity-40";
+    "flex items-center justify-center rounded-full transition-transform active:scale-95 disabled:[&>*]:opacity-40";
+  // La sombra va aparte: la suave de siempre se pierde alrededor de un botón oscuro, así que el
+  // corazón lleva la de los botones flotantes (más marcada), para que los tres floten igual.
+  const soft = "shadow-[0_3px_10px_rgb(0_0_0/0.16)]";
   const undoButton = (
     <button
       type="button"
       aria-label={t.compras.volverAria}
       disabled={busy || !next.can_undo}
       onClick={undo}
-      className={`${round} h-11 w-11 border border-line bg-card text-text-2`}
+      className={`${round} ${soft} h-11 w-11 border border-line bg-card text-text-2`}
     >
       <Icon name="undo" size={20} />
     </button>
@@ -563,7 +593,7 @@ function Discover({
             aria-label={t.compras.no}
             disabled={busy || colors.pending !== null}
             onClick={() => press(false)}
-            className={`${round} pointer-events-auto h-16 w-16 border border-line bg-card text-danger`}
+            className={`${round} ${soft} pointer-events-auto h-16 w-16 border border-line bg-card text-danger`}
           >
             <Icon name="close" size={30} />
           </button>
@@ -572,7 +602,7 @@ function Discover({
             aria-label={t.compras.si}
             disabled={busy || colors.pending !== null}
             onClick={() => press(true)}
-            className={`${round} pointer-events-auto h-16 w-16 bg-primary text-on-primary`}
+            className={`${round} ${soft} pointer-events-auto h-16 w-16 border border-line bg-card text-primary`}
           >
             <Icon name="favorite_fill" size={30} />
           </button>
@@ -1070,9 +1100,17 @@ function useColors(
         // Si mientras tanto se ha pasado a otra prenda, este color ya no viene a cuento.
         if (current.current?.id === from.id) deliver.current(found, from);
       })
-      .catch((e) =>
-        setError(e instanceof ApiError && [404, 503].includes(e.status) && e.message ? e.message : t.compras.colores.error),
-      )
+      .catch((e) => {
+        setError(e instanceof ApiError && [404, 503].includes(e.status) && e.message ? e.message : t.compras.colores.error);
+        // Ese color ya no existe: el servidor lo ha quitado de la familia, y su circulito se va con él.
+        if (e instanceof ApiError && e.status === 404)
+          api
+            .shopColors(from.id)
+            .then((fresh) => {
+              if (current.current?.id === from.id) deliver.current(fresh, from);
+            })
+            .catch(() => undefined);
+      })
       .finally(() => setPending(null));
   };
   return { pending, error, pick };
@@ -1559,7 +1597,7 @@ function SwipeCard({
           <span className="label-caps min-w-0 truncate text-text-2">
             {[item.store_name, item.brand, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
           </span>
-          <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
+          <Price item={item} />
         </div>
         <button
           type="button"
@@ -1581,6 +1619,52 @@ function SwipeCard({
       </div>
     </div>
   );
+}
+
+type Priced = Pick<ShopItem, "price_cents" | "old_price_cents">;
+
+/** La rebaja de un producto, si la tienda dice que lo está: el precio de antes y el porcentaje. */
+function saleOf(item: Priced): { old: number; off: number } | null {
+  const old = item.old_price_cents;
+  if (!old || old <= item.price_cents) return null;
+  return { old, off: Math.round((1 - item.price_cents / old) * 100) };
+}
+
+/**
+ * El precio de un producto de tienda, el mismo en Descubrir, Me gustan, el buscador y el visor. Si la tienda
+ * dice que está rebajado: el descuento en una etiqueta discreta, el precio de antes tachado (gris y pequeño) y
+ * el de ahora en rojo. Siempre en una línea. `size`: el tamaño del precio de ahora.
+ */
+function Price({ item, size = "text-lg", className = "" }: { item: Priced; size?: string; className?: string }) {
+  const sale = saleOf(item);
+  const now = t.compras.precio(item.price_cents);
+  if (!sale) return <span className={`shrink-0 font-display font-semibold ${size} ${className}`}>{now}</span>;
+  return (
+    <span className={`inline-flex shrink-0 items-baseline gap-1.5 whitespace-nowrap ${className}`}>
+      <span className="sr-only">{t.compras.oferta.aria(t.compras.precio(sale.old), now, sale.off)}</span>
+      {sale.off > 0 && (
+        <span
+          aria-hidden="true"
+          className="self-center rounded-full bg-danger/10 px-1.5 py-0.5 text-[10px] leading-none font-semibold text-danger"
+        >
+          {t.compras.oferta.descuento(sale.off)}
+        </span>
+      )}
+      <s aria-hidden="true" className="text-xs text-text-3">
+        {t.compras.precio(sale.old)}
+      </s>
+      <span aria-hidden="true" className={`font-display font-semibold text-danger ${size}`}>
+        {now}
+      </span>
+    </span>
+  );
+}
+
+/** El precio en texto, para copiarlo: «19,95 € (antes 29,95 €, −33 %)» si está rebajado. */
+function priceText(item: Priced): string {
+  const sale = saleOf(item);
+  const now = t.compras.precio(item.price_cents);
+  return sale ? t.compras.oferta.texto(now, t.compras.precio(sale.old), sale.off) : now;
 }
 
 /** Las tallas en texto, para copiarlas: «S, M, L (agotadas: XL)». */
@@ -1693,7 +1777,7 @@ function PhotoViewer({
     // El de la tienda, si el nombre está traducido: sirve para buscarlo en su web.
     { key: "original", label: t.compras.visor.nombreOriginal, value: item.name_original ?? "" },
     { key: "color", label: t.compras.visor.color, value: item.store_color },
-    { key: "precio", label: t.compras.visor.precio, value: t.compras.precio(item.price_cents) },
+    { key: "precio", label: t.compras.visor.precio, value: priceText(item) },
     // Si la tienda no dice qué tallas quedan (H&M, COS, Uniqlo, Mango, Nike), se dice dónde mirarlas.
     { key: "tallas", label: t.compras.visor.tallas, value: sizes || t.compras.visor.tallasEnTienda },
     { key: "composicion", label: t.compras.visor.composicion, value: item.composition ?? "" },
@@ -1810,7 +1894,7 @@ function PhotoViewer({
                 <span className="label-caps min-w-0 truncate text-text-2">
                   {[item.store_name, item.brand, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
                 </span>
-                <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
+                <Price item={item} />
               </div>
               <h3 className="font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
               {item.name_original && <p className="-mt-0.5 text-[11px] text-text-3">{item.name_original}</p>}
@@ -2003,6 +2087,16 @@ function Liked({ onChanged }: { onChanged: () => void }) {
     api.shopLiked().then(setItems).catch(() => setFailed(true));
   }, []);
   useEffect(load, [load]);
+  // Lo guardado desde el buscador sin foto: en cuanto llega, se cambia esa tarjeta (sin recargar la lista).
+  usePendingPhotos(items, (fresh) =>
+    setItems(
+      (list) =>
+        list?.map((item) => {
+          const now = fresh.find((other) => other.id === item.id);
+          return now && now.status === "gustado" ? now : item;
+        }) ?? null,
+    ),
+  );
 
   const remove = () => {
     if (!removing) return;
@@ -2076,22 +2170,31 @@ function Liked({ onChanged }: { onChanged: () => void }) {
           return (
             <li key={item.id} style={stagger(index)} className="card flex animate-enter flex-col gap-3 p-3.5">
               {/* Tocar la tarjeta (no los botones ni el enlace) abre la foto en grande. */}
-              <div className="flex cursor-pointer gap-3.5" onClick={() => setViewing(item)}>
-                {item.photos[0] && (
+              <div
+                className={`flex gap-3.5 ${item.photos[0] ? "cursor-pointer" : ""}`}
+                onClick={() => item.photos[0] && setViewing(item)}
+              >
+                {item.photos[0] ? (
                   <button
                     type="button"
                     aria-label={t.compras.gustados.verFoto(item.name)}
-                    className="h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-card-2 active:opacity-80"
+                    className="h-32 w-24 shrink-0 animate-fade overflow-hidden rounded-xl bg-card-2 active:opacity-80"
                   >
                     <img src={mediaUrl(item.photos[0].thumb_url)} alt="" className="h-full w-full object-cover" />
                   </button>
+                ) : (
+                  // Guardado desde el buscador sin foto: el hueco de la foto dice que está de camino.
+                  <div className="flex h-32 w-24 shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl bg-card-2 px-2 text-center text-text-3">
+                    <Icon name="schedule" size={22} />
+                    <span className="text-[11px] leading-tight">{t.compras.gustados.sinFoto}</span>
+                  </div>
                 )}
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="label-caps text-text-2">
                     {[item.store_name, item.brand, cap(item.type)].filter(Boolean).join(" · ")}
                   </span>
                   <h3 className="text-base leading-snug font-medium">{item.name}</h3>
-                  <span className="font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
+                  <Price item={item} className="self-start" />
                   {item.expires_soon && (
                     <span className="flex w-fit items-center gap-1 rounded-full bg-danger/10 px-2 py-0.5 text-[11px] font-medium text-danger">
                       <Icon name="schedule" size={13} />
@@ -2104,6 +2207,12 @@ function Liked({ onChanged }: { onChanged: () => void }) {
                   </div>
                 </div>
               </div>
+              {item.photo_pending && (
+                <p className="-mt-1 flex items-start gap-1.5 text-xs text-text-2">
+                  <Icon name="schedule" size={15} className="mt-px shrink-0" />
+                  {t.compras.gustados.fotoPendiente}
+                </p>
+              )}
 
               {open ? (
                 <div className="flex animate-enter flex-col gap-3 border-t border-control pt-3">
@@ -2174,7 +2283,8 @@ function Liked({ onChanged }: { onChanged: () => void }) {
                 <div className="grid grid-cols-[1fr_auto] gap-2">
                   <button
                     type="button"
-                    disabled={buyBusy}
+                    // Sin foto no se puede pasar al armario: espera a que llegue.
+                    disabled={buyBusy || !!item.photo_pending}
                     onClick={() => startBuying(item)}
                     className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-semibold text-on-primary active:scale-[0.98] disabled:opacity-40"
                   >
@@ -2280,6 +2390,12 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
     setResults((list) => list?.map((other, i) => (i === card ? item : other)) ?? null);
     if (saved) onChanged();
   };
+  // Lo que salió sin foto (se baja en segundo plano): en cuanto llega, se cambia esa tarjeta sola.
+  usePendingPhotos(results, (fresh) => {
+    for (const item of fresh) loaded.current.set(item.product_ref, item);
+    setResults((list) => list?.map((card) => fresh.find((item) => item.id === card.id) ?? card) ?? null);
+    if (fresh.some((item) => item.status === "gustado")) onChanged();
+  });
 
   return createPortal(
     <div
@@ -2473,7 +2589,7 @@ function SearchResult({
             {[item.store_name, item.brand, item.store_color].filter(Boolean).join(" · ")}
           </span>
           <h3 className="text-[15px] leading-snug font-medium">{item.name}</h3>
-          <span className="font-display text-base font-semibold">{t.compras.precio(item.price_cents)}</span>
+          <Price item={item} size="text-base" className="self-start" />
           <div className="mt-auto w-fit">
             <StoreLink item={item} />
           </div>

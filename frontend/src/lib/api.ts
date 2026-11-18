@@ -172,6 +172,8 @@ export type ShopItem = {
   /** El nombre como lo escribe la tienda, si `name` está traducido (sirve para buscarlo en su web). */
   name_original: string | null;
   price_cents: number;
+  /** El precio de antes (tachado), solo si la tienda dice que está rebajado; null si no hay oferta. */
+  old_price_cents?: number | null;
   url: string;
   store_color: string;
   type: string;
@@ -417,6 +419,8 @@ export const api = {
   shopReason: (id: number, reason: ShopDiscardReason) =>
     request<void>(`/api/shop/items/${id}/reason`, json("POST", { reason })),
   shopLiked: () => request<ShopItem[]>("/api/shop/liked"),
+  /** Unos items concretos como están ahora: para ver si ya ha llegado la foto que faltaba (`photo_pending`). */
+  shopItems: (ids: number[]) => request<ShopLookupItem[]>(`/api/shop/items?ids=${ids.join(",")}`),
   /** El buscador: una referencia, un enlace de producto o texto. Tarda unos segundos (habla con la tienda). */
   shopLookup: (query: string) => request<ShopLookupItem[]>("/api/shop/lookup", json("POST", { query })),
   /** Rellena los colores de un item que aún no los sabe (pregunta a la tienda una sola vez). */

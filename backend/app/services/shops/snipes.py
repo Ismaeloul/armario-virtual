@@ -25,7 +25,7 @@ from urllib.parse import urlsplit
 
 from ... import config
 from . import browser, crawl
-from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct, old_price
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_shoe_type
 from .estimate import estimate_style
 from .fetch import IMAGE, Fetcher
@@ -80,6 +80,13 @@ def _cents(item: dict) -> int | None:
     return price if isinstance(price, int) and price > 0 else None
 
 
+def _old_cents(item: dict) -> int | None:
+    """El precio de antes de la rebaja: `priceRange.min.beforeSaleWithTax` (céntimos), que la tienda solo
+    rellena si está rebajada (visto en los listados guardados: 8000 con 11499 antes)."""
+    before = ((item.get("priceRange") or {}).get("min") or {}).get("beforeSaleWithTax")
+    return old_price(_cents(item), before)
+
+
 def product_url(path: str) -> str:
     return f"{BASE}{PATH}{path}" if path.startswith("/") else path
 
@@ -117,6 +124,8 @@ def make_product(item: dict, section: str) -> ShopProduct | None:
         product_ref=f"snipes:{product_id}",
         name=name,
         price_cents=price,
+        old_price_cents=_old_cents(item),
+        old_price_known=True,
         url=url,
         store_color=colour[:1].upper() + colour[1:],
         section=section,
@@ -226,6 +235,8 @@ def parse_product(body: dict) -> ShopDetail | None:
     colour = _text(attributes, "color")
     return ShopDetail(
         price_cents=_cents(body),
+        old_price_cents=_old_cents(body),
+        old_price_known=True,
         sizes=sizes,
         photo_urls=_photos(body.get("images") or []),
         description=" ".join(html.unescape(re.sub(r"<[^>]+>", " ", _text(attributes, "description"))).split())[:400],

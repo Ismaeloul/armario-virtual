@@ -136,6 +136,9 @@ class ShopItem(Base):
     product_ref: Mapped[str] = mapped_column(String(80), unique=True, index=True)  # producto + color
     name: Mapped[str] = mapped_column(String(160))
     price_cents: Mapped[int] = mapped_column(Integer)
+    # El precio de antes (tachado), solo si la TIENDA dice que está rebajado y es mayor que el de ahora.
+    # Nunca sale de comparar con lo apuntado otro día. No cuenta para la nota (decisión del usuario).
+    old_price_cents: Mapped[int | None] = mapped_column(Integer, nullable=True)
     url: Mapped[str] = mapped_column(Text)
     store_color: Mapped[str] = mapped_column(String(60), default="")
     store_color_hex: Mapped[str | None] = mapped_column(String(7), nullable=True)
