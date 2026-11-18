@@ -29,8 +29,10 @@ VIEWS = {
 _SESSION_RE = re.compile(r"session id:\s*([0-9a-f-]{20,})", re.I)
 
 
-def build_prompt(view: str, kind: str, others: list[str]) -> str:
-    """`view` es la foto que se edita (la primera adjunta); `others`, las vistas que van de referencia."""
+def build_prompt(view: str, kind: str, others: list[str], feedback: str | None = None,
+                 has_previous: bool = False) -> str:
+    """`view` es la foto que se edita (la primera adjunta); `others`, las vistas que van de referencia.
+    `feedback` es lo que el usuario dice que salió mal en el intento anterior (la última foto, si va)."""
     names = VIEWS[kind]
     lines = [
         "Usa tu herramienta de generación de imágenes para editar la PRIMERA foto adjunta y dejarla como "
@@ -65,6 +67,13 @@ def build_prompt(view: str, kind: str, others: list[str]) -> str:
         "ningún otro objeto. Imagen vertical 3:4 con la prenda centrada y entera. No inventes nada que no "
         "se vea en las fotos."
     )
+    if feedback:
+        lines.append(
+            ("Ya lo intentaste una vez: la ÚLTIMA foto adjunta es tu intento anterior. " if has_previous
+             else "Ya lo intentaste una vez. ")
+            + "El dueño de la prenda dice que no quedó bien por esto: «" + feedback.strip() + "». "
+            "Corrígelo fijándote en la primera foto, que es la que manda."
+        )
     lines.append("Responde con una sola línea.")
     return "\n".join(lines)
 
@@ -82,8 +91,10 @@ def _newest_image(folder: Path, since: float) -> Path | None:
     return max(found, key=lambda p: p.stat().st_mtime, default=None)
 
 
-def product_photo(target: Path, view: str, kind: str, others: list[tuple[str, Path]]) -> bytes:
-    """La foto `target` redibujada como foto de producto. `others` son (vista, foto) de referencia."""
+def product_photo(target: Path, view: str, kind: str, others: list[tuple[str, Path]],
+                  feedback: str | None = None, previous: Path | None = None) -> bytes:
+    """La foto `target` redibujada como foto de producto. `others` son (vista, foto) de referencia.
+    Para rehacerla: `feedback` (qué salió mal) y `previous` (el intento anterior)."""
     binary = shutil.which(config.CODEX_BIN)
     if not binary:
         raise AnalysisError("Codex no está instalado en el servidor")
@@ -93,7 +104,7 @@ def product_photo(target: Path, view: str, kind: str, others: list[tuple[str, Pa
         cmd = [binary, "exec", "--ephemeral", "--skip-git-repo-check",
                "--sandbox", config.CODEX_SANDBOX, "--cd", tmp]
         cmd += codex_models.cli_args(codex_models.ANALYSIS)
-        for image in (target, *(path for _, path in others)):
+        for image in (target, *(path for _, path in others), *([previous] if previous else [])):
             cmd += ["--image", str(image)]
         cmd.append("-")
         try:
@@ -105,7 +116,8 @@ def product_photo(target: Path, view: str, kind: str, others: list[tuple[str, Pa
             raise AnalysisError("No se pudo ejecutar Codex") from exc
         try:
             stdout, stderr = proc.communicate(
-                build_prompt(view, kind, [name for name, _ in others]), timeout=TIMEOUT_SECONDS
+                build_prompt(view, kind, [name for name, _ in others], feedback, previous is not None),
+                timeout=TIMEOUT_SECONDS,
             )
         except subprocess.TimeoutExpired as exc:
             kill_tree(proc)

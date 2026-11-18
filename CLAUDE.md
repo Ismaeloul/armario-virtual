@@ -94,15 +94,27 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.6** (18-11-2026): animaciones y fotos de tienda con Codex.
+- **Publicada en el Umbrel: 0.4.7** (18-11-2026): fotos de tienda al añadir la prenda. El usuario
+  confirmó en el Umbrel que Codex genera imágenes dentro del contenedor y convirtió sus dos prendas; la
+  tarjeta temporal de la Ficha ya NO existe. Ahora, en «Nueva prenda», tras el análisis sale cada foto
+  junto a la que redibuja Codex (`components/StudioReview.tsx`, `POST /api/photos/studio`, de una en una):
+  «Me vale» o «No me vale», que abre un cuadro para explicar qué falló y la rehace con ese comentario y el
+  intento anterior. Solo las que tienen el visto bueno sustituyen a la original al guardar
+  (`/studio/apply`); sin visto bueno se queda la foto del usuario. Tocar una foto la abre en grande con
+  zoom (`components/ZoomViewer.tsx`: pellizco, doble toque, rueda; cambia entre «Tu foto» y «Codex» sin
+  perder el encuadre). El pellizco está sin probar en un iPhone. Un agente revisó las animaciones: las
+  de entrada llevan relleno `backwards`, no `both` (con `both` la pantalla seguía siendo contexto de
+  apilamiento y lo `fixed` de dentro quedaba bajo la barra); el visor de fotos de Compras va en un portal;
+  los skeletons miden como el contenido real; la pastilla de `Segmented` solo se desliza si la toca el
+  usuario.
+- **Antes: 0.4.6** (18-11-2026): animaciones y fotos de tienda con Codex.
   Animaciones (`theme/tokens.css`, `components/Skeleton.tsx`): skeletons con destello en vez de
   «Cargando…», fundido al cambiar de pantalla, Ficha y lavadora entran por la derecha, tarjetas escalonadas,
   fotos que aparecen al cargar, pastilla deslizante en `Segmented`, diálogos y paneles animados y destello
   en los textos «Analizando…» (`shimmer-text`). Al usuario le gustaron tal cual. `Screen` solo anima la
   opacidad: un transform ahí descoloca lo `fixed` de dentro. `?lento=1` retrasa las cargas 1,5 s para
   ver los skeletons (`?lento=0` lo quita).
-  «Editar foto con Codex» en la Ficha (TEMPORAL, para probar con las dos prendas reales; después se
-  quitará y las fotos nuevas se editarán solas al añadirlas): `services/ai/studio.py` lanza `codex exec`
+  «Editar foto con Codex» en la Ficha (temporal; quitada en la 0.4.7): `services/ai/studio.py` lanza `codex exec`
   con todas las fotos de la prenda, diciendo cuál es la delantera y cuál la trasera (sin eso dibujó la
   capucha de delante como si fuera la espalda), y recoge la imagen de `CODEX_HOME/generated_images/`.
   Unos 40 s por foto. Se enseña antes y después; las de la cámara se guardan en `garments.photos_camera`

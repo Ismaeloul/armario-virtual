@@ -178,7 +178,7 @@ export default function Compras() {
               </button>
             </div>
           )}
-          {!failed && (!state || !next) && (view === "gustados" ? <ListSkeleton /> : <CardSkeleton />)}
+          {!failed && (!state || !next) && (view === "gustados" ? <ListSkeleton /> : <DiscoverSkeleton />)}
 
           {!failed && state && next && view === "descubrir" && (
             <Discover
@@ -210,6 +210,12 @@ export default function Compras() {
 }
 
 // ---------- Descubrir
+
+/** El hueco de Descubrir mientras carga, con el mismo alto que la vista real (ver `useFitHeight`). */
+function DiscoverSkeleton() {
+  const fit = useFitHeight(true);
+  return <CardSkeleton boxRef={fit.ref} style={fit.style} />;
+}
 
 /** Lo que dice el servidor, sin mover lo que ya se ve. El servidor ordena por nota, y al llegar
  *  propuestas nuevas (una consulta en marcha, una reposición) la lista se reordena: las dos tarjetas
@@ -1701,7 +1707,9 @@ function PhotoViewer({
   ].filter((fact) => fact.value);
   const canSave = item.status === "buscado" || item.status === "variante";
 
-  return (
+  // En el body, como los demás paneles: dentro de la pantalla quedaría bajo la cabecera y la barra
+  // inferior mientras la pantalla está entrando (su fundido la hace contexto de apilamiento).
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -1969,7 +1977,8 @@ function PhotoViewer({
           <Icon name="close" size={20} />
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -2341,9 +2350,10 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
           <p className="text-xs text-text-2">{t.compras.buscador.ayuda}</p>
 
           {busy && (
-            <p role="status" className="flex animate-pulse items-center justify-center gap-2 py-6 text-sm text-text-2">
+            // El mismo destello que los demás textos de «en marcha» («Analizando…»), en vez de un parpadeo.
+            <p role="status" className="flex items-center justify-center gap-2 py-6 text-sm text-text-2">
               <Icon name="search" size={18} />
-              {t.compras.buscador.buscando}
+              <span className="shimmer-text">{t.compras.buscador.buscando}</span>
             </p>
           )}
           {error && (

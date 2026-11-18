@@ -1,9 +1,10 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { PrimaryButton, RotateButton, SecondaryButton, Segmented } from "../components/Controls";
 import { EMPTY_GARMENT, GarmentForm } from "../components/GarmentForm";
 import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
+import { StudioReview, type StudioView } from "../components/StudioReview";
 import { cap, t } from "../i18n/es";
 import { ApiError, api, mediaUrl, type Analysis, type Catalog, type GarmentFields } from "../lib/api";
 import { pickPhoto, rotateFile } from "../lib/camera";
@@ -131,6 +132,8 @@ export default function AnadirPrenda() {
   const [form, setForm] = useState<GarmentFields>(EMPTY_GARMENT);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // Las fotos de Codex con el visto bueno: al guardar sustituyen a las originales.
+  const accepted = useRef<Partial<Record<StudioView, string>>>({});
 
   useEffect(() => {
     api.catalog().then(setCatalog).catch(() => undefined);
@@ -217,7 +220,7 @@ export default function AnadirPrenda() {
     setSaving(true);
     setFormError(null);
     try {
-      await api.createGarment({
+      const created = await api.createGarment({
         ...form,
         photo_front: analysis.photo_front.id,
         photo_back: analysis.photo_back?.id ?? null,
@@ -228,6 +231,11 @@ export default function AnadirPrenda() {
         ai_confidence: analysis.draft?.confidence ?? null,
         ai_draft: analysis.draft, // la propuesta original, para ver después qué se corrigió
       });
+      // Las de Codex con el visto bueno pasan a ser las de la prenda; las originales se guardan.
+      // Si este paso falla, la prenda ya está guardada con sus fotos: no se pierde nada.
+      if (Object.keys(accepted.current).length) {
+        await api.studioApply(created.id, accepted.current).catch(() => undefined);
+      }
       navigate("/armario", { replace: true });
     } catch (err) {
       // 409: ya estaba guardada (un reintento tras perder la respuesta): no es un error para el usuario.
@@ -238,6 +246,17 @@ export default function AnadirPrenda() {
       setFormError(t.nueva.errorGuardar);
       setSaving(false);
     }
+  };
+
+  /** Gira una foto ya subida. Si es una de las que edita Codex, esa vista se vuelve a generar. */
+  const rotate = (view: StudioView | "label") => {
+    const side = `photo_${view}` as const;
+    const photo = analysis?.[side];
+    if (!photo) return;
+    api
+      .rotatePhoto(photo.id)
+      .then((rotated) => setAnalysis((a) => (a ? { ...a, [side]: rotated } : a)))
+      .catch(() => undefined);
   };
 
   const provider = analysis?.provider ? t.proveedores[analysis.provider] : "";
@@ -349,31 +368,28 @@ export default function AnadirPrenda() {
 
         {step === "formulario" && analysis && catalog && (
           <form onSubmit={save} className="mt-6 flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-2">
-              {(["photo_front", "photo_back", "photo_extra", "photo_label"] as const).map((side) => {
-                const photo = analysis[side];
-                return (
-                  photo && (
-                    <div key={side} className="relative">
-                      <img
-                        src={mediaUrl(photo.url)}
-                        alt=""
-                        className="aspect-[3/4] w-full rounded-xl border border-line object-cover"
-                      />
-                      <RotateButton
-                        className="absolute right-2 top-2"
-                        onClick={() =>
-                          api
-                            .rotatePhoto(photo.id)
-                            .then((rotated) => setAnalysis((a) => (a ? { ...a, [side]: rotated } : a)))
-                            .catch(() => undefined)
-                        }
-                      />
-                    </div>
-                  )
-                );
-              })}
-            </div>
+            {/* Cada foto con la que redibuja Codex al lado, para comparar y dar el visto bueno. */}
+            <StudioReview
+              photos={{
+                front: analysis.photo_front,
+                back: analysis.photo_back ?? undefined,
+                extra: analysis.photo_extra ?? undefined,
+              }}
+              kind={kind}
+              onRotate={rotate}
+              onAccepted={(ids) => (accepted.current = ids)}
+            />
+            {/* La etiqueta no se edita: es solo para leer la marca y la talla. */}
+            {analysis.photo_label && (
+              <div className="relative w-1/2 pr-1">
+                <img
+                  src={mediaUrl(analysis.photo_label.url)}
+                  alt={t.nueva.etiquetaFoto}
+                  className="aspect-[3/4] w-full rounded-xl border border-line object-cover"
+                />
+                <RotateButton className="absolute right-3 top-2" onClick={() => rotate("label")} />
+              </div>
+            )}
 
             {/* Quién analizó. El plan B nunca es silencioso. */}
             {analysis.draft && (

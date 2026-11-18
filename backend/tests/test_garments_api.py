@@ -279,8 +279,8 @@ def test_fotos_de_tienda_con_codex_se_aplican_y_se_puede_volver(client, photo_by
 
     seen = []
 
-    def fake(target, view, kind, others):
-        seen.append((view, kind, [name for name, _ in others]))
+    def fake(target, view, kind, others, feedback=None, previous=None):
+        seen.append((view, kind, [name for name, _ in others], feedback, previous is not None))
         return photo_bytes
 
     monkeypatch.setattr(studio, "product_photo", fake)
@@ -293,14 +293,22 @@ def test_fotos_de_tienda_con_codex_se_aplican_y_se_puede_volver(client, photo_by
     }).json()
     assert garment["photos_edited"] is False
 
-    nueva = client.post(f"/api/garments/{garment['id']}/studio/photo/front")
-    assert nueva.status_code == 200 and seen == [("front", "ropa", ["back"])]  # la trasera va de referencia
-    assert client.post(f"/api/garments/{garment['id']}/studio/photo/extra").status_code == 404  # no tiene
+    otras = [{"view": "back", "photo": garment["photo_back"]["id"]}]
+    nueva = client.post("/api/photos/studio", json={"photo": garment["photo_front"]["id"], "view": "front", "others": otras})
+    # La trasera va de referencia.
+    assert nueva.status_code == 200 and seen == [("front", "ropa", ["back"], None, False)]
+    assert client.post("/api/photos/studio", json={"photo": "0" * 32, "view": "front"}).status_code == 404
+    # Rehacerla: lo que dijo el usuario y el intento anterior llegan a Codex.
+    rehecha = client.post("/api/photos/studio", json={
+        "photo": garment["photo_front"]["id"], "view": "front", "others": otras,
+        "feedback": "El logo sale torcido", "previous": nueva.json()["id"]})
+    assert rehecha.status_code == 200 and seen[-1] == ("front", "ropa", ["back"], "El logo sale torcido", True)
+    client.post("/api/photos/discard", json={"ids": [rehecha.json()["id"]]})
     # Generar no cambia la prenda.
     assert client.get(f"/api/garments/{garment['id']}").json()["photo_front"]["id"] == garment["photo_front"]["id"]
 
     # Una que se descarta se borra; una con dueño, no.
-    otra = client.post(f"/api/garments/{garment['id']}/studio/photo/back").json()
+    otra = client.post("/api/photos/studio", json={"photo": garment["photo_back"]["id"], "view": "back"}).json()
     client.post("/api/photos/discard", json={"ids": [otra["id"], garment["photo_front"]["id"]]})
     assert not storage.exists(otra["id"]) and storage.exists(garment["photo_front"]["id"])
 

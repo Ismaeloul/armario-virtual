@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
-import { FadeImg, OutfitSkeleton, stagger } from "../components/Skeleton";
+import { FadeImg, OutfitSkeleton, Skeleton, stagger } from "../components/Skeleton";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Catalog, type Today } from "../lib/api";
 
@@ -107,6 +107,8 @@ export default function Hoy() {
                 )}
               </Link>
             )}
+            {/* Mientras carga, el hueco del tiempo: si no, al llegar empujaba la tarjeta hacia abajo. */}
+            {!today && !failed && <Skeleton className="h-[74px] w-full rounded-2xl" />}
           </header>
 
           {failed && (

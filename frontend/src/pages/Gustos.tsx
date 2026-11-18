@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
-import { FadeImg, OutfitSkeleton, stagger } from "../components/Skeleton";
+import { FadeImg, OutfitSkeleton, Skeleton, stagger } from "../components/Skeleton";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Catalog, type Taste } from "../lib/api";
 
@@ -68,6 +68,9 @@ export default function Gustos() {
             {state && state.rated > 0 && (
               <p className="text-xs text-text-3">{t.gustos.progreso(state.rated, state.liked, state.remaining)}</p>
             )}
+            {/* El hueco de esa línea mientras carga (lo normal es que ya haya valoraciones): así la
+                tarjeta no baja al llegar. */}
+            {!state && !failed && <Skeleton className="h-4 w-56 rounded-md" />}
           </header>
 
           {failed && (
@@ -79,7 +82,7 @@ export default function Gustos() {
               </button>
             </div>
           )}
-          {!failed && !state && <OutfitSkeleton />}
+          {!failed && !state && <OutfitSkeleton kind="gustos" />}
 
           {state && !combo && (
             <div className="card flex flex-col items-center gap-3 p-8 text-center">

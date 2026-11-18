@@ -440,12 +440,18 @@ export const api = {
   garment: (id: number) => request<Garment>(`/api/garments/${id}`),
   updateGarment: (id: number, changes: Partial<GarmentFields> & { favorite?: boolean; in_laundry?: boolean; on_order?: boolean }) =>
     request<Garment>(`/api/garments/${id}`, json("PATCH", changes)),
-  /** Codex redibuja una foto como foto de tienda. Tarda; no cambia la prenda hasta `studioApply`. */
-  studioPhoto: (id: number, view: "front" | "back" | "extra") =>
-    request<Photo>(`/api/garments/${id}/studio/photo/${view}`, { method: "POST" }),
+  /** Codex redibuja una foto ya subida como foto de tienda y devuelve la nueva. Tarda. Para
+   *  rehacerla: `feedback` (qué salió mal) y `previous` (el intento anterior). */
+  studio: (body: {
+    photo: string;
+    view: "front" | "back" | "extra";
+    kind: "ropa" | "calzado";
+    others: { view: "front" | "back" | "extra"; photo: string }[];
+    feedback?: string | null;
+    previous?: string | null;
+  }) => request<Photo>("/api/photos/studio", json("POST", body)),
   studioApply: (id: number, photos: Partial<Record<"front" | "back" | "extra", string>>) =>
     request<Garment>(`/api/garments/${id}/studio/apply`, json("POST", photos)),
-  studioRevert: (id: number) => request<Garment>(`/api/garments/${id}/studio/revert`, { method: "POST" }),
   discardPhotos: (ids: string[]) => request<void>("/api/photos/discard", json("POST", { ids })),
   deleteGarment: (id: number) => request<void>(`/api/garments/${id}`, { method: "DELETE" }),
   wearGarment: (id: number) => request<Garment>(`/api/garments/${id}/wear`, json("POST", {})),

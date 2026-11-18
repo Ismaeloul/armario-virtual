@@ -1,4 +1,4 @@
-import { useCallback, useState, type CSSProperties, type ImgHTMLAttributes } from "react";
+import { useCallback, useState, type CSSProperties, type ImgHTMLAttributes, type Ref } from "react";
 
 /** Bloque gris con un destello que lo recorre: ocupa el sitio de lo que está cargando. */
 export function Skeleton({ className = "", style }: { className?: string; style?: CSSProperties }) {
@@ -32,10 +32,12 @@ export function FadeImg({ className = "", ...props }: ImgHTMLAttributes<HTMLImag
 export function GridSkeleton({ cards = 6 }: { cards?: number }) {
   return (
     <div role="status" aria-busy="true" className="animate-fade">
-      <Skeleton className="h-3 w-28" />
-      <Skeleton className="mt-2 h-9 w-48" />
-      <Skeleton className="mt-2 h-4 w-40" />
-      <Skeleton className="mt-4 h-11 w-full" />
+      {/* Mismas alturas que la cabecera real (86 px: la etiqueta ocupa una línea de 24) y que el
+          control de temporada (50 px). */}
+      <Skeleton className="mt-1.5 h-3 w-28" />
+      <Skeleton className="mt-[10px] h-9 w-48" />
+      <Skeleton className="mt-1.5 h-4 w-40" />
+      <Skeleton className="mt-4 h-[50px] w-full" />
       <div className="mt-4 flex gap-1.5 overflow-hidden">
         {[16, 28, 28, 24].map((w, i) => (
           <Skeleton key={i} className="h-9 shrink-0 rounded-full" style={{ width: `${w * 4}px` }} />
@@ -55,14 +57,25 @@ export function GridSkeleton({ cards = 6 }: { cards?: number }) {
   );
 }
 
-/** Una combinación (Hoy y Gustos) mientras carga: la tarjeta con sus prendas en fila. */
-export function OutfitSkeleton({ rows = 3 }: { rows?: number }) {
+/**
+ * Una combinación (Hoy y Gustos) mientras carga: la tarjeta con sus prendas en fila. Las dos pantallas
+ * difieren en la cabecera de la tarjeta (Hoy lleva etiqueta encima del título) y en los botones (Hoy:
+ * dos y «Generar otra» debajo; Gustos: dos más altos), y el hueco se calca para que nada salte.
+ */
+export function OutfitSkeleton({ rows = 3, kind = "hoy" }: { rows?: number; kind?: "hoy" | "gustos" }) {
   return (
     <div role="status" aria-busy="true" className="flex animate-fade flex-col gap-5">
       <div className="card flex flex-col p-5">
         <div className="flex items-center justify-between gap-2 pb-4">
-          <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-6 w-24 rounded-full" />
+          {kind === "hoy" ? (
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-2.5 w-24" />
+              <Skeleton className="h-6 w-40" />
+            </div>
+          ) : (
+            <Skeleton className="h-7 w-40" />
+          )}
+          <Skeleton className="h-[22px] w-24 rounded-full" />
         </div>
         <div className="flex flex-col gap-3">
           {Array.from({ length: rows }, (_, i) => (
@@ -77,10 +90,20 @@ export function OutfitSkeleton({ rows = 3 }: { rows?: number }) {
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2.5">
-        <Skeleton className="h-12" />
-        <Skeleton className="h-12" />
-      </div>
+      {kind === "hoy" ? (
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Skeleton className="h-12" />
+            <Skeleton className="h-12" />
+          </div>
+          <Skeleton className="h-12" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <Skeleton className="h-14" />
+          <Skeleton className="h-14" />
+        </div>
+      )}
     </div>
   );
 }
@@ -90,16 +113,23 @@ export function DetailSkeleton() {
   return (
     <div role="status" aria-busy="true" className="flex animate-fade flex-col gap-4">
       <Skeleton className="aspect-[3/4] w-full" />
+      {/* El título real: fila de 44 px (etiqueta y corazón), el nombre y los detalles (suelen ser dos líneas). */}
       <div>
-        <Skeleton className="h-2.5 w-32" />
-        <Skeleton className="mt-2 h-7 w-56" />
+        <div className="flex h-11 items-center justify-between gap-2">
+          <Skeleton className="h-2.5 w-32" />
+          <Skeleton className="h-11 w-11 rounded-full" />
+        </div>
+        <Skeleton className="mt-1 h-7 w-56" />
         <Skeleton className="mt-2 h-4 w-full" />
+        <Skeleton className="mt-1 h-4 w-2/3" />
       </div>
-      <Skeleton className="h-[72px] w-full" />
-      <Skeleton className="h-5 w-48" />
-      {Array.from({ length: 4 }, (_, i) => (
-        <Skeleton key={i} className="h-12 w-full" />
-      ))}
+      <Skeleton className="h-[76px] w-full" />
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-6 w-32" />
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
     </div>
   );
 }
@@ -125,15 +155,37 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
   );
 }
 
-/** La tarjeta grande de Descubrir mientras carga. */
-export function CardSkeleton() {
+/**
+ * La tarjeta grande de Descubrir mientras carga. Recibe la misma medida que la vista real (el alto que
+ * queda hasta la barra inferior): así la tarjeta de verdad aparece justo donde estaba el hueco.
+ */
+export function CardSkeleton({
+  boxRef,
+  style,
+}: {
+  boxRef?: Ref<HTMLDivElement>;
+  style?: CSSProperties;
+}) {
   return (
-    <div role="status" aria-busy="true" className="flex animate-fade flex-col gap-4">
-      <div className="flex gap-1.5">
-        <Skeleton className="h-9 w-24 rounded-full" />
-        <Skeleton className="h-9 w-28 rounded-full" />
-      </div>
-      <Skeleton className="h-[58vh] w-full rounded-3xl" />
+    <div
+      ref={boxRef}
+      style={style}
+      role="status"
+      aria-busy="true"
+      className="-mt-2 flex min-h-[25rem] animate-fade flex-col gap-2.5"
+    >
+      {/* Las filas de filtros (tienda y tipo de prenda). */}
+      {[
+        [16, 20, 22, 18],
+        [14, 24, 22, 20],
+      ].map((row, r) => (
+        <div key={r} className="flex gap-1.5 overflow-hidden">
+          {row.map((w, i) => (
+            <Skeleton key={i} className="h-9 shrink-0 rounded-full" style={{ width: `${w * 4}px` }} />
+          ))}
+        </div>
+      ))}
+      <Skeleton className="mb-7 min-h-0 w-full flex-1 rounded-2xl" />
     </div>
   );
 }

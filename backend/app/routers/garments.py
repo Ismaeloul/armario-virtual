@@ -396,13 +396,13 @@ def rotate_photo(photo_id: str, db: Session = Depends(get_db)):
     return storage.to_schema(new_id)
 
 
-# ---------- Fotos «de tienda» con Codex (opción temporal de la Ficha, para probarlo)
+# ---------- Fotos «de tienda» con Codex (al añadir una prenda)
 
 _VIEWS = ("front", "back", "extra")
 
 
 class StudioPhotos(BaseModel):
-    """Qué foto nueva va en cada vista (ids devueltos por `/studio/photo/{view}`)."""
+    """Qué foto nueva va en cada vista (ids devueltos por `/photos/studio`)."""
 
     front: str | None = Field(default=None, max_length=32)
     back: str | None = Field(default=None, max_length=32)
@@ -418,24 +418,42 @@ def _set_photo(garment: Garment, view: str, photo_id: str) -> None:
     setattr(garment, f"photo_{view}_original", storage.original_name(photo_id))
 
 
-@router.post("/garments/{garment_id}/studio/photo/{view}", response_model=Photo)
-def studio_photo(garment_id: int, view: str, db: Session = Depends(get_db)):
-    """Codex redibuja una de las fotos como foto de producto. No cambia la prenda: devuelve la foto
-    nueva para enseñarla junto a la original; se usa con `/studio/apply` o se tira con `/photos/discard`."""
-    garment = _get_or_404(db, garment_id)
-    if view not in _VIEWS or not getattr(garment, f"photo_{view}"):
-        raise HTTPException(404, "Esa prenda no tiene esa foto")
-    kind = "calzado" if garment.category == "calzado" else "ropa"
-    # Las otras vistas van de referencia: así sabe cuál es la delantera y cuál la trasera.
-    others = [
-        (other, storage.photo_path(getattr(garment, f"photo_{other}")))
-        for other in _VIEWS
-        if other != view and getattr(garment, f"photo_{other}")
-    ]
-    target = storage.photo_path(getattr(garment, f"photo_{view}"))
-    db.close()  # Codex tarda: no se deja la conexión abierta mientras tanto
+class StudioOther(BaseModel):
+    view: str = Field(pattern="^(front|back|extra)$")
+    photo: str = Field(max_length=32)
+
+
+class StudioIn(BaseModel):
+    """Qué foto se redibuja. Las fotos son ids ya subidos: vale antes de guardar la prenda."""
+
+    photo: str = Field(max_length=32)
+    view: str = Field(pattern="^(front|back|extra)$")
+    kind: str = Field(default="ropa", pattern="^(ropa|calzado)$")
+    others: list[StudioOther] = Field(default_factory=list, max_length=2)  # las otras vistas, de referencia
+    # Para rehacerla: qué salió mal, con palabras del usuario, y el intento anterior.
+    feedback: str | None = Field(default=None, max_length=400)
+    previous: str | None = Field(default=None, max_length=32)
+
+
+@router.post("/photos/studio", response_model=Photo)
+def studio_photo(body: StudioIn):
+    """Codex redibuja una foto como foto de producto y devuelve la nueva, sin tocar la original. Se
+    usa al añadir una prenda: se enseñan las dos y la nueva se pone con `/studio/apply` al guardar,
+    o se tira con `/photos/discard`."""
     try:
-        data = studio.product_photo(target, view, kind, others)
+        ids = [body.photo, *(o.photo for o in body.others), *([body.previous] if body.previous else [])]
+        found = all(storage.exists(photo_id) for photo_id in ids)
+    except storage.InvalidPhoto as exc:
+        raise HTTPException(422, str(exc)) from exc
+    if not found:
+        raise HTTPException(404, "La foto ya no existe; vuelve a subirla")
+    try:
+        data = studio.product_photo(
+            storage.photo_path(body.photo), body.view, body.kind,
+            [(o.view, storage.photo_path(o.photo)) for o in body.others if o.view != body.view],
+            feedback=(body.feedback or "").strip() or None,
+            previous=storage.photo_path(body.previous) if body.previous else None,
+        )
         return storage.to_schema(storage.save_upload(data, "codex.png"))
     except AnalysisError as exc:
         raise HTTPException(502, str(exc)) from exc

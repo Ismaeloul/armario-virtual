@@ -81,13 +81,17 @@
     }
   }
 
-  /* Entradas. Los fotogramas solo dicen de dónde se sale: al acabar no queda ningún transform puesto
-     (un transform convierte al elemento en la referencia de lo `fixed` que lleve dentro). */
-  --animate-fade: fade 0.3s ease-out both; /* pantalla, velo de un diálogo */
-  --animate-enter: enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; /* contenido que llega: sube un poco */
-  --animate-slide: slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; /* pantalla secundaria: por la derecha */
-  --animate-pop: pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; /* diálogo */
-  --animate-sheet: sheet 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; /* hoja que sube desde abajo */
+  /* Entradas. Los fotogramas solo dicen de dónde se sale, y el relleno es `backwards` (no `both`): el
+     estado de salida se aplica durante el retraso de `stagger()` y, al acabar, la animación deja de
+     contar. Con `both` seguía «en efecto» para siempre y el navegador trataba al elemento como si
+     llevara `will-change`: la pantalla quedaba como contexto de apilamiento (lo `fixed` de dentro, con
+     z-50, quedaba debajo de la barra inferior) y cada tarjeta con `enter` seguía siendo la referencia
+     de lo `fixed` que llevara dentro, como si tuviera un transform. Comprobado en Chromium. */
+  --animate-fade: fade 0.3s ease-out backwards; /* pantalla, velo de un diálogo */
+  --animate-enter: enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards; /* contenido que llega: sube un poco */
+  --animate-slide: slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards; /* pantalla secundaria: por la derecha */
+  --animate-pop: pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards; /* diálogo */
+  --animate-sheet: sheet 0.38s cubic-bezier(0.22, 1, 0.36, 1) backwards; /* hoja que sube desde abajo */
   @keyframes fade {
     from {
       opacity: 0;
@@ -179,19 +183,27 @@ body {
 
 /* Texto de algo que está en marcha («Analizando las fotos…»): un destello lo recorre de lado a lado. */
 @utility shimmer-text {
-  background: linear-gradient(
-    90deg,
-    currentColor 0%,
-    currentColor 38%,
-    color-mix(in srgb, currentColor 22%, transparent) 50%,
-    currentColor 62%,
-    currentColor 100%
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer-text 1.5s linear infinite;
+  /* Solo donde se entiende `color-mix` (Safari 16.2 en adelante). En un Safari 16.0/16.1 el degradado
+     entero sería inválido y, con el relleno transparente, el texto no se vería: allí queda quieto. */
+  @supports (color: color-mix(in srgb, red 50%, transparent)) {
+    background: linear-gradient(
+      90deg,
+      currentColor 0%,
+      currentColor 42%,
+      color-mix(in srgb, currentColor 22%, transparent) 50%,
+      currentColor 58%,
+      currentColor 100%
+    );
+    /* El fondo mide tres veces el texto y el brillo ocupa solo su centro: al empezar (100 %) queda
+       entero fuera por la izquierda y al acabar (0 %), entero fuera por la derecha. Así cruza el texto
+       de una pasada y la vuelta a empezar no se ve. */
+    background-size: 300% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer-text 1.8s linear infinite;
+  }
 }
 
 @keyframes shimmer-text {
@@ -199,7 +211,7 @@ body {
     background-position: 100% 0;
   }
   to {
-    background-position: -120% 0;
+    background-position: 0% 0;
   }
 }
 
