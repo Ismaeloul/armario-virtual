@@ -654,6 +654,18 @@ function useFitHeight(shown: boolean) {
  */
 let lastBackdrop: string | null = null;
 
+/**
+ * ¿Es oscuro el fondo de la foto? Los puntos que indican cuántas fotos hay van encima de la foto, no
+ * del tema de la app: tienen que contrastar con ella (negros sobre fondo claro, blancos sobre oscuro).
+ * Sin dato se supone claro, que es lo normal en una foto de tienda.
+ */
+function isDark(color: string | null): boolean {
+  const parts = color?.match(/\d+/g)?.map(Number);
+  if (!parts || parts.length < 3) return false;
+  const [r, g, b] = parts;
+  return 0.299 * r + 0.587 * g + 0.114 * b < 128;
+}
+
 function cornerColor(img: HTMLImageElement): string | null {
   try {
     const canvas = document.createElement("canvas");
@@ -784,7 +796,9 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
         {photos.length > 1 && (
           <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
             {photos.map((p, i) => (
-              <span key={p.id} className={`h-1.5 rounded-full bg-text ${i === photo ? "w-4 opacity-80" : "w-1.5 opacity-30"}`} />
+              <span key={p.id} className={`h-1.5 rounded-full ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
+                  i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
+                }`} />
             ))}
           </span>
         )}
