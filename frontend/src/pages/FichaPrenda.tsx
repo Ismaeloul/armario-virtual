@@ -1,3 +1,4 @@
+import { externalHref } from "../lib/links";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -313,7 +314,7 @@ export default function FichaPrenda() {
                   value={garment.store_url}
                 >
                   <a
-                    href={garment.store_url}
+                    href={externalHref(garment.store_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={t.ficha.tienda.abrir}

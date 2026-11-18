@@ -88,7 +88,8 @@ export const t = {
     },
     selloSi: "Me gusta",
     selloNo: "No",
-    fotoN: (n: number, total: number) => `Foto ${n} de ${total}. Toca para ver la siguiente.`,
+    fotoN: (n: number, total: number) =>
+      `Foto ${n} de ${total}. Toca a la derecha para ver la siguiente y a la izquierda para volver.`,
     errorAccion: "No se pudo guardar. Inténtalo de nuevo.",
     desactivada: {
       titulo: "Novedades que pegan con tu armario",

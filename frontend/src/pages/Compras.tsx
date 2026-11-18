@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { inputClass, PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
+import { externalHref, photoAfterTap } from "../lib/links";
 import { CopyRow } from "../components/CopyButton";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
@@ -701,7 +702,7 @@ function Reasons({ item }: { item: ShopItem }) {
 function StoreLink({ item }: { item: ShopItem }) {
   return (
     <a
-      href={item.url}
+      href={externalHref(item.url)}
       target="_blank"
       rel="noopener noreferrer"
       className="flex min-h-11 items-center gap-1.5 text-xs font-semibold text-primary underline-offset-2 active:opacity-60"
@@ -1011,7 +1012,12 @@ function SwipeCard({
           type="button"
           aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : undefined}
           disabled={photos.length < 2}
-          onClick={() => setAt({ id: item.id, index: (photo + 1) % photos.length })}
+          onClick={(e) =>
+            setAt({
+              id: item.id,
+              index: photoAfterTap(e.clientX, e.currentTarget.getBoundingClientRect(), photo, photos.length),
+            })
+          }
           className="absolute inset-0 block h-full w-full overflow-hidden bg-card-2 transition-colors duration-300"
           style={backdrop ? { backgroundColor: backdrop } : undefined}
         >
@@ -1037,7 +1043,7 @@ function SwipeCard({
           {photos.length > 1 && (
             <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
               {photos.map((p, i) => (
-                <span key={p.id} className={`h-1.5 rounded-full ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
+                <span key={p.id} className={`h-1.5 rounded-full transition-all duration-300 ease-out ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
                     i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
                   }`} />
               ))}
@@ -1256,12 +1262,15 @@ function PhotoViewer({
                   // Con el dedo, deslizar ya mueve el cuadro. Con ratón no: arrastrar hacia arriba lleva a la ficha.
                   if (e.pointerType === "mouse" && dy < -40) toData();
                 }}
-                onClick={() => {
+                onClick={(e) => {
                   if (swiped.current) {
                     swiped.current = false;
                     return;
                   }
-                  if (photos.length > 1) setAt({ id: item.id, index: (photo + 1) % photos.length });
+                  setAt({
+                    id: item.id,
+                    index: photoAfterTap(e.clientX, e.currentTarget.getBoundingClientRect(), photo, photos.length),
+                  });
                 }}
                 className="absolute inset-0 block h-full w-full overflow-hidden bg-card-2 transition-colors duration-300"
                 style={backdrop ? { backgroundColor: backdrop } : undefined}
@@ -1286,7 +1295,7 @@ function PhotoViewer({
                     {photos.map((p, i) => (
                       <span
                         key={p.id}
-                        className={`h-1.5 rounded-full ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
+                        className={`h-1.5 rounded-full transition-all duration-300 ease-out ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
                           i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
                         }`}
                       />
@@ -1382,7 +1391,7 @@ function PhotoViewer({
                   value={fact.value}
                 >
                   <a
-                    href={item.url}
+                    href={externalHref(item.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={t.compras.visor.abrir}
