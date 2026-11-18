@@ -341,7 +341,7 @@ function Discover({
     return (
       <>
         {/* Todo en una pantalla: la foto se queda con el alto que sobra, para no tener que bajar a los botones. */}
-        <div ref={fit.ref} style={{ height: fit.height }} className="relative -mt-2 flex min-h-[25rem] flex-col gap-2.5">
+        <div ref={fit.ref} style={fit.style} className="relative -mt-2 flex min-h-[25rem] flex-col gap-2.5">
         {filters}
         <p className="truncate text-xs text-text-3">
           {state.running
@@ -633,20 +633,28 @@ function StoreLink({ item }: { item: ShopItem }) {
 /** Alto que queda desde donde empieza el elemento hasta la barra inferior, para encajar la vista en una pantalla. */
 function useFitHeight(shown: boolean) {
   const ref = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number>();
+  const [style, setStyle] = useState<{ height: number; marginBottom: number }>();
   useLayoutEffect(() => {
     const measure = () => {
       const el = ref.current;
       if (!el) return;
+      const gap = 10; // aire entre la vista y la barra inferior
       const nav = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
       const top = el.getBoundingClientRect().top + window.scrollY;
-      setHeight(Math.round(window.innerHeight - top - nav - 10));
+      // La pantalla reserva bajo el contenido más hueco del que ocupa la barra. Ese sobrante se
+      // descuenta con un margen negativo: si no, la página mide más que la pantalla y se puede desplazar.
+      const main = el.closest("main");
+      const reserved = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
+      setStyle({
+        height: Math.round(window.innerHeight - top - nav - gap),
+        marginBottom: Math.min(0, Math.round(nav + gap - reserved)),
+      });
     };
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, [shown]);
-  return { ref, height };
+  return { ref, style };
 }
 
 /**
