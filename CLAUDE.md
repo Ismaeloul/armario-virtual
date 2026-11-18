@@ -71,7 +71,7 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.3.2** (18-11-2026: barrido de pulido, ver abajo; antes 0.3.1, 17-11-2026; la 0.3.0 más el arreglo de copiar el código de Codex por http): incluye todo lo que abajo figura
+- **Publicada en el Umbrel: 0.4.0** (18-11-2026: Fase 4, Compras, con cinco tiendas de Francia; es la primera vez que el Chromium y JD Sports corren en Linux, sin probar). Antes 0.3.2 (18-11-2026: barrido de pulido; antes 0.3.1, 17-11-2026; la 0.3.0 más el arreglo de copiar el código de Codex por http): incluye todo lo que abajo figura
   como «en `main`, sin publicar» (Fase 2, Gustos, calzado, reglas de estilo, palabras clave). A partir de
   ahora se publica una versión por fase. El usuario va a fotografiar su ropa real en el Umbrel y a
   entrenar ahí el algoritmo; lo de la copia local es todo ropa de prueba (Vinted y Zara), nada es suyo.
