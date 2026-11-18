@@ -311,20 +311,16 @@ export default function FichaPrenda() {
                 <CopyRow
                   label={t.ficha.tienda.enlace}
                   value={garment.store_url}
-                  extra={
-                    <a
-                      href={garment.store_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={t.ficha.tienda.abrir}
-                      title={t.ficha.tienda.abrir}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-primary active:scale-90"
-                    >
-                      <Icon name="open_in_new" size={18} />
-                    </a>
-                  }
                 >
-                  <span className="truncate text-sm text-text">{garment.store_url.replace(/^https?:\/\/(www\.)?/, "")}</span>
+                  <a
+                    href={garment.store_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t.ficha.tienda.abrir}
+                    className="block truncate py-1 text-sm font-medium text-primary underline underline-offset-2 active:opacity-60"
+                  >
+                    {garment.store_url.replace(/^https?:\/\/(www\.)?/, "")}
+                  </a>
                 </CopyRow>
               )}
             </div>

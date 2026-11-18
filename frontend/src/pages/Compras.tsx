@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { inputClass, PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
-import { CopyRow, useCopy } from "../components/CopyButton";
+import { CopyRow } from "../components/CopyButton";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
@@ -126,7 +126,7 @@ export default function Compras() {
             <div className="min-w-0 flex-1">
               <Segmented<View>
                 options={[
-                  { value: "descubrir", label: t.compras.descubrir },
+                  { value: "descubrir", label: t.compras.descubrirN(state?.pending ?? 0) },
                   { value: "gustados", label: t.compras.meGustanN(state?.liked ?? 0) },
                 ]}
                 value={view}
@@ -222,6 +222,7 @@ function Discover({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fit = useFitHeight(Boolean(next.item));
+  const [viewing, setViewing] = useState<ShopItem | null>(null);
   // Los botones mueven la tarjeta igual que el dedo: sale volando hacia su lado antes de decidir.
   const [fly, setFly] = useState<-1 | 0 | 1>(0);
   // Por qué lado se fue cada tarjeta, para que «Volver» la traiga de vuelta por ahí.
@@ -402,18 +403,27 @@ function Discover({
   if (item) {
     return (
       <>
+        {viewing && (
+          <PhotoViewer
+            item={viewing}
+            onClose={() => {
+              setViewing(null);
+              api.shopNext(filter).then(onNext).catch(() => undefined);
+            }}
+          />
+        )}
         {/* Todo en una pantalla: la foto se queda con el alto que sobra, para no tener que bajar a los botones. */}
         <div ref={fit.ref} style={fit.style} className="relative -mt-2 flex min-h-[25rem] flex-col gap-2.5">
         {filters}
-        <p className="truncate text-xs text-text-3">
-          {state.running
-            ? state.job === "mas"
-              ? t.compras.mas.aviso
-              : t.compras.buscando.aviso
-            : state.last_more?.low
-              ? t.compras.mas.encajaMenos
-              : t.compras.quedan(next.remaining)}
-        </p>
+        {(state.running || state.last_more?.low) && (
+          <p className="truncate text-xs text-text-3">
+            {state.running
+              ? state.job === "mas"
+                ? t.compras.mas.aviso
+                : t.compras.buscando.aviso
+              : t.compras.mas.encajaMenos}
+          </p>
+        )}
         <SwipeCard
           key={`${cards.current.get(item.id) ?? item.id}-${attempt}`}
           item={item}
@@ -423,6 +433,7 @@ function Discover({
           fly={fly}
           enterFrom={back?.id === item.id ? back.side : 0}
           onDecide={decide}
+          onOpen={() => setViewing(item)}
         />
         {alert}
         <section className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex h-16 items-center justify-center gap-6">
@@ -890,6 +901,7 @@ function SwipeCard({
   fly,
   enterFrom,
   onDecide,
+  onOpen,
 }: {
   item: ShopItem;
   busy: boolean;
@@ -898,6 +910,7 @@ function SwipeCard({
   fly: -1 | 0 | 1; // un botón manda que salga volando hacia ese lado
   enterFrom: -1 | 0 | 1; // tras «Volver», el lado por el que se fue y por el que vuelve
   onDecide: (liked: boolean) => void;
+  onOpen: () => void; // tocar el nombre: los datos de la prenda y con qué combina
 }) {
   const drag = useRef<{ id: number; x: number; y: number; active: boolean } | null>(null);
   const moved = useRef(false); // para que soltar un arrastre no cuente como toque en la foto o el enlace
@@ -1067,7 +1080,15 @@ function SwipeCard({
           </span>
           <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
         </div>
-        <h3 className="truncate font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={t.compras.verDatos(item.name)}
+          className="-my-1 flex min-w-0 items-center gap-1 py-1 text-left active:opacity-60"
+        >
+          <h3 className="truncate font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
+          <Icon name="chevron_right" size={16} className="shrink-0 text-text-3" />
+        </button>
         <div className="flex items-center justify-between gap-2">
           <div className="max-h-[1.75rem] min-w-0 overflow-hidden">
             <Reasons item={item} />
@@ -1121,7 +1142,6 @@ function PhotoViewer({
   const [matches, setMatches] = useState<ShopMatches | "error" | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
-  const [copiedAll, copyAll] = useCopy();
   const scroller = useRef<HTMLDivElement>(null);
   const press = useRef<{ x: number; y: number } | null>(null);
   const swiped = useRef(false); // para que un deslizamiento sobre la foto no cuente como toque
@@ -1360,29 +1380,21 @@ function PhotoViewer({
                   key={fact.key}
                   label={fact.label}
                   value={fact.value}
-                  extra={
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={t.compras.visor.abrir}
-                      title={t.compras.visor.abrir}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-primary active:scale-90"
-                    >
-                      <Icon name="open_in_new" size={18} />
-                    </a>
-                  }
                 >
-                  <span className="truncate text-sm text-text">{item.url.replace(/^https?:\/\/(www\.)?/, "")}</span>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t.compras.visor.abrir}
+                    className="block truncate py-1 text-sm font-medium text-primary underline underline-offset-2 active:opacity-60"
+                  >
+                    {item.url.replace(/^https?:\/\/(www\.)?/, "")}
+                  </a>
                 </CopyRow>
               ) : (
                 <CopyRow key={fact.key} label={fact.label} value={fact.value} />
               ),
             )}
-            <SecondaryButton onClick={() => copyAll(facts.map((fact) => `${fact.label}: ${fact.value}`).join("\n"))}>
-              <Icon name={copiedAll ? "check" : "content_copy"} size={18} className={copiedAll ? "text-ok" : ""} />
-              {copiedAll ? t.comun.copiado : t.compras.visor.copiarTodo}
-            </SecondaryButton>
 
             <h4 className="mt-3 font-display text-lg font-semibold tracking-tight">{t.compras.combina.titulo}</h4>
             {matches === null ? (

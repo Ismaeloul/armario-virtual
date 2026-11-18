@@ -36,7 +36,10 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   circulitos en Descubrir, Me gustan y el buscador: el me gusta vale para el color que se ve y el otro
   queda como `variante`, que no se propone aparte en esa tanda. Las prendas del armario que vienen de
   Compras guardan `reference`, `store_name` y `store_url` y la Ficha los enseña SIN precio; hay un campo
-  «Referencia» opcional al editar cualquier prenda. Sin probar con el dedo en un móvil real.
+  «Referencia» opcional al editar cualquier prenda. Probado por el usuario en el iPhone. En Descubrir,
+  tocar el nombre de la tarjeta abre ese mismo visor. El enlace de la tienda se abre tocando el propio
+  enlace (sin botón aparte) y no hay «Copiar todo» (el usuario los quitó). El contador de propuestas va en
+  la pestaña («Descubrir (27)») para dejarle más alto a la foto.
   Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
   va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se
@@ -139,6 +142,9 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
    navegador (el 17-11-2026 se leyó desde un navegador con `<categoría>.html?ajax=true` y
    `<producto>.html?ajax=true`; las fotos de producto son las `-e1`, `-e2`… de `xmedia`).
 5. **iPhone.** App con Capacitor (instalada como .ipa). Notificación diaria con el outfit a la hora configurada.
+
+Lo último de todo (idea del usuario, 18-11-2026): que la app se conecte por su dominio propio, sin VPN.
+Exige poner login antes (ver «Acceso»: no exponerla a internet sin login).
 
 ## Stack
 
