@@ -1023,6 +1023,14 @@ def _note_code(row: ShopItem) -> None:
     row.maker_code = shops.maker_code(row.store, row.store_data or {})
 
 
+def _merge_siblings(known: list[dict] | None, more: list[dict] | None) -> list[dict]:
+    """Los colores de `known` más los de `more` que falten, siempre en el mismo orden. Manda `known`
+    (lo más reciente que dijo la tienda de cada color)."""
+    merged = {s["product_ref"]: s for s in more or [] if s.get("product_ref")}
+    merged.update({s["product_ref"]: s for s in known or [] if s.get("product_ref")})
+    return sorted(merged.values(), key=lambda sibling: sibling["product_ref"])
+
+
 def _apply_detail(row: ShopItem, detail) -> None:
     """Lo que la ficha dice además de fotos y tallas: en qué colores existe y de qué está hecha."""
     # Siempre en el mismo orden (la tienda pone primero el color que se le pide): si no, al cambiar de
@@ -1038,7 +1046,9 @@ def _apply_detail(row: ShopItem, detail) -> None:
         if before and before.get("name") == sibling.get("name"):
             sibling["name_es"] = before["name_es"]
         siblings.append(sibling)
-    row.siblings = sorted(siblings, key=lambda sibling: sibling["product_ref"])
+    # Los colores que ya se conocían y esta ficha no nombra se conservan: hay tiendas (Courir) donde
+    # cada color solo enlaza a unos pocos de sus hermanos, y al elegir uno desaparecían los demás.
+    row.siblings = _merge_siblings(siblings, row.siblings)
     row.composition = " ".join((detail.composition or "").split())[:COMPOSITION_MAX] or None
 
 
@@ -2327,6 +2337,12 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
         if target is not None:  # lo que guardó el listado de ese color (su instantánea) no se pierde
             product.store_data = {**product.store_data, **(target.store_data or {})}
         target = _store_fetched(db, target, product, detail, photos, today, Context.load(db))
+    # Es la misma familia de colores: el que se elige enseña todos los que enseñaba el anterior, aunque
+    # su ficha en la tienda nombre menos.
+    family = _merge_siblings(target.siblings, item.siblings)
+    if family != (target.siblings or []):
+        target.siblings = family
+        db.commit()
     if item.status == NEW and target.status in (NEW, SEARCHED, VARIANT):
         target.status, target.batch, target.can_undo = NEW, item.batch, False
         item.status = VARIANT

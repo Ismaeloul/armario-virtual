@@ -695,3 +695,32 @@ def test_al_cambiar_de_color_se_hereda_el_nombre_ya_traducido(client):
         assert otro.name_es == "Jersey básico de cuello redondo"
         assert otro.composition_es == "100% algodón"
         assert otro.store_color_es == "Negro"
+
+
+def test_al_elegir_un_color_no_se_pierden_los_demas(client):
+    """Courir: la ficha de cada color solo enlaza a unos pocos hermanos. El que se elige enseña todos
+    los que enseñaba el anterior, y un refresco de su ficha tampoco se los quita."""
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
+
+    def color(ref):
+        return {"product_ref": f"courir:{ref}", "name": ref, "hex": None}
+
+    def fila(ref, status, siblings, **extra):
+        return ShopItem(
+            store="courir", product_ref=f"courir:{ref}", name="Dunk Low", price_cents=12000,
+            url="https://www.courir.com/x", type="zapatillas", category="calzado", color="gris",
+            pattern="liso", style="casual", season="todo_el_ano", status=status,
+            batch=datetime.now(timezone.utc).date(), siblings=siblings, **extra,
+        )
+
+    with SessionLocal() as db:
+        gris = fila("1", shopping.NEW, [color("1"), color("2"), color("3"), color("4")])
+        beige = fila("2", shopping.LIKED, [color("1"), color("2")], liked_at=datetime.now(timezone.utc))
+        db.add_all([gris, beige])
+        db.commit()
+        elegido = shopping.switch_color(db, gris, "courir:2")
+        assert [s["product_ref"] for s in elegido.siblings] == ["courir:1", "courir:2", "courir:3", "courir:4"]
+        # La consulta semanal vuelve a leer su ficha, que sigue nombrando solo dos.
+        shopping._apply_detail(elegido, SimpleNamespace(siblings=[color("1"), color("2")], composition=""))
+        assert len(elegido.siblings) == 4

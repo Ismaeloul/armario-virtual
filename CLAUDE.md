@@ -94,7 +94,12 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.8** (19-11-2026): la foto de la Ficha. El recuadro toma la proporción
+- **Publicada en el Umbrel: 0.4.9** (19-11-2026): al elegir un color en Compras ya no desaparecen los
+  demás. En Courir la ficha de cada color solo enlaza a unos pocos hermanos (la Dunk gris nombra diez; la
+  beige, dos), y la app se quedaba con la lista corta. Ahora los colores conocidos se conservan
+  (`_merge_siblings` en `shopping.py`, en `switch_color` y en `_apply_detail`). Un color que deje de
+  existir sigue saliendo y al tocarlo dice que ya no está. Sin probar contra Courir de verdad.
+- **Antes: 0.4.8** (19-11-2026): la foto de la Ficha. El recuadro toma la proporción
   de la foto (sin bandas); la de la primera se mide antes de pintar la ficha y la foto va a su ancho,
   pegada arriba, para que al cambiar de alto no parezca que hace zoom. Puntos abajo en vez de «Vista
   frontal / posterior» y toque en la mitad derecha o izquierda para pasar de foto, en bucle como en
