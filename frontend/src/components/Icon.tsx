@@ -4,6 +4,7 @@
 // Única excepción: el armario, que Tabler no tiene. Es el de Iconoir con la línea a grosor 2,
 // y su versión rellena está dibujada a mano (decisión del usuario, 18-11-2026).
 import tune from "@tabler/icons/outline/adjustments-horizontal.svg?raw";
+import undo from "@tabler/icons/outline/arrow-back-up.svg?raw";
 import error from "@tabler/icons/outline/alert-circle.svg?raw";
 import notifications from "@tabler/icons/outline/bell.svg?raw";
 import bookmark_add from "@tabler/icons/outline/bookmark.svg?raw";
@@ -102,6 +103,7 @@ const ICONS = {
   texture,
   tune,
   tune_fill,
+  undo,
   weather,
 };
 

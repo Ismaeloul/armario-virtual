@@ -123,6 +123,20 @@ def photo_url(media: dict) -> str:
     return f"{MEDIA}/assets/public/{path}/{media['name']}.jpg?w={PHOTO_WIDTH}"
 
 
+def _composition(data: dict) -> str:
+    """Los tejidos que son al menos la mitad de la prenda («100% lino»): la descripción no siempre los
+    nombra, y el lino o la lana dicen de qué temporada es."""
+    composition = ((data.get("product") or {}).get("detail") or {}).get("detailedComposition") or {}
+    materials: list[str] = []
+    for part in composition.get("parts") or []:
+        for component in part.get("components") or []:
+            material = str(component.get("material") or "").strip().lower()
+            match = re.match(r"\d+", str(component.get("percentage") or ""))
+            if material and match and int(match.group()) >= 50 and material not in materials:
+                materials.append(material)
+    return f"Tejido principal: {', '.join(materials)}." if materials else ""
+
+
 def parse_detail(data: dict, store_data: dict) -> ShopDetail | None:
     """De la ficha de un producto a tallas y fotos del color que nos interesa. None si no trae colores."""
     colors = ((data.get("product") or {}).get("detail") or {}).get("colors") or []
@@ -148,11 +162,13 @@ def parse_detail(data: dict, store_data: dict) -> ShopDetail | None:
             sizes.append({"name": size_name, "in_stock": size.get("availability") in _AVAILABLE})
     price = color.get("price")
     hex_code = color.get("hexCode")
+    seo = (data.get("product") or {}).get("seo") or {}
+    description = (color.get("description") or color.get("rawDescription") or seo.get("description") or "").strip()
     return ShopDetail(
         price_cents=price if isinstance(price, int) and price > 0 else None,
         sizes=sizes,
         photo_urls=photos,
-        description=(color.get("description") or "").strip(),
+        description=" ".join(part for part in (description, _composition(data)) if part),
         color_hex=hex_code.lower() if isinstance(hex_code, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", hex_code) else None,
     )
 

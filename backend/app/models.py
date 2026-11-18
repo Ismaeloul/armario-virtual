@@ -111,7 +111,9 @@ class Rating(Base):
 class ShopItem(Base):
     """Un producto de una tienda propuesto en la pestaña Compras, y qué se hizo con él.
 
-    Se guarda para siempre aunque se descarte o caduque: así no se vuelve a proponer.
+    Se guarda para siempre aunque se descarte o caduque: así no se vuelve a proponer. La excepción son
+    los «candidatos»: el catálogo entero de la última consulta, sin fotos, del que sale «Ver más». Esos
+    se renuevan en cada consulta semanal.
     """
 
     __tablename__ = "shop_items"
@@ -140,13 +142,17 @@ class ShopItem(Base):
     photos: Mapped[list] = mapped_column(JSON, default=list)
     score: Mapped[float] = mapped_column(Float, default=0.0)
     reasons: Mapped[list] = mapped_column(JSON, default=list)  # [{"text": …, "kind": "pro" | "contra"}]
-    # nuevo · gustado · descartado · comprado · caducado
+    # candidato (en el catálogo, sin enseñar) · nuevo · gustado · descartado · comprado · caducado
     status: Mapped[str] = mapped_column(String(20), index=True)
     batch: Mapped[date] = mapped_column(Date, index=True)  # la tanda en la que llegó
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     liked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Cuándo se dijo me gusta / no me gusta, si aún se puede deshacer («Volver») y por qué se descartó.
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    can_undo: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
+    discard_reason: Mapped[str | None] = mapped_column(String(20), nullable=True)  # estilo · color · caro · ya_tengo
     in_stock: Mapped[bool] = mapped_column(Boolean, default=True)
     sizes: Mapped[list] = mapped_column(JSON, default=list)  # [{"name": "M", "in_stock": true}]
     garment_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # si se compró

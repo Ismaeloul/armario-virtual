@@ -169,8 +169,36 @@ export type ShopStore = {
   next_check: string | null;
 };
 
-export type ShopState = { stores: ShopStore[]; running: boolean; pending: number; liked: number };
-export type ShopNext = { item: ShopItem | null; remaining: number };
+export type ShopState = {
+  stores: ShopStore[];
+  /** Hay una consulta del catálogo o un «Ver más» en marcha, y cuál de los dos. */
+  running: boolean;
+  job: "consulta" | "mas" | null;
+  pending: number;
+  liked: number;
+  /** Cómo fue el último «Ver más» desde la última consulta semanal. `low`: lo que trajo ya encaja menos. */
+  last_more: { added: number; low: boolean; error: string | null } | null;
+};
+export type ShopNext = {
+  item: ShopItem | null;
+  /** Cuántas quedan con el filtro puesto, contando esta. */
+  remaining: number;
+  /** Cuántas prendas del catálogo puede traer aún «Ver más» con el filtro puesto. */
+  more: number;
+  /** Hay una decisión que «Volver» puede deshacer. */
+  can_undo: boolean;
+};
+/** El filtro de Descubrir: una tienda y un tipo de prenda (nuestras categorías). null = todo. */
+export type ShopFilter = { store: string | null; category: string | null };
+export type ShopDiscardReason = "estilo" | "color" | "caro" | "ya_tengo";
+
+const shopQuery = (filter?: ShopFilter) => {
+  const query = new URLSearchParams();
+  if (filter?.store) query.set("store", filter.store);
+  if (filter?.category) query.set("category", filter.category);
+  const text = query.toString();
+  return text ? `?${text}` : "";
+};
 
 export class ApiError extends Error {
   constructor(
@@ -227,9 +255,18 @@ export const api = {
     request<ShopState>("/api/shop/settings", json("PATCH", body)),
   /** Lanza la consulta en segundo plano y vuelve ya; el avance se sigue con shopState. */
   shopRefresh: (store?: string) => request<ShopState>("/api/shop/refresh", json("POST", { store: store ?? null })),
-  shopNext: () => request<ShopNext>("/api/shop/next"),
-  shopLike: (id: number) => request<ShopNext>(`/api/shop/items/${id}/like`, { method: "POST" }),
-  shopDislike: (id: number) => request<ShopNext>(`/api/shop/items/${id}/dislike`, { method: "POST" }),
+  /** «Ver más»: trae en segundo plano la siguiente tanda del catálogo guardado; se sigue con shopState. */
+  shopMore: (filter: ShopFilter) => request<ShopState>("/api/shop/more", json("POST", filter)),
+  shopNext: (filter?: ShopFilter) => request<ShopNext>(`/api/shop/next${shopQuery(filter)}`),
+  shopLike: (id: number, filter?: ShopFilter) =>
+    request<ShopNext>(`/api/shop/items/${id}/like${shopQuery(filter)}`, { method: "POST" }),
+  shopDislike: (id: number, filter?: ShopFilter) =>
+    request<ShopNext>(`/api/shop/items/${id}/dislike${shopQuery(filter)}`, { method: "POST" }),
+  /** «Volver»: deshace la última decisión y devuelve esa propuesta. */
+  shopUndo: (filter?: ShopFilter) => request<ShopNext>(`/api/shop/undo${shopQuery(filter)}`, { method: "POST" }),
+  /** Por qué se descartó (opcional). */
+  shopReason: (id: number, reason: ShopDiscardReason) =>
+    request<void>(`/api/shop/items/${id}/reason`, json("POST", { reason })),
   shopLiked: () => request<ShopItem[]>("/api/shop/liked"),
   shopRemove: (id: number) => request<void>(`/api/shop/items/${id}`, { method: "DELETE" }),
   shopBought: (id: number, size: string | null) =>

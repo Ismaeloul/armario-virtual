@@ -32,6 +32,7 @@ CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-haiku-5-5")
 # El bucle que cada hora mira si toca traer novedades de las tiendas. "0" lo apaga (tests, desarrollo).
 SHOP_AUTO = os.environ.get("ARMARIO_SHOP_AUTO", "1") != "0"
 SHOP_BATCH_SIZE = int(os.environ.get("ARMARIO_SHOP_BATCH", "40"))  # propuestas por tanda
+SHOP_MORE_SIZE = int(os.environ.get("ARMARIO_SHOP_MORE", "20"))  # propuestas por cada «Ver más»
 SHOP_PAUSE_SECONDS = float(os.environ.get("ARMARIO_SHOP_PAUSE", "1.0"))  # entre peticiones a la tienda
 SHOP_TIMEOUT_SECONDS = float(os.environ.get("ARMARIO_SHOP_TIMEOUT", "20"))
 SHOP_PAGES = int(os.environ.get("ARMARIO_SHOP_PAGES", "3"))  # páginas de 20 productos por categoría

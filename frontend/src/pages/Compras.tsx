@@ -2,15 +2,29 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent, type React
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { PrimaryButton, Segmented, Switch } from "../components/Controls";
+import { PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
-import { api, ApiError, mediaUrl, type ShopItem, type ShopNext, type ShopState, type ShopStore } from "../lib/api";
+import {
+  api,
+  ApiError,
+  mediaUrl,
+  type ShopDiscardReason,
+  type ShopFilter,
+  type ShopItem,
+  type ShopNext,
+  type ShopState,
+  type ShopStore,
+} from "../lib/api";
 
 type View = "descubrir" | "gustados";
 
-const POLL_MS = 4000; // cada cuánto se pregunta cómo va la consulta en marcha
+const POLL_MS = 4000; // cada cuánto se pregunta cómo va la consulta (o el «Ver más») en marcha
+const REASON_MS = 7000; // lo que dura en pantalla la pregunta «¿Qué no te convence?»
+const REASON_DONE_MS = 1500;
+const REASONS: ShopDiscardReason[] = ["estilo", "color", "caro", "ya_tengo"];
+const NO_FILTER: ShopFilter = { store: null, category: null };
 
 /** «viernes, 20 de noviembre, 9:41» a partir de una fecha con hora. */
 const dateTime = (iso: string) =>
@@ -37,10 +51,14 @@ export default function Compras() {
   const [next, setNext] = useState<ShopNext | null>(null);
   const [failed, setFailed] = useState(false);
   const [storesOpen, setStoresOpen] = useState(false);
+  // El filtro de Descubrir. La referencia es para el sondeo, que no debe reiniciarse al cambiarlo.
+  const [filter, setFilter] = useState<ShopFilter>(NO_FILTER);
+  const filterRef = useRef(filter);
+  filterRef.current = filter;
 
   const load = useCallback(() => {
     setFailed(false);
-    Promise.all([api.shopState(), api.shopNext()])
+    Promise.all([api.shopState(), api.shopNext(filterRef.current)])
       .then(([s, n]) => {
         setState(s);
         setNext(n);
@@ -49,6 +67,21 @@ export default function Compras() {
   }, []);
   useEffect(load, [load]);
   const closeStores = useCallback(() => setStoresOpen(false), []);
+
+  const changeFilter = useCallback((value: ShopFilter) => {
+    setFilter(value);
+    api
+      .shopNext(value)
+      // Si mientras tanto se ha vuelto a cambiar, esta respuesta ya no vale.
+      .then((n) => filterRef.current === value && setNext(n))
+      .catch(() => setFailed(true));
+  }, []);
+
+  // Si se desactiva la tienda por la que se estaba filtrando, el filtro de tienda se quita.
+  const filteredStore = state?.stores.find((s) => s.key === filter.store);
+  useEffect(() => {
+    if (filter.store && filteredStore && !filteredStore.enabled) changeFilter({ ...filter, store: null });
+  }, [filter, filteredStore, changeFilter]);
 
   // Mientras hay una consulta en marcha se sondea el estado; al terminar se piden las propuestas.
   const running = state?.running ?? false;
@@ -60,7 +93,7 @@ export default function Compras() {
         .shopState()
         .then((s) => {
           setState(s);
-          if (!s.running || s.pending > 0) api.shopNext().then(setNext).catch(() => undefined);
+          if (!s.running || s.pending > 0) api.shopNext(filterRef.current).then(setNext).catch(() => undefined);
         })
         .catch(() => undefined);
     }, POLL_MS);
@@ -112,6 +145,8 @@ export default function Compras() {
             <Discover
               state={state}
               next={next}
+              filter={filter}
+              onFilter={changeFilter}
               onState={setState}
               onNext={(n) => {
                 setNext(n);
@@ -137,12 +172,16 @@ export default function Compras() {
 function Discover({
   state,
   next,
+  filter,
+  onFilter,
   onState,
   onNext,
   onOpenStores,
 }: {
   state: ShopState;
   next: ShopNext;
+  filter: ShopFilter;
+  onFilter: (f: ShopFilter) => void;
   onState: (s: ShopState) => void;
   onNext: (n: ShopNext) => void;
   onOpenStores: () => void;
@@ -151,21 +190,56 @@ function Discover({
   const [error, setError] = useState<string | null>(null);
   // Si guardar la decisión falla, la tarjeta que ya se fue volando tiene que volver.
   const [attempt, setAttempt] = useState(0);
+  // Tras un «no me gusta», de qué producto se puede decir el motivo (y si ya se ha dicho).
+  const [asking, setAsking] = useState<{ id: number; done: boolean } | null>(null);
+  const askTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(askTimer.current), []);
+
+  const ask = (value: { id: number; done: boolean } | null, ms = 0) => {
+    window.clearTimeout(askTimer.current);
+    setAsking(value);
+    if (value) askTimer.current = window.setTimeout(() => setAsking(null), ms);
+  };
 
   const enabled = state.stores.filter((s) => s.enabled);
   const item = next.item;
 
   const decide = (liked: boolean) => {
     if (!item || busy) return;
+    const id = item.id;
     setBusy(true);
     setError(null);
-    (liked ? api.shopLike(item.id) : api.shopDislike(item.id))
-      .then(onNext)
+    (liked ? api.shopLike(id, filter) : api.shopDislike(id, filter))
+      .then((n) => {
+        onNext(n);
+        // La pregunta del motivo no frena nada: sale aparte, se puede ignorar y se va sola.
+        ask(liked ? null : { id, done: false }, REASON_MS);
+      })
       .catch(() => {
         setError(t.compras.errorAccion);
         setAttempt((n) => n + 1);
       })
       .finally(() => setBusy(false));
+  };
+
+  /** «Volver»: deshace la última decisión y vuelve a enseñar esa tarjeta. */
+  const undo = () => {
+    if (busy || !next.can_undo) return;
+    setBusy(true);
+    setError(null);
+    ask(null);
+    api
+      .shopUndo(filter)
+      .then(onNext)
+      .catch(() => setError(t.compras.errorVolver))
+      .finally(() => setBusy(false));
+  };
+
+  const giveReason = (reason: ShopDiscardReason) => {
+    if (!asking || asking.done) return;
+    ask({ id: asking.id, done: true }, REASON_DONE_MS);
+    // Si no se guarda no pasa nada grave: el descarte ya cuenta, solo que sin motivo.
+    api.shopReason(asking.id, reason).catch(() => undefined);
   };
 
   /** Activa la tienda (si hace falta) y lanza la consulta en segundo plano. */
@@ -175,6 +249,22 @@ function Discover({
     (store.enabled ? Promise.resolve() : api.shopSettings({ store: store.key, enabled: true }))
       .then(() => api.shopRefresh(store.key))
       .then(onState)
+      .catch((e) => setError(e instanceof ApiError && e.status < 500 ? e.message : t.comun.errorRed))
+      .finally(() => setBusy(false));
+  };
+
+  /** «Ver más»: la siguiente tanda del catálogo ya guardado, con el filtro que haya puesto. */
+  const more = () => {
+    setBusy(true);
+    setError(null);
+    ask(null);
+    api
+      .shopMore(filter)
+      .then((s) => {
+        onState(s);
+        // Si ya ha terminado (no quedaba nada que traer), el sondeo no arranca: se pregunta ahora.
+        if (!s.running) return api.shopNext(filter).then(onNext);
+      })
       .catch((e) => setError(e instanceof ApiError && e.status < 500 ? e.message : t.comun.errorRed))
       .finally(() => setBusy(false));
   };
@@ -201,45 +291,104 @@ function Discover({
     );
   }
 
+  // Dos filas de filtros con scroll horizontal: la tienda (solo si hay más de una) y el tipo de prenda.
+  const filters = (
+    <div className="flex flex-col gap-2">
+      {enabled.length > 1 && (
+        <Chips
+          label={t.compras.filtros.tienda}
+          options={[
+            { value: null, label: t.compras.filtros.todas },
+            ...enabled.map((s) => ({ value: s.key, label: s.name })),
+          ]}
+          value={filter.store}
+          onChange={(store) => onFilter({ ...filter, store })}
+        />
+      )}
+      <Chips
+        label={t.compras.filtros.tipo}
+        options={[
+          { value: null, label: t.compras.filtros.todo },
+          ...Object.entries(t.compras.filtros.categorias).map(([value, label]) => ({ value, label })),
+        ]}
+        value={filter.category}
+        onChange={(category) => onFilter({ ...filter, category })}
+      />
+    </div>
+  );
+
+  const reasonBar = asking && (
+    <ReasonBar done={asking.done} onReason={giveReason} onClose={() => ask(null)} />
+  );
+
+  const undoButton = (
+    <button
+      type="button"
+      aria-label={t.compras.volverAria}
+      disabled={busy || !next.can_undo}
+      onClick={undo}
+      className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-xl border border-line bg-control text-text-2 active:scale-[0.98] disabled:opacity-40"
+    >
+      <Icon name="undo" size={20} />
+      <span className="text-[10px] font-medium">{t.compras.volver}</span>
+    </button>
+  );
+
   if (item) {
     return (
       <>
+        {filters}
         <header className="flex flex-col gap-1">
           <span className="label-caps text-text-2">{t.compras.etiqueta}</span>
           <p className="text-xs text-text-3">
-            {state.running ? t.compras.buscando.aviso : t.compras.quedan(next.remaining)}
+            {state.running
+              ? state.job === "mas"
+                ? t.compras.mas.aviso
+                : t.compras.buscando.aviso
+              : t.compras.quedan(next.remaining)}
           </p>
+          {state.last_more?.low && !state.running && (
+            <p className="text-xs text-text-2">{t.compras.mas.encajaMenos}</p>
+          )}
         </header>
         <SwipeCard key={`${item.id}-${attempt}`} item={item} busy={busy} onDecide={decide} />
         {alert}
-        <section className="grid grid-cols-2 gap-2">
+        <section className="grid grid-cols-[auto_1fr_1fr] gap-2">
+          {undoButton}
           <button
             type="button"
             disabled={busy}
             onClick={() => decide(false)}
-            className="flex h-14 items-center justify-center gap-2 rounded-xl border border-line bg-control font-display text-[15px] font-semibold active:scale-[0.98] disabled:opacity-40"
+            className="flex h-14 items-center justify-center gap-1.5 rounded-xl border border-line bg-control font-display text-[15px] font-semibold whitespace-nowrap active:scale-[0.98] disabled:opacity-40"
           >
-            <Icon name="close" size={22} className="text-text-2" />
+            <Icon name="close" size={20} className="text-text-2" />
             {t.compras.no}
           </button>
           <button
             type="button"
             disabled={busy}
             onClick={() => decide(true)}
-            className="flex h-14 items-center justify-center gap-2 rounded-xl bg-primary font-display text-[15px] font-semibold text-on-primary active:scale-[0.98] disabled:opacity-40"
+            className="flex h-14 items-center justify-center gap-1.5 rounded-xl bg-primary font-display text-[15px] font-semibold whitespace-nowrap text-on-primary active:scale-[0.98] disabled:opacity-40"
           >
-            <Icon name="favorite_fill" size={22} />
+            <Icon name="favorite_fill" size={20} />
             {t.compras.si}
           </button>
         </section>
         <p className="text-center text-[11px] text-text-3">{t.compras.desliza}</p>
+        {reasonBar}
       </>
     );
   }
 
   if (state.running) {
+    const bringing = state.job === "mas";
     return (
-      <Notice icon="search" title={t.compras.buscando.titulo} text={t.compras.buscando.texto} pulse>
+      <Notice
+        icon="search"
+        title={bringing ? t.compras.mas.titulo : t.compras.buscando.titulo}
+        text={bringing ? t.compras.mas.texto : t.compras.buscando.texto}
+        pulse
+      >
         <div className="h-1 w-full overflow-hidden rounded-full bg-control">
           <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
         </div>
@@ -247,9 +396,9 @@ function Discover({
     );
   }
 
-  // Sin propuestas: o la última consulta falló, o ya se ha visto todo lo de esta semana.
+  // Sin propuestas y sin nada más que traer: puede que la última consulta fallara.
   const broken = enabled.find((s) => s.status.state === "failed");
-  if (broken) {
+  if (broken && next.more === 0 && !next.can_undo) {
     return (
       <>
         <Notice icon="error" danger title={t.compras.fallo.titulo(broken.name)} text={t.compras.fallo.texto}>
@@ -271,28 +420,148 @@ function Discover({
     );
   }
 
-  const store = enabled[0];
+  // Se han visto todas las de la tanda (o las del filtro): «Ver más» trae la siguiente del catálogo
+  // guardado; si ya no queda, se dice y se ofrece consultar la tienda.
+  const store = enabled.find((s) => s.key === filter.store) ?? enabled[0];
   const last = enabled.map((s) => s.status.at).filter((at): at is string => !!at).sort().pop();
   const upcoming = enabled.map((s) => s.next_check).filter((d): d is string => !!d).sort()[0];
+  const filterLabel = filter.category
+    ? t.compras.filtros.categorias[filter.category]
+    : filter.store
+      ? store.name
+      : null;
+  const when = [
+    last ? t.compras.vacio.ultima(dateTime(last)) : t.compras.vacio.nunca,
+    upcoming ? t.compras.vacio.proxima(dayLabel(upcoming)) : "",
+  ];
+  const text =
+    next.more > 0
+      ? filterLabel
+        ? t.compras.mas.quedanFiltro(filterLabel)
+        : t.compras.mas.quedan
+      : [filterLabel ? t.compras.mas.agotadoFiltro(filterLabel) : last ? t.compras.mas.agotado : "", ...when]
+          .filter(Boolean)
+          .join(" ");
   return (
     <>
+      {filters}
       <Notice
         icon="check_circle"
-        title={t.compras.vacio.titulo}
-        text={[
-          last ? t.compras.vacio.ultima(dateTime(last)) : t.compras.vacio.nunca,
-          upcoming ? t.compras.vacio.proxima(dayLabel(upcoming)) : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
+        title={filterLabel ? t.compras.vacio.tituloFiltro(filterLabel) : t.compras.vacio.titulo}
+        text={text}
       >
-        <PrimaryButton disabled={busy} onClick={() => search(store)}>
-          <Icon name="search" size={20} />
-          {t.compras.vacio.buscar}
-        </PrimaryButton>
+        {state.last_more?.error && state.last_more.added === 0 && (
+          <p role="alert" className="text-sm text-danger">
+            {t.compras.mas.error}
+          </p>
+        )}
+        {next.more > 0 ? (
+          <PrimaryButton disabled={busy} onClick={more}>
+            <Icon name="add" size={20} />
+            {busy ? t.compras.mas.trayendo : t.compras.mas.ver}
+          </PrimaryButton>
+        ) : (
+          <PrimaryButton disabled={busy} onClick={() => search(store)}>
+            <Icon name="search" size={20} />
+            {t.compras.vacio.buscar}
+          </PrimaryButton>
+        )}
+        {next.can_undo && (
+          <SecondaryButton onClick={undo}>
+            <Icon name="undo" size={18} />
+            {t.compras.volver}
+          </SecondaryButton>
+        )}
       </Notice>
       {alert}
+      {reasonBar}
     </>
+  );
+}
+
+/** Una fila de chips con scroll horizontal para elegir un filtro (null = sin filtro). */
+function Chips({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: string | null; label: string }[];
+  value: string | null;
+  onChange: (value: string | null) => void;
+}) {
+  return (
+    <div role="group" aria-label={label} className="-mx-5 flex gap-1.5 overflow-x-auto px-5">
+      {options.map((o) => (
+        <button
+          key={o.value ?? ""}
+          type="button"
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={`flex h-9 shrink-0 items-center rounded-full border border-line px-3.5 text-xs font-medium whitespace-nowrap ${
+            value === o.value ? "bg-primary text-on-primary" : "bg-card-2 text-text-2"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * La pregunta opcional tras un «no me gusta». Flota bajo la cabecera, sin tapar la tarjeta ni los
+ * botones, y no bloquea nada: se puede seguir deslizando y se va sola a los pocos segundos.
+ */
+function ReasonBar({
+  done,
+  onReason,
+  onClose,
+}: {
+  done: boolean;
+  onReason: (reason: ShopDiscardReason) => void;
+  onClose: () => void;
+}) {
+  return createPortal(
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-40 mx-auto max-w-md">
+      <div
+        role="status"
+        className="pointer-events-auto absolute inset-x-3 rounded-2xl border border-line bg-card px-3.5 py-2.5 shadow-float"
+        style={{ top: "calc(env(safe-area-inset-top, 0px) + 4rem)" }}
+      >
+        {done ? (
+          <p className="py-1.5 text-center text-xs text-text-2">{t.compras.motivo.anotado}</p>
+        ) : (
+          <>
+            <div className="flex items-center justify-between gap-2">
+              <span className="label-caps text-text-2">{t.compras.motivo.pregunta}</span>
+              <button
+                type="button"
+                aria-label={t.compras.motivo.cerrar}
+                onClick={onClose}
+                className="-my-2 -mr-2.5 flex h-10 w-10 items-center justify-center text-text-2 active:opacity-60"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+            <div className="-mx-3.5 mt-1.5 flex gap-1.5 overflow-x-auto px-3.5">
+              {REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  type="button"
+                  onClick={() => onReason(reason)}
+                  className="flex h-9 shrink-0 items-center rounded-full border border-line bg-card-2 px-3.5 text-xs font-medium whitespace-nowrap text-text active:scale-[0.98]"
+                >
+                  {t.compras.motivo.opciones[reason]}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>,
+    document.body,
   );
 }
 

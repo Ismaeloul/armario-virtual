@@ -1,20 +1,28 @@
-"""Compras (Fase 4): trae novedades de las tiendas, las puntúa contra el armario y lleva su estado.
+"""Compras (Fase 4): trae el catálogo de las tiendas, lo puntúa contra el armario y lleva su estado.
 
-Aquí no hay IA. La nota de un producto sale de cuatro cosas, de la que más pesa a la que menos:
+Aquí no hay IA. La nota de un producto sale, de lo que más pesa a lo que menos, de:
 
-  1. Con cuántas prendas del armario combina (las reglas de estilo más lo aprendido en Gustos:
-     la misma afinidad que usan Hoy y Gustos, pareja a pareja).
-  2. Si tapa un hueco: un tipo de prenda que no hay, un color que falta en ese tipo, o una
-     categoría con muy pocas prendas.
-  3. Si repite lo que ya hay (mismo tipo y mismo color): resta.
-  4. Lo que el usuario ha ido diciendo en la propia pestaña con «me gusta» / «no me gusta»:
-     preferencias por tipo de prenda, color y franja de precio.
+  1. Lo que el usuario ha ido diciendo en la propia pestaña con «me gusta» / «no me gusta»:
+     tipo de prenda, color, palabras del nombre («pana», «relaxed»…) y franja de precio.
+  2. Que se parezca a lo que ya lleva: que el color sea de los suyos (y lo lleve en esa parte del
+     cuerpo), que combine con su armario (la misma afinidad de Hoy y Gustos, pareja a pareja) y que
+     no sea un corte o un estampado raro.
+  3. Los huecos del armario (un tipo que no hay, un color base que falta, una categoría corta) y lo
+     repetido: solo como desempate.
+
+Con cero valoraciones gana la ropa básica y ponible, no la pieza llamativa: lo raro resta.
+
+Cada consulta semanal guarda el catálogo entero ya normalizado como «candidatos» (filas de
+`shop_items` sin fotos) y solo baja detalle y fotos de los mejores. «Ver más» vuelve a puntuar los
+candidatos con los gustos de ese momento y baja la tanda siguiente.
 
 La IA solo entra cuando el usuario marca «La he comprado»: entonces se analizan las fotos guardadas
 y la prenda pasa al armario. La app nunca compra ni guarda datos de pago: solo enlaza a la tienda.
 """
 import json
 import logging
+import math
+import re
 import threading
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
@@ -25,30 +33,86 @@ from sqlalchemy.orm import Session
 from .. import catalog, config
 from ..db import SessionLocal
 from ..models import Garment, Setting, ShopItem, now_utc
-from . import ai, outfits, shops, storage
+from . import ai, outfits, shops, storage, style_rules
 from .ai.base import build_prompt
 from .shops import ShopError
+from .shops.estimate import norm
 
 log = logging.getLogger("armario.compras")
 
+# «candidato»: está en el catálogo de la tienda pero no se ha enseñado (no tiene fotos).
+CANDIDATE = "candidato"
 NEW, LIKED, DISCARDED, BOUGHT, EXPIRED = "nuevo", "gustado", "descartado", "comprado", "caducado"
 
 LIKED_DAYS = 30  # lo que dura un «me gusta» antes de caducar
 EXPIRES_SOON_DAYS = 5  # desde cuándo se avisa de que caduca pronto
+DESCRIPTION_MAX = 400  # caracteres de la descripción de la tienda que se guardan en `details`
 
-# --- Pesos de la nota (de 0 a 100)
-GOOD_PAIR = 60  # afinidad de la pareja producto + prenda desde la que se cuenta que «combina»
-W_MATCH = 40.0  # por la fracción de prendas complementarias del armario con las que combina
-GAP_TYPE = 20.0  # el armario no tiene ninguna prenda de ese tipo
-GAP_COLOR = 10.0  # tiene el tipo, pero no en ese color
-GAP_CATEGORY = 10.0  # la categoría entera tiene muy pocas prendas…
-FEW_IN_CATEGORY = 3  # …menos de estas
-DUPLICATE = -12.0  # por cada prenda del mismo tipo y color que ya hay (hasta MAX_DUPLICATES)
-MAX_DUPLICATES = 3
-# Lo aprendido en la propia pestaña, con la opinión entre -1 y 1.
-W_PREF_TYPE, W_PREF_COLOR, W_PREF_PRICE = 15.0, 10.0, 8.0
+# ---------- Pesos de la nota (de 0 a 100)
+#
+# Todo producto sale de BASE y suma o resta. Los tres bloques, de más a menos peso:
+
+BASE = 30.0
+
+# 1. Lo que el usuario acepta y descarta en la tienda. Cada opinión va de -1 a 1 (ver ShopTaste.opinion),
+#    así que este bloque mueve la nota hasta ±56: manda sobre todo lo demás en cuanto hay valoraciones.
+#    Además, un color o un corte que el usuario ya ha aceptado deja de restar en el bloque 2.
+W_PREF_TYPE = 16.0  # tipo de prenda («sueles descartar los polos»)
+W_PREF_COLOR = 16.0  # color
+W_PREF_WORD = 16.0  # palabras del nombre (cropped, pana, relaxed…), sumadas y topadas en ±1
+W_PREF_PRICE = 8.0  # franja de precio
 PREF_PRIOR_VOTES = 2.0  # votos neutros de relleno: una sola opinión no decide
+USUAL_PRIOR_VOTES = 10.0  # votos de relleno al calcular cuánto acepta el usuario en general
 CLEAR_PREF = 0.35  # opinión a partir de la cual se enseña como motivo
+
+# 2. Que se parezca a lo que ya lleva. Sin valoraciones es lo que decide: hasta +44 y hasta -48.
+W_MATCH = 22.0  # por la fracción de prendas complementarias del armario con las que combina
+GOOD_PAIR = 60  # afinidad de la pareja producto + prenda desde la que se cuenta que «combina»
+W_PALETTE = 16.0  # el color es de los que ya lleva: cuanto más lo usa, más suma
+PALETTE_FULL = 0.2  # con esta fracción del armario en ese color, la suma es completa
+OFF_PALETTE = -16.0  # un color fuerte del que no tiene nada: no es un hueco, es que no lo lleva
+OFF_CATEGORY = -8.0  # lleva ese color, pero no en esa parte del cuerpo (vaquero blanco, zapatilla beige)
+HABIT_MIN = 8  # prendas que hacen falta en la categoría para decir «en esto no llevas ese color»
+W_BASIC = 6.0  # liso y de color base: va con todo
+LOUD = -6.0  # un estampado (rayas, cuadros, gráfico…) que no hay en todo el armario
+RISKY = -18.0  # corte o acabado poco habitual, por el nombre (ver _RISKY)
+
+# 3. Huecos del armario y repetidos: desempate entre dos prendas igual de ponibles, nunca el motor.
+GAP_TYPE = 4.0  # el armario no tiene ninguna prenda de ese tipo
+GAP_COLOR = 2.0  # tiene el tipo, pero no en ese color; solo si es un color base
+GAP_CATEGORY = 3.0  # la categoría entera tiene muy pocas prendas…
+FEW_IN_CATEGORY = 3  # …menos de estas
+DUPLICATE = -4.0  # por cada prenda del mismo tipo y color que ya hay (hasta MAX_DUPLICATES)
+MAX_DUPLICATES = 2
+
+# Cuando la nota media de una tanda de «Ver más» baja de aquí, la interfaz avisa de que lo que
+# viene ya encaja menos.
+LOW_FIT = 50.0
+
+# Al elegir qué candidatos se traen (no al puntuarlos), cada repetido baja un poco para que la tanda
+# sea variada: ocho chinos negros con la misma nota no deben llenarla.
+REPEAT_STEP = 4.0  # por cada candidato ya elegido del mismo tipo y color
+SECTION_STEP = 2.0  # por cada candidato ya elegido de la misma categoría de la tienda
+
+# Cortes y acabados poco habituales en ropa de diario. Zara Hombre los mezcla con lo básico y, sin
+# mirar la foto, el nombre es lo único que los delata. Es solo el punto de partida: si al usuario le
+# gusta alguno, lo aprendido por palabras quita la penalización.
+_RISKY = re.compile(
+    r"\b(cropped|culotte|flare|acampanad[oa]s?|crochet|calad[oa]s?|transparentes?|lentejuelas|brillos?|"
+    r"satinad[oa]s?|metalizad[oa]s?|limited|faldas?|top|sandalias?|zuecos?|flores|floral|bordad[oa]s?|"
+    r"jacquard|rejilla|leopardo|balloon|pareo|kimono|plumas)\b"
+)
+
+# A quién se le echa la culpa de un «no me gusta», según el motivo que dé el usuario:
+# (tipo, color, precio, palabras). Sin motivo se reparte entre todo, más flojo.
+DISCARD_REASONS = ("estilo", "color", "caro", "ya_tengo")
+_BLAME = {
+    None: (0.5, 0.5, 0.5, 0.5),
+    "estilo": (0.5, 0.0, 0.0, 1.0),  # el corte: las palabras del nombre y, algo, el tipo
+    "color": (0.0, 1.0, 0.0, 0.0),
+    "caro": (0.0, 0.0, 1.0, 0.0),
+    "ya_tengo": (0.0, 0.0, 0.0, 0.0),  # no dice nada de sus gustos
+}
 
 # Franjas de precio, en céntimos: hasta 25 €, hasta 50 €, hasta 80 € y más.
 PRICE_BANDS = ((2500, "hasta_25"), (5000, "hasta_50"), (8000, "hasta_80"))
@@ -56,6 +120,7 @@ PRICE_BANDS = ((2500, "hasta_25"), (5000, "hasta_50"), (8000, "hasta_80"))
 # --- Claves de la tabla settings
 K_STORES, K_CATEGORIES = "shop_stores", "shop_categories"
 K_STATUS = "shop_status"  # tienda -> cómo fue su última consulta (ver `store_status`)
+K_MORE = "shop_more"  # cómo fue el último «Ver más» (ver `more`); None tras cada consulta semanal
 
 
 # ---------- Ajustes de la pestaña
@@ -178,40 +243,76 @@ def next_check(db: Session, store: str, today: date | None = None) -> date:
 # ---------- Lo aprendido en la pestaña
 
 
+_STOP_WORDS = {
+    "con", "sin", "para", "por", "del", "los", "las", "the", "and", "zara", "hombre", "fit", "regular", "manga",
+    "mangas", "larga", "corta", "basico", "basica", "pack", "edition", "cuello", "efecto", "tejido",
+}
+
+
+def name_words(name: str) -> set[str]:
+    """Las palabras del nombre que describen la prenda («cropped», «pana», «relaxed»), sin el tipo ni
+    relleno. En minúsculas y sin tildes."""
+    words = set(re.findall(r"[a-z]{3,}", norm(name)))
+    return {w for w in words if w not in _STOP_WORDS and w not in _TYPE_WORDS}
+
+
 def price_band(cents: int) -> str:
     return next((name for limit, name in PRICE_BANDS if cents < limit), "mas_de_80")
 
 
 @dataclass
 class ShopTaste:
-    """Me gusta / no me gusta de la tienda, por tipo, color y franja de precio: clave -> [neto, total]."""
+    """Me gusta / no me gusta de la tienda, por tipo, color, franja de precio y palabras del nombre:
+    clave -> [neto, total]."""
 
     types: dict[str, list[float]] = field(default_factory=dict)
     colors: dict[str, list[float]] = field(default_factory=dict)
     prices: dict[str, list[float]] = field(default_factory=dict)
+    words: dict[str, list[float]] = field(default_factory=dict)
 
-    def learn(self, item, liked: bool) -> None:
-        for table, key in ((self.types, item.type), (self.colors, item.color), (self.prices, price_band(item.price_cents))):
-            entry = table.setdefault(key, [0.0, 0.0])
-            entry[0] += 1.0 if liked else -1.0
-            entry[1] += 1.0
+    def learn(self, item, liked: bool, reason: str | None = None) -> None:
+        """Un «me gusta» cuenta entero en todo. Un «no me gusta» carga la culpa según el motivo (`_BLAME`)."""
+        by_type, by_color, by_price, by_word = (1.0, 1.0, 1.0, 1.0) if liked else _BLAME.get(reason, _BLAME[None])
+        votes = [
+            (self.types, item.type, by_type),
+            (self.colors, item.color, by_color),
+            (self.prices, price_band(item.price_cents), by_price),
+        ]
+        votes += [(self.words, word, by_word) for word in name_words(item.name)]
+        for table, key, weight in votes:
+            if weight:
+                entry = table.setdefault(key, [0.0, 0.0])
+                entry[0] += weight if liked else -weight
+                entry[1] += weight
 
     @staticmethod
     def opinion(table: dict, key: str) -> float:
-        """De -1 a 1, suavizada: con pocos votos se queda cerca de 0."""
+        """De -1 a 1, suavizada (con pocos votos se queda cerca de 0) y RELATIVA a lo que el usuario
+        acepta en general. En una pantalla de deslizar se descarta casi todo: sin esto, todo acababa
+        con «sueles descartar…» y ninguna clave destacaba sobre las demás."""
         net, total = table.get(key, (0.0, 0.0))
-        return net / (total + PREF_PRIOR_VOTES)
+        if not total:
+            return 0.0
+        all_net = sum(entry[0] for entry in table.values())
+        all_total = sum(entry[1] for entry in table.values())
+        # Fracción de «me gusta» en esta tabla. Con pocas valoraciones tira hacia la mitad, para que
+        # los primeros «me gusta» (o los primeros descartes) ya cuenten como preferencia.
+        usual = ((all_net + all_total) / 2 + 0.5 * USUAL_PRIOR_VOTES) / (all_total + USUAL_PRIOR_VOTES)
+        liked = (net + total) / 2
+        rate = (liked + PREF_PRIOR_VOTES * usual) / (total + PREF_PRIOR_VOTES)
+        return max(-1.0, min(1.0, 2 * (rate - usual)))
 
 
 def load_shop_taste(db: Session) -> ShopTaste:
     """Cuenta como «me gusta» todo lo que alguna vez gustó (aunque luego se quitara o se comprara) y
-    como «no me gusta» lo descartado sin haberlo guardado. Lo caducado sin valorar no dice nada."""
+    como «no me gusta» lo descartado sin haberlo guardado. Lo caducado sin valorar no dice nada, y lo
+    deshecho con «Volver» tampoco: vuelve a estar pendiente."""
     learned = ShopTaste()
     for item in db.scalars(select(ShopItem).where(ShopItem.status.in_((LIKED, DISCARDED, BOUGHT)))):
         if item.liked_at is not None:
             learned.learn(item, True)
         elif item.status == DISCARDED:
-            learned.learn(item, False)
+            learned.learn(item, False, item.discard_reason)
     return learned
 
 
@@ -228,13 +329,18 @@ _TYPE_FORMS = {
 }
 _PLURAL_ONLY = {"zapatillas", "zapatos", "botas"}
 _INVARIABLE_COLORS = {"azul marino", "verde oliva", "burdeos", "beige", "naranja", "rosa"}
-# categoría -> (una, varias) para «Solo tienes 2 …»
+# categoría -> (una, varias, «no tienes … en ese color») para «Solo tienes 2 …» y «No tienes … en blanco»
 _CATEGORY_FORMS = {
-    "parte_superior": ("parte de arriba", "partes de arriba"),
-    "capa_exterior": ("chaqueta o abrigo", "chaquetas y abrigos"),
-    "parte_inferior": ("pantalón", "pantalones"),
-    "calzado": ("par de zapatos", "pares de zapatos"),
+    "parte_superior": ("parte de arriba", "partes de arriba", "partes de arriba"),
+    "capa_exterior": ("chaqueta o abrigo", "chaquetas y abrigos", "chaquetas ni abrigos"),
+    "parte_inferior": ("pantalón", "pantalones", "pantalones"),
+    "calzado": ("par de zapatos", "pares de zapatos", "calzado"),
 }
+_PATTERN_FORMS = {
+    "rayas": "de rayas", "cuadros": "de cuadros", "gráfico": "con dibujo", "logo": "con logo",
+    "bloques de color": "de bloques de color",
+}
+_PLAIN = ("liso", "texturizado")
 
 
 def _color_word(color: str, feminine: bool, plural: bool) -> str:
@@ -270,6 +376,12 @@ def _none(garment_type: str, color: str | None = None) -> str:
     return f"{text} {_color_word(color, feminine, False)}" if color else text
 
 
+# Las palabras que dicen qué prenda es: no describen el corte, así que no se aprenden como «palabras».
+_TYPE_WORDS = {norm(w) for t_, (plural, _f) in _TYPE_FORMS.items() for w in (*t_.split(), *plural.split())} | {
+    "jeans", "jean", "cazadora", "parka", "bermuda", "zapatilla", "zapato", "bota", "cardigan",
+}
+
+
 def wardrobe_item(g: Garment) -> outfits.Item:
     return outfits.Item(
         id=g.id, type=g.type, category=g.category, color=g.color_primary, style=g.style, season=g.season,
@@ -286,21 +398,70 @@ def candidate_item(product) -> outfits.Item:
     )
 
 
+# Lo que delata a una prenda de verano en el nombre o en la descripción de la tienda.
+_SUMMER_TEXT = re.compile(r"\b(tirantes|sin mangas|lino|bermudas?|shorts?|banador|sandalias?|chanclas?)\b")
+_SHORT_SLEEVE, _LONG_SLEEVE = re.compile(r"\bmangas? cortas?\b"), re.compile(r"\bmangas? largas?\b")
+
+
+def summer_text(text: str | None) -> bool:
+    """¿El texto (nombre o descripción) habla de manga corta, tirantes, lino y similares?
+
+    Si dice a la vez manga corta y manga larga (pasa: «Camiseta manga larga» con una descripción
+    copiada de la de manga corta), la manga no decide.
+    """
+    text = norm(text)
+    if _SUMMER_TEXT.search(text):
+        return True
+    return bool(_SHORT_SLEEVE.search(text)) and not _LONG_SLEEVE.search(text)
+
+
 def out_of_season(product, today: date) -> bool:
-    """Fuera de mayo-septiembre no se propone ropa de verano (la misma regla que el outfit de Hoy)."""
-    return not outfits.warm_months(today) and outfits.summer_only(candidate_item(product))
+    """Fuera de mayo-septiembre no se propone ropa de verano: la misma regla que el outfit de Hoy, más
+    lo que digan el nombre y la descripción (un jersey «de manga corta», una camisa de lino)."""
+    if outfits.warm_months(today):
+        return False
+    return outfits.summer_only(candidate_item(product)) or summer_text(f"{product.name} {product.details or ''}")
 
 
 def score(product, wardrobe: list[outfits.Item], taste=None, prefs: ShopTaste | None = None) -> tuple[float, list[dict]]:
     """La nota de un producto contra el armario (0-100) y los motivos, legibles, a favor y en contra."""
     candidate = candidate_item(product)
     reasons: list[dict] = []
-    total = 0.0
+    total = BASE
 
     def reason(text: str, kind: str = "pro") -> None:
         reasons.append({"text": text, "kind": kind})
 
-    # 1. Con cuántas prendas combina: las de las otras categorías, sin mezclar verano con invierno.
+    # 1. Lo que el usuario ha ido diciendo en la tienda: lo que más pesa.
+    if prefs is not None:
+        plural, feminine = _TYPE_FORMS[candidate.type]
+        article = "las" if feminine else "los"
+        by_type = prefs.opinion(prefs.types, candidate.type)
+        by_color = prefs.opinion(prefs.colors, candidate.color)
+        by_price = prefs.opinion(prefs.prices, price_band(product.price_cents))
+        by_word = {w: prefs.opinion(prefs.words, w) for w in sorted(name_words(product.name))}
+        total += W_PREF_TYPE * by_type + W_PREF_COLOR * by_color + W_PREF_PRICE * by_price
+        total += W_PREF_WORD * max(-1.0, min(1.0, sum(by_word.values())))
+        if by_type >= CLEAR_PREF:
+            reason(f"Te suelen gustar {article} {plural}")
+        elif by_type <= -CLEAR_PREF:
+            reason(f"Sueles descartar {article} {plural}", "contra")
+        if by_color >= CLEAR_PREF:
+            reason(f"Te suele gustar el {candidate.color}")
+        elif by_color <= -CLEAR_PREF:
+            reason(f"Sueles descartar el {candidate.color}", "contra")
+        if by_word:
+            strongest = max(by_word, key=lambda w: abs(by_word[w]))
+            if by_word[strongest] >= CLEAR_PREF:
+                reason(f"Te suele gustar lo «{strongest}»")
+            elif by_word[strongest] <= -CLEAR_PREF:
+                reason(f"Sueles descartar lo «{strongest}»", "contra")
+        if by_price >= CLEAR_PREF:
+            reason("Precio como los que te gustan")
+        elif by_price <= -CLEAR_PREF:
+            reason("Sueles descartar este rango de precio", "contra")
+
+    # 2a. Con cuántas prendas combina: las de las otras categorías, sin mezclar verano con invierno.
     others = [
         g for g in wardrobe
         if g.category != candidate.category and {g.season, candidate.season} != {"verano", "invierno"}
@@ -313,45 +474,64 @@ def score(product, wardrobe: list[outfits.Item], taste=None, prefs: ShopTaste | 
         elif len(others) >= 3:
             reason("No combina bien con lo que tienes", "contra")
 
-    # 2. Huecos del armario y 3. duplicados.
+    # 2b. ¿Es de los colores que ya lleva, y los lleva en esa parte del cuerpo? Lo normal es comprar en
+    #     la paleta propia, y que lleve camisetas blancas no quiere decir que lleve pantalones blancos.
+    in_category = [g for g in wardrobe if g.category == candidate.category]
+    # Un pantalón corto no cuenta como costumbre para uno largo (ni al revés): bermuda cruda no es vaquero crudo.
+    alike = [g for g in in_category if (g.type == "pantalón corto") == (candidate.type == "pantalón corto")]
+    neutral = style_rules.is_neutral(candidate)
+    off_category = False
+    if wardrobe:
+        share_all = sum(1 for g in wardrobe if g.color == candidate.color) / len(wardrobe)
+        share_here = share_all
+        if len(alike) >= FEW_IN_CATEGORY:
+            share_here = sum(1 for g in alike if g.color == candidate.color) / len(alike)
+        share = (share_all + share_here) / 2
+        total += W_PALETTE * min(1.0, share / PALETTE_FULL)
+        # Si ya ha dicho en la tienda que ese color le gusta, no llevarlo todavía no resta.
+        accepted = prefs is not None and prefs.opinion(prefs.colors, candidate.color) > 0
+        if share_all == 0 and not neutral:
+            if not accepted:
+                total += OFF_PALETTE
+                reason(f"No llevas nada {candidate.color}", "contra")
+        elif share_here == 0 and len(alike) >= HABIT_MIN:
+            off_category = True
+            if not accepted:
+                total += OFF_CATEGORY
+                reason(f"No tienes {_CATEGORY_FORMS[candidate.category][2]} en {candidate.color}", "contra")
+        elif share >= 0.1:
+            reason(f"Es un color que ya llevas ({candidate.color})")
+
+    # 2c. Básico o llamativo: el estampado y el corte.
+    if candidate.pattern in _PLAIN:
+        if neutral:
+            total += W_BASIC
+    elif wardrobe and not any(g.pattern == candidate.pattern for g in wardrobe):
+        total += LOUD
+        reason(f"No llevas nada {_PATTERN_FORMS.get(candidate.pattern, candidate.pattern)}", "contra")
+    risky = _RISKY.search(norm(product.name))
+    if risky and not (prefs is not None and prefs.opinion(prefs.words, risky.group(1)) > 0):
+        total += RISKY
+        reason(f"Corte poco habitual ({risky.group(1)})", "contra")
+
+    # 3. Huecos del armario y repetidos: desempate.
     same_type = [g for g in wardrobe if g.type == candidate.type]
     same = sum(1 for g in same_type if g.color == candidate.color)
-    in_category = sum(1 for g in wardrobe if g.category == candidate.category)
     if not same_type:
         total += GAP_TYPE
         reason(_none(candidate.type))
-    elif not same:
-        total += GAP_COLOR
-        reason(_none(candidate.type, candidate.color))
-    else:
+    elif same:
         total += DUPLICATE * min(same, MAX_DUPLICATES)
         reason(f"Ya tienes {_typed(candidate.type, same, candidate.color)}", "contra")
-    if in_category < FEW_IN_CATEGORY:
+    elif neutral and not off_category:
+        # Solo un color base es un hueco de verdad. «No tienes ningún jersey rosa» no es motivo para comprarlo.
+        total += GAP_COLOR
+        reason(_none(candidate.type, candidate.color))
+    if len(in_category) < FEW_IN_CATEGORY:
         total += GAP_CATEGORY
         if in_category:
-            one, many = _CATEGORY_FORMS[candidate.category]
-            reason(f"Solo tienes {in_category} {one if in_category == 1 else many}")
-
-    # 4. Lo que el usuario ha ido diciendo en la tienda.
-    if prefs is not None:
-        plural, feminine = _TYPE_FORMS[candidate.type]
-        article = "las" if feminine else "los"
-        by_type = prefs.opinion(prefs.types, candidate.type)
-        by_color = prefs.opinion(prefs.colors, candidate.color)
-        by_price = prefs.opinion(prefs.prices, price_band(product.price_cents))
-        total += W_PREF_TYPE * by_type + W_PREF_COLOR * by_color + W_PREF_PRICE * by_price
-        if by_type >= CLEAR_PREF:
-            reason(f"Te suelen gustar {article} {plural}")
-        elif by_type <= -CLEAR_PREF:
-            reason(f"Sueles descartar {article} {plural}", "contra")
-        if by_color >= CLEAR_PREF:
-            reason(f"Te suele gustar el {candidate.color}")
-        elif by_color <= -CLEAR_PREF:
-            reason(f"Sueles descartar el {candidate.color}", "contra")
-        if by_price >= CLEAR_PREF:
-            reason("Precio como los que te gustan")
-        elif by_price <= -CLEAR_PREF:
-            reason("Sueles descartar este rango de precio", "contra")
+            one, many, _in = _CATEGORY_FORMS[candidate.category]
+            reason(f"Solo tienes {len(in_category)} {one if len(in_category) == 1 else many}")
 
     return round(max(0.0, min(100.0, total)), 1), reasons
 
@@ -392,12 +572,17 @@ def rescore_pending(db: Session) -> None:
 # ---------- Estados
 
 
-def _retire(item: ShopItem, status: str) -> None:
-    """Deja de enseñarse: se queda la fila (para no volver a proponerlo) y se borran sus fotos."""
+def _drop_photos(item: ShopItem) -> None:
     for photo_id in item.photos or []:
         storage.delete(photo_id)
     item.photos = []
+
+
+def _retire(item: ShopItem, status: str) -> None:
+    """Deja de enseñarse para siempre: se queda la fila (para no volver a proponerlo) y se borran sus fotos."""
+    _drop_photos(item)
     item.status = status
+    item.can_undo = False
 
 
 def expire_old(db: Session, now: datetime | None = None) -> int:
@@ -416,20 +601,69 @@ def expire_old(db: Session, now: datetime | None = None) -> int:
 def like(db: Session, item: ShopItem) -> None:
     now = now_utc()
     item.status = LIKED
-    item.liked_at = now
+    item.liked_at = item.decided_at = now
     item.expires_at = now + timedelta(days=LIKED_DAYS)
+    item.can_undo = True
     db.commit()
     rescore_pending(db)
 
 
 def dislike(db: Session, item: ShopItem) -> None:
-    _retire(item, DISCARDED)
+    """No se vuelve a proponer. Las fotos se quedan mientras se pueda deshacer con «Volver»: se borran
+    en la siguiente consulta semanal de su tienda (`_close_undo`)."""
+    item.status = DISCARDED
+    item.decided_at = now_utc()
+    item.discard_reason = None
+    item.can_undo = True
     db.commit()
     rescore_pending(db)
 
 
+def set_reason(db: Session, item: ShopItem, reason: str | None) -> None:
+    """Por qué se descartó: decide a qué se le carga la culpa al aprender (`_BLAME`)."""
+    item.discard_reason = reason
+    db.commit()
+    rescore_pending(db)
+
+
+def last_decision(db: Session) -> ShopItem | None:
+    """El último me gusta / no me gusta que aún se puede deshacer, de las tiendas activadas."""
+    return db.scalars(
+        select(ShopItem)
+        .where(ShopItem.can_undo.is_(True), ShopItem.status.in_((LIKED, DISCARDED)),
+               ShopItem.store.in_(enabled_stores(db)))
+        .order_by(ShopItem.decided_at.desc(), ShopItem.id.desc())
+        .limit(1)
+    ).first()
+
+
+def undo(db: Session) -> ShopItem | None:
+    """«Volver»: deshace la última decisión y la deja otra vez pendiente, como si no se hubiera valorado
+    (no cuenta al aprender y, si era un «me gusta», sale de Me gustan). None si no hay nada que deshacer."""
+    item = last_decision(db)
+    if item is None:
+        return None
+    item.status = NEW
+    item.liked_at = item.expires_at = item.decided_at = item.discard_reason = None
+    item.can_undo = False
+    db.commit()
+    rescore_pending(db)
+    return item
+
+
+def _close_undo(db: Session, store: str) -> None:
+    """Con la consulta semanal se cierra la tanda: sus decisiones ya no se pueden deshacer y lo
+    descartado suelta las fotos que guardaba por si acaso."""
+    for item in db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.can_undo.is_(True))):
+        item.can_undo = False
+        if item.status == DISCARDED:
+            _drop_photos(item)
+    db.commit()
+
+
 def remove_liked(db: Session, item: ShopItem) -> None:
     _retire(item, DISCARDED)
+    item.decided_at = now_utc()
     db.commit()
 
 
@@ -506,6 +740,7 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
     item.status = BOUGHT
     item.garment_id = garment.id
     item.liked_at = item.liked_at or now_utc()
+    item.can_undo = False
     item.ai_draft = saved_draft
     item.photos = []  # las fotos pasan a ser de la prenda: una foto, un solo dueño
     db.commit()
@@ -513,7 +748,7 @@ def buy(db: Session, item: ShopItem, size: str | None, preferred_provider: str) 
     return garment, draft is not None
 
 
-# ---------- La tanda
+# ---------- Candidatos y tandas
 
 
 def _save_photos(connector, urls: list[str]) -> list[str]:
@@ -534,7 +769,8 @@ def _save_photos(connector, urls: list[str]) -> list[str]:
 
 
 def _round_robin(queues: list[list]):
-    """Reparte entre categorías: la mejor de cada una, luego la segunda de cada una…"""
+    """Reparte entre tiendas: la mejor de cada una, luego la segunda de cada una… Si una se acaba,
+    siguen las demás."""
     queues = sorted((q for q in queues if q), key=lambda q: -q[0][0])
     for position in range(max((len(q) for q in queues), default=0)):
         for queue in queues:
@@ -542,15 +778,145 @@ def _round_robin(queues: list[list]):
                 yield queue[position]
 
 
+def _varied(entries: list[tuple], head: int) -> list[tuple]:
+    """Ordena por nota, pero sin amontonar lo mismo: cada elegido baja un poco (solo para elegir) a los
+    que quedan de su mismo tipo y color y de su misma categoría de la tienda. Así una categoría floja
+    no entra a la fuerza y una buena no lo llena todo. Solo se afina la cabeza (`head`): el resto va por nota.
+    """
+    left = sorted(entries, key=lambda entry: (-entry[0], entry[2].product_ref))
+    picked: list[tuple] = []
+    same: dict[tuple, int] = {}
+    sections: dict[str, int] = {}
+    while left and len(picked) < head:
+        def worth(entry: tuple) -> float:
+            row = entry[2]
+            return entry[0] - REPEAT_STEP * same.get((row.type, row.color), 0) - SECTION_STEP * sections.get(row.section, 0)
+
+        best = max(range(len(left)), key=lambda i: (worth(left[i]), -i))
+        entry = left.pop(best)
+        row = entry[2]
+        same[(row.type, row.color)] = same.get((row.type, row.color), 0) + 1
+        sections[row.section] = sections.get(row.section, 0) + 1
+        picked.append(entry)
+    return picked + left
+
+
+def _ranked(context: "Context", rows: list[ShopItem], head: int) -> list[tuple]:
+    """Los candidatos en el orden en que se intentará traerlos, como (nota, motivos, fila).
+
+    El cupo se reparte a partes iguales entre tiendas, para que un catálogo grande no entierre a los
+    demás, y dentro de cada tienda manda la nota con algo de variedad (`_varied`). Es el orden de
+    traída: al enseñarlas, las propuestas van por nota, vengan de la tienda que vengan.
+    """
+    by_store: dict[str, list[tuple]] = {}
+    for row in rows:
+        value, reasons = context.score(row)
+        by_store.setdefault(row.store, []).append((value, reasons, row))
+    return list(_round_robin([_varied(entries, head) for entries in by_store.values()]))
+
+
+def _store_candidate(db: Session, row: ShopItem | None, product, today: date) -> ShopItem:
+    """Guarda (o pone al día) un producto del catálogo como candidato: todo lo del listado, sin fotos."""
+    name = product.name[:160]
+    if row is None:
+        row = ShopItem(
+            store=product.store, product_ref=product.product_ref, status=CANDIDATE, batch=today, photos=[],
+            sizes=[], reasons=[], score=0.0, first_seen_at=now_utc(), details="",
+        )
+        db.add(row)
+    # Si ya se le bajó la ficha, se conserva lo que decía la descripción (y la temporada que salió de
+    # ella): así un «manga corta» ya descubierto no vuelve a gastar una petición cada semana.
+    described = row.name == name and len(row.details or "") > len(product.details)
+    row.name, row.price_cents, row.url = name, product.price_cents, product.url
+    row.store_color, row.section, row.store_data = product.store_color[:60], product.section, product.store_data
+    row.type, row.category, row.color = product.type, product.category, product.color
+    row.pattern, row.style = product.pattern, product.style
+    if not described:
+        row.season, row.details = product.season, product.details
+    row.last_checked_at = None  # todavía no se le ha pedido la ficha esta semana
+    return row
+
+
+def candidates_left(db: Session, today: date | None = None, store: str | None = None,
+                    category: str | None = None) -> list[ShopItem]:
+    """Los candidatos que «Ver más» aún puede traer: de las tiendas activadas (o de una), de una categoría
+    si se filtra, de temporada y sin haber fallado ya esta semana al pedir su ficha."""
+    today = today or outfits.local_today()
+    stores = [s for s in enabled_stores(db) if store in (None, s)]
+    stmt = select(ShopItem).where(
+        ShopItem.status == CANDIDATE, ShopItem.store.in_(stores), ShopItem.last_checked_at.is_(None)
+    )
+    if category:
+        stmt = stmt.where(ShopItem.category == category)
+    return [row for row in db.scalars(stmt) if not out_of_season(row, today)]
+
+
+def _promote(db: Session, context: "Context", ranked: list[tuple], limit: int, today: date, failed) -> list[float]:
+    """Baja la ficha y las fotos de los mejores candidatos hasta tener `limit` propuestas nuevas, y
+    devuelve sus notas. Si uno no sirve (ya no existe, sin foto, sin tallas o, leída la descripción,
+    fuera de temporada) entra el siguiente, con un tope de peticiones por educación con la tienda.
+    """
+    scores: list[float] = []
+    attempts = 0
+    for _value, _reasons, row in ranked:
+        if len(scores) >= limit or attempts >= limit * 2:
+            break
+        attempts += 1
+        connector = shops.CONNECTORS[row.store]
+        try:
+            detail = connector.detail(row.store_data)
+            row.last_checked_at = now_utc()
+            if detail is None or not detail.photo_urls or not detail.in_stock:
+                db.commit()
+                continue  # ya no existe, no tiene foto de producto o no queda ninguna talla
+            description = " ".join((detail.description or "").split())[:DESCRIPTION_MAX]
+            if description and description not in (row.details or ""):
+                row.details = f"{row.details or ''} {description}".strip()
+            if summer_text(description) and row.season != "verano":
+                row.season = "verano"
+            if out_of_season(row, today):
+                db.commit()
+                continue  # la descripción dice manga corta, lino…: fuera hasta mayo
+            photos = _save_photos(connector, detail.photo_urls)
+        except Exception as exc:
+            if not isinstance(exc, ShopError):
+                log.exception("Compras: error inesperado con %s", row.product_ref)
+            failed(row.name, exc)
+            row.last_checked_at = None  # un fallo de red no dice nada del producto: se podrá reintentar
+            db.commit()
+            continue
+        row.status, row.batch, row.photos = NEW, today, photos
+        row.price_cents = detail.price_cents or row.price_cents
+        row.store_color_hex, row.sizes, row.in_stock = detail.color_hex, detail.sizes, True
+        row.first_seen_at = now_utc()
+        row.score, row.reasons = context.score(row)  # con la descripción ya leída
+        db.commit()
+        scores.append(row.score)
+    return scores
+
+
+def _failure_log(result: dict):
+    """Devuelve la función que apunta un fallo en `result` («Camisas: HTTP 403»)."""
+
+    def failed(what: str, exc: Exception) -> None:
+        message = str(exc) if isinstance(exc, ShopError) else "error inesperado en el conector"
+        result["failed"] += 1
+        result["errors"].append(f"{what}: {message}")
+
+    return failed
+
+
 def refresh_store(db: Session, store: str, today: date | None = None, limit: int | None = None) -> dict:
-    """Consulta UNA tienda: trae sus novedades, deja las mejores como propuestas y revisa sus «me gusta».
+    """Consulta UNA tienda: guarda su catálogo como candidatos, deja los mejores como propuestas y
+    revisa sus «me gusta».
 
     Nunca lanza por culpa de la tienda: lo que falla se apunta, se guarda en el estado de la tienda
     (`store_status`) y se sigue con lo demás.
     """
     now = now_utc()
     today = today or outfits.local_today()
-    limit = config.SHOP_BATCH_SIZE if limit is None else limit
+    # El cupo de la tanda se reparte entre las tiendas activadas.
+    limit = math.ceil((config.SHOP_BATCH_SIZE if limit is None else limit) / max(1, len(enabled_stores(db))))
     connector = shops.CONNECTORS[store]
     previous = store_status(db, store) or {}
     result = {
@@ -558,22 +924,24 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
         "found": 0, "added": 0, "expired": 0, "failed": 0, "error": None, "errors": [],
     }
     errors: list[str] = result["errors"]
-
-    def failed(what: str, exc: Exception) -> None:
-        message = str(exc) if isinstance(exc, ShopError) else "error inesperado en el conector"
-        result["failed"] += 1
-        errors.append(f"{what}: {message}")
+    failed = _failure_log(result)
 
     # Se apunta ya el intento: si el proceso muere a medias, hoy no se vuelve a insistir.
     _save_status(db, store, {**previous, "day": today.isoformat()})
     db.commit()
 
-    context = Context.load(db)
-    seen = set(db.scalars(select(ShopItem.product_ref)))  # lo visto alguna vez, sea cual sea su estado
+    # Lo que ya se enseñó alguna vez (sea cual sea su estado) no vuelve; los candidatos se renuevan.
+    shown = set(db.scalars(select(ShopItem.product_ref).where(ShopItem.status != CANDIDATE)))
+    old = {
+        row.product_ref: row
+        for row in db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.status == CANDIDATE))
+    }
+    fresh: dict[str, ShopItem] = {}
 
     # 1. Listados: una petición por categoría. Solo datos del listado, sin fotos ni detalle.
-    queues: list[list[tuple]] = []
-    for slug in active_categories(db, store):
+    active = active_categories(db, store)
+    listed: set[str] = set()
+    for slug in active:
         label = connector.categories.get(slug, slug)
         try:
             products = connector.list_category(slug)
@@ -584,58 +952,31 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
             continue
         result["ok"] = True
         result["found"] += len(products)
-        queue = []
+        listed.add(slug)
         for product in products:
-            if product.product_ref in seen:
-                continue
-            seen.add(product.product_ref)  # la misma prenda puede salir en dos categorías
-            if out_of_season(product, today):
-                continue
-            value, reasons = context.score(product)
-            queue.append((value, reasons, product))
-        queue.sort(key=lambda entry: -entry[0])
-        queues.append(queue)
+            ref = product.product_ref
+            if ref not in shown and ref not in fresh:  # la misma prenda puede salir en dos categorías
+                fresh[ref] = _store_candidate(db, old.get(ref), product, today)
 
     if result["ok"]:
-        # 2. Las propuestas de tandas anteriores que no se llegaron a valorar caducan.
+        # 2. Fuera lo que ya no está: los candidatos que la tienda ha retirado (los de una categoría que
+        #    hoy ha fallado se conservan), las propuestas de tandas anteriores que no se llegaron a
+        #    valorar y la posibilidad de deshacer las decisiones de la tanda anterior.
+        for ref, row in old.items():
+            if ref not in fresh and (row.section in listed or row.section not in active):
+                db.delete(row)
         stale = select(ShopItem).where(ShopItem.store == store, ShopItem.status == NEW, ShopItem.batch < today)
         for item in db.scalars(stale):
             _retire(item, EXPIRED)
             result["expired"] += 1
+        _set(db, K_MORE, None)
         db.commit()
+        _close_undo(db, store)
 
-        # 3. El detalle y las fotos, solo de las mejores. Si una no sirve, entra la siguiente
-        #    (con un tope de peticiones, por educación con la tienda).
-        attempts = 0
-        for value, reasons, product in _round_robin(queues):
-            if result["added"] >= limit or attempts >= limit * 2:
-                break
-            attempts += 1
-            try:
-                detail = connector.detail(product.store_data)
-                if detail is None or not detail.photo_urls or not detail.in_stock:
-                    continue  # ya no existe, no tiene foto de producto o no queda ninguna talla
-                photos = _save_photos(connector, detail.photo_urls)
-            except Exception as exc:
-                if not isinstance(exc, ShopError):
-                    log.exception("Compras: error inesperado con %s", product.product_ref)
-                failed(product.name, exc)
-                continue
-            db.add(
-                ShopItem(
-                    store=product.store, product_ref=product.product_ref, name=product.name[:160],
-                    price_cents=detail.price_cents or product.price_cents, url=product.url,
-                    store_color=product.store_color[:60], store_color_hex=detail.color_hex,
-                    section=product.section, store_data=product.store_data, type=product.type,
-                    category=product.category, color=product.color, pattern=product.pattern,
-                    style=product.style, season=product.season,
-                    details=f"{product.details} {detail.description}".strip(),
-                    photos=photos, score=value, reasons=reasons, status=NEW, batch=today,
-                    first_seen_at=now, last_checked_at=now_utc(), in_stock=True, sizes=detail.sizes,
-                )
-            )
-            db.commit()
-            result["added"] += 1
+        # 3. El detalle y las fotos, solo de los mejores.
+        context = Context.load(db)
+        in_season = [row for row in fresh.values() if not out_of_season(row, today)]
+        result["added"] = len(_promote(db, context, _ranked(context, in_season, limit * 2), limit, today, failed))
 
     # 4. Los «me gusta» de esta tienda: ¿siguen ahí y queda alguna talla?
     for item in db.scalars(select(ShopItem).where(ShopItem.store == store, ShopItem.status == LIKED)):
@@ -695,13 +1036,50 @@ def refresh(db: Session, today: date | None = None, limit: int | None = None, st
     return total
 
 
+def more(db: Session, store: str | None = None, category: str | None = None, limit: int | None = None,
+         today: date | None = None) -> dict:
+    """«Ver más»: la siguiente tanda sin esperar al día de consulta.
+
+    Vuelve a puntuar los candidatos guardados con los gustos de ahora (respetando el filtro de tienda
+    y de tipo de prenda), y solo de los mejores baja ficha y fotos. No pide el catálogo otra vez.
+
+    Devuelve, y deja guardado para la interfaz (`last_more`):
+    {"at", "added": propuestas nuevas, "mean": su nota media, "low": si encajan ya menos (LOW_FIT),
+     "failed", "error": el primer fallo en claro, "errors"}
+    """
+    today = today or outfits.local_today()
+    limit = config.SHOP_MORE_SIZE if limit is None else limit
+    result = {"at": now_utc().isoformat(), "added": 0, "mean": None, "low": False, "failed": 0, "error": None,
+              "errors": []}
+    context = Context.load(db)
+    ranked = _ranked(context, candidates_left(db, today, store, category), limit * 2)
+    scores = _promote(db, context, ranked, limit, today, _failure_log(result))
+    if scores:
+        result["added"] = len(scores)
+        result["mean"] = round(sum(scores) / len(scores), 1)
+        result["low"] = result["mean"] < LOW_FIT
+    result["error"] = result["errors"][0] if result["errors"] else None
+    result["errors"] = result["errors"][:20]
+    _set(db, K_MORE, result)
+    db.commit()
+    log.info("Compras: ver más (%s nuevas, nota media %s, %s peticiones fallidas)",
+             result["added"], result["mean"], result["failed"])
+    return result
+
+
+def last_more(db: Session) -> dict | None:
+    """Cómo fue el último «Ver más» desde la última consulta semanal, o None si no ha habido."""
+    return _get(db, K_MORE)
+
+
 # ---------- En segundo plano
 
-_lock = threading.Lock()  # una sola tanda a la vez
+_lock = threading.Lock()  # una sola tanda a la vez, sea la consulta semanal o un «Ver más»
 _running = threading.Event()
 _stop = threading.Event()
 _worker: threading.Thread | None = None
 _scheduler: threading.Thread | None = None
+_job = "consulta"  # qué es lo que está en marcha: la «consulta» del catálogo o un ver «mas»
 FIRST_CHECK_SECONDS, CHECK_EVERY_SECONDS = 30, 3600
 
 
@@ -709,11 +1087,16 @@ def is_running() -> bool:
     return _running.is_set()
 
 
-def _run_locked(stores: list[str] | None = None) -> None:
-    """Hace la tanda con el cerrojo ya cogido y lo suelta al acabar, pase lo que pase."""
+def running_job() -> str | None:
+    """«consulta» o «mas» mientras hay una tanda en marcha; None si no hay ninguna."""
+    return _job if _running.is_set() else None
+
+
+def _run_locked(job) -> None:
+    """Hace el trabajo (`job(db)`) con el cerrojo ya cogido y lo suelta al acabar, pase lo que pase."""
     try:
         with SessionLocal() as db:
-            refresh(db, stores=stores)
+            job(db)
     except Exception:
         log.exception("Compras: la tanda falló")
     finally:
@@ -721,15 +1104,25 @@ def _run_locked(stores: list[str] | None = None) -> None:
         _lock.release()
 
 
-def start_refresh(stores: list[str] | None = None) -> bool:
-    """Lanza una tanda en un hilo aparte y vuelve ya. False si ya había una en marcha."""
-    global _worker
+def _start(job, kind: str) -> bool:
+    global _worker, _job
     if not _lock.acquire(blocking=False):
         return False
+    _job = kind
     _running.set()
-    _worker = threading.Thread(target=_run_locked, args=(stores,), name="armario-compras-tanda", daemon=True)
+    _worker = threading.Thread(target=_run_locked, args=(job,), name=f"armario-compras-{kind}", daemon=True)
     _worker.start()
     return True
+
+
+def start_refresh(stores: list[str] | None = None) -> bool:
+    """Lanza una tanda en un hilo aparte y vuelve ya. False si ya había una en marcha."""
+    return _start(lambda db: refresh(db, stores=stores), "consulta")
+
+
+def start_more(store: str | None = None, category: str | None = None) -> bool:
+    """Lanza un «Ver más» en un hilo aparte y vuelve ya. False si ya había una tanda en marcha."""
+    return _start(lambda db: more(db, store, category), "mas")
 
 
 def wait_idle(timeout: float = 30) -> None:
@@ -739,6 +1132,7 @@ def wait_idle(timeout: float = 30) -> None:
 
 
 def _loop() -> None:
+    global _job
     delay = FIRST_CHECK_SECONDS
     while not _stop.wait(delay):
         delay = CHECK_EVERY_SECONDS
@@ -746,8 +1140,9 @@ def _loop() -> None:
             with SessionLocal() as db:
                 due = due_stores(db)
             if due and _lock.acquire(blocking=False):
+                _job = "consulta"
                 _running.set()
-                _run_locked(due)
+                _run_locked(lambda db: refresh(db, stores=due))
         except Exception:
             log.exception("Compras: fallo en el bucle de la tanda semanal")
 

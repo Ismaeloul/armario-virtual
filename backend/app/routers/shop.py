@@ -5,11 +5,12 @@ La app solo enlaza a la página del producto: nunca compra ni guarda datos de pa
 from datetime import date, datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from .. import catalog
 from ..db import get_db
 from ..models import ShopItem
 from ..schemas import Photo
@@ -77,11 +78,21 @@ class ShopStoreOut(BaseModel):
     next_check: date | None  # cuándo se consultará sola (None si está desactivada)
 
 
+class ShopMoreOut(BaseModel):
+    """Cómo fue el último «Ver más» desde la última consulta semanal."""
+
+    added: int  # propuestas que trajo
+    low: bool  # su nota media es baja: lo que viene ya encaja menos
+    error: str | None  # el primer fallo, en claro
+
+
 class ShopState(BaseModel):
     stores: list[ShopStoreOut]
-    running: bool  # hay una consulta en marcha
+    running: bool  # hay una consulta o un «Ver más» en marcha
+    job: Literal["consulta", "mas"] | None  # cuál de las dos
     pending: int  # propuestas por ver
     liked: int
+    last_more: ShopMoreOut | None
 
 
 class ShopSettingsIn(BaseModel):
@@ -94,9 +105,35 @@ class RefreshIn(BaseModel):
     store: str | None = None  # None = todas las activadas
 
 
+class MoreIn(BaseModel):
+    store: str | None = None  # None = todas las activadas
+    category: str | None = None  # None = todo tipo de prenda
+
+
+class ReasonIn(BaseModel):
+    reason: Literal["estilo", "color", "caro", "ya_tengo"] | None = None
+
+
 class ShopNext(BaseModel):
     item: ShopItemOut | None
-    remaining: int  # cuántas quedan, contando esta
+    remaining: int  # cuántas quedan con este filtro, contando esta
+    more: int  # candidatos que «Ver más» aún puede traer con este filtro
+    can_undo: bool  # hay una decisión que «Volver» puede deshacer
+
+
+def _check_filter(store: str | None, category: str | None) -> None:
+    if store is not None and store not in shops.CONNECTORS:
+        raise HTTPException(404, "Tienda desconocida")
+    if category is not None and category not in catalog.CATEGORIES:
+        raise HTTPException(422, "Tipo de prenda desconocido")
+
+
+class Filter:
+    """El filtro de Descubrir: una tienda y un tipo de prenda (nuestras categorías). Va en la URL."""
+
+    def __init__(self, store: str | None = Query(default=None), category: str | None = Query(default=None)):
+        _check_filter(store, category)
+        self.store, self.category = store, category
 
 
 class BoughtIn(BaseModel):
@@ -132,10 +169,12 @@ def _to_out(item: ShopItem) -> ShopItemOut:
     )
 
 
-def _count(db: Session, status: str, stores: list[str] | None = None) -> int:
+def _count(db: Session, status: str, stores: list[str] | None = None, category: str | None = None) -> int:
     stmt = select(func.count()).select_from(ShopItem).where(ShopItem.status == status)
     if stores is not None:
         stmt = stmt.where(ShopItem.store.in_(stores))
+    if category is not None:
+        stmt = stmt.where(ShopItem.category == category)
     return db.scalar(stmt) or 0
 
 
@@ -167,24 +206,33 @@ def _state(db: Session) -> ShopState:
                 ],
             )
         )
+    more = shopping.last_more(db)
     return ShopState(
         stores=stores,
         running=shopping.is_running(),
+        job=shopping.running_job(),
         pending=_count(db, shopping.NEW, enabled),
         liked=_count(db, shopping.LIKED),
+        last_more=ShopMoreOut(added=more.get("added", 0), low=bool(more.get("low")), error=more.get("error"))
+        if more
+        else None,
     )
 
 
-def _next(db: Session) -> ShopNext:
-    """La propuesta con mejor nota entre las que quedan por ver, de las tiendas activadas."""
-    enabled = shopping.enabled_stores(db)
-    item = db.scalars(
-        select(ShopItem)
-        .where(ShopItem.status == shopping.NEW, ShopItem.store.in_(enabled))
-        .order_by(ShopItem.score.desc(), ShopItem.id)
-        .limit(1)
-    ).first()
-    return ShopNext(item=_to_out(item) if item else None, remaining=_count(db, shopping.NEW, enabled))
+def _next(db: Session, only: Filter, first: ShopItem | None = None) -> ShopNext:
+    """La propuesta con mejor nota entre las que quedan por ver: una sola lista, venga de la tienda que
+    venga, con el filtro de tienda y de tipo de prenda. `first` adelanta una concreta (la recién deshecha)."""
+    stores = [s for s in shopping.enabled_stores(db) if only.store in (None, s)]
+    stmt = select(ShopItem).where(ShopItem.status == shopping.NEW, ShopItem.store.in_(stores))
+    if only.category is not None:
+        stmt = stmt.where(ShopItem.category == only.category)
+    item = first or db.scalars(stmt.order_by(ShopItem.score.desc(), ShopItem.id).limit(1)).first()
+    return ShopNext(
+        item=_to_out(item) if item else None,
+        remaining=_count(db, shopping.NEW, stores, only.category),
+        more=len(shopping.candidates_left(db, store=only.store, category=only.category)),
+        can_undo=shopping.last_decision(db) is not None,
+    )
 
 
 def _get_or_404(db: Session, item_id: int) -> ShopItem:
@@ -222,31 +270,63 @@ def refresh(body: RefreshIn | None = None, db: Session = Depends(get_db)):
     return _state(db)
 
 
+@router.post("/more", response_model=ShopState, status_code=202)
+def more(body: MoreIn | None = None, db: Session = Depends(get_db)):
+    """«Ver más»: trae en segundo plano la siguiente tanda de los candidatos guardados (con el filtro
+    que se le pase) y responde ya. No consulta el catálogo. Si hay una tanda en marcha, no lanza otra."""
+    body = body or MoreIn()
+    _check_filter(body.store, body.category)
+    enabled = shopping.enabled_stores(db)
+    if not enabled or (body.store is not None and body.store not in enabled):
+        raise HTTPException(409, "Activa primero la tienda")
+    shopping.start_more(body.store, body.category)
+    return _state(db)
+
+
 @router.get("/next", response_model=ShopNext)
-def next_item(db: Session = Depends(get_db)):
-    return _next(db)
+def next_item(only: Filter = Depends(), db: Session = Depends(get_db)):
+    return _next(db, only)
 
 
 @router.post("/items/{item_id}/like", response_model=ShopNext)
-def like(item_id: int, db: Session = Depends(get_db)):
+def like(item_id: int, only: Filter = Depends(), db: Session = Depends(get_db)):
     """Me gusta: pasa a «Me gustan» y devuelve la siguiente propuesta."""
     item = _get_or_404(db, item_id)
     if item.status == shopping.NEW:
         shopping.like(db, item)
     elif item.status != shopping.LIKED:  # un doble toque no es un error
         raise HTTPException(409, "Este producto ya no está entre las propuestas")
-    return _next(db)
+    return _next(db, only)
 
 
 @router.post("/items/{item_id}/dislike", response_model=ShopNext)
-def dislike(item_id: int, db: Session = Depends(get_db)):
+def dislike(item_id: int, only: Filter = Depends(), db: Session = Depends(get_db)):
     """No me gusta: no se vuelve a proponer. Devuelve la siguiente propuesta."""
     item = _get_or_404(db, item_id)
     if item.status == shopping.NEW:
         shopping.dislike(db, item)
     elif item.status != shopping.DISCARDED:
         raise HTTPException(409, "Este producto ya no está entre las propuestas")
-    return _next(db)
+    return _next(db, only)
+
+
+@router.post("/items/{item_id}/reason", status_code=204)
+def reason(item_id: int, body: ReasonIn, db: Session = Depends(get_db)):
+    """Por qué no gustó (opcional): estilo, color, caro o «ya tengo algo así». Afina lo que se aprende."""
+    item = _get_or_404(db, item_id)
+    if item.status != shopping.DISCARDED or item.liked_at is not None:
+        raise HTTPException(409, "Este producto no está descartado")
+    shopping.set_reason(db, item, body.reason)
+
+
+@router.post("/undo", response_model=ShopNext)
+def undo(only: Filter = Depends(), db: Session = Depends(get_db)):
+    """«Volver»: deshace la última decisión de la tanda y vuelve a enseñar esa propuesta. Se puede
+    repetir para ir hacia atrás."""
+    item = shopping.undo(db)
+    if item is None:
+        raise HTTPException(409, "No hay nada que deshacer")
+    return _next(db, only, first=item)
 
 
 @router.get("/liked", response_model=list[ShopItemOut])

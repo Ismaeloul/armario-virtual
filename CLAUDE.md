@@ -17,6 +17,15 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   productos vistos, 40 propuestas, 116 s. Lo descartado o caducado no se vuelve a proponer; los «me gusta»
   caducan a los 30 días o si se agotan. La tienda arranca desactivada. Sin probar: «La he comprado» con
   Codex real, el bucle semanal en un proceso largo, nada en el Umbrel, modo oscuro.
+  Rehecho el mismo día tras probarlo el usuario (salían piezas llamativas: cropped, culotte, colores que no
+  lleva; todo era de Zara Hombre, el fallo era premiar «lo que no tienes»). Decidido con él: primero sus
+  gustos (lo que acepta y descarta por tipo, color, palabras del nombre y precio, medido respecto a lo que
+  acepta en general) y parecerse a lo que lleva; los huecos del armario, solo desempate. «Ver más» al
+  acabar la tanda (el catálogo entero se guarda como candidatos sin fotos). Tiendas mezcladas en una lista
+  con filtros por tienda y por tipo de prenda (no separar por tienda). «Volver» deshace decisiones. Motivo
+  opcional al descartar. La temporada se lee también de la descripción. Codex NO analiza las finalistas.
+  Pendiente: tiendas de zapatillas (JD Sports respondió sin navegador; Foot Locker muestra captcha y no se
+  va a saltar; Courir, Pull&Bear y Bershka sin mirar a fondo).
 - **En `main`, sin publicar: modelo y esfuerzo de Codex en Ajustes (18-11-2026).** La lista de modelos se
   lee de `models_cache.json` de la carpeta de Codex (`services/ai/codex_models.py`); vacío = el de Codex
   por defecto. Esfuerzo: bajo, medio o alto. Cada prenda guarda con qué modelo se analizó (`ai_model`).

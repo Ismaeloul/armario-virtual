@@ -25,9 +25,9 @@ def _fixture(name: str) -> dict:
 
 
 def product(ref: str, type: str = "camisa", color: str = "blanco", price: int = 2995, section: str = "camisas",
-            **extra) -> ShopProduct:
+            store: str = "zara", **extra) -> ShopProduct:
     return ShopProduct(
-        store="zara", product_ref=f"zara:{ref}", name=extra.pop("name", f"{type.capitalize()} {ref}"),
+        store=store, product_ref=f"{store}:{ref}", name=extra.pop("name", f"{type.capitalize()} {ref}"),
         price_cents=price, url=f"https://tienda.test/{ref}", store_color=color.capitalize(), section=section,
         type=type, category=catalog.category_of(type), color=color, pattern=extra.pop("pattern", "liso"),
         style=extra.pop("style", "casual"), season=extra.pop("season", "todo_el_ano"),
@@ -43,7 +43,8 @@ class FakeConnector:
     refresh_weekday = 4  # viernes
     categories = {"camisas": "Camisas", "pantalones": "Pantalones", "sudaderas": "Sudaderas"}
 
-    def __init__(self, photo: bytes, **by_section: list[ShopProduct]):
+    def __init__(self, photo: bytes, key: str = "zara", name: str = "Zara", **by_section: list[ShopProduct]):
+        self.key, self.name = key, name
         self.photo = photo
         self.products = by_section
         self.failing: set[str] = set()  # categorías que fallan
@@ -82,11 +83,11 @@ class FakeConnector:
 def tienda(monkeypatch, photo_bytes):
     """Instala la tienda falsa y la deja activada."""
 
-    def install(**by_section) -> FakeConnector:
-        connector = FakeConnector(photo_bytes, **by_section)
-        monkeypatch.setitem(shops.CONNECTORS, "zara", connector)
+    def install(key: str = "zara", name: str = "Zara", **by_section) -> FakeConnector:
+        connector = FakeConnector(photo_bytes, key, name, **by_section)
+        monkeypatch.setitem(shops.CONNECTORS, key, connector)
         with SessionLocal() as db:
-            shopping.set_store(db, "zara", True, None)
+            shopping.set_store(db, key, True, None)
         return connector
 
     return install
@@ -98,9 +99,20 @@ def _refresh(today: date = INVIERNO, **kwargs) -> dict:
 
 
 def _items(status: str | None = None) -> list[ShopItem]:
+    """Lo que se ha enseñado alguna vez (o, si se pide, lo de un estado; «candidato» incluido)."""
     with SessionLocal() as db:
         stmt = select(ShopItem).order_by(ShopItem.id)
-        return list(db.scalars(stmt.where(ShopItem.status == status) if status else stmt))
+        return list(db.scalars(stmt.where(ShopItem.status == status if status else ShopItem.status != "candidato")))
+
+
+def _more(today: date = INVIERNO, **kwargs) -> dict:
+    with SessionLocal() as db:
+        return shopping.more(db, today=today, **kwargs)
+
+
+def _taste() -> shopping.ShopTaste:
+    with SessionLocal() as db:
+        return shopping.load_shop_taste(db)
 
 
 def _garment(client, photo_bytes, **fields) -> dict:
@@ -277,22 +289,67 @@ def test_estimacion_de_estampado_estilo_temporada_y_color_por_tono():
 # ---------- La nota
 
 
-def test_la_nota_premia_los_huecos_del_armario():
-    wardrobe = [_item(1, "vaquero", "azul"), _item(2, "camiseta", "blanco"), _item(3, "camiseta", "negro"),
-                _item(4, "sudadera", "gris"), _item(5, "zapatillas", "blanco")]
+# Un armario de diario: mucho negro, gris y azul, nada de colores fuertes.
+ARMARIO = [
+    _item(1, "vaquero", "azul"), _item(2, "vaquero", "negro"), _item(3, "chino", "beige"),
+    _item(4, "pantalón", "negro"), _item(5, "pantalón", "gris"), _item(6, "camiseta", "blanco"),
+    _item(7, "camiseta", "negro"), _item(8, "camiseta", "gris"), _item(9, "jersey", "gris", season="invierno"),
+    _item(10, "sudadera", "negro", season="invierno"), _item(11, "chaqueta", "negro"),
+    _item(12, "zapatillas", "blanco"), _item(13, "zapatillas", "negro"), _item(14, "vaquero", "azul"),
+    _item(15, "vaquero", "negro"), _item(16, "chino", "azul marino"),
+]
 
-    nueva, motivos = shopping.score(product("a", "sobrecamisa", "verde oliva"), wardrobe)
-    texts = [m["text"] for m in motivos]
-    assert "No tienes ninguna sobrecamisa" in texts
-    assert any(t.startswith("Combina con ") for t in texts)
 
-    otro_color, motivos = shopping.score(product("b", "camiseta", "gris"), wardrobe)
-    assert "No tienes ninguna camiseta gris" in [m["text"] for m in motivos]
-    assert nueva > otro_color  # un tipo que falta pesa más que un color que falta
+def _texts(reasons: list[dict], kind: str | None = None) -> list[str]:
+    return [m["text"] for m in reasons if kind in (None, m["kind"])]
 
-    _, motivos = shopping.score(product("c", "botas", "marrón"), wardrobe)
-    texts = [m["text"] for m in motivos]
-    assert "No tienes botas" in texts and "Solo tienes 1 par de zapatos" in texts
+
+def test_sin_valoraciones_un_basico_neutro_gana_a_una_pieza_llamativa():
+    basico, motivos = shopping.score(product("a", "jersey", "negro", name="Jersey básico cuello redondo"), ARMARIO)
+    assert "Es un color que ya llevas (negro)" in _texts(motivos) and not _texts(motivos, "contra")
+
+    # Lo que el usuario vio en la primera versión: todo eso queda ahora por debajo de lo básico.
+    raros = {
+        "Jersey cropped": product("b", "jersey", "rosa", name="Jersey cropped"),
+        "Pantalón culotte": product("c", "pantalón", "negro", name="Pantalón culotte pliegues"),
+        "Jeans blancos": product("d", "vaquero", "blanco", name="Jeans straight fit"),
+        "Zapatilla amarilla": product("e", "zapatillas", "amarillo", name="Zapatilla retro"),
+        "Camisa de flores": product("f", "camisa", "verde", name="Camisa estampado floral", pattern="gráfico"),
+    }
+    notas = {nombre: shopping.score(p, ARMARIO) for nombre, p in raros.items()}
+    assert all(nota < basico - 10 for nota, _ in notas.values()), notas
+    assert {"No llevas nada rosa", "Corte poco habitual (cropped)"} <= set(_texts(notas["Jersey cropped"][1], "contra"))
+    assert "Corte poco habitual (culotte)" in _texts(notas["Pantalón culotte"][1], "contra")
+    assert "No tienes pantalones en blanco" in _texts(notas["Jeans blancos"][1], "contra")  # blanco arriba sí, abajo no
+    assert "No llevas nada amarillo" in _texts(notas["Zapatilla amarilla"][1], "contra")
+    assert {"No llevas nada verde", "No llevas nada con dibujo"} <= set(_texts(notas["Camisa de flores"][1], "contra"))
+
+
+def test_los_huecos_del_armario_solo_desempatan():
+    # Que falte el tipo ya no compensa un color que no lleva: «no tienes ninguna sobrecamisa rosa» no vende.
+    rosa, motivos = shopping.score(product("a", "sobrecamisa", "rosa"), ARMARIO)
+    repetida, _ = shopping.score(product("b", "camiseta", "negro"), ARMARIO)
+    assert "No tienes ninguna sobrecamisa" in _texts(motivos) and repetida > rosa
+    assert "No tienes ningún jersey rosa" not in _texts(shopping.score(product("c", "jersey", "rosa"), ARMARIO)[1])
+
+    # Entre dos prendas igual de ponibles, sí: gana la que tapa un hueco, y por poco.
+    hueco, motivos = shopping.score(product("d", "sobrecamisa", "negro"), ARMARIO)
+    otra_mas, contra = shopping.score(product("e", "chaqueta", "negro"), ARMARIO)
+    assert {"No tienes ninguna sobrecamisa", "Solo tienes 1 chaqueta o abrigo"} <= set(_texts(motivos))
+    assert "Ya tienes 1 chaqueta negra" in _texts(contra, "contra")
+    assert 0 < hueco - otra_mas <= shopping.GAP_TYPE - shopping.DUPLICATE
+    _, motivos = shopping.score(product("f", "botas", "marrón"), ARMARIO)
+    assert {"No tienes botas", "Solo tienes 2 pares de zapatos"} <= set(_texts(motivos))
+    _, motivos = shopping.score(product("g", "camiseta", "azul marino"), ARMARIO)
+    assert "No tienes ninguna camiseta azul marino" in _texts(motivos)  # un color base sí es un hueco
+
+    # Los pesos, por bloques: los gustos mandan, luego parecerse a lo que lleva, y los huecos al final.
+    gustos = shopping.W_PREF_TYPE + shopping.W_PREF_COLOR + shopping.W_PREF_WORD + shopping.W_PREF_PRICE
+    parecido = shopping.W_MATCH + shopping.W_PALETTE + shopping.W_BASIC
+    huecos = shopping.GAP_TYPE + shopping.GAP_COLOR + shopping.GAP_CATEGORY
+    assert gustos > parecido > 3 * huecos
+    assert huecos < min(shopping.W_PALETTE, shopping.W_MATCH, shopping.W_PREF_TYPE, shopping.W_PREF_COLOR)
+    assert huecos < -shopping.OFF_PALETTE and huecos < -shopping.RISKY
 
 
 def test_la_nota_penaliza_repetir_lo_que_ya_hay():
@@ -300,13 +357,90 @@ def test_la_nota_penaliza_repetir_lo_que_ya_hay():
                 _item(4, "sudadera", "negro"), _item(5, "sudadera", "gris"), _item(6, "zapatillas", "blanco")]
 
     repetida, motivos = shopping.score(product("a", "sudadera", "negro"), wardrobe)
-    contra = [m["text"] for m in motivos if m["kind"] == "contra"]
-    assert contra == ["Ya tienes 3 sudaderas negras"]
-
-    distinta, _ = shopping.score(product("b", "sudadera", "verde oliva"), wardrobe)
+    assert _texts(motivos, "contra") == ["Ya tienes 3 sudaderas negras"]
     una_vez, motivos = shopping.score(product("c", "sudadera", "gris"), wardrobe)
-    assert "Ya tienes 1 sudadera gris" in [m["text"] for m in motivos]
-    assert distinta > una_vez > repetida
+    assert "Ya tienes 1 sudadera gris" in _texts(motivos)
+    _, motivos = shopping.score(product("b", "sudadera", "verde oliva"), wardrobe)
+    assert "No tienes ninguna sudadera verde oliva" in _texts(motivos)
+    assert una_vez > repetida
+
+
+def test_lo_que_dice_en_la_tienda_pesa_mas_que_todo_lo_demas():
+    basico = product("a", "jersey", "negro", name="Jersey básico cuello redondo")
+    llamativo = product("b", "jersey", "rosa", name="Jersey cropped")
+    sin_gustos = shopping.ShopTaste()
+    assert shopping.score(basico, ARMARIO, prefs=sin_gustos)[0] > shopping.score(llamativo, ARMARIO, prefs=sin_gustos)[0]
+
+    # El usuario se queda con lo rosa y cropped y descarta los básicos negros: el orden se da la vuelta.
+    prefs = shopping.ShopTaste()
+    for _ in range(4):
+        prefs.learn(product("x", "jersey", "rosa", name="Jersey cropped punto"), liked=True)
+        prefs.learn(product("y", "jersey", "negro", name="Jersey básico"), liked=False, reason="color")
+    gusta, motivos = shopping.score(llamativo, ARMARIO, prefs=prefs)
+    assert gusta > shopping.score(basico, ARMARIO, prefs=prefs)[0]
+    assert {"Te suele gustar el rosa", "Te suele gustar lo «cropped»"} <= set(_texts(motivos, "pro"))
+    assert "Corte poco habitual (cropped)" not in _texts(motivos)  # ya ha dicho que le gusta
+
+
+def test_las_palabras_del_nombre_se_aprenden():
+    assert shopping.name_words("Pantalón relaxed fit PANA") == {"relaxed", "pana"}  # ni el tipo ni el relleno
+    assert shopping.name_words("Jerséis de algodón básicos") == {"algodon", "basicos"}  # sin tildes
+    assert shopping.name_words("Top crochet") == {"top", "crochet"}  # las de tres letras también cuentan
+
+    wardrobe = [_item(1, "vaquero", "azul"), _item(2, "camisa", "blanco")]
+    prefs = shopping.ShopTaste()
+    for i in range(3):
+        prefs.learn(product(f"x{i}", "pantalón", "marrón", name="Pantalón pana relaxed fit"), liked=True)
+        prefs.learn(product(f"y{i}", "vaquero", "azul", name="Jeans skinny fit"), liked=False)
+    assert prefs.opinion(prefs.words, "pana") > 0 > prefs.opinion(prefs.words, "skinny")
+    assert "pantalon" not in prefs.words and "fit" not in prefs.words
+
+    # Otro tipo, otro color y otro precio: lo único en común es la palabra.
+    pana = product("a", "sobrecamisa", "verde oliva", price=5995, name="Sobrecamisa pana")
+    lisa = product("b", "sobrecamisa", "verde oliva", price=5995, name="Sobrecamisa algodón")
+    con_pana, motivos = shopping.score(pana, wardrobe, prefs=prefs)
+    assert con_pana > shopping.score(lisa, wardrobe, prefs=prefs)[0]
+    assert "Te suele gustar lo «pana»" in _texts(motivos, "pro")
+    skinny, motivos = shopping.score(product("c", "chino", "beige", price=5995, name="Chino skinny"), wardrobe, prefs=prefs)
+    assert "Sueles descartar lo «skinny»" in _texts(motivos, "contra")
+    assert skinny < shopping.score(product("d", "chino", "beige", price=5995, name="Chino recto"), wardrobe, prefs=prefs)[0]
+
+    # Un corte raro resta de entrada (el «top», también) y deja de restar cuando el usuario lo acepta.
+    cropped = product("e", "camiseta", "blanco", name="Camiseta cropped")
+    normal = product("f", "camiseta", "blanco", name="Camiseta algodón")
+    antes, motivos = shopping.score(cropped, wardrobe, prefs=shopping.ShopTaste())
+    assert "Corte poco habitual (cropped)" in _texts(motivos, "contra")
+    assert shopping.score(normal, wardrobe)[0] - antes == -shopping.RISKY
+    assert "Corte poco habitual (top)" in _texts(shopping.score(product("g", "camiseta", "negro", name="Top canalé"), wardrobe)[1])
+    prefs.learn(product("h", "sudadera", "gris", name="Sudadera cropped"), liked=True)
+    assert "Corte poco habitual (cropped)" not in _texts(shopping.score(cropped, wardrobe, prefs=prefs)[1])
+
+
+@pytest.mark.parametrize(
+    ("motivo", "esperado"),
+    [
+        (None, {"types": -0.5, "colors": -0.5, "prices": -0.5, "words": -0.5}),  # repartido y flojo
+        ("estilo", {"types": -0.5, "words": -1.0}),  # las palabras del nombre y, algo, el tipo
+        ("color", {"colors": -1.0}),
+        ("caro", {"prices": -1.0}),
+        ("ya_tengo", {}),  # no dice nada de sus gustos
+    ],
+)
+def test_el_motivo_del_descarte_decide_a_que_se_le_carga_la_culpa(motivo, esperado):
+    prefs = shopping.ShopTaste()
+    prefs.learn(product("x", "polo", "rosa", price=1995, name="Polo cropped"), liked=False, reason=motivo)
+    aprendido = {
+        tabla: next(iter(getattr(prefs, tabla).values()))[0]
+        for tabla in ("types", "colors", "prices", "words") if getattr(prefs, tabla)
+    }
+    assert aprendido == esperado
+    assert set(prefs.types) <= {"polo"} and set(prefs.colors) <= {"rosa"} and set(prefs.words) <= {"cropped"}
+
+    # Un «me gusta» cuenta entero en todo.
+    prefs = shopping.ShopTaste()
+    prefs.learn(product("x", "polo", "rosa", price=1995, name="Polo cropped"), liked=True)
+    assert [t["polo" if i == 0 else k][0] for i, (t, k) in enumerate(
+        [(prefs.types, ""), (prefs.colors, "rosa"), (prefs.prices, "hasta_25"), (prefs.words, "cropped")])] == [1.0] * 4
 
 
 def test_la_nota_aprende_de_los_me_gusta_de_la_tienda():
@@ -336,6 +470,19 @@ def test_fuera_de_mayo_a_septiembre_no_se_propone_ropa_de_verano():
     manga_larga = product("c", "camiseta", "blanco", details="camiseta manga larga")
     assert [shopping.out_of_season(p, INVIERNO) for p in (bermuda, camiseta, manga_larga)] == [True, True, False]
     assert not any(shopping.out_of_season(p, VERANO) for p in (bermuda, camiseta, manga_larga))
+
+    # El nombre y la descripción también cuentan: un jersey «de invierno» de manga corta, una camisa de lino…
+    jersey = product("d", "jersey", "negro", season="invierno", details="jersey punto. Cuello redondo y manga corta.")
+    lino = product("e", "camisa", "beige", name="Camisa relaxed fit 100% lino")
+    tirantes = product("f", "camisa", "blanco", details="camisa. Tejido principal: lino.")
+    normal = product("g", "camisa", "blanco", details="camisa oxford. Cuello abotonado y manga larga con puños.")
+    assert [shopping.out_of_season(p, INVIERNO) for p in (jersey, lino, tirantes, normal)] == [True, True, True, False]
+    assert not any(shopping.out_of_season(p, VERANO) for p in (jersey, lino, tirantes))
+    assert shopping.summer_text("Camiseta de TIRANTES") and shopping.summer_text("Chaleco sin mangas")
+    assert not shopping.summer_text("Sobrecamisa de pana con forro") and not shopping.summer_text(None)
+    # Visto en Zara: el nombre dice manga larga y la descripción, copiada de otra, manga corta. Manda el nombre.
+    liosa = product("h", "camiseta", "negro", details="camiseta manga larga relaxed fit. Cuello redondo y manga corta.")
+    assert not shopping.summer_text(liosa.details) and not shopping.out_of_season(liosa, INVIERNO)
 
 
 # ---------- La tanda
@@ -538,7 +685,8 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
     assert client.post("/api/shop/refresh").status_code == 409  # sin tienda activada no hay tanda
     assert client.post("/api/shop/refresh", json={"store": "zara"}).status_code == 409
     assert client.post("/api/shop/refresh", json={"store": "otra"}).status_code == 404
-    assert client.get("/api/shop/next").json() == {"item": None, "remaining": 0}
+    assert client.get("/api/shop/next").json() == {"item": None, "remaining": 0, "more": 0, "can_undo": False}
+    assert state["last_more"] is None and client.post("/api/shop/more").status_code == 409
     with SessionLocal() as db:
         assert shopping.due_stores(db) == []
 
@@ -578,8 +726,8 @@ def test_me_gusta_y_no_me_gusta(client, tienda, photo_bytes):
 
     disliked = after_like["item"]
     after_dislike = client.post(f"/api/shop/items/{disliked['id']}/dislike").json()
-    assert after_dislike["remaining"] == 1
-    assert client.get(disliked["photos"][0]["url"]).status_code == 404  # lo descartado no ocupa disco
+    assert after_dislike["remaining"] == 1 and after_dislike["can_undo"] is True
+    assert client.get(disliked["photos"][0]["url"]).status_code == 200  # por si se deshace con «Volver»
 
     liked = client.get("/api/shop/liked").json()
     assert [i["id"] for i in liked] == [item["id"]]
@@ -587,9 +735,10 @@ def test_me_gusta_y_no_me_gusta(client, tienda, photo_bytes):
     state = client.get("/api/shop/state").json()
     assert (state["pending"], state["liked"]) == (1, 1)
 
-    # Quitar de «Me gustan»: pasa a descartado y no vuelve.
+    # Quitar de «Me gustan»: pasa a descartado, no vuelve y sus fotos se borran (eso no se deshace).
     assert client.delete(f"/api/shop/items/{item['id']}").status_code == 204
     assert client.get("/api/shop/liked").json() == []
+    assert client.get(item["photos"][0]["url"]).status_code == 404
     assert {i.status for i in _items() if i.id in (item["id"], disliked["id"])} == {"descartado"}
     assert client.post("/api/shop/items/999/like").status_code == 404
 
@@ -662,3 +811,335 @@ def test_zara_baja_de_pagina_si_la_categoria_tiene_menos(monkeypatch):
     monkeypatch.setattr(connector, "_json", fake_json)
     assert connector.list_category("hombre-camisetas-l855") == []
     assert len(asked) == 2 and asked[1].endswith("page=2")
+
+
+# ---------- Candidatos y «Ver más»
+
+
+def test_la_consulta_guarda_todo_el_catalogo_como_candidatos_y_los_renueva(client, tienda):
+    connector = tienda(camisas=[product(f"c{i}") for i in range(5)])
+    _refresh(limit=2)
+    assert len(_items("nuevo")) == 2
+    candidatos = _items("candidato")
+    assert len(candidatos) == 3 and all(c.photos == [] and c.sizes == [] for c in candidatos)  # sin fotos ni ficha
+    assert client.get("/api/shop/state").json()["pending"] == 2  # los candidatos no son propuestas
+
+    # Una semana después la tienda ha retirado uno, ha cambiado el precio de otro y trae uno nuevo.
+    retirado, rebajado = candidatos[0].product_ref, candidatos[1].product_ref
+    connector.products["camisas"] = [
+        p for p in connector.products["camisas"] if p.product_ref != retirado
+    ] + [product("nuevo")]
+    next(p for p in connector.products["camisas"] if p.product_ref == rebajado).price_cents = 1995
+    _refresh(today=INVIERNO + timedelta(days=7), limit=1)
+    with SessionLocal() as db:
+        refs = {i.product_ref: i for i in db.scalars(select(ShopItem))}
+    assert retirado not in refs and refs[rebajado].price_cents == 1995
+    assert len(refs) == 5  # los 2 que se enseñaron (ya caducados) siguen para no repetirse; el resto se renueva
+    assert sorted(i.status for i in refs.values()) == ["caducado", "caducado", "candidato", "candidato", "nuevo"]
+
+
+def test_ver_mas_trae_la_siguiente_tanda_sin_volver_a_consultar_el_catalogo(client, tienda, monkeypatch):
+    connector = tienda(
+        camisas=[product(f"c{i}", "camisa", "blanco") for i in range(5)],
+        sudaderas=[product(f"z{i}", "zapatillas", "blanco", section="sudaderas") for i in range(4)],
+    )
+    _refresh(limit=2)
+    assert sorted(i.category for i in _items("nuevo")) == ["calzado", "parte_superior"]
+    nxt = client.get("/api/shop/next").json()
+    assert (nxt["remaining"], nxt["more"]) == (2, 7)
+    calzado = client.get("/api/shop/next", params={"category": "calzado"}).json()
+    assert (calzado["remaining"], calzado["more"], calzado["item"]["category"]) == (1, 3, "calzado")
+    assert client.get("/api/shop/next", params={"category": "capa_exterior"}).json()["item"] is None
+    assert client.get("/api/shop/next", params={"category": "sombreros"}).status_code == 422
+    assert client.get("/api/shop/next", params={"store": "otra"}).status_code == 404
+
+    # Con el filtro «Calzado», «Ver más» trae más calzado: en segundo plano y sin pedir el catálogo.
+    connector.calls.clear()
+    monkeypatch.setattr(shopping, "LOW_FIT", 0.0)
+    assert client.post("/api/shop/more", json={"category": "calzado"}).status_code == 202
+    shopping.wait_idle()
+    assert connector.asked("lista") == [] and len(connector.asked("detalle")) == 3
+    state = client.get("/api/shop/state").json()
+    assert state["running"] is False and state["pending"] == 5
+    assert state["last_more"] == {"added": 3, "low": False, "error": None}
+    calzado = client.get("/api/shop/next", params={"category": "calzado"}).json()
+    assert (calzado["remaining"], calzado["more"]) == (4, 0)
+    nuevas = [i for i in _items("nuevo") if i.category == "calzado"]
+    assert len(nuevas) == 4 and all(len(i.photos) == 2 and i.sizes and i.reasons for i in nuevas)
+
+    # Sin filtro, lo que quede, de N en N. Cuando la nota media baja del umbral, se avisa.
+    monkeypatch.setattr(shopping, "LOW_FIT", 99.0)
+    result = _more(limit=3)
+    assert (result["added"], result["low"]) == (3, True) and result["mean"] < 99
+    assert client.get("/api/shop/state").json()["last_more"]["low"] is True
+    assert client.get("/api/shop/next").json()["more"] == 1
+    assert _more(limit=3)["added"] == 1
+
+    # Ya no quedan candidatos: no se pide nada y se dice.
+    connector.calls.clear()
+    result = _more()
+    assert (result["added"], result["low"], result["mean"]) == (0, False, None) and connector.calls == []
+    assert client.get("/api/shop/next").json()["more"] == 0
+    assert client.get("/api/shop/state").json()["last_more"] == {"added": 0, "low": False, "error": None}
+    # La siguiente consulta semanal empieza de cero.
+    _refresh(today=INVIERNO + timedelta(days=7))
+    assert client.get("/api/shop/state").json()["last_more"] is None
+
+
+def test_ver_mas_puntua_con_los_gustos_de_ahora_y_salta_lo_que_no_sirve(client, tienda):
+    connector = tienda(camisas=[
+        product("a", "camisa", "negro"), product("b", "camisa", "negro"), product("c1", "camisa", "beige"),
+        product("c2", "camisa", "beige"), product("agotado", "camisa", "negro"),
+    ])
+    connector.details["agotado"] = ShopDetail(
+        price_cents=1000, sizes=[{"name": "M", "in_stock": False}], photo_urls=["https://fotos.test/x-e1.jpg"]
+    )
+    _refresh(limit=2)
+    negra, beige = _items("nuevo")
+    assert (negra.product_ref, beige.product_ref) == ("zara:a", "zara:c1")  # variada: no dos negras
+
+    # Sin valoraciones, la siguiente sería otra negra (empatan y va por orden). Pero el usuario descarta la
+    # negra por el color y se queda la beige: «Ver más» puntúa con eso y trae antes la beige.
+    client.post(f"/api/shop/items/{negra.id}/dislike")
+    assert client.post(f"/api/shop/items/{negra.id}/reason", json={"reason": "color"}).status_code == 204
+    client.post(f"/api/shop/items/{beige.id}/like")
+    connector.calls.clear()
+    assert _more(limit=1)["added"] == 1
+    assert [i.product_ref for i in _items("nuevo")] == ["zara:c2"] and connector.asked("detalle") == ["c2"]
+    assert "Te suele gustar el beige" not in _texts(_items("nuevo")[0].reasons)  # un solo voto aún no es motivo
+
+    # El agotado se pide una vez, no sirve, entra el siguiente y no se vuelve a intentar hasta la consulta semanal.
+    assert _more(limit=1)["added"] == 1 and connector.asked("detalle")[1:] == ["agotado", "b"]
+    assert _more(limit=2)["added"] == 0 and connector.asked("detalle").count("agotado") == 1
+    assert client.get("/api/shop/next").json()["more"] == 0
+
+    # Un fallo de red no dice nada del producto: se apunta y se podrá reintentar.
+    connector.products["camisas"].append(product("lento", "camisa", "gris"))
+    _refresh(today=INVIERNO + timedelta(days=7), limit=0)
+    connector.detail = lambda store_data: (_ for _ in ()).throw(ShopError("tiempo agotado (20 s)"))
+    result = _more(today=INVIERNO + timedelta(days=7), limit=1)
+    assert result["added"] == 0 and result["failed"] == 2
+    assert result["error"].endswith("tiempo agotado (20 s)")
+    assert client.get("/api/shop/state").json()["last_more"]["error"] == result["error"]
+    assert client.get("/api/shop/next").json()["more"] == 2
+
+
+def test_el_cupo_se_reparte_entre_tiendas_y_la_lista_es_una_sola(client, tienda):
+    grande = tienda(camisas=[product(f"g{i}", "camisa", "negro") for i in range(12)])
+    pequena = tienda(key="otra", name="Otra", camisas=[
+        product(f"p{i}", "camisa", "rosa", store="otra", name=f"Camisa cropped p{i}") for i in range(3)
+    ])
+    # La tanda semanal: el cupo (4) a medias, aunque las de la tienda pequeña tengan peor nota.
+    _refresh(limit=4)
+    assert sorted(i.store for i in _items("nuevo")) == ["otra", "otra", "zara", "zara"]
+    assert len(grande.asked("detalle")) == 2 and len(pequena.asked("detalle")) == 2
+
+    # Al enseñarlas, una sola lista por nota, venga de la tienda que venga.
+    orden = []
+    while (nxt := client.get("/api/shop/next").json())["item"]:
+        orden.append((nxt["item"]["store_name"], nxt["item"]["score"]))
+        if len(orden) == 1:
+            assert (nxt["remaining"], nxt["more"]) == (4, 11)
+            otra = client.get("/api/shop/next", params={"store": "otra"}).json()
+            assert (otra["item"]["store"], otra["remaining"], otra["more"]) == ("otra", 2, 1)
+        client.post(f"/api/shop/items/{nxt['item']['id']}/like")
+    assert [tienda_ for tienda_, _ in orden] == ["Zara", "Zara", "Otra", "Otra"]
+
+    # «Ver más»: a la pequeña solo le queda una; el resto del cupo lo llena la grande.
+    assert _more(limit=4)["added"] == 4
+    assert sorted(i.store for i in _items("nuevo")) == ["otra", "zara", "zara", "zara"]
+    # Y con el filtro de tienda, solo de esa.
+    assert _more(limit=4, store="otra")["added"] == 0
+    assert _more(limit=2, store="zara")["added"] == 2
+    assert [i.store for i in _items("nuevo")].count("zara") == 5
+
+    # Una tienda desactivada no entra ni en la lista ni en «Ver más».
+    with SessionLocal() as db:
+        shopping.set_store(db, "otra", False, None)
+    assert all(i["store"] == "zara" for i in [client.get("/api/shop/next").json()["item"]])
+    assert client.post("/api/shop/more", json={"store": "otra"}).status_code == 409
+
+
+# ---------- «Volver» y el motivo del descarte
+
+
+def test_volver_deshace_las_decisiones_una_a_una_y_no_cuentan_al_aprender(client, tienda):
+    tienda(camisas=[product("a"), product("b"), product("c")])
+    _refresh()
+    first = client.get("/api/shop/next").json()
+    assert first["can_undo"] is False and client.post("/api/shop/undo").status_code == 409
+    a = first["item"]
+    b = client.post(f"/api/shop/items/{a['id']}/like").json()["item"]
+    after = client.post(f"/api/shop/items/{b['id']}/dislike").json()
+    assert after["remaining"] == 1 and after["can_undo"] is True
+    decided = {i.id: i for i in _items()}
+    assert decided[a["id"]].decided_at and decided[b["id"]].decided_at  # se guarda cuándo se decidió
+    learned = _taste()
+    assert learned.types["camisa"] == [0.5, 1.5]  # un me gusta entero y un descarte sin motivo, a medias
+
+    # Primera vuelta: el descarte. La tarjeta vuelve tal cual, con sus fotos.
+    back = client.post("/api/shop/undo").json()
+    assert back["item"]["id"] == b["id"] and back["item"]["status"] == "nuevo"
+    assert (back["remaining"], back["can_undo"]) == (2, True)
+    assert client.get(back["item"]["photos"][0]["url"]).status_code == 200
+    assert _taste().types["camisa"] == [1.0, 1.0]
+
+    # Segunda vuelta: el me gusta, que sale de «Me gustan».
+    back = client.post("/api/shop/undo").json()
+    assert back["item"]["id"] == a["id"] and (back["remaining"], back["can_undo"]) == (3, False)
+    assert client.get("/api/shop/liked").json() == []
+    assert client.get("/api/shop/state").json()["liked"] == 0
+    restored = {i.id: i for i in _items()}[a["id"]]
+    assert (restored.liked_at, restored.expires_at, restored.decided_at) == (None, None, None)
+    assert _taste().types == {} and _taste().colors == {}  # como si no se hubiera valorado nada
+    assert client.post("/api/shop/undo").status_code == 409
+
+    # Se puede volver a decidir lo deshecho, y ahora con otro resultado.
+    assert client.post(f"/api/shop/items/{a['id']}/dislike").status_code == 200
+    assert _taste().types["camisa"] == [-0.5, 0.5]
+
+
+def test_volver_solo_alcanza_a_la_tanda_actual(client, tienda):
+    tienda(camisas=[product("a"), product("b"), product("c")])
+    _refresh()
+    a, b, c = _items()
+    client.post(f"/api/shop/items/{a.id}/dislike")
+    client.post(f"/api/shop/items/{b.id}/like")
+    client.post(f"/api/shop/items/{c.id}/like")
+    assert all(storage.exists(p) for p in a.photos)  # lo descartado guarda las fotos mientras se pueda deshacer
+
+    # Quitar de «Me gustan» no es una decisión de Descubrir: no se deshace.
+    assert client.delete(f"/api/shop/items/{c.id}").status_code == 204
+    assert client.post("/api/shop/undo").json()["item"]["id"] == b.id
+    client.post(f"/api/shop/items/{b.id}/like")
+
+    # La consulta semanal cierra la tanda: ya no hay vuelta atrás y lo descartado suelta sus fotos.
+    _refresh(today=INVIERNO + timedelta(days=7))
+    assert client.get("/api/shop/next").json()["can_undo"] is False
+    assert client.post("/api/shop/undo").status_code == 409
+    assert not any(storage.exists(p) for p in a.photos)
+    by_id = {i.id: i for i in _items()}
+    assert (by_id[a.id].status, by_id[a.id].photos) == ("descartado", [])
+    assert by_id[b.id].status == "gustado" and all(storage.exists(p) for p in by_id[b.id].photos)
+    assert by_id[a.id].decided_at  # la fecha de la decisión se conserva
+
+
+def test_el_motivo_del_descarte_se_guarda_y_cambia_lo_aprendido(client, tienda):
+    tienda(camisas=[
+        product("a", "camisa", "rosa", price=1995, name="Camisa cropped"), product("b", "camisa", "negro"),
+        product("c", "camisa", "gris"),
+    ])
+    _refresh()
+    a, b, c = _items()
+    client.post(f"/api/shop/items/{a.id}/dislike")
+    assert _taste().colors["rosa"] == [-0.5, 0.5]  # sin motivo: repartido y flojo
+
+    assert client.post(f"/api/shop/items/{a.id}/reason", json={"reason": "caro"}).status_code == 204
+    learned = _taste()
+    assert learned.prices == {"hasta_25": [-1.0, 1.0]} and not (learned.colors or learned.types or learned.words)
+    assert client.post(f"/api/shop/items/{a.id}/reason", json={"reason": "estilo"}).status_code == 204  # se puede cambiar
+    learned = _taste()
+    assert learned.words == {"cropped": [-1.0, 1.0]} and learned.types == {"camisa": [-0.5, 0.5]}
+    assert not (learned.colors or learned.prices)
+    assert _items()[0].discard_reason == "estilo"
+    # Lo que queda por ver se vuelve a puntuar con lo aprendido.
+    assert any("Sueles descartar" in m["text"] for i in _items("nuevo") for m in i.reasons) is False  # un voto no basta
+    assert client.post(f"/api/shop/items/{a.id}/reason", json={"reason": "ya_tengo"}).status_code == 204
+    assert _taste().types == {} and _taste().words == {}
+
+    # Solo vale para lo descartado, y solo los motivos conocidos.
+    assert client.post(f"/api/shop/items/{b.id}/reason", json={"reason": "color"}).status_code == 409
+    assert client.post(f"/api/shop/items/{a.id}/reason", json={"reason": "feo"}).status_code == 422
+    assert client.post("/api/shop/items/999/reason", json={"reason": "color"}).status_code == 404
+    client.post(f"/api/shop/items/{c.id}/like")
+    client.delete(f"/api/shop/items/{c.id}")  # gustó y luego se quitó: sigue contando como me gusta
+    assert client.post(f"/api/shop/items/{c.id}/reason", json={"reason": "color"}).status_code == 409
+    # Al deshacer el descarte, el motivo se va con él.
+    client.post(f"/api/shop/items/{a.id}/reason", json={"reason": "color"})
+    assert client.post("/api/shop/undo").json()["item"]["id"] == a.id
+    assert _items()[0].discard_reason is None and "rosa" not in _taste().colors
+
+
+# ---------- La temporada, leyendo la descripción
+
+
+def test_la_descripcion_delata_la_ropa_de_verano_y_entra_el_siguiente_candidato(client, tienda):
+    connector = tienda(sudaderas=[
+        product("corta", "jersey", "negro", section="sudaderas", season="invierno", name="Jersey punto calado"),
+        product("larga", "jersey", "gris", section="sudaderas", season="invierno", name="Jersey punto"),
+    ])
+    sizes = [{"name": "M", "in_stock": True}]
+    connector.details["corta"] = ShopDetail(
+        price_cents=None, sizes=sizes, photo_urls=["https://fotos.test/corta-e1.jpg"],
+        description="Jersey de punto.   Cuello redondo y manga corta. " + "Acabados en rib. " * 60,
+    )
+    connector.details["larga"] = ShopDetail(
+        price_cents=None, sizes=sizes, photo_urls=["https://fotos.test/larga-e1.jpg"],
+        description="Jersey de punto con cuello redondo y manga larga.",
+    )
+    with SessionLocal() as db:  # sin el corte raro del nombre, la de manga corta iría primero (negro)
+        shopping.refresh(db, today=INVIERNO, limit=0)
+    assert not any(shopping.out_of_season(c, INVIERNO) for c in _items("candidato"))  # por el nombre, nada que objetar
+
+    with SessionLocal() as db:
+        ranked = shopping._ranked(shopping.Context.load(db), shopping.candidates_left(db, INVIERNO), 2)
+        corta = next(row for _v, _r, row in ranked if row.product_ref == "zara:corta")
+        scores = shopping._promote(db, shopping.Context.load(db), [(0, [], corta)] + ranked, 1, INVIERNO, lambda *a: None)
+    assert len(scores) == 1
+    assert connector.asked("detalle") == ["corta", "larga"]  # se leyó su ficha, no valía y entró la siguiente
+    assert connector.asked("foto") == ["https://fotos.test/larga-e1.jpg"]  # de la descartada no se bajan fotos
+    assert [i.product_ref for i in _items("nuevo")] == ["zara:larga"]
+    assert "manga larga" in _items("nuevo")[0].details
+
+    saved = _items("candidato")[0]
+    assert saved.season == "verano" and "manga corta" in saved.details
+    assert saved.details.startswith("Jersey de punto. Cuello redondo")  # el nombre no viene en `details` del falso
+    assert len(saved.details) <= shopping.DESCRIPTION_MAX + 1  # recortada
+    assert client.get("/api/shop/next").json()["more"] == 0  # hasta mayo no es candidata
+
+    # La semana siguiente no se vuelve a gastar una petición en ella: ya se sabe que es de verano.
+    connector.calls.clear()
+    _refresh(today=INVIERNO + timedelta(days=7))
+    assert "corta" not in connector.asked("detalle") and [i.status for i in _items()] == ["caducado"]
+    # En verano sí se propone.
+    _refresh(today=date(2027, 7, 2))
+    assert "zara:corta" in [i.product_ref for i in _items("nuevo")]
+
+
+def test_el_detalle_de_zara_trae_la_descripcion_y_el_tejido_principal():
+    store_data = {"keyword": "x", "seo_id": "05854122", "discern_id": 590649460, "color_id": "800"}
+    data = _fixture("zara_detalle.json")
+    data["product"]["detail"]["detailedComposition"] = {"parts": [
+        {"description": "EXTERIOR", "components": [{"material": "Lino", "percentage": "70%"},
+                                                   {"material": "algodón", "percentage": "30%"}]},
+        {"description": "FORRO", "components": [{"material": "poliéster", "percentage": "100%"}]},
+    ]}
+    description = zara.parse_detail(data, store_data).description
+    assert description.startswith("Sobrecamisa regular fit")
+    assert description.endswith("Tejido principal: lino, poliéster.") and "algodón" not in description
+    assert shopping.summer_text(description)
+
+    # Si el color no trae descripción, vale la de la ficha (seo); sin composición no se inventa nada.
+    del data["product"]["detail"]["detailedComposition"]
+    data["product"]["detail"]["colors"][0]["description"] = ""
+    assert zara.parse_detail(data, store_data).description == data["product"]["seo"]["description"].strip()
+
+
+def test_las_columnas_nuevas_se_anaden_a_una_tabla_shop_items_que_ya_existia():
+    from sqlalchemy import create_engine
+
+    from app import db as database
+
+    old = create_engine("sqlite://")
+    with old.begin() as conn:
+        conn.exec_driver_sql("CREATE TABLE shop_items (id INTEGER PRIMARY KEY, status VARCHAR(20))")
+        conn.exec_driver_sql("INSERT INTO shop_items (status) VALUES ('descartado')")
+    original, database.engine = database.engine, old
+    try:
+        database._add_missing_columns()
+    finally:
+        database.engine = original
+    with old.begin() as conn:
+        columns = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(shop_items)")}
+        row = conn.exec_driver_sql("SELECT decided_at, can_undo, discard_reason FROM shop_items").one()
+    assert {"decided_at", "can_undo", "discard_reason"} <= columns and tuple(row) == (None, None, None)

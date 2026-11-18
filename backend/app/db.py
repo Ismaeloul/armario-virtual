@@ -47,6 +47,7 @@ _NEW_COLUMNS = {
     },
     "wear_log": {"outfit_id": "INTEGER"},
     "ratings": {"culprit_ids": "JSON"},
+    "shop_items": {"decided_at": "DATETIME", "can_undo": "BOOLEAN", "discard_reason": "VARCHAR(20)"},
 }
 
 
