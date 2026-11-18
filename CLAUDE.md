@@ -94,7 +94,9 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.3** (18-11-2026): las 20 tiendas, el catálogo completo de noche, la pila de
+- **Publicada en el Umbrel: 0.4.4** (18-11-2026): Nike con navegador, la tarjeta de debajo ya no cambia al
+  llegar propuestas nuevas y «Ver más de <tienda>» / «Buscar más en <tienda>» con el filtro de una tienda.
+- **Antes: 0.4.3** (18-11-2026): las 20 tiendas, el catálogo completo de noche, la pila de
   tarjetas, la barra de progreso real y los colores apagados. Nada de eso probado antes en el Umbrel.
 - **Antes: 0.4.2** (18-11-2026): JD Sports pasa a leerse con el navegador y al cambiar de
   color se hereda el nombre traducido. En la 0.4.1 se comprobó en el Umbrel real: el Chromium arranca con
