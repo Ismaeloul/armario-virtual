@@ -1281,8 +1281,13 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-scrim backdrop-blur-[2px]"
-      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 2.5rem)" }}
+      // Arriba y del alto de su contenido: en el móvil el teclado no tapa el campo, y en pantallas
+      // grandes no queda una hoja medio vacía pegada abajo.
+      className="fixed inset-0 z-50 flex items-start justify-center bg-scrim px-4 backdrop-blur-[2px]"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 4.5rem)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -1291,7 +1296,7 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
         role="dialog"
         aria-modal="true"
         aria-label={t.compras.buscador.titulo}
-        className="flex max-h-full min-h-[60%] w-full max-w-md flex-col rounded-t-3xl border border-line bg-bg"
+        className="flex max-h-full w-full max-w-md flex-col rounded-3xl border border-line bg-bg shadow-[0_10px_30px_rgb(0_0_0/0.18)]"
       >
         <div className="flex items-center justify-between gap-2 py-3 pr-2 pl-5">
           <h2 className="font-display text-lg font-semibold tracking-tight">{t.compras.buscador.titulo}</h2>
@@ -1305,8 +1310,7 @@ function SearchPanel({ onChanged, onClose }: { onChanged: () => void; onClose: (
           </button>
         </div>
         <div
-          className="flex flex-col gap-4 overflow-y-auto px-5"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)" }}
+          className="flex flex-col gap-4 overflow-y-auto px-5 pb-5"
         >
           <form
             className="flex gap-2"
@@ -1612,8 +1616,7 @@ function StoresPanel({
           </button>
         </div>
         <div
-          className="flex flex-col gap-4 overflow-y-auto px-5"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)" }}
+          className="flex flex-col gap-4 overflow-y-auto px-5 pb-5"
         >
           <p className="text-sm text-text-2">{t.compras.panel.intro}</p>
           {error && (
