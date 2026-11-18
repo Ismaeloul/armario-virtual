@@ -189,6 +189,13 @@ function Discover({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fit = useFitHeight(Boolean(next.item));
+  // Los botones mueven la tarjeta igual que el dedo: sale volando hacia su lado antes de decidir.
+  const [fly, setFly] = useState<-1 | 0 | 1>(0);
+  // Por qué lado se fue cada tarjeta, para que «Volver» la traiga de vuelta por ahí.
+  const sides = useRef(new Map<number, -1 | 1>());
+  const [back, setBack] = useState<{ id: number; side: -1 | 1 } | null>(null);
+  const flyTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(flyTimer.current), []);
   // Si guardar la decisión falla, la tarjeta que ya se fue volando tiene que volver.
   const [attempt, setAttempt] = useState(0);
   // Tras un «no me gusta», de qué producto se puede decir el motivo (y si ya se ha dicho).
@@ -208,10 +215,13 @@ function Discover({
   const decide = (liked: boolean) => {
     if (!item || busy) return;
     const id = item.id;
+    sides.current.set(id, liked ? 1 : -1);
     setBusy(true);
     setError(null);
     (liked ? api.shopLike(id, filter) : api.shopDislike(id, filter))
       .then((n) => {
+        setFly(0);
+        setBack(null);
         onNext(n);
         // La pregunta del motivo no frena nada: sale aparte, se puede ignorar y se va sola.
         // Ya no se pregunta el motivo al descartar (decisión del usuario): descartar una prenda no
@@ -219,10 +229,18 @@ function Discover({
         ask(null);
       })
       .catch(() => {
+        setFly(0);
         setError(t.compras.errorAccion);
         setAttempt((n) => n + 1);
       })
       .finally(() => setBusy(false));
+  };
+
+  /** Botón de la X o del corazón: la tarjeta sale volando hacia su lado y luego se guarda la decisión. */
+  const press = (liked: boolean) => {
+    if (!item || busy || fly) return;
+    setFly(liked ? 1 : -1);
+    flyTimer.current = window.setTimeout(() => decide(liked), FLY_MS);
   };
 
   /** «Volver»: deshace la última decisión y vuelve a enseñar esa tarjeta. */
@@ -233,7 +251,10 @@ function Discover({
     ask(null);
     api
       .shopUndo(filter)
-      .then(onNext)
+      .then((n) => {
+        if (n.item) setBack({ id: n.item.id, side: sides.current.get(n.item.id) ?? -1 });
+        onNext(n);
+      })
       .catch(() => setError(t.compras.errorVolver))
       .finally(() => setBusy(false));
   };
@@ -324,7 +345,8 @@ function Discover({
     <ReasonBar done={asking.done} onReason={giveReason} onClose={() => ask(null)} />
   );
 
-  const round = "flex items-center justify-center rounded-full shadow-lg active:scale-95 disabled:opacity-40";
+  const round =
+    "flex items-center justify-center rounded-full shadow-[0_6px_16px_rgb(0_0_0/0.22)] transition-transform active:scale-95 disabled:[&>*]:opacity-40";
   const undoButton = (
     <button
       type="button"
@@ -352,7 +374,14 @@ function Discover({
               ? t.compras.mas.encajaMenos
               : t.compras.quedan(next.remaining)}
         </p>
-        <SwipeCard key={`${item.id}-${attempt}`} item={item} busy={busy} onDecide={decide} />
+        <SwipeCard
+          key={`${item.id}-${attempt}`}
+          item={item}
+          busy={busy}
+          fly={fly}
+          enterFrom={back?.id === item.id ? back.side : 0}
+          onDecide={decide}
+        />
         {alert}
         <section className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex h-16 items-center justify-center gap-6">
           <span className="pointer-events-auto absolute left-3">{undoButton}</span>
@@ -360,7 +389,7 @@ function Discover({
             type="button"
             aria-label={t.compras.no}
             disabled={busy}
-            onClick={() => decide(false)}
+            onClick={() => press(false)}
             className={`${round} pointer-events-auto h-16 w-16 border border-line bg-card text-danger`}
           >
             <Icon name="close" size={30} />
@@ -369,7 +398,7 @@ function Discover({
             type="button"
             aria-label={t.compras.si}
             disabled={busy}
-            onClick={() => decide(true)}
+            onClick={() => press(true)}
             className={`${round} pointer-events-auto h-16 w-16 bg-primary text-on-primary`}
           >
             <Icon name="favorite_fill" size={30} />
@@ -696,12 +725,37 @@ const FLY_MS = 220;
  * Una propuesta, tipo Tinder: deslizar a la derecha = me gusta, a la izquierda = no me gusta.
  * `touch-action: pan-y` deja el scroll vertical al navegador; el arrastre horizontal es nuestro.
  */
-function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; onDecide: (liked: boolean) => void }) {
+function SwipeCard({
+  item,
+  busy,
+  fly,
+  enterFrom,
+  onDecide,
+}: {
+  item: ShopItem;
+  busy: boolean;
+  fly: -1 | 0 | 1; // un botón manda que salga volando hacia ese lado
+  enterFrom: -1 | 0 | 1; // tras «Volver», el lado por el que se fue y por el que vuelve
+  onDecide: (liked: boolean) => void;
+}) {
   const drag = useRef<{ id: number; x: number; y: number; active: boolean } | null>(null);
   const moved = useRef(false); // para que soltar un arrastre no cuente como toque en la foto o el enlace
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [leaving, setLeaving] = useState<-1 | 0 | 1>(0);
+  const [entering, setEntering] = useState<-1 | 0 | 1>(enterFrom);
+  useEffect(() => {
+    if (fly) setLeaving(fly);
+  }, [fly]);
+  // Se pinta primero fuera de la pantalla y, en el siguiente fotograma, se la deja volver a su sitio.
+  useEffect(() => {
+    if (!entering) return;
+    // Con un temporizador y no con requestAnimationFrame: si la pestaña está en segundo plano los
+    // fotogramas no llegan y la tarjeta se quedaría fuera de la pantalla.
+    const wait = window.setTimeout(() => setEntering(0), 30);
+    return () => window.clearTimeout(wait);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Se empieza con el fondo de la foto anterior (los de una tienda se parecen) y la foto entra con un
   // fundido cuando ya está cargada y se sabe su color: así no hay salto de bandas ni parpadeo.
   const [backdrop, setBackdrop] = useState<string | null>(lastBackdrop);
@@ -751,7 +805,7 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
     }
   };
 
-  const shift = leaving ? leaving * 520 : dx;
+  const shift = leaving ? leaving * 520 : entering ? entering * 520 : dx;
   const strength = Math.min(1, Math.abs(shift) / 90);
   const photos = item.photos;
 
@@ -768,12 +822,12 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
           moved.current = false;
         }
       }}
-      className={`card relative mb-7 flex min-h-0 flex-1 flex-col overflow-hidden select-none ${busy && !leaving ? "opacity-50" : ""}`}
+      className="card relative mb-7 flex min-h-0 flex-1 flex-col overflow-hidden select-none"
       style={{
         touchAction: "pan-y",
         transform: `translateX(${shift}px) rotate(${shift / 22}deg)`,
         transition: dragging ? "none" : `transform ${FLY_MS}ms ease-out, opacity ${FLY_MS}ms ease-out`,
-        opacity: leaving ? 0 : undefined,
+        opacity: leaving || entering ? 0 : undefined,
       }}
     >
       <button
