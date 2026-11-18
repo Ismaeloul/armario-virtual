@@ -27,7 +27,7 @@ from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 
 from ... import catalog, config
 from . import browser
-from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from .base import NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
 from .estimate import estimate_color, estimate_pattern, estimate_season, estimate_style, estimate_type
 from .estimate import sentence_case
 from .fetch import IMAGE, Fetcher
@@ -434,7 +434,7 @@ class InditexConnector:
         if has_snap and (fresh(store_data) or not browser.active()):
             return detail_from(self.site, store_data)
         if not browser.active():
-            raise ShopError(f"{self.name} se lee con navegador: la ficha llega con la próxima consulta")
+            raise NeedsBrowser(f"{self.name} se lee con navegador: la ficha llega con la próxima consulta")
         snap = self._fetch_snapshot(store_data)
         if snap is None:
             return None

@@ -1,7 +1,7 @@
 """Tiendas de las que la pestaña Compras trae novedades. Una entrada por conector."""
 from . import browser
-from .base import BlockedError, BrowserUnavailable, NotThisStore, SearchError, ShopConnector, ShopDetail, ShopError
-from .base import ShopProduct
+from .base import BlockedError, BrowserUnavailable, NeedsBrowser, NotThisStore, SearchError, ShopConnector, ShopDetail
+from .base import ShopError, ShopProduct
 from .bershka import BershkaConnector
 from .courir import CourirConnector
 from .jdsports import JDSportsConnector
@@ -12,8 +12,8 @@ from .zara import ZaraConnector
 CONNECTORS: dict[str, ShopConnector] = {
     "zara": ZaraConnector(),
     "courir": CourirConnector(),
+    # Estas tres solo se leen con un navegador de verdad (browser.py), en las consultas en segundo plano.
     "jdsports": JDSportsConnector(),
-    # Estas dos solo se leen con un navegador de verdad (browser.py), en las consultas en segundo plano.
     "pullandbear": PullAndBearConnector(),
     "bershka": BershkaConnector(),
 }
@@ -30,6 +30,6 @@ def unavailable(key: str) -> str | None:
 
 
 __all__ = [
-    "CONNECTORS", "BlockedError", "BrowserUnavailable", "NotThisStore", "SearchError", "ShopConnector", "ShopDetail",
+    "CONNECTORS", "BlockedError", "BrowserUnavailable", "NeedsBrowser", "NotThisStore", "SearchError", "ShopConnector", "ShopDetail",
     "ShopError", "ShopProduct", "needs_browser", "unavailable",
 ]

@@ -1,22 +1,27 @@
 """Conector de JD Sports (de momento jdsports.fr): zapatillas de hombre de muchas marcas.
 
-Se lee CON PEGAS (ver la investigación del 18-11-2026):
+Se lee CON NAVEGADOR (browser.py), como Pull&Bear y Bershka: desde el Umbrel (Linux, Docker) la web
+responde 403 a curl y a httpx en casi todo (un filtro por la huella del cliente), y a un Chromium de
+serie con su ventana, no. No se imita ninguna huella: es el navegador de verdad.
 
-- Los datos van en el `__NEXT_DATA__` de cada página (Next.js). El servidor solo pinta las 72 primeras
-  de cada ruta, en el orden «recomendados»; la web pagina y ordena en el navegador con un servicio
-  de búsqueda de terceros que aquí NO se consulta. Para cubrir más catálogo se recorren varias rutas
-  (novedades, subcategorías y marcas) y se ordena en local por antigüedad (`ageDaysRound`).
-- La web responde 403 a httpx (con o sin HTTP/2) en casi todo y 200 a `curl` con las mismas
-  cabeceras: las páginas se piden con `curl` (fetch.py). Las fotos, de la CDN, con httpx.
-- Sin buscador: el de la web va por ese servicio de terceros. Solo se busca por enlace de producto.
+- Los datos van en el `__NEXT_DATA__` de cada página (Next.js): se abre la página en el navegador y se
+  lee ese JSON de la página ya cargada, nada de lo que pinta. El servidor pinta 72 productos por
+  página en el orden «recomendados». Las páginas siguientes son las que abre el propio botón
+  «Charger plus» de la web (`?from=72`, `?from=144`…, que el servidor también pinta): se leen hasta
+  PAGES por ruta. Para cubrir más catálogo se recorren varias rutas (novedades, subcategorías y marcas)
+  y se ordena en local por antigüedad (`ageDaysRound`). El servicio de búsqueda de terceros que usa la
+  web en el cliente NO se consulta nunca.
+- La ficha, igual: la página del producto en el navegador y su `__NEXT_DATA__`. Las fotos, de su CDN
+  (otro dominio, que responde a un cliente normal), con httpx.
+- Sin buscador: el navegador no se abre dentro de una petición HTTP. A un enlace de JD se le explica.
 """
 import html
-import json
 import re
 from urllib.parse import urlsplit
 
 from ... import config
-from .base import NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
+from . import browser
+from .base import BlockedError, NeedsBrowser, NotThisStore, SearchError, ShopDetail, ShopError, ShopProduct
 from .estimate import brand_name, estimate_color, estimate_pattern, estimate_season, estimate_shoe_type
 from .estimate import estimate_style, title_case
 from .fetch import IMAGE, Fetcher
@@ -59,25 +64,14 @@ SITE = SITES[COUNTRY]
 BASE = SITE["base"]
 
 PHOTO_WIDTH = 1600
+PAGES = 3  # páginas de 72 por ruta: las que abriría el botón «Charger plus» de la web
+PER_PAGE = 72  # lo que pinta el servidor por página (la propia página lo dice en `hitsPerPage`)
 # Vistas de la ficha: _a lateral, _b tres cuartos, _c trasera. Ni la suela (_f) ni un detalle (_d) ni la
 # cenital (_e) como fotos del armario.
 _VIEWS = ("a", "b", "c")
-_NEXT_DATA = re.compile(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
 _PRODUCT_PATH = re.compile(r"/product/([^/]+)/(\d{5,10})(?:_jdsports[a-z]*)?/?")
 _LINK_TEXT = re.compile(r"(?:https?://|www\.)\S+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/\S*", re.IGNORECASE)
 _NOT_SHOES = re.compile(r"tong|sandale|claquette|chausson|chaussette|sandalia|chancla", re.IGNORECASE)
-
-
-def next_data(page: str) -> dict:
-    """El JSON de Next.js de una página. Lanza ShopError si no está (la página no es la esperada)."""
-    match = _NEXT_DATA.search(page)
-    if not match:
-        raise ShopError("la respuesta no era la esperada (sin datos de la página)")
-    try:
-        data = json.loads(match.group(1))
-    except ValueError as exc:
-        raise ShopError("la respuesta no era la esperada (datos ilegibles)") from exc
-    return data if isinstance(data, dict) else {}
 
 
 def listing_results(data: dict) -> dict:
@@ -109,7 +103,7 @@ def _is_for_men(hit: dict) -> bool:
 
 
 def make_product(*, object_id: str, name: str, brand: str, colour: str, price: float | int | None, slug: str,
-                 section: str, product_ref: str | None, age_days=None, url: str | None = None) -> ShopProduct | None:
+                 section: str, product_ref: str | None, age_days=None) -> ShopProduct | None:
     shown_brand = brand_name(brand)
     clean = _clean_name(name, shown_brand)
     shoe_type = estimate_shoe_type(f"{name} {section}")
@@ -125,7 +119,7 @@ def make_product(*, object_id: str, name: str, brand: str, colour: str, price: f
         product_ref=f"jdsports:{object_id}",
         name=clean,
         price_cents=cents,
-        url=url or product_url(slug, object_id),
+        url=product_url(slug, object_id),
         store_color=colour[:1].upper() + colour[1:],
         section=section,
         type=shoe_type,
@@ -173,8 +167,9 @@ def _photo(src: str) -> str:
     return f"{src}?w={PHOTO_WIDTH}&fmt=jpg&qlt=85"
 
 
-def parse_product(data: dict) -> tuple[dict, ShopDetail] | None:
-    """De la ficha (`props.pageProps.product`) a (datos del producto, detalle). None si no hay producto."""
+def parse_product(data: dict) -> ShopDetail | None:
+    """De la ficha (`props.pageProps.product`) a su detalle. None si no hay producto (ya no existe y la
+    tienda ha llevado a otra página)."""
     product = ((data.get("props") or {}).get("pageProps") or {}).get("product")
     if not isinstance(product, dict) or not product.get("id"):
         return None
@@ -206,18 +201,9 @@ def parse_product(data: dict) -> tuple[dict, ShopDetail] | None:
         })
     price = (product.get("minPrice") or {}).get("centAmount")
     code = str(product.get("productCode") or "")
-    match = _PRODUCT_PATH.search(str(product.get("urlPath") or ""))
+    ref = code.rsplit("/", 1)[-1] if "/" in code else None
     colour = str(product.get("colour") or "")
-    info = {
-        "id": str(product["id"]),
-        "name": str(product.get("name") or ""),
-        "brand": str(product.get("brand") or ""),
-        "colour": colour,
-        "slug": match.group(1) if match else "",
-        "ref": code.rsplit("/", 1)[-1] if "/" in code else None,
-        "price": price / 100 if isinstance(price, int) else None,
-    }
-    detail = ShopDetail(
+    return ShopDetail(
         price_cents=price if isinstance(price, int) and price > 0 else None,
         sizes=sizes,
         photo_urls=photos,
@@ -225,9 +211,8 @@ def parse_product(data: dict) -> tuple[dict, ShopDetail] | None:
         composition=" ".join(str(product.get("fabric") or "").split())[:300],
         siblings=siblings or None,
         store_color=colour[:1].upper() + colour[1:],
-        store_data={"ref": info["ref"]} if info["ref"] else {},
+        store_data={"ref": ref} if ref else {},
     )
-    return info, detail
 
 
 def parse_query(text: str) -> tuple[str, str]:
@@ -248,71 +233,86 @@ def parse_query(text: str) -> tuple[str, str]:
     return match.group(1), match.group(2)
 
 
+def page_url(path: str, index: int, per_page: int = PER_PAGE) -> str:
+    """La página `index` (desde 0) de una ruta: la misma dirección que deja el botón «Charger plus»."""
+    return BASE + path + (f"?from={index * per_page}" if index else "")
+
+
 class JDSportsConnector:
     key = "jdsports"
     name = "JD Sports"
+    needs_browser = True
     # No se sabe qué día saca novedades: se consulta los miércoles.
     refresh_weekday = 2  # lunes = 0
     refresh_after_release = False
     language = SITE["language"]
     categories = {slug: label for slug, (label, _path) in SITE["routes"].items()}
 
-    def __init__(self, pause: float | None = None, timeout: float | None = None):
-        self.fetcher = Fetcher(
-            "jdsports",
-            pause=max(config.SHOP_PAUSE_SECONDS, 1.5) if pause is None else pause,
-            timeout=config.SHOP_TIMEOUT_SECONDS if timeout is None else timeout,
-            accept_language=SITE["accept_language"],
-            use_curl=True,
-        )
+    def __init__(self, pages: int = PAGES):
+        self.pages = pages
+        # Las fotos, de la CDN: un cliente normal, con su pausa corta.
+        self.fetcher = Fetcher("jdsports", pause=0.3, timeout=config.SHOP_TIMEOUT_SECONDS,
+                               accept_language=SITE["accept_language"])
 
-    def _get(self, url: str, accept: str | None = None, pause: float | None = None, curl: bool | None = None):
-        if accept is None:
-            return self.fetcher.get(url, pause=pause, curl=curl)
-        return self.fetcher.get(url, accept=accept, pause=pause, curl=curl)
+    def _read(self, url: str) -> tuple[int | None, dict | None]:
+        """(estado, `__NEXT_DATA__`) de una página de la tienda, abierta en el navegador."""
+        status, data = browser.require(self.key).page_json(self.key, url)
+        return status, data if isinstance(data, dict) else None
 
     def list_category(self, slug: str) -> list[ShopProduct]:
         _label, path = SITE["routes"][slug]
-        page = self._get(BASE + path)
-        if page.status != 200:
-            raise ShopError(f"HTTP {page.status}")
-        return parse_listing(listing_results(next_data(page.text)), slug)
-
-    def _product(self, object_id: str, slug: str | None) -> tuple[dict, ShopDetail] | None:
-        page = self._get(product_url(slug or "p", object_id))
-        if page.status in (404, 410):
-            return None
-        if page.status != 200:
-            raise ShopError(f"HTTP {page.status}")
-        return parse_product(next_data(page.text))
+        hits: list = []
+        per_page = PER_PAGE
+        for index in range(self.pages):
+            try:
+                status, data = self._read(page_url(path, index, per_page))
+                if status != 200 or data is None:
+                    raise ShopError(f"HTTP {status}")
+                results = listing_results(data)
+            except ShopError as exc:
+                # Un bloqueo para la tienda entera; si falla una página siguiente, basta con lo que hay.
+                if index == 0 or isinstance(exc, BlockedError):
+                    raise
+                break
+            if results.get("page") not in (None, index):
+                break  # el servidor no ha dado la página pedida: no se insiste
+            hits += results.get("hits") or []
+            if isinstance(results.get("hitsPerPage"), int) and results["hitsPerPage"] > 0:
+                per_page = results["hitsPerPage"]
+            pages = results.get("nbPages")
+            if isinstance(pages, int) and index + 1 >= pages:
+                break
+        return parse_listing({"hits": hits}, slug)
 
     def detail(self, store_data: dict) -> ShopDetail | None:
         object_id = str(store_data.get("id") or "")
         if not object_id.isdigit():
             return None
-        parsed = self._product(object_id, store_data.get("slug"))
-        return parsed[1] if parsed else None
+        if not browser.active():  # una petición HTTP normal (elegir otro color): aquí no se abre
+            raise NeedsBrowser(f"{self.name} solo se lee con navegador, en las consultas en segundo plano: "
+                               "ese color no se puede traer ahora")
+        status, data = self._read(product_url(store_data.get("slug") or "p", object_id))
+        if status in (404, 410):
+            return None
+        if status != 200 or data is None:
+            raise ShopError(f"HTTP {status}")
+        return parse_product(data)
 
     def reference(self, store_data: dict) -> str | None:
         return reference(store_data)
 
     def search(self, query: str, limit: int = 12) -> list[ShopProduct]:
-        slug, object_id = parse_query(query)
-        parsed = self._product(object_id, slug)
-        if not parsed:
-            raise SearchError("No he encontrado esa zapatilla en JD Sports")
-        info, detail = parsed
-        product = make_product(
-            object_id=info["id"], name=info["name"], brand=info["brand"], colour=info["colour"],
-            price=info["price"], slug=info["slug"] or "p", section="", product_ref=info["ref"],
+        """Sin buscador: el navegador no se abre dentro de una petición HTTP. A un enlace de JD se le
+        explica por qué; lo demás no es cosa suya."""
+        parse_query(query)  # NotThisStore si no es un enlace de JD; SearchError si no es de un producto
+        raise SearchError(
+            f"{self.name} solo se lee con navegador en las consultas semanales: el buscador no la abre. "
+            "Actívala en Tiendas y saldrá en Descubrir si está en sus secciones."
         )
-        if product is None:
-            raise SearchError("Eso no es calzado que quepa en el armario")
-        return [product][:limit]
 
     def download(self, url: str) -> bytes:
         # Las fotos salen de su CDN, que sí responde a un cliente normal.
-        page = self._get(url, accept=IMAGE, pause=0.5, curl=False)
+        page = self.fetcher.get(url, accept=IMAGE)
         if page.status != 200 or not page.content:
             raise ShopError(f"HTTP {page.status} al bajar la foto")
         return page.content

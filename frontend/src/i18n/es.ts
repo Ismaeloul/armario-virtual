@@ -163,7 +163,7 @@ export const t = {
       titulo: "Buscar una prenda",
       placeholder: "Referencia o enlace de la tienda",
       ayuda:
-        "Vale la referencia de Zara (la de la etiqueta, tipo 3918/300), el código de fabricante de unas zapatillas de Courir (tipo IF6490), el enlace del producto de Zara, Courir o JD Sports, o escribir qué buscas en Zara.",
+        "Vale la referencia de Zara (la de la etiqueta, tipo 3918/300), el código de fabricante de unas zapatillas de Courir (tipo IF6490), el enlace del producto de Zara o Courir, o escribir qué buscas en Zara.",
       buscar: "Buscar",
       buscando: "Buscando…",
       error: "No se pudo buscar. Inténtalo de nuevo.",
@@ -433,7 +433,7 @@ export const t = {
     olvidar: "Borrar lo aprendido",
     olvidarConfirmar: "Toca otra vez para confirmar",
     olvidado: "Hecho. El algoritmo empieza de cero.",
-    version: "Armario · v0.4.1",
+    version: "Armario · v0.4.2",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",

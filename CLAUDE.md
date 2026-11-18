@@ -71,7 +71,12 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.1** (la etiqueta v0.4.0 existe pero su imagen no llegó a construirse: faltaba `libatomic1`) (18-11-2026: Fase 4, Compras, con cinco tiendas de Francia; es la primera vez que el Chromium y JD Sports corren en Linux, sin probar). Antes 0.3.2 (18-11-2026: barrido de pulido; antes 0.3.1, 17-11-2026; la 0.3.0 más el arreglo de copiar el código de Codex por http): incluye todo lo que abajo figura
+- **Publicada en el Umbrel: 0.4.2** (18-11-2026): JD Sports pasa a leerse con el navegador y al cambiar de
+  color se hereda el nombre traducido. En la 0.4.1 se comprobó en el Umbrel real: el Chromium arranca con
+  Xvfb y Pull&Bear funciona (449 productos, 0 fallos); JD Sports con `curl` daba 403 en Linux (filtro por
+  huella del cliente), por eso se pasó al navegador. Límite firme, hablado con el usuario: no se disfraza el
+  navegador (ni extensiones para cambiar el user agent ni nada parecido), tampoco «solo para una tienda».
+- **Antes: 0.4.1** (la etiqueta v0.4.0 existe pero su imagen no llegó a construirse: faltaba `libatomic1`) (18-11-2026: Fase 4, Compras, con cinco tiendas de Francia; es la primera vez que el Chromium y JD Sports corren en Linux, sin probar). Antes 0.3.2 (18-11-2026: barrido de pulido; antes 0.3.1, 17-11-2026; la 0.3.0 más el arreglo de copiar el código de Codex por http): incluye todo lo que abajo figura
   como «en `main`, sin publicar» (Fase 2, Gustos, calzado, reglas de estilo, palabras clave). A partir de
   ahora se publica una versión por fase. El usuario va a fotografiar su ropa real en el Umbrel y a
   entrenar ahí el algoritmo; lo de la copia local es todo ropa de prueba (Vinted y Zara), nada es suyo.

@@ -13,8 +13,8 @@ from app.db import SessionLocal
 from app.models import ShopItem, now_utc
 from app.services import shopping, shops
 from app.services.ai import translate as traductor
-from app.services.shops import BlockedError, BrowserUnavailable, NotThisStore, SearchError, ShopError
-from app.services.shops import bershka, browser, inditex, pullandbear
+from app.services.shops import BlockedError, BrowserUnavailable, NeedsBrowser, NotThisStore, SearchError, ShopError
+from app.services.shops import bershka, browser, inditex, jdsports, pullandbear
 
 
 def _json(name: str):
@@ -316,6 +316,7 @@ def test_si_falta_el_navegador_la_tienda_sale_no_disponible_y_las_demas_siguen(c
     state = {s["key"]: s for s in client.get("/api/shop/state").json()["stores"]}
     assert state["pullandbear"]["unavailable"] == "No disponible: falta el navegador"
     assert state["bershka"]["unavailable"] == "No disponible: falta el navegador" and state["bershka"]["browser"]
+    assert state["jdsports"]["unavailable"] == "No disponible: falta el navegador" and state["jdsports"]["browser"]
     assert state["zara"]["unavailable"] is None and not state["zara"]["browser"]
     result = _refresh(limit=4)
     assert called == []  # ni se intenta
@@ -386,6 +387,217 @@ def test_una_consulta_de_pull_and_bear_deja_propuestas_con_fotos_y_colores(clien
     answer = client.post(f"/api/shop/items/{stwd.id}/color", json={"product_ref": "pullandbear:763994346-501"})
     assert answer.status_code == 200 and answer.json()["product_ref"] == "pullandbear:763994346-501"
     assert answer.json()["reference"] == "7551/528/501" and len(answer.json()["photos"]) == 2
+
+
+# ---------- JD Sports: el `__NEXT_DATA__` de la página abierta en el navegador
+
+JD_BASKETS = jdsports.BASE + "/homme/chaussures-homme/baskets/"
+JD_FICHA = "https://www.jdsports.fr/product/noir-on-running-cloudtilt/19772886_jdsportsfr/"
+
+
+def _jd_listado(hits, page=0, pages=19):
+    results = {**_json("jd_listado.json"), "hits": hits, "page": page, "nbPages": pages}
+    return {"props": {"pageProps": {"searchServerState": {"initialResults": {"jd_prod_products_fr": {"results": [results]}}}}}}
+
+
+def _jd_ficha():
+    return {"props": {"pageProps": {"product": _json("jd_producto.json")}}}
+
+
+class FakeJDSession:
+    """El navegador visto desde JD: dirección -> (estado, `__NEXT_DATA__`) o la excepción que lanzaría."""
+
+    def __init__(self, pages):
+        self.pages = pages
+        self.opened: list[str] = []
+
+    def page_json(self, store, url, script_id="__NEXT_DATA__", wait=10):
+        self.opened.append(url)
+        answer = self.pages.get(url, (404, None))
+        if callable(answer):
+            answer = answer()
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+
+def test_jd_lee_el_listado_y_las_paginas_de_charger_plus(monkeypatch):
+    hits = _json("jd_listado.json")["hits"]
+    session = FakeJDSession({
+        JD_BASKETS: (200, _jd_listado(hits[:2])),
+        JD_BASKETS + "?from=72": (200, _jd_listado([hits[2], hits[0]], page=1)),  # una repetida
+        JD_BASKETS + "?from=144": ShopError("HTTP 500"),  # una página siguiente que falla: basta con lo que hay
+    })
+    _con_sesion(monkeypatch, session)
+    products = jdsports.JDSportsConnector().list_category("baskets")
+    assert session.opened == [JD_BASKETS, JD_BASKETS + "?from=72", JD_BASKETS + "?from=144"]
+    assert [p.product_ref for p in products] == ["jdsports:19772886", "jdsports:19713373", "jdsports:19615454"]
+    assert products[0].brand == "On Running" and products[0].price_cents == 17000
+    # Si la ruta solo tiene una página, no se abre ninguna más; y nunca más de PAGES.
+    session = FakeJDSession({JD_BASKETS: (200, _jd_listado(hits, pages=1))})
+    _con_sesion(monkeypatch, session)
+    assert len(jdsports.JDSportsConnector().list_category("baskets")) == 3 and session.opened == [JD_BASKETS]
+    session = FakeJDSession({JD_BASKETS + (f"?from={72 * i}" if i else ""): (200, _jd_listado(hits, page=i))
+                             for i in range(6)})
+    _con_sesion(monkeypatch, session)
+    jdsports.JDSportsConnector().list_category("baskets")
+    assert len(session.opened) == jdsports.PAGES
+
+
+def test_jd_la_primera_pagina_que_falla_o_un_bloqueo_paran_la_ruta(monkeypatch):
+    _con_sesion(monkeypatch, FakeJDSession({JD_BASKETS: (500, None)}))
+    with pytest.raises(ShopError, match="HTTP 500"):
+        jdsports.JDSportsConnector().list_category("baskets")
+    hits = _json("jd_listado.json")["hits"]
+    session = FakeJDSession({
+        JD_BASKETS: (200, _jd_listado(hits)),
+        JD_BASKETS + "?from=72": BlockedError("la tienda ha bloqueado el acceso (no se vuelve a intentar hasta mañana)"),
+    })
+    _con_sesion(monkeypatch, session)
+    with pytest.raises(BlockedError):
+        jdsports.JDSportsConnector().list_category("baskets")
+
+
+def test_jd_la_ficha_se_abre_en_el_navegador_y_fuera_de_una_consulta_no(monkeypatch):
+    connector = jdsports.JDSportsConnector()
+    data = {"id": "19772886", "slug": "noir-on-running-cloudtilt", "ref": "807022"}
+
+    def _no(store):
+        raise AssertionError("se ha pedido el navegador fuera de una consulta")
+
+    monkeypatch.setattr(jdsports.browser, "require", _no)
+    with pytest.raises(NeedsBrowser, match="JD Sports solo se lee con navegador"):
+        connector.detail(data)
+    session = FakeJDSession({JD_FICHA: (200, _jd_ficha())})
+    _con_sesion(monkeypatch, session)
+    detail = connector.detail(data)
+    assert session.opened == [JD_FICHA]
+    assert len(detail.photo_urls) == 3 and detail.price_cents == 17000 and detail.store_data == {"ref": "807022"}
+    assert connector.detail({"id": "1", "slug": "x"}) is None  # 404: ya no existe
+    session.pages[JD_FICHA] = (200, {"props": {"pageProps": {}}})
+    assert connector.detail(data) is None  # la tienda lleva a otra página: tampoco existe
+
+
+def test_jd_el_buscador_no_abre_el_navegador_y_lo_explica(client):
+    connector = jdsports.JDSportsConnector()
+    with pytest.raises(SearchError, match="JD Sports solo se lee con navegador"):
+        connector.search(JD_FICHA, 6)
+    for otra in ("IF6490", "https://www.courir.com/fr/p/x-1514875.html"):
+        with pytest.raises(NotThisStore):
+            connector.search(otra, 6)
+    response = client.post("/api/shop/lookup", json={"query": JD_FICHA})
+    assert response.status_code == 404 and "JD Sports solo se lee con navegador" in response.json()["detail"]
+
+
+class FakeBrowserPage:
+    """La página de Playwright, lo justo para `Session.page_json`."""
+
+    def __init__(self, status=200, script=None, title="", text="", frames=()):
+        self.status, self.script, self._title, self._text = status, script, title, text
+        self.frames = [type("F", (), {"url": u})() for u in frames]
+        self.visited: list[str] = []
+
+    def goto(self, url, wait_until=None, timeout=None):
+        self.visited.append(url)
+        return type("R", (), {"status": self.status})()
+
+    def evaluate(self, script, arg=None):
+        assert arg == "__NEXT_DATA__"
+        return self.script
+
+    def wait_for_timeout(self, ms):
+        pass
+
+    def title(self):
+        return self._title
+
+    def inner_text(self, selector, timeout=None):
+        return self._text
+
+
+@pytest.mark.parametrize(
+    ("page", "error", "blocked"),
+    [
+        (FakeBrowserPage(status=403, text="Forbidden"), BlockedError, True),
+        (FakeBrowserPage(title="Access Denied", text="You don't have permission to access"), BlockedError, True),
+        (FakeBrowserPage(text="Please verify you are human"), BlockedError, True),
+        (FakeBrowserPage(text="x" * 3000, frames=["https://geo.captcha-delivery.com/captcha/"]), BlockedError, True),
+        (FakeBrowserPage(text="Baskets homme " * 300), ShopError, False),  # sin datos, pero no es un bloqueo
+        (FakeBrowserPage(script="{no es json", text="Baskets homme " * 300), ShopError, False),
+    ],
+)
+def test_jd_la_pagina_que_bloquea_o_no_trae_datos(monkeypatch, page, error, blocked):
+    monkeypatch.setattr(browser, "PAUSE", (0, 0))
+    session = browser.Session()
+    monkeypatch.setattr(session, "_start", lambda: page)
+    with pytest.raises(error) as caught:
+        session.page_json("jdsports", JD_FICHA, wait=0)
+    assert isinstance(caught.value, BlockedError) == blocked
+    assert bool(browser.blocked("jdsports")) == blocked
+    if blocked:
+        assert "hasta mañana" in browser.blocked("jdsports")
+    else:
+        assert "no traía sus datos" in str(caught.value) or "ilegibles" in str(caught.value)
+
+
+def test_jd_lee_el_next_data_de_la_pagina_ya_cargada(monkeypatch):
+    monkeypatch.setattr(browser, "PAUSE", (0, 0))
+    session = browser.Session()
+    page = FakeBrowserPage(script=json.dumps(_jd_ficha()), text="Cloudtilt " * 300)
+    monkeypatch.setattr(session, "_start", lambda: page)
+    status, data = session.page_json("jdsports", JD_FICHA)
+    assert status == 200 and jdsports.parse_product(data).price_cents == 17000
+    assert page.visited == [JD_FICHA] and session.pages == 1
+    page.status = 404
+    assert session.page_json("jdsports", JD_FICHA) == (404, None)
+    assert browser.blocked("jdsports") is None
+
+
+@pytest.fixture
+def jd_activada(monkeypatch, tienda):
+    monkeypatch.setattr(browser, "missing", lambda: None)
+    with SessionLocal() as db:
+        shopping.set_store(db, "jdsports", True, ["baskets"])
+
+
+def test_una_consulta_de_jd_deja_propuestas_con_fotos_de_la_cdn(client, monkeypatch, jd_activada, photo_bytes):
+    hits = _json("jd_listado.json")["hits"]
+    fichas = {}
+    for hit in hits:
+        product_ = _json("jd_producto.json")
+        product_["id"] = hit["objectID"]
+        fichas[jdsports.product_url(hit["slug"], hit["objectID"])] = (200, {"props": {"pageProps": {"product": product_}}})
+    session = FakeJDSession({JD_BASKETS: (200, _jd_listado(hits, pages=1)), **fichas})
+    _con_sesion(monkeypatch, session)
+    downloaded = []
+    monkeypatch.setattr(jdsports.JDSportsConnector, "download", lambda self, url: downloaded.append(url) or photo_bytes)
+    result = _refresh(limit=8, stores=["jdsports"])
+    assert result["failed"] == 0 and result["found"] == 3
+    shown = [i for i in _items("nuevo") if i.store == "jdsports"]
+    assert len(shown) >= 1 and all(len(i.photos) == 3 for i in shown)
+    assert all(url.startswith("https://i8.amplience.net/") for url in downloaded)
+    # Una página de listado y una ficha por propuesta (o intento): nada más.
+    assert session.opened[0] == JD_BASKETS and set(session.opened[1:]) <= set(fichas)
+    # Elegir otro color es una petición HTTP normal: JD no abre el navegador ahí, y lo dice.
+    monkeypatch.setattr(jdsports.browser, "active", lambda: False)
+    item = shown[0]
+    listed = {f"jdsports:{hit['objectID']}" for hit in hits}
+    other = next(s["product_ref"] for s in item.siblings if s["product_ref"] not in listed)
+    answer = client.post(f"/api/shop/items/{item.id}/color", json={"product_ref": other})
+    assert answer.status_code != 200 and "solo se lee con navegador" in answer.json()["detail"]
+
+
+def test_un_bloqueo_de_jd_se_apunta_y_hoy_no_se_insiste(client, monkeypatch, jd_activada):
+    session = FakeJDSession({JD_BASKETS: lambda: browser.block("jdsports", browser.BLOCKED_TEXT)})
+    _con_sesion(monkeypatch, session)
+    _refresh(limit=4, stores=["jdsports"])
+    jd = next(s for s in client.get("/api/shop/state").json()["stores"] if s["key"] == "jdsports")
+    assert jd["browser"] and jd["status"]["error"].startswith("JD Sports: la tienda ha bloqueado el acceso")
+    browser.forget_blocks()
+    _refresh(limit=4, stores=["jdsports"])
+    assert session.opened == [JD_BASKETS]  # el mismo día ni se toca
+    with SessionLocal() as db:
+        assert not shopping.reachable(db, "jdsports", INVIERNO)
 
 
 # ---------- El color se enseña en español

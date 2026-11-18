@@ -10,7 +10,7 @@ RUN npm run build
 
 # --- 2) Backend + CLI de Codex + Chromium ---
 FROM python:3.12-slim
-# PLAYWRIGHT_BROWSERS_PATH: el Chromium de Pull&Bear y Bershka, dentro de la imagen y en una ruta que el
+# PLAYWRIGHT_BROWSERS_PATH: el Chromium de Pull&Bear, Bershka y JD Sports, dentro de la imagen y en una ruta que el
 # usuario 1000 puede leer (no en el HOME de root, que es donde Playwright lo pondría por defecto).
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -20,12 +20,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
 
 # Node solo hace falta para el lanzador del CLI de Codex (suscripción de ChatGPT).
-# curl: JD Sports responde 403 a httpx y 200 a curl (backend/app/services/shops/fetch.py).
 # libatomic1: lo necesita el Node que trae Playwright (sin él, `playwright install` falla en la imagen slim).
-# xvfb: la pantalla virtual donde se abre Chromium CON ventana (Pull&Bear y Bershka no dejan pasar a
-# un Chromium sin ventana). Se arranca solo mientras dura una consulta (services/shops/browser.py).
+# xvfb: la pantalla virtual donde se abre Chromium CON ventana (Pull&Bear, Bershka y JD Sports no dejan
+# pasar a un Chromium sin ventana o a un cliente HTTP). Se arranca solo mientras dura una consulta
+# (services/shops/browser.py).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nodejs npm ca-certificates curl xvfb libatomic1 \
+    && apt-get install -y --no-install-recommends nodejs npm ca-certificates xvfb libatomic1 \
     && npm install -g @openai/codex --no-fund --no-audit \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /root/.npm
 

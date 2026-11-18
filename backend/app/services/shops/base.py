@@ -26,6 +26,12 @@ class BrowserUnavailable(ShopError):
     La tienda no se ha llegado a tocar: no es un bloqueo."""
 
 
+class NeedsBrowser(ShopError):
+    """Esto solo se puede pedir con el navegador, y el navegador solo se abre en las consultas en
+    segundo plano (no dentro de una petición HTTP). No es un fallo de la tienda: el mensaje ya va
+    escrito para el usuario."""
+
+
 class SearchError(ShopError):
     """El buscador no puede dar nada con lo que se le ha pedido (la referencia no existe, no tiene
     forma de referencia…). No es un fallo de la tienda, y el mensaje ya va escrito para el usuario."""
@@ -95,7 +101,7 @@ class ShopConnector(Protocol):
     categories: dict[str, str]  # slug de la tienda -> nombre para el usuario
     # Día de la semana en que se consulta (lunes = 0): el siguiente al que la tienda saca novedades.
     refresh_weekday: int
-    # Opcional: True si la tienda solo se deja leer con un navegador de verdad (Pull&Bear, Bershka).
+    # Opcional: True si la tienda solo se deja leer con un navegador de verdad (Pull&Bear, Bershka, JD Sports).
     # Esas solo hablan con la tienda en el hilo de las consultas (ver shops/browser.py).
     # needs_browser: bool
 

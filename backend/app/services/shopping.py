@@ -46,7 +46,7 @@ from ..models import Garment, Setting, ShopItem, now_utc
 from . import ai, outfits, shops, storage, style_rules
 from .ai.base import build_prompt
 from .ai import codex_models
-from .shops import BlockedError, BrowserUnavailable, NotThisStore, SearchError, ShopError
+from .shops import BlockedError, BrowserUnavailable, NeedsBrowser, NotThisStore, SearchError, ShopError
 from .shops.estimate import brand_family, estimate_color, norm
 
 log = logging.getLogger("armario.compras")
@@ -1589,6 +1589,8 @@ def switch_color(db: Session, item: ShopItem, product_ref: str, today: date | No
             photos = _save_photos(connector, detail.photo_urls)
         except ColorFailed:
             raise
+        except NeedsBrowser as exc:  # la tienda no ha fallado: ese color solo se trae con navegador
+            raise ColorFailed(str(exc), "tienda") from exc
         except Exception as exc:
             if not isinstance(exc, ShopError):
                 log.exception("Compras: error inesperado al traer el color %s", product_ref)
@@ -1805,7 +1807,7 @@ def _run_locked(job) -> None:
     Después, aparte y sin cerrojo, traduce lo nuevo: las propuestas salen ya, en el idioma de la
     tienda, y pasan al español en cuanto llega la traducción."""
     try:
-        # El navegador (Pull&Bear, Bershka) solo puede abrirse aquí dentro y se cierra al acabar.
+        # El navegador (Pull&Bear, Bershka, JD Sports) solo puede abrirse aquí dentro y se cierra al acabar.
         with SessionLocal() as db, shops.browser.session():
             job(db)
     except Exception:

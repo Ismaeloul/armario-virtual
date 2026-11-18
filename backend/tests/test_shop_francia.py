@@ -211,22 +211,21 @@ def test_jd_sports_lee_el_listado_del_servidor_y_lo_ordena_por_novedad():
     assert (first.price_cents, first.type, first.category) == (17000, "zapatillas", "calzado")
     assert first.url == "https://www.jdsports.fr/product/noir-on-running-cloudtilt/19772886_jdsportsfr/"
     assert jdsports.reference(first.store_data) == "807022"
-    # Los datos salen del JSON de Next.js de la página.
-    page = '<html><script id="__NEXT_DATA__" type="application/json">' + json.dumps(
-        {"props": {"pageProps": {"searchServerState": {"initialResults": {"jd_prod_products_fr": {"results": [data]}}}}}}
-    ) + "</script></html>"
-    assert jdsports.listing_results(jdsports.next_data(page))["nbHits"] == 1330
+    # Los datos salen del JSON de Next.js de la página (`searchServerState`).
+    data_page = {"props": {"pageProps": {"searchServerState": {"initialResults": {"jd_prod_products_fr": {"results": [data]}}}}}}
+    assert jdsports.listing_results(data_page)["nbHits"] == 1330
     with pytest.raises(ShopError, match="no era la esperada"):
-        jdsports.next_data("<html>Access Denied</html>")
+        jdsports.listing_results({"props": {"pageProps": {}}})
 
 
 def test_la_ficha_de_jd_sports_da_lateral_tres_cuartos_y_trasera():
-    info, detail = jdsports.parse_product({"props": {"pageProps": {"product": _fixture("jd_producto.json")}}})
+    detail = jdsports.parse_product({"props": {"pageProps": {"product": _fixture("jd_producto.json")}}})
     assert [u.split("?")[0].rsplit("_", 1)[1] for u in detail.photo_urls] == ["a", "b", "c"]  # ni detalle ni suela
     assert detail.photo_urls[0].endswith("?w=1600&fmt=jpg&qlt=85")
     assert detail.price_cents == 17000 and detail.sizes[0] == {"name": "40", "in_stock": True}
     assert detail.composition.startswith("Tige : textile") and detail.store_data == {"ref": "807022"}
-    assert info["slug"] == "noir-on-running-cloudtilt" and len(detail.siblings) == 5
+    assert len(detail.siblings) == 5 and detail.store_color == "Noir"
+    assert jdsports.parse_product({"props": {"pageProps": {}}}) is None  # sin producto: ya no existe
     assert jdsports.parse_query("https://www.jdsports.fr/product/noir-on-running-cloudtilt/19772886_jdsportsfr/") == (
         "noir-on-running-cloudtilt", "19772886",
     )

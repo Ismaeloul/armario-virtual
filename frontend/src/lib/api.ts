@@ -204,7 +204,7 @@ export type ShopStore = {
   weekday: number;
   /** El día sale de cuándo saca novedades la tienda; si no, es uno elegido sin ese dato. */
   weekday_after_release: boolean;
-  /** Se lee con un navegador de verdad (Pull&Bear, Bershka): tarda más. */
+  /** Se lee con un navegador de verdad (Pull&Bear, Bershka, JD Sports): tarda más. */
   browser: boolean;
   /** Por qué no se puede consultar en este equipo («No disponible: falta el navegador»), o null. */
   unavailable: string | null;

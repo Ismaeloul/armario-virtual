@@ -1,6 +1,6 @@
 """Un Chromium de verdad, con su ventana, para las tiendas que no se dejan leer de otra forma
 (Pull&Bear y Bershka: a httpx les responden con un desafío de JavaScript y a un Chromium sin
-ventana con «Access Denied»).
+ventana con «Access Denied»; JD Sports: desde el Umbrel responde 403 a curl y a httpx en casi todo).
 
 Lo acordado con el usuario, sin excepciones:
 
@@ -11,7 +11,8 @@ Lo acordado con el usuario, sin excepciones:
   al cargar, se PARA con esa tienda (BlockedError) y no se le vuelve a preguntar hasta el día
   siguiente. El motivo va en claro al panel «Tiendas».
 - Solo catálogo público: ni sesión, ni carrito, ni compra. El aviso de cookies se rechaza si sale
-  (solo las imprescindibles) y si no, se ignora: lo que se lee son las respuestas JSON de la página.
+  (solo las imprescindibles) y si no, se ignora: lo que se lee son las respuestas JSON de la página
+  (Pull&Bear, Bershka) o el JSON que la página ya trae dentro (`page_json`, JD Sports).
 - Con educación: una página o una petición cada vez, con 2-3 s entre ellas.
 
 Cómo se usa: el navegador solo vive mientras dura una consulta en segundo plano. Quien lanza la
@@ -51,6 +52,7 @@ LAUNCH_TIMEOUT_MS = 60_000
 NAV_TIMEOUT_MS = 60_000
 FETCH_TIMEOUT_MS = 45_000
 WAIT_JSON_SECONDS = 30.0  # lo que se espera a que la página pida su catálogo
+WAIT_SCRIPT_SECONDS = 10.0  # lo que se espera a que aparezcan los datos de la página (JD Sports)
 LOCK_SECONDS = 120.0  # lo que se espera a que se cierre otro navegador antes de rendirse
 VIEWPORT = {"width": 1280, "height": 900}
 
@@ -350,6 +352,43 @@ class Session:
             page.remove_listener("response", on_response)
             self._last = time.monotonic()
 
+    def page_json(self, store: str, url: str, script_id: str = "__NEXT_DATA__",
+                  wait: float = WAIT_SCRIPT_SECONDS) -> tuple[int | None, object]:
+        """Abre una página de la tienda y devuelve (estado, JSON del `<script id=script_id>` que trae
+        la propia página). Es lo que pinta el servidor (JD Sports, con Next.js): no se lee nada más.
+        Un 404 o un 410 se devuelven tal cual, con None (el producto ya no existe). Lanza BlockedError
+        si la tienda bloquea o pide un captcha, y ShopError si la página no carga o no trae sus datos."""
+        page = self._start()
+        self._wait_turn()
+        self.pages += 1
+        try:
+            try:
+                main = page.goto(url, wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
+            except Exception as exc:
+                raise ShopError(f"la página no cargó ({type(exc).__name__})") from exc
+            status = main.status if main else None
+            if status in (404, 410):
+                return status, None
+            self._check(store, page, status)
+            text = None
+            deadline = time.monotonic() + wait
+            while True:
+                try:
+                    text = page.evaluate("(id) => document.getElementById(id)?.textContent ?? null", script_id)
+                except Exception:  # la página se está recargando sola (una comprobación que se resuelve)
+                    text = None
+                if text is not None or time.monotonic() >= deadline:
+                    break
+                page.wait_for_timeout(500)
+            if text is None:
+                self._check(store, page, None, strict=True, missing="la página no traía sus datos")
+            try:
+                return status, json.loads(text)
+            except ValueError as exc:
+                raise ShopError("la respuesta no era la esperada (datos ilegibles)") from exc
+        finally:
+            self._last = time.monotonic()
+
     def fetch_json(self, store: str, url: str) -> tuple[int, object]:
         """Pide `url` desde dentro de la página abierta (mismo origen, como hace la propia web).
         Devuelve (estado, JSON o None). Lanza BlockedError si la tienda bloquea."""
@@ -388,7 +427,8 @@ class Session:
 
     # --- por dentro
 
-    def _check(self, store: str, page, status: int | None, strict: bool = False) -> None:
+    def _check(self, store: str, page, status: int | None, strict: bool = False,
+               missing: str = "la página no pidió su catálogo") -> None:
         """¿Ha bloqueado la tienda? «Access Denied» o un 403/429 en la página: bloqueo. Un captcha o
         un desafío que no se ha resuelto solo: captcha. Con `strict` (la página no ha pedido su
         catálogo) cualquier pista vale; si no, solo las claras."""
@@ -405,7 +445,7 @@ class Session:
         if (strict or len(text) < 1500) and any(word in title or word in text for word in _CAPTCHA_WORDS):
             raise block(store, CAPTCHA_TEXT)
         if strict:
-            raise ShopError("la página no pidió su catálogo")
+            raise ShopError(missing)
 
     def _reject_cookies(self, page) -> None:
         """Si sale el aviso de cookies, solo las imprescindibles. Si no sale, nada."""
