@@ -76,6 +76,10 @@ export const t = {
     },
     mas: {
       ver: "Ver más",
+      verDe: (tienda: string) => `Ver más de ${tienda}`,
+      consultar: (tienda: string) => `Buscar más en ${tienda}`,
+      sinMasTienda: (tienda: string) =>
+        `Ya te he enseñado todo lo que tenía guardado de ${tienda}. Puedo volver a consultarla ahora por si hay algo más.`,
       trayendo: "Trayendo más…",
       titulo: "Trayendo más propuestas…",
       texto: "Vuelvo a mirar el catálogo de esta semana con lo que me has ido diciendo y bajo las fotos de las que mejor encajan. Tarda alrededor de un minuto.",

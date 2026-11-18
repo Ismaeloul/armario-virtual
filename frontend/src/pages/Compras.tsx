@@ -658,7 +658,8 @@ function Discover({
   // Se han visto todas las de la tanda (o las del filtro): «Ver más» trae la siguiente del catálogo
   // guardado; si ya no queda, se dice tal cual y cuándo llegará más.
   const last = enabled.map((s) => s.status.at).filter((at): at is string => !!at).sort().pop();
-  const upcoming = nextConsult(enabled);
+  // Con el filtro de una tienda, lo que importa es cuándo le toca a esa.
+  const upcoming = nextConsult(filter.store ? [store] : enabled);
   const filterLabel = filter.category
     ? t.compras.filtros.categorias[filter.category]
     : filter.store
@@ -673,7 +674,9 @@ function Discover({
       ? filterLabel
         ? t.compras.mas.quedanFiltro(filterLabel)
         : t.compras.mas.quedan
-      : filterLabel
+      : filter.store && !filter.category
+        ? t.compras.mas.sinMasTienda(store.name)
+        : filterLabel
         ? upcoming
           ? t.compras.ocupado.sinMas(what, upcoming)
           : t.compras.ocupado.sinMasNunca(what)
@@ -694,8 +697,21 @@ function Discover({
         {next.more > 0 ? (
           <PrimaryButton disabled={busy} onClick={more}>
             <Icon name="add" size={20} />
-            {busy ? t.compras.mas.trayendo : t.compras.mas.ver}
+            {busy ? t.compras.mas.trayendo : filter.store ? t.compras.mas.verDe(store.name) : t.compras.mas.ver}
           </PrimaryButton>
+        ) : filter.store ? (
+          // De esa tienda no queda nada guardado: lo único que trae más es volver a consultarla.
+          <>
+            <PrimaryButton disabled={busy} onClick={() => search(store)}>
+              <Icon name="search" size={20} />
+              {t.compras.mas.consultar(store.name)}
+            </PrimaryButton>
+            {state.pending > 0 && (
+              <SecondaryButton onClick={() => onFilter({ store: null, category: null })}>
+                {t.compras.ocupado.verTodo}
+              </SecondaryButton>
+            )}
+          </>
         ) : filtered && state.pending > 0 ? (
           <PrimaryButton onClick={() => onFilter({ store: null, category: null })}>{t.compras.ocupado.verTodo}</PrimaryButton>
         ) : (
