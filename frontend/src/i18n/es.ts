@@ -117,6 +117,7 @@ export const t = {
       vacioTitulo: "Aún no has guardado nada",
       vacioTexto: "Lo que te guste en Descubrir aparecerá aquí, para comprarlo o descartarlo con calma.",
       caducaPronto: "Caduca pronto",
+      verFoto: (nombre: string) => `Ver en grande: ${nombre}`,
       caducaEl: (cuando: string) => `Se retira el ${cuando}`,
       comprada: "La he comprado",
       quitar: "Quitar",

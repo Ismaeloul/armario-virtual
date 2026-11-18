@@ -906,6 +906,100 @@ function SwipeCard({
   );
 }
 
+/** La foto de una prenda guardada, en grande: solo la foto, el nombre, el precio y el enlace. */
+function PhotoViewer({ item, onClose }: { item: ShopItem; onClose: () => void }) {
+  const [photo, setPhoto] = useState(0);
+  const [backdrop, setBackdrop] = useState<string | null>(lastBackdrop);
+  const [loaded, setLoaded] = useState<string | null>(null);
+  const photos = item.photos;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden"; // que no se mueva la lista de debajo
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = overflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={item.name}
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim px-4 backdrop-blur-[2px]"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="card relative flex h-full max-h-[46rem] w-full max-w-md flex-col overflow-hidden"
+      >
+        <button
+          type="button"
+          aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : undefined}
+          disabled={photos.length < 2}
+          onClick={() => setPhoto((n) => (n + 1) % photos.length)}
+          className="relative block min-h-0 w-full flex-1 overflow-hidden bg-card-2 transition-colors duration-300"
+          style={backdrop ? { backgroundColor: backdrop } : undefined}
+        >
+          {photos[photo] && (
+            <img
+              key={photos[photo].id}
+              src={mediaUrl(photos[photo].url)}
+              alt={item.name}
+              draggable={false}
+              onLoad={(e) => {
+                const color = cornerColor(e.currentTarget);
+                if (color) setBackdrop(color);
+                setLoaded(photos[photo].url);
+              }}
+              className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
+                loaded === photos[photo].url ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          )}
+          {photos.length > 1 && (
+            <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
+              {photos.map((p, i) => (
+                <span
+                  key={p.id}
+                  className={`h-1.5 rounded-full ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
+                    i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
+                  }`}
+                />
+              ))}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          aria-label={t.compras.panel.cerrar}
+          onClick={onClose}
+          className="absolute top-3 right-3 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-card text-text shadow-[0_3px_10px_rgb(0_0_0/0.16)] active:scale-95"
+        >
+          <Icon name="close" size={20} />
+        </button>
+        <div className="flex shrink-0 flex-col gap-1 px-4 pt-3 pb-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="label-caps min-w-0 truncate text-text-2">
+              {[item.store_name, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
+            </span>
+            <span className="shrink-0 font-display text-lg font-semibold">{t.compras.precio(item.price_cents)}</span>
+          </div>
+          <h3 className="font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
+          <StoreLink item={item} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Me gustan
 
 function Liked({ onChanged }: { onChanged: () => void }) {
@@ -917,6 +1011,7 @@ function Liked({ onChanged }: { onChanged: () => void }) {
   const [removeError, setRemoveError] = useState<string | null>(null);
   // «La he comprado»: de qué producto se está eligiendo talla.
   const [buying, setBuying] = useState<number | null>(null);
+  const [viewing, setViewing] = useState<ShopItem | null>(null);
   const [size, setSize] = useState<string | null>(null);
   const [buyBusy, setBuyBusy] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
@@ -979,19 +1074,23 @@ function Liked({ onChanged }: { onChanged: () => void }) {
 
   return (
     <>
+      {viewing && <PhotoViewer item={viewing} onClose={() => setViewing(null)} />}
       <ul className="flex flex-col gap-3">
         {items.map((item) => {
           const available = item.sizes.filter((s) => s.in_stock);
           const open = buying === item.id;
           return (
             <li key={item.id} className="card flex flex-col gap-3 p-3.5">
-              <div className="flex gap-3.5">
+              {/* Tocar la tarjeta (no los botones ni el enlace) abre la foto en grande. */}
+              <div className="flex cursor-pointer gap-3.5" onClick={() => setViewing(item)}>
                 {item.photos[0] && (
-                  <img
-                    src={mediaUrl(item.photos[0].thumb_url)}
-                    alt=""
-                    className="h-32 w-24 shrink-0 rounded-xl bg-card-2 object-cover"
-                  />
+                  <button
+                    type="button"
+                    aria-label={t.compras.gustados.verFoto(item.name)}
+                    className="h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-card-2 active:opacity-80"
+                  >
+                    <img src={mediaUrl(item.photos[0].thumb_url)} alt="" className="h-full w-full object-cover" />
+                  </button>
                 )}
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="label-caps text-text-2">
@@ -1006,7 +1105,7 @@ function Liked({ onChanged }: { onChanged: () => void }) {
                       {item.expires_at && ` · ${t.compras.gustados.caducaEl(dayMonth(item.expires_at))}`}
                     </span>
                   )}
-                  <div className="mt-auto">
+                  <div className="mt-auto w-fit" onClick={(e) => e.stopPropagation()}>
                     <StoreLink item={item} />
                   </div>
                 </div>
