@@ -323,16 +323,16 @@ function Discover({
     <ReasonBar done={asking.done} onReason={giveReason} onClose={() => ask(null)} />
   );
 
+  const round = "flex items-center justify-center rounded-full shadow-lg active:scale-95 disabled:opacity-40";
   const undoButton = (
     <button
       type="button"
       aria-label={t.compras.volverAria}
       disabled={busy || !next.can_undo}
       onClick={undo}
-      className="flex h-12 w-14 flex-col items-center justify-center gap-0.5 rounded-xl border border-line bg-control text-text-2 active:scale-[0.98] disabled:opacity-40"
+      className={`${round} h-11 w-11 border border-line bg-card text-text-2`}
     >
       <Icon name="undo" size={20} />
-      <span className="text-[10px] font-medium">{t.compras.volver}</span>
     </button>
   );
 
@@ -340,7 +340,7 @@ function Discover({
     return (
       <>
         {/* Todo en una pantalla: la foto se queda con el alto que sobra, para no tener que bajar a los botones. */}
-        <div ref={fit.ref} style={{ height: fit.height }} className="-mt-2 flex min-h-[25rem] flex-col gap-2.5">
+        <div ref={fit.ref} style={{ height: fit.height }} className="relative -mt-2 flex min-h-[25rem] flex-col gap-2.5">
         {filters}
         <p className="truncate text-xs text-text-3">
           {state.running
@@ -353,25 +353,25 @@ function Discover({
         </p>
         <SwipeCard key={`${item.id}-${attempt}`} item={item} busy={busy} onDecide={decide} />
         {alert}
-        <section className="grid shrink-0 grid-cols-[auto_1fr_1fr] gap-2">
-          {undoButton}
+        <section className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex h-16 items-center justify-center gap-6">
+          <span className="pointer-events-auto absolute left-3">{undoButton}</span>
           <button
             type="button"
+            aria-label={t.compras.no}
             disabled={busy}
             onClick={() => decide(false)}
-            className="flex h-12 items-center justify-center gap-1.5 rounded-xl border border-line bg-control font-display text-[15px] font-semibold whitespace-nowrap active:scale-[0.98] disabled:opacity-40"
+            className={`${round} pointer-events-auto h-16 w-16 border border-line bg-card text-danger`}
           >
-            <Icon name="close" size={20} className="text-text-2" />
-            {t.compras.no}
+            <Icon name="close" size={30} />
           </button>
           <button
             type="button"
+            aria-label={t.compras.si}
             disabled={busy}
             onClick={() => decide(true)}
-            className="flex h-12 items-center justify-center gap-1.5 rounded-xl bg-primary font-display text-[15px] font-semibold whitespace-nowrap text-on-primary active:scale-[0.98] disabled:opacity-40"
+            className={`${round} pointer-events-auto h-16 w-16 bg-primary text-on-primary`}
           >
-            <Icon name="favorite_fill" size={20} />
-            {t.compras.si}
+            <Icon name="favorite_fill" size={30} />
           </button>
         </section>
         </div>
@@ -648,6 +648,24 @@ function useFitHeight(shown: boolean) {
   return { ref, height };
 }
 
+/**
+ * El color de la esquina de la foto. Las fotos de tienda tienen un fondo liso; pintando con él los
+ * lados que la foto no cubre, parece que llena la tarjeta. Si no se puede leer, se queda el de la app.
+ */
+function cornerColor(img: HTMLImageElement): string | null {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(img, 2, 2, 6, 6, 0, 0, 1, 1);
+    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r} ${g} ${b})`;
+  } catch {
+    return null; // foto de otro origen: el lienzo no deja leerla
+  }
+}
+
 const SWIPE_START = 10; // px que hay que mover para que cuente como arrastre y no como toque
 const FLY_MS = 220;
 
@@ -661,6 +679,7 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [leaving, setLeaving] = useState<-1 | 0 | 1>(0);
+  const [backdrop, setBackdrop] = useState<string | null>(null);
   const [photo, setPhoto] = useState(0);
   const timer = useRef(0);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -723,7 +742,7 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
           moved.current = false;
         }
       }}
-      className={`card relative flex min-h-0 flex-1 flex-col overflow-hidden select-none ${busy && !leaving ? "opacity-50" : ""}`}
+      className={`card relative mb-7 flex min-h-0 flex-1 flex-col overflow-hidden select-none ${busy && !leaving ? "opacity-50" : ""}`}
       style={{
         touchAction: "pan-y",
         transform: `translateX(${shift}px) rotate(${shift / 22}deg)`,
@@ -736,18 +755,20 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
         aria-label={photos.length > 1 ? t.compras.fotoN(photo + 1, photos.length) : undefined}
         disabled={photos.length < 2}
         onClick={() => setPhoto((n) => (n + 1) % photos.length)}
-        className="relative block min-h-0 w-full flex-1 bg-card-2"
+        className="relative block min-h-0 w-full flex-1 overflow-hidden bg-card-2"
+        style={backdrop ? { backgroundColor: backdrop } : undefined}
       >
         {photos[photo] && (
           <img
             src={mediaUrl(photos[photo].url)}
             alt={item.name}
             draggable={false}
+            onLoad={(e) => setBackdrop(cornerColor(e.currentTarget))}
             className="absolute inset-0 h-full w-full object-contain"
           />
         )}
         {photos.length > 1 && (
-          <span className="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
+          <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
             {photos.map((p, i) => (
               <span key={p.id} className={`h-1.5 rounded-full bg-text ${i === photo ? "w-4 opacity-80" : "w-1.5 opacity-30"}`} />
             ))}
@@ -771,7 +792,8 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
         {t.compras.selloNo}
       </span>
 
-      <div className="flex shrink-0 flex-col gap-1.5 px-4 pt-3 pb-2">
+      {/* La ficha. El hueco de abajo es para los botones flotantes, que pisan el borde de la tarjeta. */}
+      <div className="flex shrink-0 flex-col gap-1 px-4 pt-3 pb-10">
         <div className="flex items-baseline justify-between gap-3">
           <span className="label-caps min-w-0 truncate text-text-2">
             {[item.store_name, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
@@ -780,7 +802,7 @@ function SwipeCard({ item, busy, onDecide }: { item: ShopItem; busy: boolean; on
         </div>
         <h3 className="truncate font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
         <div className="flex items-center justify-between gap-2">
-          <div className="max-h-[3.75rem] min-w-0 overflow-hidden pb-0.5">
+          <div className="max-h-[1.75rem] min-w-0 overflow-hidden">
             <Reasons item={item} />
           </div>
           <div className="shrink-0">
