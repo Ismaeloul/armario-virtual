@@ -15,6 +15,11 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
   const [season, setSeason] = useState("todas");
   const [category, setCategory] = useState("todo");
 
+  const [ownCount, setOwnCount] = useState(0);
+  useEffect(() => {
+    if (!laundryOnly) api.tasteOwn().then((list) => setOwnCount(list.length)).catch(() => undefined);
+  }, [laundryOnly]);
+
   const load = () => {
     setFailed(false);
     Promise.all([api.garments(), api.catalog()])
@@ -93,7 +98,19 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
               </p>
             </section>
 
-            <div className="mt-4">
+            {!laundryOnly && (
+              <div className="mt-3 flex justify-end">
+                <Link
+                  to="/armario/outfits"
+                  className="flex h-10 items-center gap-1.5 rounded-full border border-line bg-card-2 pr-3.5 pl-3 text-xs font-medium text-text active:scale-[0.97]"
+                >
+                  <Icon name="checkroom" size={18} className="text-primary" />
+                  {t.armario.outfits.botonN(ownCount)}
+                </Link>
+              </div>
+            )}
+
+            <div className={laundryOnly ? "mt-4" : "mt-2"}>
               <Segmented
                 value={season}
                 onChange={setSeason}

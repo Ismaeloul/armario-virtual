@@ -9,6 +9,7 @@ import { applyTheme, storedTheme } from "./lib/theme";
 import AnadirPrenda from "./pages/AnadirPrenda";
 import Ajustes from "./pages/Ajustes";
 import Armario from "./pages/Armario";
+import TusOutfits from "./pages/TusOutfits";
 import Compras from "./pages/Compras";
 import EditarPrenda from "./pages/EditarPrenda";
 import FichaPrenda from "./pages/FichaPrenda";
@@ -77,6 +78,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/" element={<Hoy />} />
         <Route path="/armario" element={<Armario />} />
         <Route path="/armario/lavadora" element={<Armario laundryOnly />} />
+        <Route path="/armario/outfits" element={<TusOutfits />} />
         <Route path="/nueva" element={<AnadirPrenda />} />
         <Route path="/prenda/:id" element={<FichaPrenda />} />
         <Route path="/prenda/:id/editar" element={<EditarPrenda />} />

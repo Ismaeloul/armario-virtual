@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { FadeImg, OutfitSkeleton, Skeleton, stagger } from "../components/Skeleton";
-import { OwnOutfits } from "../components/OwnOutfits";
 import { ZoomViewer } from "../components/ZoomViewer";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Catalog, type Garment, type Taste } from "../lib/api";
@@ -21,6 +20,7 @@ export default function Gustos() {
   const [reasons, setReasons] = useState<string[]>([]);
   const [culprits, setCulprits] = useState<number[]>([]);
   const [sendError, setSendError] = useState(false);
+  const [saved, setSaved] = useState(false); // el último fue «Me gusta y guardar»
   // La prenda cuya foto se está viendo en grande (en la lista son muy pequeñas para juzgar).
   const [viewing, setViewing] = useState<Garment | null>(null);
 
@@ -35,19 +35,22 @@ export default function Gustos() {
 
   const combo = state?.combo;
 
-  const send = (liked: boolean) => {
+  const send = (liked: boolean, save = false) => {
     if (!combo) return;
     setBusy(true);
     setSendError(false);
+    setSaved(false);
     api
       .tasteRate({
         garment_ids: combo.garments.map((g) => g.id),
         liked,
         reasons: liked ? [] : reasons,
         culprit_ids: liked ? [] : culprits,
+        save,
       })
       .then((next) => {
         setState(next);
+        setSaved(save);
         setAsking(false);
         setReasons([]);
         setCulprits([]);
@@ -76,8 +79,6 @@ export default function Gustos() {
                 tarjeta no baja al llegar. */}
             {!state && !failed && <Skeleton className="h-4 w-56 rounded-md" />}
           </header>
-
-          {state && <OwnOutfits count={state.own} catalog={catalog} onState={setState} />}
 
           {failed && (
             <div className="card flex flex-col items-center gap-3 p-6 text-center">
@@ -254,6 +255,21 @@ export default function Gustos() {
                     <Icon name="favorite_fill" size={22} />
                     {t.gustos.si}
                   </button>
+                  {/* Para los que se pondría: va a «Tus outfits» del Armario y cuenta el doble. */}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => send(true, true)}
+                    className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-xl border border-line bg-card text-sm font-semibold text-primary active:scale-[0.98] disabled:opacity-40"
+                  >
+                    <Icon name="bookmark_add" size={20} />
+                    {t.gustos.guardar}
+                  </button>
+                  {saved && (
+                    <p role="status" className="col-span-2 animate-enter text-center text-xs text-text-2">
+                      {t.gustos.guardado}
+                    </p>
+                  )}
                 </section>
               )}
             </>

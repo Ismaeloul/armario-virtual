@@ -57,6 +57,8 @@ class RateIn(BaseModel):
     liked: bool
     reasons: list[Reason] = Field(default_factory=list)
     culprit_ids: list[int] = Field(default_factory=list, max_length=4)  # prendas que estropean el conjunto
+    # «Me gusta y guardar»: además de gustar, va a «Tus outfits» del Armario y cuenta el doble.
+    save: bool = False
 
 
 def piece(g: Garment) -> taste.Piece:
@@ -171,8 +173,10 @@ def _state(db: Session) -> TasteOut:
     # Lo pedido que aún no ha llegado también se valora (decisión del usuario): así se entrena ya con
     # la ropa que está por llegar. Solo Hoy la deja fuera.
     garments = list(db.scalars(select(Garment)))
-    ratings = [r for r in db.scalars(select(Rating)) if r.source == "gustos"]
-    rated_sets = {frozenset(r.garment_ids) for r in ratings}
+    all_ratings = list(db.scalars(select(Rating)))
+    ratings = [r for r in all_ratings if r.source == "gustos"]
+    # Lo guardado en «Tus outfits» tampoco se vuelve a preguntar.
+    rated_sets = {frozenset(r.garment_ids) for r in all_ratings if r.source in ("gustos", OWN)}
     learned = load_taste(db)
 
     by_id = {g.id: g for g in garments}
@@ -210,14 +214,15 @@ def rate(body: RateIn, db: Session = Depends(get_db)):
         raise HTTPException(404, "Alguna prenda de la combinación ya no existe")
     if not set(body.culprit_ids) <= found:
         raise HTTPException(422, "Alguna prenda señalada no está en la combinación")
+    saved = body.liked and body.save
     db.add(
         Rating(
             garment_ids=body.garment_ids,
             liked=body.liked,
-            weight=1.0,
+            weight=OWN_WEIGHT if saved else 1.0,
             reasons=[] if body.liked else list(dict.fromkeys(body.reasons)),
             culprit_ids=[] if body.liked else list(dict.fromkeys(body.culprit_ids)),
-            source="gustos",
+            source=OWN if saved else "gustos",
         )
     )
     db.commit()

@@ -94,7 +94,16 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.13** (19-11-2026). «Tus outfits» en Gustos (`components/OwnOutfits.tsx`,
+- **Publicada en el Umbrel: 0.4.14** (19-11-2026). «Tus outfits» pasa de Gustos al Armario: botón con el
+  icono del armario encima del selector de temporada, pantalla `/armario/outfits` (`pages/TusOutfits.tsx`)
+  con «Montar un outfit» (`OutfitPicker` en `components/OwnOutfits.tsx`), lista horizontal y tarjeta del
+  outfit al tocarlo (prendas enlazadas a su ficha, zoom en la foto, quitar). En Gustos, «Me gusta y
+  guardar» (`save` en `/taste/rate`): va a «Tus outfits», cuenta doble y no se vuelve a preguntar.
+  Uniqlo: investigado el 19-11-2026, Akamai Bot Manager bloquea el navegador automatizado ya en la
+  portada (con un navegador normal y la misma IP sí carga). El usuario NO quiere ocultar la automatización
+  y lo dio por cerrado: Uniqlo se queda desactivada. Idea aparcada: un marcador «Guardar en Armario» que
+  mande a la app los datos de la ficha que el usuario tiene abierta en su navegador.
+- **Antes: 0.4.13** (19-11-2026). «Tus outfits» en Gustos (`components/OwnOutfits.tsx`,
   `GET|POST /api/taste/own`, `DELETE /api/taste/own/{id}`): el usuario monta un outfit que sabe que le
   queda bien y cuenta como un «me gusta» con peso 2 (`Rating.source = "propio"`); arriba puede llevar
   varias prendas, abajo y calzado una. Ajuste «Qué ropa toca ahora» (`settings.season_mode`: auto,

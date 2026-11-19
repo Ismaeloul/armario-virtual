@@ -488,3 +488,15 @@ def test_un_outfit_tuyo_cuenta_como_me_gusta_doble_y_se_puede_quitar(client, pho
     assert estado["learned"] != antes["learned"] or propios[0]["affinity"] > 50
     assert client.delete(f"/api/taste/own/{propios[0]['id']}").status_code == 204
     assert client.get("/api/taste/own").json() == []
+
+
+def test_me_gusta_y_guardar_lo_lleva_a_tus_outfits_y_no_se_vuelve_a_preguntar(client, photo_bytes):
+    _armario(client, photo_bytes)
+    combo = client.get("/api/taste/next").json()["combo"]
+    ids = [g["id"] for g in combo["garments"]]
+    estado = client.post("/api/taste/rate", json={"garment_ids": ids, "liked": True, "save": True}).json()
+    assert estado["own"] == 1
+    assert [g["id"] for g in client.get("/api/taste/own").json()[0]["garments"]] == ids
+    for _ in range(10):  # ya guardada: Gustos no la vuelve a enseñar
+        siguiente = client.get("/api/taste/next").json()["combo"]
+        assert siguiente is None or {g["id"] for g in siguiente["garments"]} != set(ids)

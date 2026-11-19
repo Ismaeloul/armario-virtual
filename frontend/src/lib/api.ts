@@ -412,7 +412,13 @@ export const api = {
   updateSettings: (changes: Partial<Settings>) => request<Settings>("/api/settings", json("PATCH", changes)),
   tasteNext: () => request<Taste>("/api/taste/next"),
   tasteForget: () => request<void>("/api/taste", { method: "DELETE" }),
-  tasteRate: (body: { garment_ids: number[]; liked: boolean; reasons: string[]; culprit_ids: number[] }) =>
+  tasteRate: (body: {
+    garment_ids: number[];
+    liked: boolean;
+    reasons: string[];
+    culprit_ids: number[];
+    save?: boolean;
+  }) =>
     request<Taste>("/api/taste/rate", json("POST", body)),
   /** «Tus outfits»: combinaciones que monta el usuario. Cuentan como un «me gusta» con más peso. */
   tasteOwn: () => request<OwnOutfit[]>("/api/taste/own"),
