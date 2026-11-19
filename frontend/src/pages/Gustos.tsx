@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { FadeImg, OutfitSkeleton, Skeleton, stagger } from "../components/Skeleton";
+import { ZoomViewer } from "../components/ZoomViewer";
 import { cap, t } from "../i18n/es";
-import { api, mediaUrl, type Catalog, type Taste } from "../lib/api";
+import { api, mediaUrl, type Catalog, type Garment, type Taste } from "../lib/api";
 
 const REASONS = ["colores", "calzado", "estilo", "soso", "recargado"] as const;
 
@@ -19,6 +20,8 @@ export default function Gustos() {
   const [reasons, setReasons] = useState<string[]>([]);
   const [culprits, setCulprits] = useState<number[]>([]);
   const [sendError, setSendError] = useState(false);
+  // La prenda cuya foto se está viendo en grande (en la lista son muy pequeñas para juzgar).
+  const [viewing, setViewing] = useState<Garment | null>(null);
 
   const load = () => {
     setFailed(false);
@@ -124,25 +127,35 @@ export default function Gustos() {
                   {combo.garments.map((g, i) => {
                     const marked = culprits.includes(g.id);
                     return (
-                      <button
+                      <div
                         key={g.id}
-                        type="button"
-                        disabled={!asking}
-                        aria-pressed={marked}
-                        onClick={() =>
-                          setCulprits((list) => (marked ? list.filter((id) => id !== g.id) : [...list, g.id]))
-                        }
                         style={stagger(i + 1, 70)}
-                        className={`flex animate-enter items-center gap-3.5 rounded-2xl border p-2.5 text-left transition-colors duration-200 ${
+                        className={`flex animate-enter items-center gap-3.5 rounded-2xl border p-2.5 transition-colors duration-200 ${
                           marked ? "border-danger bg-danger/10" : "border-line bg-card-2"
                         }`}
                       >
-                        <FadeImg
-                          src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
-                          alt=""
-                          className="h-24 w-20 shrink-0 rounded-xl object-cover"
-                        />
-                        <div className="min-w-0 flex-1">
+                        {/* La foto se abre en grande; el resto de la fila señala la prenda que no pega. */}
+                        <button
+                          type="button"
+                          aria-label={t.gustos.verFoto(g.name)}
+                          onClick={() => setViewing(g)}
+                          className="shrink-0 cursor-zoom-in active:opacity-80"
+                        >
+                          <FadeImg
+                            src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
+                            alt=""
+                            className="h-24 w-20 rounded-xl object-cover"
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!asking}
+                          aria-pressed={marked}
+                          onClick={() =>
+                            setCulprits((list) => (marked ? list.filter((id) => id !== g.id) : [...list, g.id]))
+                          }
+                          className="min-w-0 flex-1 self-stretch text-left"
+                        >
                           <span className="label-caps text-text-2">{catalog?.categories[g.category] ?? ""}</span>
                           <h4 className="truncate text-base font-medium">{g.name}</h4>
                           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -159,8 +172,8 @@ export default function Gustos() {
                               </span>
                             )}
                           </div>
-                        </div>
-                      </button>
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -264,6 +277,20 @@ export default function Gustos() {
         </div>
       </Screen>
       <BottomNav />
+      {viewing && (
+        <ZoomViewer
+          photos={(
+            [
+              [viewing.photo_pair, t.ficha.juntas],
+              [viewing.photo_front, viewing.category === "calzado" ? t.ficha.lateral : t.ficha.delante],
+              [viewing.photo_back, viewing.category === "calzado" ? t.ficha.frente : t.ficha.detras],
+              [viewing.photo_extra, t.ficha.otroLado],
+            ] as const
+          ).flatMap(([photo, label]) => (photo ? [{ label, url: mediaUrl(photo.url) }] : []))}
+          closeLabel={t.nueva.estudio.cerrar}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </>
   );
 }

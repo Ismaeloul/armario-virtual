@@ -10,6 +10,7 @@ export const t = {
       `${n === 1 ? "1 valorada" : `${n} valoradas`} · ${gustan === 1 ? "te gusta 1" : `te gustan ${gustan}`} · ${quedan} por valorar`,
     pareja: (a: string, b: string) => `${a} con ${b}`,
     pregunta: "¿Pega?",
+    verFoto: (nombre: string) => `Ver en grande: ${nombre}`,
     porQue: "¿Qué falla?",
     si: "Me gusta",
     no: "No me gusta",
@@ -561,7 +562,7 @@ export const t = {
     olvidar: "Borrar lo aprendido",
     olvidarConfirmar: "Toca otra vez para confirmar",
     olvidado: "Hecho. El algoritmo empieza de cero.",
-    version: "Armario · v0.4.11",
+    version: "Armario · v0.4.12",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",

@@ -94,7 +94,10 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.11** (19-11-2026). El usuario está metiendo su armario real y el
+- **Publicada en el Umbrel: 0.4.12** (19-11-2026): en Gustos, tocar la foto de una prenda la abre en
+  grande con `ZoomViewer` (todas sus fotos), sin salir de la pantalla: ir a la Ficha cambiaba la
+  combinación al volver. El resto de la fila sigue marcando la prenda que no pega.
+- **Antes: 0.4.11** (19-11-2026). El usuario está metiendo su armario real y el
   proceso era lento. Lleva:
   Añadir prenda: las fotos de Codex se generan TODAS A LA VEZ (`StudioReview`, antes de una en una).
   Foto opcional «Textura y color» (primer plano de la tela): no se guarda en la prenda, va de apoyo al
