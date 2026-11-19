@@ -23,6 +23,8 @@ import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+import time
+
 import httpx
 
 from .. import config
@@ -145,6 +147,56 @@ def missing() -> str | None:
     if used >= limit:
         return quota_text(used, limit)
     return None
+
+
+# ---------- El saldo real (gratis)
+
+_ACCOUNT_TTL = 300  # segundos: Ajustes se abre a menudo y el saldo no cambia tan rápido
+_account_cache: dict = {}
+
+
+def account() -> dict | None:
+    """El saldo de verdad de la cuenta de API.SH (`GET /v1/account`, gratis: no gasta créditos):
+    {"total", "free", "plan", "payg", "free_resets_at", "spent_month"}. None si no hay clave o no
+    responde. Se guarda unos minutos en memoria. Nunca lanza ni deja ver la clave."""
+    key = api_key()
+    if not key:
+        return None
+    now = time.monotonic()
+    cached = _account_cache.get("value")
+    if cached is not None and _account_cache.get("key") == hash(key) and now - _account_cache.get("at", 0) < _ACCOUNT_TTL:
+        return cached
+    try:
+        with httpx.Client(timeout=15, transport=transport) as client:
+            response = client.get(config.APISH_BASE + "/v1/account", headers={"x-api-key": key})
+        body = response.json() if response.status_code == 200 else None
+    except (httpx.HTTPError, ValueError):
+        body = None
+    if not isinstance(body, dict):
+        return None
+    credits_ = body.get("credits") if isinstance(body.get("credits"), dict) else {}
+    spend = body.get("spend") if isinstance(body.get("spend"), dict) else {}
+
+    def number(value):
+        return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+    value = {
+        "total": number(credits_.get("total")),
+        "free": number(credits_.get("free")),
+        "plan": number(credits_.get("plan")),
+        "payg": number(credits_.get("payg")),
+        "free_resets_at": credits_.get("free_resets_at") if isinstance(credits_.get("free_resets_at"), str) else None,
+        "spent_month": number(spend.get("this_month")),
+    }
+    if value["total"] is None:
+        return None
+    _account_cache.update(value=value, key=hash(key), at=now)
+    return value
+
+
+def forget_account() -> None:
+    """Al cambiar o borrar la clave, el saldo guardado ya no vale."""
+    _account_cache.clear()
 
 
 # ---------- La llamada

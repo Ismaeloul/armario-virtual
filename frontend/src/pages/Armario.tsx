@@ -86,31 +86,32 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
 
         {!failed && garments && catalog && garments.length > 0 && (
           <div className={laundryOnly ? "animate-slide" : "animate-enter"}>
-            <section>
-              <span className="label-caps text-text-2">
-                {laundryOnly ? t.armario.lavadora.etiqueta : t.armario.etiqueta}
-              </span>
-              <h2 className="mt-0.5 font-display text-[32px] font-semibold leading-[38px] tracking-tight">
-                {laundryOnly ? t.armario.lavadora.titulo : t.armario.titulo}
-              </h2>
-              <p className="mt-0.5 text-sm text-text-2">
-                {laundryOnly ? t.armario.enLavadoTexto : t.armario.prendas(garments.length)}
-              </p>
-            </section>
-
-            {!laundryOnly && (
-              <div className="mt-3 flex justify-end">
+            {/* El título a la izquierda y «Tus outfits» a la derecha, en la misma fila, justo encima del
+                selector de temporada (petición del usuario: más limpio). */}
+            <div className="flex items-end justify-between gap-3">
+              <section className="min-w-0">
+                <span className="label-caps text-text-2">
+                  {laundryOnly ? t.armario.lavadora.etiqueta : t.armario.etiqueta}
+                </span>
+                <h2 className="mt-0.5 font-display text-[32px] font-semibold leading-[38px] tracking-tight">
+                  {laundryOnly ? t.armario.lavadora.titulo : t.armario.titulo}
+                </h2>
+                <p className="mt-0.5 text-sm text-text-2">
+                  {laundryOnly ? t.armario.enLavadoTexto : t.armario.prendas(garments.length)}
+                </p>
+              </section>
+              {!laundryOnly && (
                 <Link
                   to="/armario/outfits"
-                  className="flex h-10 items-center gap-1.5 rounded-full border border-line bg-card-2 pr-3.5 pl-3 text-xs font-medium text-text active:scale-[0.97]"
+                  className="mb-0.5 flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-line bg-card-2 pr-3.5 pl-3 text-xs font-medium text-text active:scale-[0.97]"
                 >
                   <Icon name="checkroom" size={18} className="text-primary" />
                   {t.armario.outfits.botonN(ownCount)}
                 </Link>
-              </div>
-            )}
+              )}
+            </div>
 
-            <div className={laundryOnly ? "mt-4" : "mt-2"}>
+            <div className="mt-4">
               <Segmented
                 value={season}
                 onChange={setSeason}

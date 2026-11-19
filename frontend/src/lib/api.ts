@@ -112,6 +112,16 @@ export type Settings = {
   apish?: ApishStatus | null;
 };
 
+/** El saldo real de la cuenta de API.SH (lo dice API.SH; consultarlo es gratis). */
+export type ApishAccount = {
+  total: number;
+  free: number | null;
+  plan: number | null;
+  payg: number | null;
+  free_resets_at: string | null;
+  spent_month: number | null;
+};
+
 export type ApishStatus = {
   has_key: boolean;
   /** La pone la variable de entorno del servidor (desarrollo): no se cambia desde Ajustes. */
@@ -425,6 +435,7 @@ export const api = {
   /** Solo escritura: se guarda cifrada y ninguna respuesta la devuelve. */
   saveApishKey: (key: string) => request<Settings>("/api/settings/apish-key", json("PUT", { key })),
   deleteApishKey: () => request<Settings>("/api/settings/apish-key", { method: "DELETE" }),
+  apishAccount: () => request<ApishAccount | null>("/api/settings/apish-account"),
   updateSettings: (changes: Partial<Settings>) => request<Settings>("/api/settings", json("PATCH", changes)),
   tasteNext: () => request<Taste>("/api/taste/next"),
   tasteForget: () => request<void>("/api/taste", { method: "DELETE" }),

@@ -94,7 +94,10 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.15** (20-11-2026). Uniqlo por API.SH (servicio de scraping de pago,
+- **Publicada en el Umbrel: 0.4.16** (20-11-2026): saldo real de API.SH en Ajustes (`apish.account()`,
+  `GET /v1/account`, gratis; `GET /api/settings/apish-account`; en memoria 5 min). En el Armario, el título
+  y «Tus outfits» van en la misma fila, justo encima del selector de temporada.
+- **Antes: 0.4.15** (20-11-2026). Uniqlo por API.SH (servicio de scraping de pago,
   decisión expresa del usuario como excepción SOLO para Uniqlo, que bloquea nuestro Chromium con Akamai;
   las demás tiendas no cambian). `services/apish.py` (cliente común, `raw=0`, contador de créditos
   mensual y GLOBAL en `settings.apish_credits`, tope 300 con `ARMARIO_APISH_MONTHLY_CREDITS`),

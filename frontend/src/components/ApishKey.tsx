@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { t } from "../i18n/es";
-import { ApiError, api, type ApishStatus, type Settings } from "../lib/api";
+import { ApiError, api, type ApishAccount, type ApishStatus, type Settings } from "../lib/api";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { inputClass } from "./Controls";
 import { Icon } from "./Icon";
@@ -150,6 +150,7 @@ export function ApishKey({ status, onSaved }: { status: ApishStatus; onSaved: (s
           {text.creditos(status.credits_used, status.credits_limit)}
         </p>
         <p className="px-0.5 text-[11px] text-text-3">{text.creditosAyuda}</p>
+        {status.has_key && <ApishBalance key={String(status.credits_used)} />}
       </div>
       <ConfirmDialog
         open={confirming}
@@ -163,5 +164,29 @@ export function ApishKey({ status, onSaved }: { status: ApishStatus; onSaved: (s
         onCancel={() => setConfirming(false)}
       />
     </>
+  );
+}
+
+/** El saldo real de la cuenta, que dice API.SH (consultarlo no gasta créditos). */
+function ApishBalance() {
+  const [account, setAccount] = useState<ApishAccount | null | undefined>(undefined);
+  useEffect(() => {
+    api.apishAccount().then(setAccount).catch(() => setAccount(null));
+  }, []);
+  if (account === undefined) return null;
+  if (account === null) return <p className="mt-1 px-0.5 text-[11px] text-text-3">{t.ajustes.apish.saldoSinDato}</p>;
+  const resets = account.free_resets_at
+    ? new Date(account.free_resets_at).toLocaleDateString("es-ES", { day: "numeric", month: "long" })
+    : null;
+  return (
+    <div className="mt-2 flex flex-col gap-0.5">
+      <p className="text-xs font-medium text-text">{t.ajustes.apish.saldo(account.total)}</p>
+      {account.free !== null && (
+        <p className="px-0.5 text-[11px] text-text-3">
+          {t.ajustes.apish.saldoDesglose(account.free, (account.plan ?? 0) + (account.payg ?? 0))}
+          {resets && ` ${t.ajustes.apish.saldoRenueva(resets)}`}
+        </p>
+      )}
+    </div>
   );
 }

@@ -607,6 +607,11 @@ export const t = {
       ayuda: "Se guarda cifrada en tu servidor y nadie puede volver a verla, ni entera ni en parte.",
       creditos: (usados: number, tope: number) => `Créditos usados este mes: ${usados} de ${tope}`,
       creditosAyuda: "El tope es común a todas las tiendas de API.SH. Al llegar, se paran hasta el mes siguiente.",
+      saldo: (n: number) => `Te quedan ${n.toLocaleString("es-ES")} créditos en API.SH`,
+      saldoDesglose: (gratis: number, pago: number) =>
+        `${gratis.toLocaleString("es-ES")} gratis este mes${pago > 0 ? ` y ${pago.toLocaleString("es-ES")} de pago` : ""}`,
+      saldoRenueva: (fecha: string) => `Los gratis se renuevan el ${fecha}.`,
+      saldoSinDato: "No se ha podido leer el saldo de API.SH ahora mismo.",
       borrarTitulo: "¿Borrar la clave de API.SH?",
       borrarTexto: "Uniqlo dejará de consultarse hasta que pegues otra clave.",
       borrarBoton: "Borrar la clave",
@@ -618,7 +623,7 @@ export const t = {
     olvidar: "Borrar lo aprendido",
     olvidarConfirmar: "Toca otra vez para confirmar",
     olvidado: "Hecho. El algoritmo empieza de cero.",
-    version: "Armario · v0.4.15",
+    version: "Armario · v0.4.16",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",

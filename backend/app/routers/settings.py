@@ -80,15 +80,23 @@ async def save_apish_key(request: Request, db: Session = Depends(get_db)):
     value = body.get("key") if isinstance(body, dict) else None
     try:
         vault.save(db, apish.SECRET, value if isinstance(value, str) else "")
+        apish.forget_account()
     except vault.BadSecret as exc:
         raise HTTPException(400, str(exc)) from None
     return read_settings(db)
+
+
+@router.get("/settings/apish-account")
+def apish_account():
+    """El saldo real de la cuenta de API.SH (gratis). `null` si no hay clave o no responde."""
+    return apish.account()
 
 
 @router.delete("/settings/apish-key", response_model=SettingsOut)
 def delete_apish_key(db: Session = Depends(get_db)):
     """Borra la clave guardada de API.SH. Sin clave, las tiendas que lo usan no se consultan."""
     vault.delete(db, apish.SECRET)
+    apish.forget_account()
     return read_settings(db)
 
 

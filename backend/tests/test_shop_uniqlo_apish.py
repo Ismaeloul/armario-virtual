@@ -289,3 +289,34 @@ def test_lo_visto_se_olvida_con_el_tiempo(client):
     uniqlo.note_seen(["E1"], today=date(2026, 1, 1))
     uniqlo.note_seen(["E2"], today=date(2026, 11, 1))
     assert set(uniqlo.seen_ids()) == {"E2"}
+
+
+def test_el_saldo_real_se_lee_gratis_y_nunca_ensena_la_clave(client, monkeypatch):
+    import httpx
+    from app.services import apish
+
+    vistas = []
+
+    def responder(request):
+        vistas.append((request.url.path, request.headers.get("x-api-key")))
+        return httpx.Response(200, json={
+            "success": True,
+            "credits": {"total": 981, "free": 981, "plan": 0, "payg": 0, "free_resets_at": "2026-12-01T00:00:00Z"},
+            "spend": {"today": 18, "this_month": 19},
+        })
+
+    monkeypatch.setattr(apish, "transport", httpx.MockTransport(responder))
+    apish.forget_account()
+    assert client.get("/api/settings/apish-account").json() is None  # sin clave: ni se pregunta
+    assert vistas == []
+    assert client.put("/api/settings/apish-key", json={"key": "ash_live_PRUEBA_SALDO"}).status_code == 200
+    saldo = client.get("/api/settings/apish-account")
+    assert saldo.json() == {"total": 981, "free": 981, "plan": 0, "payg": 0,
+                            "free_resets_at": "2026-12-01T00:00:00Z", "spent_month": 19}
+    assert "PRUEBA_SALDO" not in saldo.text
+    assert vistas == [("/v1/account", "ash_live_PRUEBA_SALDO")]
+    used, _ = apish.credits()
+    client.get("/api/settings/apish-account")
+    assert len(vistas) == 1 and apish.credits()[0] == used  # en memoria unos minutos y sin contar créditos
+    client.delete("/api/settings/apish-key")
+    apish.forget_account()
