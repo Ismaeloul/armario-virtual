@@ -137,16 +137,26 @@ _VISTAS = {
 }
 
 
-def build_prompt(has_back: bool, has_label: bool, has_extra: bool = False, kind: str = "ropa") -> str:
+def build_prompt(has_back: bool, has_label: bool, has_extra: bool = False, kind: str = "ropa",
+                 has_pair: bool = False, has_texture: bool = False) -> str:
     """Las instrucciones dependen de qué se fotografía, qué fotos se mandan y en qué orden."""
     what, first, second, third = _VISTAS.get(kind, _VISTAS["ropa"])
-    order = [f"- Foto 1: {first}."]
+    order = []
+    if has_pair:
+        order.append("- Foto 1: las dos zapatillas juntas.")
+    order.append(f"- Foto {len(order) + 1}: {first}.")
     if has_back:
         order.append(f"- Foto {len(order) + 1}: {second}.")
     if has_extra:
         order.append(f"- Foto {len(order) + 1}: {third}.")
     if has_label:
         order.append(f"- Foto {len(order) + 1}: la etiqueta, en primer plano.")
+    if has_texture:
+        order.append(
+            f"- Foto {len(order) + 1}: un primer plano de la tela o del material, hecho de cerca. El COLOR y la "
+            "TEXTURA de verdad son los de esta foto: las fotos de lejos suelen salir más oscuras (un marrón muy "
+            "oscuro parece negro). Para el color principal, su tono y el estampado, manda esta foto."
+        )
     if kind == "calzado":
         order.append('Es calzado: "type" solo puede ser "zapatillas", "zapatos" o "botas".')
     count = len([line for line in order if line.startswith("- Foto")])

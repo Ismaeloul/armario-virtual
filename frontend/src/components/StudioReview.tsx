@@ -6,7 +6,7 @@ import { Icon } from "./Icon";
 import { FadeImg, Skeleton } from "./Skeleton";
 import { ZoomViewer } from "./ZoomViewer";
 
-export type StudioView = "front" | "back" | "extra";
+export type StudioView = "front" | "back" | "extra" | "pair";
 
 type Slot = {
   status: "wait" | "working" | "done" | "error";
@@ -23,20 +23,26 @@ const EMPTY: Slot = { status: "wait", edited: null, verdict: null, feedback: "",
  * Fotos de tienda al añadir una prenda: junto a cada foto hecha con el móvil sale la que redibuja Codex
  * (fondo liso, prenda bien colocada). Con el visto bueno se usa la de Codex; si no ha quedado bien se
  * le explica qué ha fallado y la rehace. Sin visto bueno, la prenda se guarda con la foto original.
- * Las fotos se editan de una en una. `onAccepted` avisa de qué editadas tienen el visto bueno.
+ * Todas las fotos se editan a la vez. `onAccepted` avisa de qué editadas tienen el visto bueno.
+ * `texture` es el primer plano de la tela (color y textura reales), que va de apoyo a Codex;
+ * `references`, otras vistas de la prenda que no se editan aquí pero le sirven de referencia.
  */
 export function StudioReview({
   photos,
   kind,
+  texture,
+  references,
   onRotate,
   onAccepted,
 }: {
   photos: Partial<Record<StudioView, Photo>>;
   kind: "ropa" | "calzado";
-  onRotate: (view: StudioView) => void;
+  texture?: string | null;
+  references?: Partial<Record<StudioView, Photo>>;
+  onRotate?: (view: StudioView) => void;
   onAccepted: (accepted: Partial<Record<StudioView, string>>) => void;
 }) {
-  const views = (["front", "back", "extra"] as const).filter((v) => photos[v]);
+  const views = (["pair", "front", "back", "extra"] as const).filter((v) => photos[v]);
   const [slots, setSlots] = useState<Partial<Record<StudioView, Slot>>>({});
   // La foto abierta en grande para mirarla de cerca: de qué vista y cuál de las dos (0 la tuya, 1 la de Codex).
   const [zoom, setZoom] = useState<{ view: StudioView; index: number } | null>(null);
@@ -64,13 +70,16 @@ export function StudioReview({
       sources.current[view] = id;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photos.front?.id, photos.back?.id, photos.extra?.id]);
+  }, [photos.front?.id, photos.back?.id, photos.extra?.id, photos.pair?.id]);
 
-  // De una en una: la primera que esté esperando, si no hay ninguna en marcha.
-  const busy = views.some((v) => slot(v).status === "working");
-  const next = busy ? undefined : views.find((v) => slot(v).status === "wait");
+  // Todas a la vez: cada foto que esté esperando se manda a Codex sin aguardar a las demás.
+  const waiting = views.filter((v) => slot(v).status === "wait").join(",");
   useEffect(() => {
-    if (!next) return;
+    for (const view of views) if (slot(view).status === "wait") start(view);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waiting]);
+
+  const start = (next: StudioView) => {
     const source = photos[next]!;
     const current = slot(next);
     patch(next, { status: "working", error: null });
@@ -79,7 +88,11 @@ export function StudioReview({
         photo: source.id,
         view: next,
         kind,
-        others: views.filter((v) => v !== next).map((v) => ({ view: v, photo: photos[v]!.id })),
+        others: (["pair", "front", "back", "extra"] as const)
+          .filter((v) => v !== next && (photos[v] ?? references?.[v]))
+          .map((v) => ({ view: v, photo: (photos[v] ?? references![v])!.id }))
+          .slice(0, 3),
+        texture: texture ?? null,
         feedback: current.note,
         previous: current.note && current.edited ? current.edited.id : null,
       })
@@ -95,8 +108,7 @@ export function StudioReview({
           error: e instanceof ApiError && e.message ? e.message : t.comun.errorRed,
         });
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [next]);
+  };
 
   // Qué editadas tienen el visto bueno.
   const accepted = Object.fromEntries(
@@ -111,8 +123,8 @@ export function StudioReview({
 
   const label = (view: StudioView) =>
     kind === "calzado"
-      ? { front: t.nueva.lateral, back: t.nueva.frente, extra: t.nueva.otroLado }[view]
-      : { front: t.nueva.delante, back: t.nueva.detras, extra: t.nueva.otroLado }[view];
+      ? { pair: t.nueva.juntas, front: t.nueva.lateral, back: t.nueva.frente, extra: t.nueva.otroLado }[view]
+      : { pair: t.nueva.juntas, front: t.nueva.delante, back: t.nueva.detras, extra: t.nueva.otroLado }[view];
 
   const chip = "label-caps absolute left-2 top-2 rounded-full border border-line bg-card/90 px-2 py-0.5 backdrop-blur-md";
   const choice = (on: boolean) =>
@@ -144,7 +156,7 @@ export function StudioReview({
                   <FadeImg key={source.id} src={mediaUrl(source.url)} alt="" className="aspect-[3/4] w-full object-cover" />
                 </button>
                 <span className={`${chip} pointer-events-none`}>{t.nueva.estudio.tuya}</span>
-                <RotateButton className="absolute right-2 top-2" onClick={() => onRotate(view)} />
+                {onRotate && <RotateButton className="absolute right-2 top-2" onClick={() => onRotate(view)} />}
               </div>
               <div className="relative overflow-hidden rounded-xl border border-line bg-card-2">
                 {s.status === "done" && s.edited ? (

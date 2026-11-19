@@ -22,15 +22,17 @@ TIMEOUT_SECONDS = int(os.environ.get("ARMARIO_STUDIO_TIMEOUT", "240"))
 
 # Qué se ve en cada foto, según sea ropa o calzado (las mismas vistas que al añadir una prenda).
 VIEWS = {
-    "ropa": {"front": "la parte DELANTERA", "back": "la parte TRASERA (la espalda)", "extra": "otra vista"},
-    "calzado": {"front": "un LATERAL", "back": "la vista DE FRENTE", "extra": "el OTRO LATERAL"},
+    "ropa": {"front": "la parte DELANTERA", "back": "la parte TRASERA (la espalda)", "extra": "otra vista",
+             "pair": "otra vista"},
+    "calzado": {"front": "un LATERAL", "back": "la vista DE FRENTE", "extra": "el OTRO LATERAL",
+                "pair": "las DOS zapatillas juntas"},
 }
 
 _SESSION_RE = re.compile(r"session id:\s*([0-9a-f-]{20,})", re.I)
 
 
 def build_prompt(view: str, kind: str, others: list[str], feedback: str | None = None,
-                 has_previous: bool = False) -> str:
+                 has_previous: bool = False, has_texture: bool = False) -> str:
     """`view` es la foto que se edita (la primera adjunta); `others`, las vistas que van de referencia.
     `feedback` es lo que el usuario dice que salió mal en el intento anterior (la última foto, si va)."""
     names = VIEWS[kind]
@@ -45,6 +47,13 @@ def build_prompt(view: str, kind: str, others: list[str], feedback: str | None =
         lines.append(
             f"Las demás fotos son la MISMA prenda vista desde otro lado, solo como referencia ({listed}). "
             "No las edites ni mezcles sus detalles con los de la primera."
+        )
+    if has_texture:
+        lines.append(
+            f"La foto nº {len(others) + 2} es un primer plano de la tela o del material, hecho de cerca: el COLOR y "
+            "la TEXTURA reales son los de esa foto. Las fotos de lejos suelen salir más oscuras o lavadas (un "
+            "marrón muy oscuro parece negro): pinta la prenda con el color y el tejido del primer plano. Es solo "
+            "una referencia: no la dibujes ni la recortes."
         )
     if kind == "ropa":
         lines.append(
@@ -92,7 +101,8 @@ def _newest_image(folder: Path, since: float) -> Path | None:
 
 
 def product_photo(target: Path, view: str, kind: str, others: list[tuple[str, Path]],
-                  feedback: str | None = None, previous: Path | None = None) -> bytes:
+                  feedback: str | None = None, previous: Path | None = None,
+                  texture: Path | None = None) -> bytes:
     """La foto `target` redibujada como foto de producto. `others` son (vista, foto) de referencia.
     Para rehacerla: `feedback` (qué salió mal) y `previous` (el intento anterior)."""
     binary = shutil.which(config.CODEX_BIN)
@@ -104,7 +114,9 @@ def product_photo(target: Path, view: str, kind: str, others: list[tuple[str, Pa
         cmd = [binary, "exec", "--ephemeral", "--skip-git-repo-check",
                "--sandbox", config.CODEX_SANDBOX, "--cd", tmp]
         cmd += codex_models.cli_args(codex_models.ANALYSIS)
-        for image in (target, *(path for _, path in others), *([previous] if previous else [])):
+        # Orden fijo, el mismo que cuenta el prompt: la que se edita, las otras vistas, la tela y el intento anterior.
+        for image in (target, *(path for _, path in others), *([texture] if texture else []),
+                      *([previous] if previous else [])):
             cmd += ["--image", str(image)]
         cmd.append("-")
         try:
@@ -116,7 +128,8 @@ def product_photo(target: Path, view: str, kind: str, others: list[tuple[str, Pa
             raise AnalysisError("No se pudo ejecutar Codex") from exc
         try:
             stdout, stderr = proc.communicate(
-                build_prompt(view, kind, [name for name, _ in others], feedback, previous is not None),
+                build_prompt(view, kind, [name for name, _ in others], feedback, previous is not None,
+                             texture is not None),
                 timeout=TIMEOUT_SECONDS,
             )
         except subprocess.TimeoutExpired as exc:

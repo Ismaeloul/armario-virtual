@@ -114,6 +114,19 @@ function RowSlot({
   );
 }
 
+/** Vista previa local de una foto elegida (se libera al cambiarla). */
+function usePreview(file: File | null): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const next = file ? URL.createObjectURL(file) : null;
+    setUrl(next);
+    return () => {
+      if (next) URL.revokeObjectURL(next);
+    };
+  }, [file]);
+  return url;
+}
+
 export default function AnadirPrenda() {
   const navigate = useNavigate();
   const [catalog, setCatalog] = useState<Catalog | null>(null);
@@ -124,10 +137,14 @@ export default function AnadirPrenda() {
   const [extra, setExtra] = useState<File | null>(null);
   const [label, setLabel] = useState<File | null>(null);
   const [kind, setKind] = useState<"ropa" | "calzado">("ropa");
-  const [frontUrl, setFrontUrl] = useState<string | null>(null);
-  const [backUrl, setBackUrl] = useState<string | null>(null);
-  const [labelUrl, setLabelUrl] = useState<string | null>(null);
-  const [extraUrl, setExtraUrl] = useState<string | null>(null);
+  const [pair, setPair] = useState<File | null>(null); // calzado: las dos juntas (portada)
+  const [texture, setTexture] = useState<File | null>(null); // primer plano de la tela: solo apoyo para la IA
+  const frontUrl = usePreview(front);
+  const backUrl = usePreview(back);
+  const labelUrl = usePreview(label);
+  const extraUrl = usePreview(extra);
+  const pairUrl = usePreview(pair);
+  const textureUrl = usePreview(texture);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [form, setForm] = useState<GarmentFields>(EMPTY_GARMENT);
   const [saving, setSaving] = useState(false);
@@ -139,28 +156,6 @@ export default function AnadirPrenda() {
     api.catalog().then(setCatalog).catch(() => undefined);
     api.settings().then((s) => setPreferred(s.ai_provider)).catch(() => undefined);
   }, []);
-
-  // Vistas previas locales de las fotos elegidas.
-  useEffect(() => {
-    const url = front ? URL.createObjectURL(front) : null;
-    setFrontUrl(url);
-    return () => { if (url) URL.revokeObjectURL(url); };
-  }, [front]);
-  useEffect(() => {
-    const url = back ? URL.createObjectURL(back) : null;
-    setBackUrl(url);
-    return () => { if (url) URL.revokeObjectURL(url); };
-  }, [back]);
-  useEffect(() => {
-    const url = label ? URL.createObjectURL(label) : null;
-    setLabelUrl(url);
-    return () => { if (url) URL.revokeObjectURL(url); };
-  }, [label]);
-  useEffect(() => {
-    const url = extra ? URL.createObjectURL(extra) : null;
-    setExtraUrl(url);
-    return () => { if (url) URL.revokeObjectURL(url); };
-  }, [extra]);
 
   const pick = async (set: (f: File) => void) => {
     const file = await pickPhoto();
@@ -179,6 +174,8 @@ export default function AnadirPrenda() {
               backId: analysis.photo_back?.id,
               extraId: analysis.photo_extra?.id,
               labelId: analysis.photo_label?.id,
+              pairId: analysis.photo_pair?.id,
+              textureId: analysis.photo_texture?.id,
               kind,
               skipAi,
             }
@@ -187,6 +184,8 @@ export default function AnadirPrenda() {
               back: back ?? undefined,
               extra: kind === "calzado" ? (extra ?? undefined) : undefined,
               label: label ?? undefined,
+              pair: kind === "calzado" ? (pair ?? undefined) : undefined,
+              texture: texture ?? undefined,
               kind,
               skipAi,
             },
@@ -226,6 +225,7 @@ export default function AnadirPrenda() {
         photo_back: analysis.photo_back?.id ?? null,
         photo_extra: analysis.photo_extra?.id ?? null,
         photo_label: analysis.photo_label?.id ?? null,
+        photo_pair: analysis.photo_pair?.id ?? null,
         ai_provider: analysis.draft ? analysis.provider : null,
         ai_model: analysis.draft ? (analysis.model ?? null) : null,
         ai_confidence: analysis.draft?.confidence ?? null,
@@ -236,6 +236,8 @@ export default function AnadirPrenda() {
       if (Object.keys(accepted.current).length) {
         await api.studioApply(created.id, accepted.current).catch(() => undefined);
       }
+      // La foto de la tela solo era de apoyo: ya no hace falta.
+      if (analysis.photo_texture) api.discardPhotos([analysis.photo_texture.id]).catch(() => undefined);
       navigate("/armario", { replace: true });
     } catch (err) {
       // 409: ya estaba guardada (un reintento tras perder la respuesta): no es un error para el usuario.
@@ -285,20 +287,44 @@ export default function AnadirPrenda() {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
+              {/* Calzado: primero las dos juntas, que será la portada; luego el lateral. */}
+              {kind === "calzado" && (
+                <PhotoSlot
+                  label={t.nueva.juntas}
+                  hint={t.nueva.juntasAyuda}
+                  preview={pairUrl}
+                  onPick={() => pick(setPair)}
+                  onRotate={() => pair && rotateFile(pair).then(setPair)}
+                />
+              )}
               <PhotoSlot
                 label={kind === "calzado" ? t.nueva.lateral : t.nueva.delante}
                 preview={frontUrl}
                 onPick={() => pick(setFront)}
                 onRotate={() => front && rotateFile(front).then(setFront)}
               />
-              <PhotoSlot
-                label={kind === "calzado" ? t.nueva.frente : t.nueva.detras}
-                hint={kind === "calzado" ? t.nueva.frenteAyuda : t.nueva.detrasAyuda}
+              {kind !== "calzado" && (
+                <PhotoSlot
+                  label={t.nueva.detras}
+                  hint={t.nueva.detrasAyuda}
+                  preview={backUrl}
+                  onPick={() => pick(setBack)}
+                  onRotate={() => back && rotateFile(back).then(setBack)}
+                />
+              )}
+            </div>
+
+            {kind === "calzado" && (
+              <RowSlot
+                icon="add_a_photo"
+                title={t.nueva.frente}
+                help={t.nueva.frenteAyuda}
+                file={back}
                 preview={backUrl}
                 onPick={() => pick(setBack)}
-                onRotate={() => back && rotateFile(back).then(setBack)}
+                onChange={setBack}
               />
-            </div>
+            )}
 
             {/* En el calzado, una tercera vista: no todas las zapatillas son iguales por los dos lados. */}
             {kind === "calzado" && (
@@ -323,14 +349,27 @@ export default function AnadirPrenda() {
               onPick={() => pick(setLabel)}
               onChange={setLabel}
             />
+            {/* De cerca: las fotos de lejos oscurecen el color (un marrón muy oscuro sale negro). */}
+            <RowSlot
+              icon="palette"
+              title={t.nueva.textura}
+              help={t.nueva.texturaAyuda}
+              file={texture}
+              preview={textureUrl}
+              onPick={() => pick(setTexture)}
+              onChange={setTexture}
+            />
             {formError && <p className="text-center text-sm text-danger">{formError}</p>}
-            <PrimaryButton disabled={!front} onClick={() => runAnalysis(false)}>
+            {kind === "calzado" && front && !pair && (
+              <p className="text-center text-xs text-text-2">{t.nueva.faltaJuntas}</p>
+            )}
+            <PrimaryButton disabled={!front || (kind === "calzado" && !pair)} onClick={() => runAnalysis(false)}>
               <Icon name="auto_awesome" size={20} />
               {t.nueva.analizar}
             </PrimaryButton>
             <button
               type="button"
-              disabled={!front}
+              disabled={!front || (kind === "calzado" && !pair)}
               onClick={() => runAnalysis(true)}
               className="py-2 text-center text-xs font-medium text-text-2 disabled:opacity-40"
             >
@@ -370,7 +409,9 @@ export default function AnadirPrenda() {
           <form onSubmit={save} className="mt-6 flex flex-col gap-4">
             {/* Cada foto con la que redibuja Codex al lado, para comparar y dar el visto bueno. */}
             <StudioReview
+              texture={analysis.photo_texture?.id}
               photos={{
+                pair: analysis.photo_pair ?? undefined,
                 front: analysis.photo_front,
                 back: analysis.photo_back ?? undefined,
                 extra: analysis.photo_extra ?? undefined,

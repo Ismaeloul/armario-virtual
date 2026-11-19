@@ -6,6 +6,7 @@ import { PrimaryButton, Switch } from "../components/Controls";
 import { CopyRow } from "../components/CopyButton";
 import { Icon, type IconName } from "../components/Icon";
 import { BackHeader, Screen } from "../components/Layout";
+import { PairCard, StudioCard } from "../components/GarmentExtras";
 import { DetailSkeleton, FadeImg } from "../components/Skeleton";
 import { cap, t } from "../i18n/es";
 import { ApiError, api, mediaUrl, type Catalog, type Garment, type Photo } from "../lib/api";
@@ -46,7 +47,7 @@ export default function FichaPrenda() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   // "missing": la prenda no existe (404); "red": no se pudo cargar (servidor caído, etc.).
   const [loadError, setLoadError] = useState<"missing" | "red" | null>(null);
-  const [view, setView] = useState<"photo_front" | "photo_back" | "photo_extra" | "photo_label">("photo_front");
+  const [view, setView] = useState<"photo_pair" | "photo_front" | "photo_back" | "photo_extra" | "photo_label">("photo_front");
   // La proporción (ancho/alto) de cada foto: el recuadro toma la de la foto que enseña, así no quedan
   // bandas ni a los lados ni arriba y abajo. La de la primera se mide ANTES de pintar la ficha, para
   // que el recuadro salga ya con su forma; las demás, por detrás. Sin medir, 3:4.
@@ -82,9 +83,11 @@ export default function FichaPrenda() {
       .garment(Number(id))
       .then(async (g) => {
         // Como mucho se espera un momento por la primera foto: si tarda, la ficha sale igual.
-        await Promise.race([measure(g.photo_front), new Promise((done) => setTimeout(done, 1500))]);
+        // En el calzado la primera es la de las dos juntas, si la tiene.
+        await Promise.race([measure(g.photo_pair ?? g.photo_front), new Promise((done) => setTimeout(done, 1500))]);
         setGarment(g);
-        for (const other of [g.photo_back, g.photo_extra, g.photo_label]) if (other) void measure(other);
+        if (g.photo_pair) setView("photo_pair");
+        for (const other of [g.photo_front, g.photo_back, g.photo_extra, g.photo_label]) if (other) void measure(other);
       })
       .catch((e) => setLoadError(e instanceof ApiError && e.status === 404 ? "missing" : "red"));
     api
@@ -180,6 +183,7 @@ export default function FichaPrenda() {
 
   const views = (
     [
+      ["photo_pair", t.ficha.juntas],
       ["photo_front", garment.category === "calzado" ? t.ficha.lateral : t.ficha.delante],
       ["photo_back", garment.category === "calzado" ? t.ficha.frente : t.ficha.detras],
       ["photo_extra", t.ficha.otroLado],
@@ -279,6 +283,8 @@ export default function FichaPrenda() {
             {garment.details && <p className="mt-1 text-sm text-text-2">{garment.details}</p>}
             {garment.notes && <p className="mt-1 text-sm text-text-3">{garment.notes}</p>}
           </div>
+
+          <StudioCard key={garment.id} garment={garment} onChange={setGarment} />
 
           {/* Pedida y aún sin llegar: en vez de la lavadora, el aviso y «Ya me ha llegado». */}
           {garment.on_order && (
@@ -392,6 +398,8 @@ export default function FichaPrenda() {
               )}
             </div>
           )}
+
+          <PairCard garment={garment} onChange={setGarment} />
 
           {/* Uso (se deriva del historial) */}
           <div className="flex flex-col gap-2">

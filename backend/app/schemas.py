@@ -68,6 +68,7 @@ class GarmentCreate(GarmentFields):
     photo_back: str | None = Field(default=None, pattern=PHOTO_ID)
     photo_extra: str | None = Field(default=None, pattern=PHOTO_ID)
     photo_label: str | None = Field(default=None, pattern=PHOTO_ID)
+    photo_pair: str | None = Field(default=None, pattern=PHOTO_ID)  # calzado: las dos juntas (portada)
     ai_provider: AIProvider | None = None
     ai_model: str | None = Field(default=None, max_length=60)
     ai_confidence: float | None = Field(default=None, ge=0, le=1)
@@ -102,6 +103,13 @@ class Photo(BaseModel):
     thumb_url: str
 
 
+class PairOut(BaseModel):
+    id: int
+    name: str
+    type: str
+    photo: Photo
+
+
 class GarmentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -129,6 +137,11 @@ class GarmentOut(BaseModel):
     photo_back: Photo | None
     photo_extra: Photo | None
     photo_label: Photo | None
+    photo_pair: Photo | None = None  # calzado: las dos zapatillas juntas
+    photo_cover: Photo | None = None  # la que se enseña en los listados: las dos juntas si la hay, o la principal
+    # Vistas (front, back, extra, pair) que ya redibujó Codex; las demás siguen siendo fotos de la cámara.
+    photos_edited_views: list[str] = []
+    pair: "PairOut | None" = None  # la otra mitad del conjunto, si la tiene
     photos_edited: bool = False  # Codex las redibujó como «de tienda» (se puede volver a las de la cámara)
     in_laundry: bool
     laundry_since: datetime | None
@@ -151,6 +164,9 @@ class AnalyzeResponse(BaseModel):
     photo_back: Photo | None
     photo_extra: Photo | None
     photo_label: Photo | None
+    photo_pair: Photo | None = None
+    # Primer plano de la tela (color y textura reales). Solo es apoyo para la IA: no se guarda en la prenda.
+    photo_texture: Photo | None = None
     draft: GarmentDraft | None
     provider: str | None  # quién analizó de verdad
     model: str | None = None  # con qué modelo, si se sabe

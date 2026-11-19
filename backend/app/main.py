@@ -20,7 +20,8 @@ def referenced_photos() -> set[str]:
     with SessionLocal() as db:
         referenced = {
             photo
-            for row in db.execute(select(Garment.photo_front, Garment.photo_back, Garment.photo_extra, Garment.photo_label))
+            for row in db.execute(select(Garment.photo_front, Garment.photo_back, Garment.photo_extra, Garment.photo_label,
+                                         Garment.photo_pair))
             for photo in row
             if photo
         }

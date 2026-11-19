@@ -74,10 +74,19 @@ def _items(db: Session, garments: list[Garment], today: date) -> list[outfits.It
             fit=g.fit,
             thickness=g.thickness,
             hood=g.hood,
+            pair_id=g.pair_id,
             days_since_worn=(today - stats[g.id][1]).days if g.id in stats and stats[g.id][1] else None,
         )
         for g in garments
     ]
+
+
+def _rated_ids(db: Session, outfit: Outfit) -> list[int]:
+    """Las prendas que cuentan al valorar el outfit: sin la camiseta que va debajo de la sudadera con
+    cremallera (lo que gusta o no es la sudadera con lo demás, no qué camiseta tocó debajo)."""
+    garments = {g.id: g for g in db.scalars(select(Garment).where(Garment.id.in_(outfit.garment_ids)))}
+    kept = {g.id for g in outfits.without_undershirt(list(garments.values()))}
+    return [i for i in outfit.garment_ids if i in kept or i not in garments]
 
 
 def _current(db: Session, today: date) -> Outfit | None:
@@ -221,7 +230,7 @@ def next_outfit(body: NextIn, db: Session = Depends(get_db)):
         current.status = DISCARDED if body.action == "pasar" else REPLACED
         already = db.scalar(select(Rating.id).where(Rating.outfit_id == current.id, Rating.liked.is_(False)))
         if body.action == "pasar" and not already:  # también enseña, pero menos: no sabemos el motivo
-            db.add(Rating(garment_ids=current.garment_ids, liked=False, weight=0.5, reasons=[],
+            db.add(Rating(garment_ids=_rated_ids(db, current), liked=False, weight=0.5, reasons=[],
                           source="hoy", outfit_id=current.id))
         db.commit()
     return _today_state(db, regenerate=True, replaced=current)
@@ -241,7 +250,7 @@ def choose_outfit(db: Session = Depends(get_db)):
         current.status = CHOSEN
         for garment_id in current.garment_ids:
             db.add(WearLog(garment_id=garment_id, worn_on=today, outfit_id=current.id))
-        db.add(Rating(garment_ids=current.garment_ids, liked=True, weight=1.0, reasons=[],
+        db.add(Rating(garment_ids=_rated_ids(db, current), liked=True, weight=1.0, reasons=[],
                       source="hoy", outfit_id=current.id))
         db.commit()
     return _today_state(db)

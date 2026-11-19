@@ -35,6 +35,14 @@ export type Garment = GarmentFields & {
   photo_back: Photo | null;
   photo_extra: Photo | null;
   photo_label: Photo | null;
+  /** Calzado: las dos zapatillas juntas. */
+  photo_pair: Photo | null;
+  /** La que se enseña en los listados: las dos juntas si la hay, o la principal. */
+  photo_cover: Photo | null;
+  /** Vistas (front, back, extra, pair) que ya redibujó Codex. */
+  photos_edited_views: string[];
+  /** La otra mitad del conjunto (un chándal), si la tiene. */
+  pair: { id: number; name: string; type: string; photo: Photo } | null;
   /** Codex redibujó las fotos como «de tienda»; se puede volver a las de la cámara. */
   photos_edited: boolean;
   in_laundry: boolean;
@@ -54,6 +62,9 @@ export type Analysis = {
   photo_back: Photo | null;
   photo_extra: Photo | null;
   photo_label: Photo | null;
+  photo_pair: Photo | null;
+  /** Primer plano de la tela: solo apoyo para la IA, no se guarda en la prenda. */
+  photo_texture: Photo | null;
   draft: Draft | null;
   provider: string | null;
   model?: string | null;
@@ -448,14 +459,18 @@ export const api = {
    *  rehacerla: `feedback` (qué salió mal) y `previous` (el intento anterior). */
   studio: (body: {
     photo: string;
-    view: "front" | "back" | "extra";
+    view: "front" | "back" | "extra" | "pair";
     kind: "ropa" | "calzado";
-    others: { view: "front" | "back" | "extra"; photo: string }[];
+    others: { view: "front" | "back" | "extra" | "pair"; photo: string }[];
+    texture?: string | null;
     feedback?: string | null;
     previous?: string | null;
   }) => request<Photo>("/api/photos/studio", json("POST", body)),
-  studioApply: (id: number, photos: Partial<Record<"front" | "back" | "extra", string>>) =>
+  studioApply: (id: number, photos: Partial<Record<"front" | "back" | "extra" | "pair", string>>) =>
     request<Garment>(`/api/garments/${id}/studio/apply`, json("POST", photos)),
+  /** Une dos prendas como conjunto; con null, las separa. */
+  setPair: (id: number, pairId: number | null) =>
+    request<Garment>(`/api/garments/${id}/pair`, json("PUT", { pair_id: pairId })),
   discardPhotos: (ids: string[]) => request<void>("/api/photos/discard", json("POST", { ids })),
   deleteGarment: (id: number) => request<void>(`/api/garments/${id}`, { method: "DELETE" }),
   wearGarment: (id: number) => request<Garment>(`/api/garments/${id}/wear`, json("POST", {})),
@@ -469,6 +484,10 @@ export const api = {
     back?: File;
     extra?: File;
     label?: File;
+    pair?: File;
+    texture?: File;
+    pairId?: string;
+    textureId?: string;
     frontId?: string;
     backId?: string;
     extraId?: string;
@@ -481,6 +500,10 @@ export const api = {
     if (opts.back) form.append("back", opts.back);
     if (opts.extra) form.append("extra", opts.extra);
     if (opts.label) form.append("label", opts.label);
+    if (opts.pair) form.append("pair", opts.pair);
+    if (opts.texture) form.append("texture", opts.texture);
+    if (opts.pairId) form.append("pair_id", opts.pairId);
+    if (opts.textureId) form.append("texture_id", opts.textureId);
     if (opts.frontId) form.append("front_id", opts.frontId);
     if (opts.backId) form.append("back_id", opts.backId);
     if (opts.extraId) form.append("extra_id", opts.extraId);
@@ -496,6 +519,7 @@ export const api = {
       photo_back: string | null;
       photo_extra: string | null;
       photo_label: string | null;
+      photo_pair?: string | null;
       ai_provider: string | null;
       ai_model: string | null;
       ai_confidence: number | null;

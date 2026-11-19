@@ -94,7 +94,26 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.10** (19-11-2026). La 0.4.9 se etiquetó pero NO llegó a la tienda (su
+- **Publicada en el Umbrel: 0.4.11** (19-11-2026). El usuario está metiendo su armario real y el
+  proceso era lento. Lleva:
+  Añadir prenda: las fotos de Codex se generan TODAS A LA VEZ (`StudioReview`, antes de una en una).
+  Foto opcional «Textura y color» (primer plano de la tela): no se guarda en la prenda, va de apoyo al
+  análisis (color correcto: un marrón muy oscuro salía negro) y a Codex al redibujar (`texture` en
+  `/garments/analyze` y `/photos/studio`). Zapatillas: foto obligatoria «Las dos juntas»
+  (`garments.photo_pair`), que es la portada (`photo_cover` en la API) y la primera de la Ficha.
+  Ficha: vuelve «Editar fotos con Codex» (`components/GarmentExtras.tsx`, `StudioCard`) para las vistas
+  que siguen siendo de la cámara (`photos_edited_views`); y «Pareja» (`PairCard`, `garments.pair_id`,
+  `PUT /garments/{id}/pair`): la otra mitad de un conjunto (chándal), enlace en los dos sentidos, solo ropa.
+  Hoy (`services/outfits.py`): la pareja junta compite con ventaja (`PAIR_TOGETHER`) pero se puede separar;
+  afinidad mínima del 60 % (`MIN_AFFINITY`; si nada llega, nota `afinidad_baja`); camiseta debajo de la
+  sudadera SOLO si tiene cremallera entera (se añade al final, no cuenta en la afinidad ni en las
+  valoraciones: `without_undershirt`); con frío la capa exterior es obligatoria si alguna vale.
+  Sin probar con Codex real (la sesión de Codex de la copia local caducó): la foto de textura, las dos
+  juntas y dos ediciones simultáneas.
+  Auditoría de seguridad con Mythos: APARCADA por el usuario (gastaba demasiados tokens). Solo se hizo el
+  reconocimiento y el plan de cobertura, guardados en `~/security-audit-skill/armario-virtual/run-1/`. El
+  repaso general con Fable no produjo nada (se quedó sin límite). No relanzar sin que lo pida.
+- **Antes: 0.4.10** (19-11-2026). La 0.4.9 se etiquetó pero NO llegó a la tienda (su
   arreglo de colores era malo). Lleva:
   Colores de Compras bien definidos (agente con Fable): en Courir el bloque «Couleur» enlaza TODA la línea
   del modelo (una Air Force 1 Luxe enlaza 41 productos distintos), no los colores de la zapatilla. Ahora

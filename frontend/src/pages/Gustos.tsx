@@ -138,7 +138,7 @@ export default function Gustos() {
                         }`}
                       >
                         <FadeImg
-                          src={mediaUrl(g.photo_front.thumb_url)}
+                          src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
                           alt=""
                           className="h-24 w-20 shrink-0 rounded-xl object-cover"
                         />

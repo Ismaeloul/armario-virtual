@@ -279,7 +279,7 @@ def test_fotos_de_tienda_con_codex_se_aplican_y_se_puede_volver(client, photo_by
 
     seen = []
 
-    def fake(target, view, kind, others, feedback=None, previous=None):
+    def fake(target, view, kind, others, feedback=None, previous=None, texture=None):
         seen.append((view, kind, [name for name, _ in others], feedback, previous is not None))
         return photo_bytes
 

@@ -4,7 +4,9 @@ La nota de una combinación tiene tres capas, de la que más manda a la que meno
 
   1. Reglas del usuario, que no se negocian: ropa de verano solo del 1 de mayo al 30 de septiembre,
      nada de cazadora o sobrecamisa sobre una sudadera con cremallera entera, no repetir una
-     combinación ya propuesta. (Lo que está en la lavadora ni llega hasta aquí.)
+     combinación ya propuesta, con frío siempre una capa exterior si hay alguna que valga, una
+     camiseta debajo de la sudadera con cremallera entera, y nada por debajo de una afinidad mínima
+     mientras haya algo mejor. (Lo que está en la lavadora ni llega hasta aquí.)
   2. Cuánto pegan las prendas entre sí (`harmony`): las reglas generales de style_rules.py más lo
      aprendido en Gustos (taste.py). Es lo único que cuenta para la afinidad que se enseña, así que
      Hoy y Gustos dan el mismo porcentaje a la misma combinación.
@@ -76,6 +78,12 @@ MAX_COMBOS = 20_000
 # pasan de 90 % las que el usuario ha confirmado. Cuando haya valoraciones reales, estas dos cifras
 # se pueden ajustar para que el porcentaje sea la probabilidad de «me gusta» (regresión logística).
 AFFINITY_MID, AFFINITY_SCALE = 0.7, 1.2
+# Por debajo de esta afinidad Hoy no propone la combinación mientras quede alguna que llegue
+# (decisión del usuario: que no recomiende cosas que no quedan bien).
+MIN_AFFINITY = 60
+# Las dos mitades de un conjunto (un chándal) juntas: ventaja al competir por ser el outfit de hoy.
+# No cambia la afinidad que se enseña; separadas se siguen pudiendo proponer.
+PAIR_TOGETHER = 3.0
 
 
 @dataclass
@@ -96,6 +104,7 @@ class Item:
     fit: str | None = None
     thickness: str | None = None
     hood: bool | None = None
+    pair_id: int | None = None  # la otra mitad del conjunto
 
 
 @dataclass
@@ -105,7 +114,8 @@ class Proposal:
     affinity: int  # 0-100, para mostrar
     day_kind: str  # "calor", "frio" o "templado"
     with_layer: bool
-    notes: list[str] = field(default_factory=list)  # "sin_capa", "sin_calzado", "sin_mas_combinaciones"
+    # "sin_capa", "sin_calzado", "sin_mas_combinaciones", "afinidad_baja", "sin_camiseta"
+    notes: list[str] = field(default_factory=list)
 
     @property
     def ids(self) -> list[int]:
@@ -239,6 +249,30 @@ def combo_affinity(pieces: list, taste=None, memo: dict | None = None) -> int:
     return max(1, min(99, round(100 / (1 + math.exp(-value)))))
 
 
+def needs_undershirt(top) -> bool:
+    """Una sudadera con la cremallera entera va abierta o medio abierta: debajo hace falta una camiseta."""
+    return top.type == "sudadera" and style_rules.has_zip(top)
+
+
+def without_undershirt(pieces: list) -> list:
+    """La combinación sin la camiseta que va debajo de la sudadera con cremallera: lo que se valora y lo
+    que no hay que repetir es la sudadera con lo demás, no qué camiseta tocó debajo."""
+    if not any(needs_undershirt(p) for p in pieces):
+        return list(pieces)
+    return [p for p in pieces if p.type != "camiseta"]
+
+
+def _undershirt(top: Item, combo: list[Item], tees: list[Item], taste, memo: dict) -> Item | None:
+    """La camiseta que mejor va debajo: la que más pega con lo de abajo y el calzado, y que no se usó ayer.
+    La temporada no cuenta: debajo de una sudadera una camiseta de manga corta vale todo el año."""
+    rest = [p for p in combo if p.category in ("parte_inferior", "calzado")]
+    return max(
+        tees,
+        key=lambda tee: harmony([tee, *rest], taste, memo) + _recency(tee) + (FAVORITE if tee.favorite else 0.0),
+        default=None,
+    )
+
+
 def score(
     items: list[Item], kind: str, today: date | None = None, taste=None, temp_max: float | None = None,
     memo: dict | None = None,
@@ -294,27 +328,65 @@ def propose(
             key=lambda pair: harmony(list(pair), taste, memo) + day[pair[0].id] + day[pair[1].id],
         )
 
-    candidates: list[tuple[float, float, list[Item]]] = []
+    # (nota con azar, nota, cuánto pegan, combinación)
+    candidates: list[tuple[float, float, float, list[Item]]] = []
     for (top, bottom), shoe, layer in itertools.product(pairs, shoes, layers):
         if layer is not None and style_rules.zip_clash(layer, top):
             continue  # regla del usuario; la misma combinación sin capa sigue en la lista
         combo = [piece for piece in (layer, top, bottom, shoe) if piece is not None]
-        value = harmony(combo, taste, memo) + sum(day[piece.id] for piece in combo)
+        pegan = harmony(combo, taste, memo)
+        value = pegan + sum(day[piece.id] for piece in combo)
         if layer is None:
             own_layer = top.type == "sudadera" and style_rules.has_zip(top)
             value += no_layer * (ZIP_HOODIE_AS_LAYER.get(kind, 1.0) if own_layer else 1.0)
-        candidates.append((value + sum(luck[piece.id] for piece in combo) + rng.uniform(0, NOISE), value, combo))
+        ids = {piece.id for piece in combo}
+        if any(piece.pair_id in ids for piece in combo):
+            value += PAIR_TOGETHER  # el conjunto entero (sudadera y pantalón del chándal)
+        candidates.append(
+            (value + sum(luck[piece.id] for piece in combo) + rng.uniform(0, NOISE), value, pegan, combo)
+        )
 
-    last_seen = {frozenset(ids): position for position, ids in enumerate(avoid or [])}
-    fresh = [c for c in candidates if frozenset(piece.id for piece in c[2]) not in last_seen]
+    # Con frío, la capa exterior no es opcional: sin ella solo si ninguna combinación admite una
+    # (decisión del usuario: «va a hacer frío, hay que poner abrigo»).
+    if kind == "frio" and layers_available:
+        layered = [c for c in candidates if c[3][0].category == "capa_exterior"]
+        candidates = layered or candidates
+
+    # Lo ya propuesto se compara sin la camiseta de debajo: es la misma combinación con otra camiseta.
+    def key(pieces) -> frozenset:
+        return frozenset(piece.id for piece in pieces)
+
+    by_id = {item.id: item for item in items}
+    last_seen: dict[frozenset, int] = {}
+    for position, ids in enumerate(avoid or []):
+        last_seen[key(without_undershirt([by_id[i] for i in ids if i in by_id]))] = position
+        last_seen[frozenset(ids)] = position
+    fresh = [c for c in candidates if key(c[3]) not in last_seen]
     notes = []
     if fresh:
-        _, value, combo = max(fresh, key=lambda c: c[0])
+        # Nada por debajo de la afinidad mínima mientras quede algo que llegue.
+        floor = AFFINITY_MID + AFFINITY_SCALE * math.log(MIN_AFFINITY / (100 - MIN_AFFINITY))
+        good = [c for c in fresh if c[2] >= floor]
+        if not good:
+            notes.append("afinidad_baja")
+        _, value, _, combo = max(good or fresh, key=lambda c: c[0])
     else:
         # Todo lo posible ya ha salido: toca la que hace más que se propuso (nunca la que se acaba de ver,
         # salvo que sea la única que hay).
         notes.append("sin_mas_combinaciones")
-        _, value, combo = min(candidates, key=lambda c: (last_seen[frozenset(piece.id for piece in c[2])], -c[0]))
+        _, value, _, combo = min(candidates, key=lambda c: (last_seen.get(key(c[3]), -1), -c[0]))
+
+    affinity = combo_affinity(combo, taste, memo)
+    with_layer = any(piece.category == "capa_exterior" for piece in combo)
+    # Debajo de la sudadera con cremallera entera, una camiseta. Va aparte de la nota y de la afinidad:
+    # se elige al final, para la combinación que ya ha ganado.
+    top = next(piece for piece in combo if piece.category == "parte_superior")
+    if needs_undershirt(top):
+        tee = _undershirt(top, combo, [item for item in tops if item.type == "camiseta"], taste, memo)
+        if tee is None:
+            notes.append("sin_camiseta")
+        else:
+            combo = [*combo[: combo.index(top) + 1], tee, *combo[combo.index(top) + 1:]]
 
     if layer_wanted and not layers_available:
         notes.append("sin_capa")
@@ -323,8 +395,8 @@ def propose(
     return Proposal(
         items=combo,
         score=value,
-        affinity=combo_affinity(combo, taste, memo),
+        affinity=affinity,
         day_kind=kind,
-        with_layer=any(piece.category == "capa_exterior" for piece in combo),
+        with_layer=with_layer,
         notes=notes,
     )

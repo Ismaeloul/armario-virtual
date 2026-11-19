@@ -323,7 +323,7 @@ export default function Ajustes() {
                   {laundry.map((g) => (
                     <Link key={g.id} to={`/prenda/${g.id}`} className="flex items-center gap-3 py-1.5">
                       <img
-                        src={mediaUrl(g.photo_front.thumb_url)}
+                        src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
                         alt=""
                         className="h-11 w-11 shrink-0 rounded-xl border border-line object-cover"
                       />

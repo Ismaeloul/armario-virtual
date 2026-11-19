@@ -372,3 +372,83 @@ def test_un_pasar_no_veta_la_pareja_para_siempre(client, sin_tiempo, photo_bytes
         outfit = client.post("/api/today/next", json={"action": "otra"}).json()["outfit"]
         afinidades[frozenset(g["id"] for g in outfit["garments"])] = outfit["affinity"]
     assert afinidades[frozenset(pasada)] == max(afinidades.values()) >= 85
+
+
+# ---------- Reglas del 19-11-2026: camiseta debajo, capa con frío, afinidad mínima, parejas y fotos nuevas
+
+
+def test_debajo_de_la_sudadera_con_cremallera_entera_va_una_camiseta():
+    prendas = [
+        item(1, "parte_superior", type_="sudadera", season="invierno", closure="cremallera"),
+        item(2, "parte_superior", color="blanco"),  # camiseta: fuera de sus meses no se propone sola...
+        item(3, "parte_inferior", color="azul", type_="vaquero"),
+        item(4, "calzado", color="blanco", type_="zapatillas"),
+    ]
+    propuesta = propose(prendas, 8, 0, date(2026, 11, 19), rng=random.Random(1))
+    assert propuesta.ids == [1, 2, 3, 4]  # ...pero debajo de la sudadera, sí; y va justo detrás de ella
+    # La combinación que cuenta (para valorar y para no repetir) es sin la camiseta de debajo.
+    assert [p.id for p in outfits.without_undershirt(propuesta.items)] == [1, 3, 4]
+    repetida = propose(prendas, 8, 0, date(2026, 11, 19), avoid=[{1, 2, 3, 4}], rng=random.Random(1))
+    assert "sin_mas_combinaciones" in repetida.notes or 1 not in repetida.ids
+    # Sin camisetas: se avisa. Una sudadera sin cremallera no la pide.
+    assert "sin_camiseta" in propose([prendas[0], *prendas[2:]], 8, 0, date(2026, 11, 19)).notes
+    cerrada = [item(1, "parte_superior", type_="sudadera", season="invierno", closure="sin cierre"), *prendas[1:]]
+    assert propose(cerrada, 8, 0, date(2026, 11, 19), avoid=[{2, 3, 4}], rng=random.Random(1)).ids == [1, 3, 4]
+
+
+def test_con_frio_siempre_sale_con_capa_si_alguna_vale():
+    prendas = [
+        item(1, "parte_superior", type_="jersey", season="invierno"),
+        item(2, "parte_inferior", color="azul", type_="vaquero"),
+        item(3, "calzado", color="blanco", type_="zapatillas"),
+        item(4, "capa_exterior", color="rojo", type_="abrigo", season="invierno", style="formal", pattern="cuadros"),
+    ]
+    for semilla in range(8):  # aunque el abrigo pegue poco, con 6 °C no se sale sin él
+        assert 4 in propose(prendas, 6, 0, date(2026, 11, 19), rng=random.Random(semilla)).ids
+
+
+def test_las_dos_mitades_de_un_conjunto_compiten_con_ventaja():
+    prendas = [
+        item(1, "parte_superior", type_="sudadera", season="invierno", style="deportivo", pair_id=3),
+        item(2, "parte_superior", type_="sudadera", season="invierno", style="deportivo", color="gris"),
+        item(3, "parte_inferior", type_="chándal", style="deportivo", pair_id=1),
+        item(4, "parte_inferior", type_="chándal", style="deportivo", color="gris"),
+    ]
+    juntas = sum({1, 3} <= set(propose(prendas, 15, 0, date(2026, 10, 19), rng=random.Random(s)).ids) for s in range(30))
+    assert juntas >= 25  # casi siempre el conjunto entero, sin prohibir las otras mezclas
+
+
+def test_por_debajo_de_la_afinidad_minima_solo_si_no_queda_otra():
+    prendas = [
+        item(1, "parte_superior", type_="camisa", color="naranja", style="formal", pattern="cuadros"),
+        item(2, "parte_inferior", type_="chándal", color="morado", style="deportivo", pattern="rayas"),
+    ]
+    propuesta = propose(prendas, 20, 0, date(2026, 6, 1))
+    if propuesta.affinity < outfits.MIN_AFFINITY:
+        assert "afinidad_baja" in propuesta.notes
+    buena = propose([*prendas, item(3, "parte_inferior", type_="chino", color="beige", style="formal")],
+                    20, 0, date(2026, 6, 1), rng=random.Random(2))
+    assert buena.affinity >= outfits.MIN_AFFINITY or "afinidad_baja" in buena.notes
+
+
+def test_la_pareja_se_une_en_los_dos_sentidos_y_se_suelta_al_borrar(client, photo_bytes):
+    arriba = _prenda(client, photo_bytes, name="Sudadera chándal", type="sudadera")
+    abajo = _prenda(client, photo_bytes, name="Pantalón chándal", type="chándal")
+    otra = _prenda(client, photo_bytes, name="Camiseta", type="camiseta")
+    assert client.put(f"/api/garments/{arriba['id']}/pair", json={"pair_id": otra["id"]}).status_code == 422
+    unida = client.put(f"/api/garments/{arriba['id']}/pair", json={"pair_id": abajo["id"]}).json()
+    assert unida["pair"]["id"] == abajo["id"]
+    assert client.get(f"/api/garments/{abajo['id']}").json()["pair"]["id"] == arriba["id"]
+    assert client.delete(f"/api/garments/{abajo['id']}").status_code == 204
+    assert client.get(f"/api/garments/{arriba['id']}").json()["pair"] is None
+
+
+def test_las_dos_zapatillas_juntas_son_la_portada_y_la_foto_de_la_tela_no_se_guarda(client, photo_bytes):
+    fotos = {name: (f"{name}.jpg", photo_bytes, "image/jpeg") for name in ("front", "pair", "texture")}
+    analisis = client.post("/api/garments/analyze", files=fotos, data={"skip_ai": "true", "kind": "calzado"}).json()
+    assert analisis["photo_pair"] and analisis["photo_texture"]
+    cuerpo = {k: v for k, v in VALID_DRAFT.items() if k != "confidence"}
+    cuerpo.update(type="zapatillas", photo_front=analisis["photo_front"]["id"], photo_pair=analisis["photo_pair"]["id"])
+    prenda = client.post("/api/garments", json=cuerpo).json()
+    assert prenda["photo_cover"]["id"] == analisis["photo_pair"]["id"] and prenda["photos_edited_views"] == []
+    assert analisis["photo_texture"]["id"] not in str(prenda)  # solo era apoyo para la IA

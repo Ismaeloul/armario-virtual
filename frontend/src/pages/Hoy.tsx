@@ -176,7 +176,7 @@ export default function Hoy() {
                       className="flex animate-enter items-center gap-3.5 rounded-2xl border border-line bg-card-2 p-2.5 transition-transform active:scale-[0.98]"
                     >
                       <FadeImg
-                        src={mediaUrl(g.photo_front.thumb_url)}
+                        src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
                         alt=""
                         className="h-24 w-20 shrink-0 rounded-xl object-cover"
                       />
@@ -204,6 +204,8 @@ export default function Hoy() {
                   <div className="mt-4 flex flex-col gap-1 border-t border-control pt-3 text-xs text-text-2">
                     {today.notes.includes("sin_calzado") && <p>{t.hoy.sinCalzado}</p>}
                     {today.notes.includes("sin_capa") && <p>{t.hoy.sinCapa}</p>}
+                    {today.notes.includes("afinidad_baja") && <p>{t.hoy.afinidadBaja}</p>}
+                    {today.notes.includes("sin_camiseta") && <p>{t.hoy.sinCamiseta}</p>}
                     {today.notes.includes("sin_mas_combinaciones") && <p>{t.hoy.sinMasCombinaciones}</p>}
                     {today.in_laundry > 0 && <p>{t.hoy.enLavadora(today.in_laundry)}</p>}
                   </div>

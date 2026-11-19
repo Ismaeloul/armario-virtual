@@ -132,8 +132,11 @@ def acierto(usuario, aprendido) -> float:
 
 
 def comprobar_reglas(dia, maxima, propuesta):
-    combo = propuesta.items
+    # La camiseta que va debajo de la sudadera con cremallera es un añadido: las reglas miran lo demás.
+    combo = outfits.without_undershirt(propuesta.items)
     arriba, capa = de(combo, "parte_superior"), de(combo, "capa_exterior")
+    if outfits.needs_undershirt(arriba) and "sin_camiseta" not in propuesta.notes:
+        assert [p.type for p in propuesta.items].count("camiseta") == 1, propuesta.ids
     assert [p.category for p in combo if p.category != "capa_exterior"] == ["parte_superior", "parte_inferior", "calzado"]
     assert len(combo) == len({p.category for p in combo})  # una prenda por hueco
     # Cazadora o sobrecamisa sobre sudadera con cremallera entera: nunca.

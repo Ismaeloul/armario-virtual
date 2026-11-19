@@ -152,7 +152,7 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
                   >
                     <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-card-2">
                       <FadeImg
-                        src={mediaUrl(g.photo_front.thumb_url)}
+                        src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
                         alt={g.name}
                         loading="lazy"
                         className="h-full w-full object-cover"

@@ -46,6 +46,12 @@ class Garment(Base):
     # Tercera vista opcional (en el calzado, el otro lateral).
     photo_extra: Mapped[str | None] = mapped_column(String(32), nullable=True)
     photo_extra_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Calzado: las dos zapatillas juntas. Si la hay, es la portada (lo que se ve en los listados).
+    photo_pair: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    photo_pair_original: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # La otra mitad de un conjunto (la sudadera y el pantalón de un chándal). El enlace va en los dos
+    # sentidos; Hoy puede separarlas, pero juntas compiten con ventaja.
+    pair_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Foto opcional de la etiqueta: de ahí salen la marca y la talla.
     photo_label: Mapped[str | None] = mapped_column(String(32), nullable=True)
     photo_label_original: Mapped[str | None] = mapped_column(String(64), nullable=True)

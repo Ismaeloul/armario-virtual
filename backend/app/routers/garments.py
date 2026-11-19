@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from .. import catalog
 from ..db import get_db
@@ -16,6 +16,7 @@ from ..schemas import (
     GarmentCreate,
     GarmentOut,
     GarmentUpdate,
+    PairOut,
     Photo,
     Summary,
     WearIn,
@@ -37,6 +38,16 @@ def _wear_stats(db: Session, ids: list[int]) -> dict[int, tuple[int, date | None
         .group_by(WearLog.garment_id)
     ).all()
     return {gid: (count, last) for gid, count, last in rows}
+
+
+def _pair_out(g: Garment) -> PairOut | None:
+    """La otra mitad del conjunto, si sigue existiendo."""
+    db = object_session(g)
+    other = db.get(Garment, g.pair_id) if g.pair_id and db is not None else None
+    if other is None:
+        return None
+    return PairOut(id=other.id, name=other.name, type=other.type,
+                   photo=storage.to_schema(other.photo_pair or other.photo_front))
 
 
 def _to_out(g: Garment, stats: dict[int, tuple[int, date | None]]) -> GarmentOut:
@@ -66,6 +77,10 @@ def _to_out(g: Garment, stats: dict[int, tuple[int, date | None]]) -> GarmentOut
         photo_back=storage.to_schema(g.photo_back) if g.photo_back else None,
         photo_extra=storage.to_schema(g.photo_extra) if g.photo_extra else None,
         photo_label=storage.to_schema(g.photo_label) if g.photo_label else None,
+        photo_pair=storage.to_schema(g.photo_pair) if g.photo_pair else None,
+        photo_cover=storage.to_schema(g.photo_pair or g.photo_front),
+        photos_edited_views=sorted(view for view, photo in (g.photos_camera or {}).items() if photo),
+        pair=_pair_out(g),
         photos_edited=bool(g.photos_camera),
         in_laundry=g.in_laundry,
         laundry_since=g.laundry_since,
@@ -119,6 +134,10 @@ def analyze_garment(
     back: UploadFile | None = File(None),
     extra: UploadFile | None = File(None),
     label: UploadFile | None = File(None),
+    pair: UploadFile | None = File(None),  # calzado: las dos juntas
+    texture: UploadFile | None = File(None),  # primer plano de la tela: solo apoyo para la IA
+    pair_id: str | None = Form(None),
+    texture_id: str | None = Form(None),
     front_id: str | None = Form(None),
     back_id: str | None = Form(None),
     extra_id: str | None = Form(None),
@@ -136,18 +155,24 @@ def analyze_garment(
     back_photo = _resolve_photo(back, back_id, required=False)
     extra_photo = _resolve_photo(extra, extra_id, required=False)
     label_photo = _resolve_photo(label, label_id, required=False)
+    pair_photo = _resolve_photo(pair, pair_id, required=False)
+    texture_photo = _resolve_photo(texture, texture_id, required=False)
 
     if skip_ai:
         result = ai.AnalysisResult(draft=None, provider=None, fallback_used=False, error=None)
     else:
         # La trasera también se manda: algunas prendas tienen el diseño detrás.
-        images = [storage.photo_path(front_photo)]
+        # El orden es el que cuenta build_prompt: juntas, principal, segunda, tercera, etiqueta y tela.
+        images = [storage.photo_path(pair_photo)] if pair_photo else []
+        images.append(storage.photo_path(front_photo))
         if back_photo:
             images.append(storage.photo_path(back_photo))
         if extra_photo:
             images.append(storage.photo_path(extra_photo))
         if label_photo:  # la etiqueta, para leer marca y talla
             images.append(storage.photo_path(label_photo))
+        if texture_photo:
+            images.append(storage.photo_path(texture_photo))
         result = ai.analyze(
             images,
             preferred=read_settings(db).ai_provider,
@@ -156,6 +181,8 @@ def analyze_garment(
                 has_label=bool(label_photo),
                 has_extra=bool(extra_photo),
                 kind="calzado" if kind == "calzado" else "ropa",
+                has_pair=bool(pair_photo),
+                has_texture=bool(texture_photo),
             ),
         )
 
@@ -164,6 +191,8 @@ def analyze_garment(
         photo_back=storage.to_schema(back_photo) if back_photo else None,
         photo_extra=storage.to_schema(extra_photo) if extra_photo else None,
         photo_label=storage.to_schema(label_photo) if label_photo else None,
+        photo_pair=storage.to_schema(pair_photo) if pair_photo else None,
+        photo_texture=storage.to_schema(texture_photo) if texture_photo else None,
         draft=result.draft,
         provider=result.provider,
         model=_model_used(result),
@@ -180,6 +209,7 @@ def _photo_in_use(db: Session, photo_id: str) -> bool:
                 Garment.photo_back == photo_id,
                 Garment.photo_extra == photo_id,
                 Garment.photo_label == photo_id,
+                Garment.photo_pair == photo_id,
             )
         )
     ) > 0
@@ -187,7 +217,7 @@ def _photo_in_use(db: Session, photo_id: str) -> bool:
 
 @router.post("/garments", response_model=GarmentOut, status_code=201)
 def create_garment(body: GarmentCreate, db: Session = Depends(get_db)):
-    for photo_id in (body.photo_front, body.photo_back, body.photo_extra, body.photo_label):
+    for photo_id in (body.photo_front, body.photo_back, body.photo_extra, body.photo_label, body.photo_pair):
         if photo_id and not storage.exists(photo_id):
             raise HTTPException(422, "La foto no existe; vuelve a subirla")
         if photo_id and _photo_in_use(db, photo_id):  # doble toque o reintento: no duplicar la prenda
@@ -220,6 +250,8 @@ def create_garment(body: GarmentCreate, db: Session = Depends(get_db)):
         photo_extra_original=storage.original_name(body.photo_extra) if body.photo_extra else None,
         photo_label=body.photo_label,
         photo_label_original=storage.original_name(body.photo_label) if body.photo_label else None,
+        photo_pair=body.photo_pair,
+        photo_pair_original=storage.original_name(body.photo_pair) if body.photo_pair else None,
         ai_provider=body.ai_provider,
         ai_model=body.ai_model,
         ai_confidence=body.ai_confidence,
@@ -343,7 +375,8 @@ def update_garment(garment_id: int, body: GarmentUpdate, db: Session = Depends(g
 def delete_garment(garment_id: int, db: Session = Depends(get_db)):
     garment = _get_or_404(db, garment_id)
     photos = (garment.photo_front, garment.photo_back, garment.photo_extra, garment.photo_label,
-              *(garment.photos_camera or {}).values())
+              garment.photo_pair, *(garment.photos_camera or {}).values())
+    _unpair(db, garment)
     db.delete(garment)
     db.commit()
     for photo_id in photos:
@@ -377,9 +410,13 @@ def rotate_photo(photo_id: str, db: Session = Depends(get_db)):
                 Garment.photo_back == photo_id,
                 Garment.photo_extra == photo_id,
                 Garment.photo_label == photo_id,
+                Garment.photo_pair == photo_id,
             )
         )
     ):
+        if garment.photo_pair == photo_id:
+            garment.photo_pair = new_id
+            garment.photo_pair_original = storage.original_name(new_id)
         if garment.photo_extra == photo_id:
             garment.photo_extra = new_id
             garment.photo_extra_original = storage.original_name(new_id)
@@ -396,9 +433,43 @@ def rotate_photo(photo_id: str, db: Session = Depends(get_db)):
     return storage.to_schema(new_id)
 
 
+# ---------- Pareja: la otra mitad de un conjunto (un chándal)
+
+
+class PairIn(BaseModel):
+    pair_id: int | None = None  # None = quitar la pareja
+
+
+def _unpair(db: Session, garment: Garment) -> None:
+    """Suelta el enlace en los dos sentidos."""
+    for other in db.scalars(select(Garment).where(Garment.pair_id == garment.id)):
+        other.pair_id = None
+    garment.pair_id = None
+
+
+@router.put("/garments/{garment_id}/pair", response_model=GarmentOut)
+def set_pair(garment_id: int, body: PairIn, db: Session = Depends(get_db)):
+    """Une dos prendas como conjunto (o las separa). Cada prenda tiene como mucho una pareja: la que
+    tuviera cualquiera de las dos se suelta."""
+    garment = _get_or_404(db, garment_id)
+    if body.pair_id is None:
+        _unpair(db, garment)
+    else:
+        other = _get_or_404(db, body.pair_id)
+        if other.id == garment.id:
+            raise HTTPException(422, "Una prenda no puede ser su propia pareja")
+        if other.category == garment.category:
+            raise HTTPException(422, "La pareja tiene que ser de otra parte del cuerpo")
+        _unpair(db, garment)
+        _unpair(db, other)
+        garment.pair_id, other.pair_id = other.id, garment.id
+    db.commit()
+    return _to_out(garment, _wear_stats(db, [garment.id]))
+
+
 # ---------- Fotos «de tienda» con Codex (al añadir una prenda)
 
-_VIEWS = ("front", "back", "extra")
+_VIEWS = ("front", "back", "extra", "pair")
 
 
 class StudioPhotos(BaseModel):
@@ -407,10 +478,11 @@ class StudioPhotos(BaseModel):
     front: str | None = Field(default=None, max_length=32)
     back: str | None = Field(default=None, max_length=32)
     extra: str | None = Field(default=None, max_length=32)
+    pair: str | None = Field(default=None, max_length=32)
 
 
 class DiscardIn(BaseModel):
-    ids: list[str] = Field(max_length=6)
+    ids: list[str] = Field(max_length=12)
 
 
 def _set_photo(garment: Garment, view: str, photo_id: str) -> None:
@@ -419,7 +491,7 @@ def _set_photo(garment: Garment, view: str, photo_id: str) -> None:
 
 
 class StudioOther(BaseModel):
-    view: str = Field(pattern="^(front|back|extra)$")
+    view: str = Field(pattern="^(front|back|extra|pair)$")
     photo: str = Field(max_length=32)
 
 
@@ -427,9 +499,11 @@ class StudioIn(BaseModel):
     """Qué foto se redibuja. Las fotos son ids ya subidos: vale antes de guardar la prenda."""
 
     photo: str = Field(max_length=32)
-    view: str = Field(pattern="^(front|back|extra)$")
+    view: str = Field(pattern="^(front|back|extra|pair)$")
     kind: str = Field(default="ropa", pattern="^(ropa|calzado)$")
-    others: list[StudioOther] = Field(default_factory=list, max_length=2)  # las otras vistas, de referencia
+    others: list[StudioOther] = Field(default_factory=list, max_length=3)  # las otras vistas, de referencia
+    # Primer plano de la tela (color y textura reales), si se hizo: solo referencia.
+    texture: str | None = Field(default=None, max_length=32)
     # Para rehacerla: qué salió mal, con palabras del usuario, y el intento anterior.
     feedback: str | None = Field(default=None, max_length=400)
     previous: str | None = Field(default=None, max_length=32)
@@ -441,7 +515,8 @@ def studio_photo(body: StudioIn):
     usa al añadir una prenda: se enseñan las dos y la nueva se pone con `/studio/apply` al guardar,
     o se tira con `/photos/discard`."""
     try:
-        ids = [body.photo, *(o.photo for o in body.others), *([body.previous] if body.previous else [])]
+        ids = [body.photo, *(o.photo for o in body.others), *([body.previous] if body.previous else []),
+               *([body.texture] if body.texture else [])]
         found = all(storage.exists(photo_id) for photo_id in ids)
     except storage.InvalidPhoto as exc:
         raise HTTPException(422, str(exc)) from exc
@@ -453,6 +528,7 @@ def studio_photo(body: StudioIn):
             [(o.view, storage.photo_path(o.photo)) for o in body.others if o.view != body.view],
             feedback=(body.feedback or "").strip() or None,
             previous=storage.photo_path(body.previous) if body.previous else None,
+            texture=storage.photo_path(body.texture) if body.texture else None,
         )
         return storage.to_schema(storage.save_upload(data, "codex.png"))
     except AnalysisError as exc:
@@ -509,9 +585,9 @@ def discard_photos(body: DiscardIn, db: Session = Depends(get_db)):
     """Tira fotos generadas que al final no se usan. Nunca borra una que tenga dueño."""
     owned = set()
     for row in db.execute(select(Garment.photo_front, Garment.photo_back, Garment.photo_extra,
-                                 Garment.photo_label, Garment.photos_camera)):
-        owned.update(p for p in row[:4] if p)
-        owned.update(p for p in (row[4] or {}).values() if p)
+                                 Garment.photo_label, Garment.photo_pair, Garment.photos_camera)):
+        owned.update(p for p in row[:5] if p)
+        owned.update(p for p in (row[5] or {}).values() if p)
     owned.update(p for photos in db.scalars(select(ShopItem.photos)) for p in photos or [])
     for photo_id in body.ids:
         try:

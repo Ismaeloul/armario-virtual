@@ -318,7 +318,7 @@ def _lookup_out(db: Session, item: ShopItem) -> ShopLookupOut:
     if saved == shopping.BOUGHT:
         # Sus fotos son ya las de la prenda del armario.
         garment = db.get(Garment, item.garment_id)
-        ids = [garment.photo_front, garment.photo_back, garment.photo_extra]
+        ids = [garment.photo_pair, garment.photo_front, garment.photo_back, garment.photo_extra]
         out["photos"] = [storage.to_schema(photo_id) for photo_id in ids if photo_id]
     return ShopLookupOut(**out, saved=saved, garment_id=item.garment_id if saved == shopping.BOUGHT else None)
 
