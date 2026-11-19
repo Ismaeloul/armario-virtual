@@ -452,3 +452,39 @@ def test_las_dos_zapatillas_juntas_son_la_portada_y_la_foto_de_la_tela_no_se_gua
     prenda = client.post("/api/garments", json=cuerpo).json()
     assert prenda["photo_cover"]["id"] == analisis["photo_pair"]["id"] and prenda["photos_edited_views"] == []
     assert analisis["photo_texture"]["id"] not in str(prenda)  # solo era apoyo para la IA
+
+
+def test_una_camiseta_de_verano_no_sale_en_invierno_ni_debajo_de_la_sudadera():
+    base = [
+        item(1, "parte_superior", type_="sudadera", season="invierno", closure="cremallera"),
+        item(2, "parte_superior", color="crudo", season="verano", pattern="rayas"),  # la de fútbol
+        item(3, "parte_inferior", color="gris", type_="chándal"),
+    ]
+    assert "sin_camiseta" in propose(base, 14, 0, date(2026, 11, 19)).notes
+    lisa = item(4, "parte_superior", color="blanco")
+    assert propose([*base, lisa], 14, 0, date(2026, 11, 19), rng=random.Random(1)).ids == [1, 4, 3]
+    # Ajustes manda sobre el mes: con «Verano» fijado, en noviembre la de verano vuelve a valer.
+    assert 2 in propose(base, 14, 0, date(2026, 11, 19), summer=True, rng=random.Random(1)).ids
+    # Y con «Invierno» fijado, en julio no se propone manga corta sola si hay otra cosa.
+    julio = [lisa, item(5, "parte_superior", type_="camisa", season="todo_el_ano", details="manga larga"), base[2]]
+    assert all(propose(julio, 18, 0, date(2026, 7, 1), summer=False, rng=random.Random(s)).ids[0] == 5 for s in range(6))
+
+
+def test_un_outfit_tuyo_cuenta_como_me_gusta_doble_y_se_puede_quitar(client, photo_bytes):
+    pantalon = _prenda(client, photo_bytes, name="Pantalón negro de pinzas", type="pantalón")
+    blanca = _prenda(client, photo_bytes, name="Camisa blanca", type="camisa",
+                     color_primary={"name": "blanco", "hex": "#ffffff"})
+    marron = _prenda(client, photo_bytes, name="Camisa marrón oscura", type="camisa",
+                     color_primary={"name": "marrón", "hex": "#3b2a20"})
+    ids = [blanca["id"], marron["id"], pantalon["id"]]
+    antes = client.get("/api/taste/next").json()
+    # Hace falta arriba y abajo, y una sola parte de abajo.
+    assert client.post("/api/taste/own", json={"garment_ids": [blanca["id"], marron["id"]]}).status_code == 422
+    estado = client.post("/api/taste/own", json={"garment_ids": ids}).json()
+    assert estado["own"] == 1 and estado["rated"] == antes["rated"]  # no cuenta como combinación de Gustos
+    propios = client.get("/api/taste/own").json()
+    assert [g["id"] for g in propios[0]["garments"]] == ids
+    # Lo aprendido sube: la camisa blanca con el pantalón negro pega más que antes.
+    assert estado["learned"] != antes["learned"] or propios[0]["affinity"] > 50
+    assert client.delete(f"/api/taste/own/{propios[0]['id']}").status_code == 204
+    assert client.get("/api/taste/own").json() == []

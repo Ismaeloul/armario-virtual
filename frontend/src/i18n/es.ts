@@ -32,6 +32,22 @@ export const t = {
     finTexto: "Añade más prendas al armario para que haya combinaciones nuevas.",
     vacioTitulo: "Todavía no hay combinaciones",
     vacioTexto: "Hace falta al menos una parte superior y una inferior en el armario.",
+    propios: {
+      titulo: "Tus outfits",
+      texto: "¿Te has montado algo que queda bien? Enséñaselo: cuenta el doble que un «me gusta».",
+      anadir: "Añadir un outfit tuyo",
+      n: (n: number) => (n === 1 ? "1 outfit tuyo" : `${n} outfits tuyos`),
+      ver: "Ver",
+      ocultar: "Ocultar",
+      elegir: "Monta tu outfit",
+      elegirTexto: "Toca las prendas que llevabas. Arriba puedes poner varias (una camisa debajo de otra).",
+      guardar: (n: number) => (n < 2 ? "Elige al menos dos prendas" : `Guardar outfit (${n} prendas)`),
+      guardando: "Guardando…",
+      falta: "Falta una parte de arriba y una de abajo.",
+      quitar: "Quitar",
+      quitarAria: (n: number) => `Quitar el outfit ${n}`,
+      guardado: "Guardado. El algoritmo ya lo tiene en cuenta.",
+    },
   },
   compras: {
     titulo: "Compras",
@@ -510,6 +526,11 @@ export const t = {
   },
   ajustes: {
     titulo: "Ajustes",
+    temporada: "Ropa de temporada",
+    temporadaTitulo: "Qué ropa toca ahora",
+    temporadas: { auto: "Automático", verano: "Verano", invierno: "Invierno" } as Record<string, string>,
+    temporadaTexto:
+      "En invierno no se te propone manga corta, pantalón corto ni nada marcado como de verano. Automático: verano del 1 de mayo al 30 de septiembre.",
     codexModelo: "Modelo de Codex",
     codexEsfuerzo: "Esfuerzo",
     codexAuto: "Automático (el de Codex)",
@@ -562,7 +583,7 @@ export const t = {
     olvidar: "Borrar lo aprendido",
     olvidarConfirmar: "Toca otra vez para confirmar",
     olvidado: "Hecho. El algoritmo empieza de cero.",
-    version: "Armario · v0.4.12",
+    version: "Armario · v0.4.13",
   },
   codex: {
     iniciar: "Iniciar sesión en Codex",

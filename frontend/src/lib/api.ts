@@ -105,6 +105,8 @@ export type Settings = {
   codex_translate_effort: string;
   city: string;
   notify_enabled: boolean;
+  /** Qué ropa toca: "auto" (por el mes), "verano" o "invierno". */
+  season_mode: string;
   notify_time: string;
 };
 
@@ -146,12 +148,16 @@ export type Today = {
   total: number;
 };
 
+export type OwnOutfit = { id: number; garments: Garment[]; affinity: number };
+
 export type Taste = {
   combo: { garments: Garment[]; affinity: number } | null;
   rated: number;
   liked: number;
   remaining: number;
   learned: { likes: string[][]; dislikes: string[][] };
+  /** Outfits montados por el usuario («Tus outfits»). */
+  own: number;
 };
 
 export type ShopReason = { text: string; kind: "pro" | "contra" };
@@ -408,6 +414,10 @@ export const api = {
   tasteForget: () => request<void>("/api/taste", { method: "DELETE" }),
   tasteRate: (body: { garment_ids: number[]; liked: boolean; reasons: string[]; culprit_ids: number[] }) =>
     request<Taste>("/api/taste/rate", json("POST", body)),
+  /** «Tus outfits»: combinaciones que monta el usuario. Cuentan como un «me gusta» con más peso. */
+  tasteOwn: () => request<OwnOutfit[]>("/api/taste/own"),
+  tasteOwnAdd: (garmentIds: number[]) => request<Taste>("/api/taste/own", json("POST", { garment_ids: garmentIds })),
+  tasteOwnDelete: (id: number) => request<void>(`/api/taste/own/${id}`, { method: "DELETE" }),
   shopState: () => request<ShopState>("/api/shop/state"),
   shopSettings: (body: { store: string; enabled?: boolean; categories?: string[] }) =>
     request<ShopState>("/api/shop/settings", json("PATCH", body)),

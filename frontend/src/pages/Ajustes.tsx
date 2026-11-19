@@ -149,6 +149,17 @@ export default function Ajustes() {
             {changeFailed("theme")}
           </Section>
 
+          <Section label={t.ajustes.temporada}>
+            <Title icon="calendar" title={t.ajustes.temporadaTitulo} />
+            <Segmented
+              value={settings?.season_mode ?? "auto"}
+              onChange={(v) => change({ season_mode: v })}
+              options={["auto", "verano", "invierno"].map((value) => ({ value, label: t.ajustes.temporadas[value] }))}
+            />
+            <p className="px-0.5 text-[11px] text-text-3">{t.ajustes.temporadaTexto}</p>
+            {changeFailed("season_mode")}
+          </Section>
+
           <Section label={t.ajustes.ia}>
             <Title icon="auto_awesome" title={t.ajustes.iaTitulo} />
             <Segmented

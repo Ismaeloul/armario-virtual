@@ -117,6 +117,7 @@ def test_ajustes_por_defecto_y_cambio(client):
         "codex_translate_model": "",
         "codex_translate_effort": "low",
         "city": "Argenteuil",
+        "season_mode": "auto",
         "notify_enabled": True,
         "notify_time": "07:30",
     }

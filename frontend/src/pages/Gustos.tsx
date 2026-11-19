@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { FadeImg, OutfitSkeleton, Skeleton, stagger } from "../components/Skeleton";
+import { OwnOutfits } from "../components/OwnOutfits";
 import { ZoomViewer } from "../components/ZoomViewer";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Catalog, type Garment, type Taste } from "../lib/api";
@@ -75,6 +76,8 @@ export default function Gustos() {
                 tarjeta no baja al llegar. */}
             {!state && !failed && <Skeleton className="h-4 w-56 rounded-md" />}
           </header>
+
+          {state && <OwnOutfits count={state.own} catalog={catalog} onState={setState} />}
 
           {failed && (
             <div className="card flex flex-col items-center gap-3 p-6 text-center">

@@ -19,6 +19,7 @@ DEFAULTS = {
     "codex_translate_model": "",
     "codex_translate_effort": "low",
     "city": "Argenteuil",
+    "season_mode": "auto",
     "notify_enabled": "true",
     "notify_time": "07:30",
 }
@@ -35,6 +36,7 @@ def read_settings(db: Session) -> SettingsOut:
         codex_translate_model=values["codex_translate_model"],
         codex_translate_effort=values["codex_translate_effort"],
         city=values["city"],
+        season_mode=values["season_mode"] if values["season_mode"] in ("auto", "verano", "invierno") else "auto",
         notify_enabled=values["notify_enabled"] == "true",
         notify_time=values["notify_time"],
     )

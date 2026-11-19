@@ -84,6 +84,8 @@ MIN_AFFINITY = 60
 # Las dos mitades de un conjunto (un chándal) juntas: ventaja al competir por ser el outfit de hoy.
 # No cambia la afinidad que se enseña; separadas se siguen pudiendo proponer.
 PAIR_TOGETHER = 3.0
+PLAIN_UNDERSHIRT = 1.5  # la camiseta de debajo de la sudadera, mejor lisa
+REPEATED_UNDERSHIRT = 1.0  # por cada propuesta reciente en la que ya salió esa camiseta debajo
 
 
 @dataclass
@@ -179,8 +181,10 @@ def summer_only(item) -> bool:
 # ---------- El día
 
 
-def _season_fit(item: Item, kind: str, today: date | None = None) -> float:
-    if today is not None and not warm_months(today) and summer_only(item):
+def _season_fit(item: Item, kind: str, today: date | None = None, summer: bool | None = None) -> float:
+    # `summer`: lo que el usuario fijó en Ajustes (época de ropa de verano o de invierno); sin fijar, el mes.
+    warm = summer if summer is not None else (today is None or warm_months(today))
+    if not warm and summer_only(item):
         return OUT_OF_SEASON
     return SEASON_FIT[kind][item.season]
 
@@ -219,10 +223,11 @@ def _warmth(item: Item, kind: str, temp_max: float | None) -> float:
     return value
 
 
-def _day_fit(item: Item, kind: str, today: date | None = None, temp_max: float | None = None) -> float:
+def _day_fit(item: Item, kind: str, today: date | None = None, temp_max: float | None = None,
+             summer: bool | None = None) -> float:
     """Lo que suma o resta una prenda por el día que hace, lo reciente que se usó y si es favorita."""
     return (
-        _season_fit(item, kind, today)
+        _season_fit(item, kind, today, summer)
         + _warmth(item, kind, temp_max)
         + _recency(item)
         + (FAVORITE if item.favorite else 0.0)
@@ -262,13 +267,18 @@ def without_undershirt(pieces: list) -> list:
     return [p for p in pieces if p.type != "camiseta"]
 
 
-def _undershirt(top: Item, combo: list[Item], tees: list[Item], taste, memo: dict) -> Item | None:
+def _undershirt(top: Item, combo: list[Item], tees: list[Item], taste, memo: dict,
+                seen: dict[int, int] | None = None, rng: random.Random | None = None) -> Item | None:
     """La camiseta que mejor va debajo: la que más pega con lo de abajo y el calzado, y que no se usó ayer.
     La temporada no cuenta: debajo de una sudadera una camiseta de manga corta vale todo el año."""
     rest = [p for p in combo if p.category in ("parte_inferior", "calzado")]
     return max(
         tees,
-        key=lambda tee: harmony([tee, *rest], taste, memo) + _recency(tee) + (FAVORITE if tee.favorite else 0.0),
+        # Debajo va mejor una camiseta lisa que una con dibujo o una de fútbol.
+        key=lambda tee: harmony([tee, *rest], taste, memo) + _recency(tee) + (FAVORITE if tee.favorite else 0.0)
+        + (PLAIN_UNDERSHIRT if tee.pattern == "liso" else 0.0)
+        # Que no sea siempre la misma: resta lo que ya ha salido estos días y un poco de azar.
+        - REPEATED_UNDERSHIRT * (seen or {}).get(tee.id, 0) + (rng.uniform(0, ITEM_NOISE) if rng else 0.0),
         default=None,
     )
 
@@ -289,6 +299,7 @@ def propose(
     avoid: list[set[int]] | None = None,
     rng: random.Random | None = None,
     taste=None,  # services.taste.Taste: lo aprendido en la pestaña Gustos
+    summer: bool | None = None,  # Ajustes: True = época de ropa de verano, False = de invierno, None = por el mes
 ) -> Proposal | None:
     """Elige un outfit entre las prendas disponibles (las de la lavadora ya vienen quitadas).
 
@@ -316,7 +327,8 @@ def propose(
     no_layer = NO_LAYER[kind] if layer_wanted and layers_available else 0.0
 
     memo: dict = {}  # cada pareja de prendas se puntúa una sola vez, aunque salga en miles de combinaciones
-    day = {item.id: _day_fit(item, kind, today, temp_max) for item in items}
+    day = {item.id: _day_fit(item, kind, today, temp_max, summer) for item in items}
+    warm = summer if summer is not None else warm_months(today)
     luck = {item.id: rng.uniform(0, ITEM_NOISE) for item in items}
 
     pairs = list(itertools.product(tops, bottoms))
@@ -366,10 +378,13 @@ def propose(
     if fresh:
         # Nada por debajo de la afinidad mínima mientras quede algo que llegue.
         floor = AFFINITY_MID + AFFINITY_SCALE * math.log(MIN_AFFINITY / (100 - MIN_AFFINITY))
-        good = [c for c in fresh if c[2] >= floor]
+        # Las reglas que no se negocian van antes: una combinación con ropa fuera de época no gana por
+        # tener buena afinidad (su nota del día la delata: resta más que cualquier matiz).
+        legal = [c for c in fresh if c[1] - c[2] > WRONG_SEASON] or fresh
+        good = [c for c in legal if c[2] >= floor]
         if not good:
             notes.append("afinidad_baja")
-        _, value, _, combo = max(good or fresh, key=lambda c: c[0])
+        _, value, _, combo = max(good or legal, key=lambda c: c[0])
     else:
         # Todo lo posible ya ha salido: toca la que hace más que se propuso (nunca la que se acaba de ver,
         # salvo que sea la única que hay).
@@ -382,7 +397,14 @@ def propose(
     # se elige al final, para la combinación que ya ha ganado.
     top = next(piece for piece in combo if piece.category == "parte_superior")
     if needs_undershirt(top):
-        tee = _undershirt(top, combo, [item for item in tops if item.type == "camiseta"], taste, memo)
+        # Una camiseta marcada como de verano no sale en invierno ni debajo de la sudadera
+        # (pasó con una de fútbol); las de todo el año, sí.
+        tees = [item for item in tops if item.type == "camiseta" and (warm or item.season != "verano")]
+        seen: dict[int, int] = {}
+        for ids in avoid or []:
+            for tee_id in ids:
+                seen[tee_id] = seen.get(tee_id, 0) + 1
+        tee = _undershirt(top, combo, tees, taste, memo, seen, rng)
         if tee is None:
             notes.append("sin_camiseta")
         else:

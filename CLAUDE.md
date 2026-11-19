@@ -94,7 +94,14 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.12** (19-11-2026): en Gustos, tocar la foto de una prenda la abre en
+- **Publicada en el Umbrel: 0.4.13** (19-11-2026). «Tus outfits» en Gustos (`components/OwnOutfits.tsx`,
+  `GET|POST /api/taste/own`, `DELETE /api/taste/own/{id}`): el usuario monta un outfit que sabe que le
+  queda bien y cuenta como un «me gusta» con peso 2 (`Rating.source = "propio"`); arriba puede llevar
+  varias prendas, abajo y calzado una. Ajuste «Qué ropa toca ahora» (`settings.season_mode`: auto,
+  verano o invierno; manda sobre el mes). Arreglo: la camiseta de debajo de la sudadera con cremallera
+  salía siempre la misma (la de España, marcada de verano): ahora respeta la temporada, prefiere una
+  lisa y rota (`REPEATED_UNDERSHIRT` y azar); y la afinidad mínima ya no cuela ropa fuera de temporada.
+- **Antes: 0.4.12** (19-11-2026): en Gustos, tocar la foto de una prenda la abre en
   grande con `ZoomViewer` (todas sus fotos), sin salir de la pantalla: ir a la Ficha cambiaba la
   combinación al volver. El resto de la fila sigue marcando la prenda que no pega.
 - **Antes: 0.4.11** (19-11-2026). El usuario está metiendo su armario real y el

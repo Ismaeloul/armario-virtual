@@ -136,6 +136,7 @@ def _generate(
         today=today,
         avoid=avoid,
         taste=load_taste(db),
+        summer={"verano": True, "invierno": False}.get(read_settings(db).season_mode),
     )
     if proposal is None:
         return None, [], []

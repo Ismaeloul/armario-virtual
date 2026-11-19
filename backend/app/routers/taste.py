@@ -22,6 +22,10 @@ Reason = Literal[*taste.REASONS]
 SAMPLE = 12
 # Intentos de dar al azar con una pendiente antes de recorrerlas todas (solo pasa cuando quedan pocas).
 TRIES = 300
+# Un outfit que el usuario monta él mismo («Tus outfits») enseña el doble que un «me gusta» a una
+# combinación propuesta: no es que le parezca bien, es que lo ha elegido y se lo ha puesto.
+OWN_WEIGHT = 2.0
+OWN = "propio"
 
 
 class Combo(BaseModel):
@@ -35,6 +39,17 @@ class TasteOut(BaseModel):
     liked: int
     remaining: int
     learned: dict  # parejas de colores que más y menos le gustan
+    own: int = 0  # outfits montados por el usuario
+
+
+class OwnIn(BaseModel):
+    garment_ids: list[int] = Field(min_length=2, max_length=6)
+
+
+class OwnOut(BaseModel):
+    id: int
+    garments: list[GarmentOut]
+    affinity: int
 
 
 class RateIn(BaseModel):
@@ -177,6 +192,7 @@ def _state(db: Session) -> TasteOut:
         liked=sum(1 for r in ratings if r.liked),
         remaining=remaining,
         learned=learned.summary(),
+        own=sum(1 for r in db.scalars(select(Rating).where(Rating.source == OWN))),
     )
 
 
@@ -206,6 +222,52 @@ def rate(body: RateIn, db: Session = Depends(get_db)):
     )
     db.commit()
     return _state(db)
+
+
+@router.get("/taste/own", response_model=list[OwnOut])
+def own_outfits(db: Session = Depends(get_db)):
+    """Los outfits que el usuario ha montado él mismo, del último al primero."""
+    learned = load_taste(db)
+    garments = {g.id: g for g in db.scalars(select(Garment))}
+    out = []
+    for rating in db.scalars(select(Rating).where(Rating.source == OWN).order_by(Rating.id.desc())):
+        pieces = [garments[i] for i in rating.garment_ids if i in garments]
+        if len(pieces) < 2:
+            continue  # se borraron prendas: ya no enseña nada
+        stats = _wear_stats(db, [g.id for g in pieces])
+        out.append(OwnOut(
+            id=rating.id,
+            garments=[_to_out(g, stats) for g in pieces],
+            affinity=outfits.combo_affinity([piece(g) for g in pieces], learned),
+        ))
+    return out
+
+
+@router.post("/taste/own", response_model=TasteOut)
+def add_own(body: OwnIn, db: Session = Depends(get_db)):
+    """«Añadir un outfit tuyo»: una combinación que el usuario ha montado y le queda bien. Cuenta como
+    un «me gusta» con más peso."""
+    ids = list(dict.fromkeys(body.garment_ids))
+    found = list(db.scalars(select(Garment).where(Garment.id.in_(ids))))
+    if len(found) != len(ids):
+        raise HTTPException(404, "Alguna prenda del outfit ya no existe")
+    categories = {g.category for g in found}
+    if not {"parte_superior", "parte_inferior"} <= categories:
+        raise HTTPException(422, "Un outfit lleva al menos una parte de arriba y una de abajo")
+    if sum(g.category == "parte_inferior" for g in found) > 1 or sum(g.category == "calzado" for g in found) > 1:
+        raise HTTPException(422, "Un outfit lleva una sola parte de abajo y un solo calzado")
+    db.add(Rating(garment_ids=ids, liked=True, weight=OWN_WEIGHT, reasons=[], culprit_ids=[], source=OWN))
+    db.commit()
+    return _state(db)
+
+
+@router.delete("/taste/own/{rating_id}", status_code=204)
+def delete_own(rating_id: int, db: Session = Depends(get_db)):
+    rating = db.get(Rating, rating_id)
+    if rating is None or rating.source != OWN:
+        raise HTTPException(404, "Ese outfit no existe")
+    db.delete(rating)
+    db.commit()
 
 
 @router.delete("/taste", status_code=204)

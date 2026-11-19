@@ -194,6 +194,8 @@ class SettingsOut(BaseModel):
     codex_translate_model: str
     codex_translate_effort: str
     city: str
+    # Qué ropa toca: "auto" (verano del 1 de mayo al 30 de septiembre), "verano" o "invierno".
+    season_mode: str = "auto"
     notify_enabled: bool
     notify_time: str
 
@@ -206,6 +208,7 @@ class SettingsUpdate(BaseModel):
     codex_translate_model: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._-]{0,40}$")
     codex_translate_effort: Literal["", "low", "medium", "high"] | None = None
     city: str | None = Field(default=None, min_length=1, max_length=80)
+    season_mode: Literal["auto", "verano", "invierno"] | None = None
     notify_enabled: bool | None = None
     notify_time: str | None = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
     # Solo escritura: nunca se devuelve. Cadena vacía = borrar la clave guardada.
