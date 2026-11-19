@@ -94,7 +94,19 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.14** (19-11-2026). «Tus outfits» pasa de Gustos al Armario: botón con el
+- **Publicada en el Umbrel: 0.4.15** (20-11-2026). Uniqlo por API.SH (servicio de scraping de pago,
+  decisión expresa del usuario como excepción SOLO para Uniqlo, que bloquea nuestro Chromium con Akamai;
+  las demás tiendas no cambian). `services/apish.py` (cliente común, `raw=0`, contador de créditos
+  mensual y GLOBAL en `settings.apish_credits`, tope 300 con `ARMARIO_APISH_MONTHLY_CREDITS`),
+  `services/vault.py` (clave cifrada con Fernet en `settings.secret_apish`; la llave maestra en
+  `CODEX_HOME/armario-vault.key`, fuera de `data/`), `shops/uniqlo.py` reescrito (`uses_apish = True`,
+  sin navegador). La clave se pega en Ajustes → «API.SH» (solo escritura, nunca se devuelve; en
+  desarrollo manda `ARMARIO_APISH_KEY`). La API no filtra por clase: cada sección es hombre (37609) + una
+  palabra (13 secciones); se ordena por novedad y se para al llegar a lo ya visto; recorrido completo
+  una vez al mes. Solo se proponen colores con foto de producto sin modelo (`goods_`). Prueba real en
+  local el 20-11-2026: 18 créditos, 323 productos, 2 min; 10 propuestas sin gastar más. Sin probar en
+  el Umbrel. El usuario renovará la clave de prueba (la pegó en el chat) y pegará la nueva en Ajustes.
+- **Antes: 0.4.14** (19-11-2026). «Tus outfits» pasa de Gustos al Armario: botón con el
   icono del armario encima del selector de temporada, pantalla `/armario/outfits` (`pages/TusOutfits.tsx`)
   con «Montar un outfit» (`OutfitPicker` en `components/OwnOutfits.tsx`), lista horizontal y tarjeta del
   outfit al tocarlo (prendas enlazadas a su ficha, zoom en la foto, quitar). En Gustos, «Me gusta y

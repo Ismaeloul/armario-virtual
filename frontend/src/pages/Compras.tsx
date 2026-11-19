@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { inputClass, PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
 import { externalHref, photoAfterTap } from "../lib/links";
@@ -2973,6 +2973,16 @@ function StoresPanel({
                         </>
                       )}
                       {store.unavailable && <p className="font-semibold text-danger">{store.unavailable}</p>}
+                      {store.apish && store.unavailable && (
+                        <Link
+                          to="/ajustes"
+                          onClick={onClose}
+                          className="-ml-1 inline-flex min-h-11 items-center gap-1 self-start px-1 font-semibold text-primary"
+                        >
+                          {t.compras.panel.irAjustes}
+                          <Icon name="chevron_right" size={16} />
+                        </Link>
+                      )}
                       {status.error && (
                         <p className="rounded-lg bg-card-2 px-3 py-2 font-mono text-[11px] break-words text-text">
                           <span className="font-sans font-semibold">{t.compras.panel.error}: </span>
@@ -2985,6 +2995,7 @@ function StoresPanel({
                           : t.compras.panel.diaSinDato(t.compras.dias[store.weekday] ?? "")}
                       </p>
                       {store.browser && <p className="text-text-3">{t.compras.panel.conNavegador}</p>}
+                      {store.apish && <p className="text-text-3">{t.compras.panel.conApish}</p>}
                       <p>
                         {store.enabled && store.next_check
                           ? t.compras.panel.proxima(

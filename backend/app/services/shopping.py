@@ -1846,7 +1846,11 @@ def refresh_store(db: Session, store: str, today: date | None = None, limit: int
                 fresh.add(ref)
                 old[ref] = _store_candidate(db, old.get(ref), product, today)
         if partial is None:
-            drop_section(slug)
+            # Una tienda que a propósito no lee la sección entera (Uniqlo por API.SH: para de pasar páginas en
+            # cuanto todo está ya visto, para no gastar créditos) la da por leída, pero sin retirar nada.
+            listed_all = getattr(connector, "listed_all", None)
+            if listed_all is None or listed_all(slug):
+                drop_section(slug)
             cycle["done"].append(slug)
             section_pages[slug] = int(progress.get("section_pages") or 0)
             run.section_end()

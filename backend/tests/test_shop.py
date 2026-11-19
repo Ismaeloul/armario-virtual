@@ -711,10 +711,10 @@ def test_la_tienda_arranca_desactivada_y_se_configura_en_la_pestana(client, monk
     assert [s["weekday_after_release"] for s in state["stores"]] == [False] * 20  # el falso no lo dice
     # Nike (la octava) va con navegador desde que su paginación sin él empezó a dar 400.
     assert [s["browser"] for s in state["stores"]] == [False, False, True, True, True, True, True, True, False, False,
-                                                       True, True, False, True, True] + [True] * 5
+                                                       True, True, False, True, True, False] + [True] * 4
+    # Uniqlo (por API.SH desde el 19-11-2026) ni va con navegador ni es pesada.
     assert [s["key"] for s in state["stores"] if s["heavy"]] == [
-        "pullandbear", "bershka", "massimodutti", "lefties", "jules", "bonobo", "uniqlo", "mango", "hm", "cos",
-        "weekday"]
+        "pullandbear", "bershka", "massimodutti", "lefties", "jules", "bonobo", "mango", "hm", "cos", "weekday"]
     # El reparto de la semana, de lunes a domingo, y su tope por noche.
     assert state["week"] == [
         ["pullandbear", "jackjones", "uniqlo"], ["courir", "massimodutti", "mango"], ["jdsports", "carhartt", "jules"],

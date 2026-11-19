@@ -17,10 +17,12 @@ from app.db import SessionLocal
 from app.models import ShopItem
 from app.services import shopping, shops
 from app.services.shops import NeedsBrowser, NotThisStore, SearchError, browser, cos, crawl, hm, listing, mango
-from app.services.shops import uniqlo, weekday
+from app.services.shops import weekday
 from app.services.shops.browser import Response
 
 ULTIMAS = ("uniqlo", "mango", "hm", "cos", "weekday")
+# Uniqlo pasó el 19-11-2026 a leerse por API.SH (ver test_shop_uniqlo_apish.py): las otras cuatro siguen igual.
+NAVEGADOR = ("mango", "hm", "cos", "weekday")
 
 
 def _json(name: str):
@@ -245,43 +247,6 @@ def test_cos_escucha_lo_que_pide_la_pagina_y_pulsa_su_boton_de_la_pagina_siguien
     assert session.clicks == [cos.NEXT_BUTTON, cos.NEXT_BUTTON]  # el botón de la web, una vez por página
 
 
-# ---------- Uniqlo
-
-
-def test_uniqlo_solo_propone_los_colores_con_foto_sin_modelo(monkeypatch):
-    data = _json("uniqlo_listado.json")
-    products, raw, total = uniqlo.parse_listing(data, "t-shirts")
-    assert raw == 3 and total == 23
-    # Del primero, solo el rosa (12) y el gris (06) tienen foto de producto; los otros dos, ninguno.
-    assert [(p.product_ref, p.name, p.store_color, p.color, p.price_cents) for p in products] == [
-        ("uniqlo:E465193-000-00-06", "T-shirt AIRism en coton (Manches longues)", "Gris", "gris", 2490),
-        ("uniqlo:E465193-000-00-12", "T-shirt AIRism en coton (Manches longues)", "Rose", "rosa", 2490),
-    ]
-    first = products[1]
-    assert first.url == "https://www.uniqlo.com/fr/fr/products/E465193-000/00?colorDisplayCode=12"
-    assert uniqlo.UniqloConnector().reference(first.store_data) == "465193"
-    detail = shops.cached_detail("uniqlo", first.store_data)
-    assert all("/WesternCommon/" in url and "goods_12_" in url for url in detail.photo_urls)
-    assert detail.sizes == [] and not detail.stock_known
-    assert [s["product_ref"] for s in detail.siblings] == ["uniqlo:E465193-000-00-06", "uniqlo:E465193-000-00-12"]
-
-    # La página y lo que pide al abrirla; después, bajando, la siguiente tanda.
-    api = "https://www.uniqlo.com/fr/api/commerce/v5/fr/products?path=37609%2C84995%2C85071&offset={}&limit=3"
-    second = copy.deepcopy(data)
-    second["result"]["items"] = second["result"]["items"][:1]
-    second["result"]["items"][0]["productId"] = "E999999-000"
-    other = "https://www.uniqlo.com/fr/api/commerce/v5/fr/products?path=37609%2C84995%2C85072&offset=0"
-    session = _session(monkeypatch, FakeSession(
-        opened={"/men/tops/t-shirts": [Response(api.format(0), 200, data), Response(other, 200, second)]},
-        more=[[Response(api.format(3), 200, second)], []],
-    ))
-    found = uniqlo.UniqloConnector().list_category("t-shirts")
-    assert [p.product_ref for p in found] == [
-        "uniqlo:E465193-000-00-06", "uniqlo:E465193-000-00-12", "uniqlo:E999999-000-00-06",
-        "uniqlo:E999999-000-00-12"]
-    assert session.asked == ["https://www.uniqlo.com/fr/fr/men/tops/t-shirts"] and session.clicks == [None, None]
-
-
 # ---------- Mango
 
 
@@ -340,7 +305,7 @@ def test_mango_sin_tarjetas_dentro_sigue_bajando_y_sin_nada_lo_dice(monkeypatch)
 def test_ninguna_abre_la_ficha_ni_busca(monkeypatch):
     monkeypatch.setattr(browser, "active", lambda: True)
     product = hm.parse_listing(_hm_next(_json("hm_baskets.json")), "baskets")[0][0]
-    for key in ULTIMAS:
+    for key in NAVEGADOR:
         connector = shops.CONNECTORS[key]
         assert connector.needs_browser and connector.heavy and connector.prepared_colors and connector.language == "fr"
         with pytest.raises(NeedsBrowser):
@@ -351,7 +316,6 @@ def test_ninguna_abre_la_ficha_ni_busca(monkeypatch):
     for key, link in (("hm", "https://www2.hm.com/fr_fr/productpage.1338515005.html"),
                       ("cos", "https://www.cos.com/fr-fr/men/x/product/y-1343689003"),
                       ("weekday", "https://www.weekday.com/fr-fr/p/men/x-1330797003"),
-                      ("uniqlo", "https://www.uniqlo.com/fr/fr/products/E465193-000/00"),
                       ("mango", "https://shop.mango.com/fr/fr/p/homme/x/47041489")):
         with pytest.raises(SearchError) as error:
             shops.CONNECTORS[key].search(link)
@@ -362,7 +326,7 @@ def test_las_cinco_nacen_desactivadas_con_su_dia_y_su_clase_de_ropa(client):
     stores = {s["key"]: s for s in client.get("/api/shop/state").json()["stores"]}
     for key in ULTIMAS:
         assert stores[key]["enabled"] is False and stores[key]["next_check"] is None
-        assert stores[key]["browser"] is True and stores[key]["heavy"] is True
+        assert stores[key]["browser"] is (key != "uniqlo") and stores[key]["heavy"] is (key != "uniqlo")
     assert [stores[k]["weekday"] for k in ULTIMAS] == [0, 1, 3, 5, 6]
     assert "calzado" in stores["hm"]["kinds"] and "calzado" not in stores["weekday"]["kinds"]
     assert "capa_exterior" in stores["uniqlo"]["kinds"]

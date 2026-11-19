@@ -4,12 +4,12 @@ Reparto de noches (18-11-2026). Cada tienda se consulta un día fijo a la semana
 hora de la noche, y las de una misma noche van una detrás de otra, de madrugada (nadie usa el Umbrel a esa
 hora: que tarde una o dos horas no importa). Con veinte tiendas, cada noche lleva como mucho TRES tiendas y
 como mucho DOS «pesadas» (las de navegador con muchas secciones o muchas páginas: las de Inditex, Jules,
-Bonobo, Uniqlo, Mango, H&M, COS y Weekday). Las de zapatillas con navegador (JD Sports, Snipes, size? y
+Bonobo, Mango, H&M, COS y Weekday). Las de zapatillas con navegador (JD Sports, Snipes, size? y
 Nike) son ligeras: una o dos secciones. Además, el bucle de la noche lo hace cumplir aunque coincidan más (recién
 activadas a la vez, una que falló y se repite): las que no caben pasan a la noche siguiente (ver
 `shopping.tonight`; los topes, `ARMARIO_SHOP_STORES_PER_NIGHT` y `ARMARIO_SHOP_HEAVY_PER_NIGHT`).
 
-    Lun  Pull&Bear (pesada)       + Jack & Jones                  + Uniqlo (pesada)
+    Lun  Pull&Bear (pesada)       + Jack & Jones                  + Uniqlo (API.SH)
     Mar  Massimo Dutti (pesada)   + Courir                        + Mango (pesada)
     Mié  Jules (pesada)           + JD Sports + Carhartt WIP
     Jue  Bershka (pesada)         + Nike                          + H&M (pesada)
@@ -17,8 +17,10 @@ activadas a la vez, una que falló y se repite): las que no caben pasan a la noc
     Sáb  Lefties (pesada)         + Snipes                        + COS (pesada)
     Dom  size?                    + Weekday (pesada)              (y un sitio libre)
 
-Veinte tiendas en 21 sitios y once pesadas en 14, sin pasar de los topes ninguna noche. Uniqlo, Mango, H&M,
-COS y Weekday se leen solo por su listado, con navegador y sin abrir nunca una ficha (ver listing.py).
+Veinte tiendas en 21 sitios y diez pesadas en 14, sin pasar de los topes ninguna noche. Mango, H&M, COS y
+Weekday se leen solo por su listado, con navegador y sin abrir nunca una ficha (ver listing.py). Uniqlo, desde
+el 19-11-2026, por API.SH (un servicio de pago que el usuario ha contratado; ver uniqlo.py y services/apish.py): sin
+navegador y ya no es pesada, aunque sigue el lunes.
 """
 from . import browser, crawl
 from .base import BlockedError, BrowserUnavailable, NeedsBrowser, NotThisStore, SearchError, ShopConnector, ShopDetail
@@ -69,7 +71,7 @@ CONNECTORS: dict[str, ShopConnector] = {
     "bonobo": BonoboConnector(),  # navegador (también para las fotos)
     # Solo por su listado, con navegador y sin abrir nunca una ficha (listing.py). H&M, COS, Uniqlo y Mango,
     # sin tallas en el listado.
-    "uniqlo": UniqloConnector(),
+    "uniqlo": UniqloConnector(),  # por API.SH (de pago, con su clave cifrada), no con navegador
     "mango": MangoConnector(),
     "hm": HMConnector(),
     "cos": COSConnector(),
@@ -79,6 +81,11 @@ CONNECTORS: dict[str, ShopConnector] = {
 
 def needs_browser(key: str) -> bool:
     return bool(getattr(CONNECTORS.get(key), "needs_browser", False))
+
+
+def uses_apish(key: str) -> bool:
+    """¿Se lee por API.SH, el servicio de pago (Uniqlo)? Comparten la clave de Ajustes y el tope de créditos."""
+    return bool(getattr(CONNECTORS.get(key), "uses_apish", False))
 
 
 def heavy(key: str) -> bool:
@@ -101,8 +108,17 @@ def kinds(key: str, sections: list[str] | None = None) -> list[str]:
 
 def unavailable(key: str) -> str | None:
     """Por qué no se puede consultar ahora una tienda en este equipo («No disponible: falta el
-    navegador»), o None si se puede. Solo afecta a las que necesitan navegador."""
-    return browser.missing() if needs_browser(key) else None
+    navegador»), o None si se puede. Afecta a las que necesitan navegador y a las que tienen su propio
+    `unavailable()` (Uniqlo, por API.SH: sin clave o con el tope de créditos del mes)."""
+    if needs_browser(key):
+        return browser.missing()
+    own = getattr(CONNECTORS.get(key), "unavailable", None)
+    if own is None:
+        return None
+    try:
+        return own()
+    except Exception:  # leer un ajuste no puede tumbar el panel ni la consulta
+        return "No disponible ahora"
 
 
 def maker_code(key: str, store_data: dict) -> str | None:
@@ -132,5 +148,5 @@ def cached_detail(key: str, store_data: dict):
 __all__ = [
     "CONNECTORS", "BlockedError", "BrowserUnavailable", "Cancelled", "NeedsBrowser", "NotThisStore", "Partial",
     "SearchError", "ShopConnector", "ShopDetail", "ShopError", "ShopProduct", "cached_detail", "crawl", "heavy",
-    "kinds", "maker_code", "maker_key", "needs_browser", "old_price", "unavailable",
+    "kinds", "maker_code", "maker_key", "needs_browser", "old_price", "unavailable", "uses_apish",
 ]

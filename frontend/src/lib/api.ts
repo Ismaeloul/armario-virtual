@@ -108,6 +108,17 @@ export type Settings = {
   /** Qué ropa toca: "auto" (por el mes), "verano" o "invierno". */
   season_mode: string;
   notify_time: string;
+  /** API.SH (el servicio de pago de Uniqlo). La clave nunca llega aquí: solo si hay una guardada. */
+  apish?: ApishStatus | null;
+};
+
+export type ApishStatus = {
+  has_key: boolean;
+  /** La pone la variable de entorno del servidor (desarrollo): no se cambia desde Ajustes. */
+  from_env: boolean;
+  /** Créditos gastados este mes entre todas las tiendas de API.SH, y el tope del mes. */
+  credits_used: number;
+  credits_limit: number;
 };
 
 export type AIStatus = { codex_installed: boolean; codex_logged_in: boolean; claude_configured: boolean };
@@ -252,6 +263,8 @@ export type ShopStore = {
   kinds: string[];
   /** Por qué no se puede consultar en este equipo («No disponible: falta el navegador»), o null. */
   unavailable: string | null;
+  /** Se lee por API.SH, el servicio de pago: su clave y sus créditos están en Ajustes. */
+  apish: boolean;
   status: {
     state: "ok" | "failed" | "never";
     at: string | null;
@@ -409,6 +422,9 @@ export const api = {
   aiStatus: () => request<AIStatus>("/api/ai/status"),
   /** La clave se envía al servidor y no vuelve nunca. Cadena vacía = borrarla. */
   saveClaudeKey: (key: string) => request<Settings>("/api/settings", json("PATCH", { anthropic_api_key: key })),
+  /** Solo escritura: se guarda cifrada y ninguna respuesta la devuelve. */
+  saveApishKey: (key: string) => request<Settings>("/api/settings/apish-key", json("PUT", { key })),
+  deleteApishKey: () => request<Settings>("/api/settings/apish-key", { method: "DELETE" }),
   updateSettings: (changes: Partial<Settings>) => request<Settings>("/api/settings", json("PATCH", changes)),
   tasteNext: () => request<Taste>("/api/taste/next"),
   tasteForget: () => request<void>("/api/taste", { method: "DELETE" }),

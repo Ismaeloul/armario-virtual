@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+import json
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from .. import catalog
 from ..db import get_db
 from ..models import Setting
-from ..schemas import AIStatus, CodexLogin, CodexUsage, SettingsOut, SettingsUpdate
+from ..schemas import AIStatus, ApishOut, CodexLogin, CodexUsage, SettingsOut, SettingsUpdate
+from ..services import apish, vault
 from ..services.ai import codex_login, codex_models, codex_usage
 from ..services.ai import claude as claude_ai
 from ..services.ai.selector import ANALYZERS
@@ -39,6 +42,7 @@ def read_settings(db: Session) -> SettingsOut:
         season_mode=values["season_mode"] if values["season_mode"] in ("auto", "verano", "invierno") else "auto",
         notify_enabled=values["notify_enabled"] == "true",
         notify_time=values["notify_time"],
+        apish=ApishOut(**apish.status()),
     )
 
 
@@ -61,6 +65,30 @@ def update_settings(body: SettingsUpdate, db: Session = Depends(get_db)):
         stored = ("true" if value else "false") if isinstance(value, bool) else str(value)
         db.merge(Setting(key=key, value=stored))
     db.commit()
+    return read_settings(db)
+
+
+@router.put("/settings/apish-key", response_model=SettingsOut)
+async def save_apish_key(request: Request, db: Session = Depends(get_db)):
+    """Guarda la clave de API.SH (común a las tiendas que lo usan), CIFRADA (ver services/vault.py). Solo
+    escritura: ninguna respuesta la devuelve. El cuerpo ({"key": "…"}) se lee a mano y no con un modelo: el
+    error de validación de FastAPI (422) repite lo recibido, y aquí lo recibido es la clave."""
+    try:
+        body = json.loads(await request.body() or b"{}")
+    except ValueError:
+        raise HTTPException(400, "Eso no parece una clave de API: pégala entera, sin espacios") from None
+    value = body.get("key") if isinstance(body, dict) else None
+    try:
+        vault.save(db, apish.SECRET, value if isinstance(value, str) else "")
+    except vault.BadSecret as exc:
+        raise HTTPException(400, str(exc)) from None
+    return read_settings(db)
+
+
+@router.delete("/settings/apish-key", response_model=SettingsOut)
+def delete_apish_key(db: Session = Depends(get_db)):
+    """Borra la clave guardada de API.SH. Sin clave, las tiendas que lo usan no se consultan."""
+    vault.delete(db, apish.SECRET)
     return read_settings(db)
 
 

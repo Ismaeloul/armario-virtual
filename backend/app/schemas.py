@@ -185,6 +185,16 @@ class WearIn(BaseModel):
     worn_on: date | None = None
 
 
+class ApishOut(BaseModel):
+    """API.SH, el servicio de pago con el que se leen algunas tiendas (Uniqlo). La clave NUNCA sale: solo si
+    hay una guardada."""
+
+    has_key: bool
+    from_env: bool  # la da la variable de entorno ARMARIO_APISH_KEY (desarrollo): no se cambia desde aquí
+    credits_used: int  # créditos gastados este mes, entre todas las tiendas que lo usan
+    credits_limit: int  # tope del mes (ARMARIO_APISH_MONTHLY_CREDITS)
+
+
 class SettingsOut(BaseModel):
     theme: Theme
     ai_provider: AIProvider
@@ -198,6 +208,7 @@ class SettingsOut(BaseModel):
     season_mode: str = "auto"
     notify_enabled: bool
     notify_time: str
+    apish: ApishOut | None = None
 
 
 class SettingsUpdate(BaseModel):

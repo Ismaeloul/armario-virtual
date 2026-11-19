@@ -384,7 +384,7 @@ def test_con_las_veinte_tiendas_cada_noche_cabe():
         ["pullandbear", "jackjones", "uniqlo"], ["courir", "massimodutti", "mango"], ["bershka", "nike", "hm"],
         ["lefties", "snipes", "cos"], ["size", "weekday"],
     ]
-    assert sum(map(shops.heavy, shops.CONNECTORS)) == 11
+    assert sum(map(shops.heavy, shops.CONNECTORS)) == 10  # Uniqlo, por API.SH desde el 19-11-2026, ya no lo es
 
 
 # ---------- La misma zapatilla en varias tiendas

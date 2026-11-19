@@ -277,12 +277,13 @@ def test_sfra_price_list_en_la_ficha():
 
 
 def test_listados_de_uniqlo_weekday_y_cos():
-    data = copy.deepcopy(_json("uniqlo_listado.json"))
-    item = next(i for i in uniqlo_items(data))
-    assert all(p.old_price_cents is None for p in uniqlo.parse_listing(data, "t-shirts")[0])
-    item["prices"] = {"base": {"value": 49.9}, "promo": {"value": 39.9}}
-    sale = uniqlo.parse_listing(data, "t-shirts")[0][0]
-    assert (sale.price_cents, sale.old_price_cents) == (3990, 4990)
+    # Uniqlo, por API.SH: rebajado si hay `promo_price` por debajo de `regular_price`.
+    data = copy.deepcopy(_json("apish_uniqlo_search.json"))
+    assert all(p.old_price_cents is None for p in uniqlo.parse_search(data, "t-shirts")[0])
+    item = next(i for i in data["products"] if i["id"] == "E488252-000")
+    item.update(price=9.9, promo_price=9.9, regular_price=19.9)
+    sale = next(p for p in uniqlo.parse_search(data, "t-shirts")[0] if "E488252" in p.product_ref)
+    assert (sale.price_cents, sale.old_price_cents) == (990, 1990)
 
     data = copy.deepcopy(_json("weekday_listado.json"))
     assert all(p.old_price_cents is None for p in weekday.parse_listing(data, "shirts")[0])
@@ -295,10 +296,6 @@ def test_listados_de_uniqlo_weekday_y_cos():
     raws = [r for r in walk(data) if isinstance(r, dict) and "priceBeforeDiscount" in r]
     raws[0]["price"]["value"] = 89
     assert any(p.old_price_cents == 12900 for p in cos.parse_listing(data, "shirts")[0])
-
-
-def uniqlo_items(data):
-    return [o for o in walk(data) if isinstance(o, dict) and "prices" in o and "productId" in o]
 
 
 def walk(value):

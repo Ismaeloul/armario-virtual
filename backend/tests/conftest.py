@@ -13,6 +13,8 @@ os.environ["ARMARIO_SHOP_TRANSLATE"] = "0"  # ni a Codex para traducir
 os.environ["ARMARIO_SHOP_NIGHT_PAUSE"] = "0"  # el recorrido del catálogo, sin pausas
 os.environ["ARMARIO_SHOP_DAY_PAUSE"] = "0"
 os.environ.pop("ANTHROPIC_API_KEY", None)
+os.environ.pop("ARMARIO_APISH_KEY", None)  # la clave de API.SH de quien lance los tests no entra en ellos
+os.environ["ARMARIO_SECRETS_DIR"] = tempfile.mkdtemp(prefix="armario-secretos-")  # ni su clave maestra (ver vault.py)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest  # noqa: E402
@@ -23,6 +25,9 @@ from app.db import Base, engine  # noqa: E402
 from app.main import app  # noqa: E402
 from app.services.ai import selector  # noqa: E402
 from app.services.ai import translate  # noqa: E402
+import httpx  # noqa: E402
+
+from app.services import apish  # noqa: E402
 from app.services.shops import browser  # noqa: E402
 from app.services.shops.fetch import Fetcher  # noqa: E402
 from app.services.shops.zara import ZaraConnector  # noqa: E402
@@ -72,6 +77,11 @@ def sin_red(monkeypatch):
 
     monkeypatch.setattr(ZaraConnector, "_get", _blocked)
     monkeypatch.setattr(Fetcher, "get", _blocked)  # Courir, Nike, Jack & Jones, Carhartt WIP y las fotos
+
+    def _no_apish(request):
+        raise AssertionError(f"Un test ha intentado llamar a API.SH: {request.url.path}")
+
+    monkeypatch.setattr(apish, "transport", httpx.MockTransport(_no_apish))  # Uniqlo (de pago)
     browser.forget_blocks()  # un bloqueo apuntado por un test no pasa al siguiente
 
     def _no_ai(prompt):

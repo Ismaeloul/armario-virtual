@@ -120,6 +120,8 @@ def test_ajustes_por_defecto_y_cambio(client):
         "season_mode": "auto",
         "notify_enabled": True,
         "notify_time": "07:30",
+        # API.SH (Uniqlo): sin clave guardada y sin créditos gastados. La clave nunca sale aquí.
+        "apish": {"has_key": False, "from_env": False, "credits_used": 0, "credits_limit": 300},
     }
     updated = client.patch("/api/settings", json={"theme": "oscuro", "ai_provider": "claude"}).json()
     assert updated["theme"] == "oscuro" and updated["ai_provider"] == "claude"

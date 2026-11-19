@@ -164,6 +164,8 @@ class ShopStoreOut(BaseModel):
     kinds: list[str]
     # Por qué no se puede consultar en este equipo («No disponible: falta el navegador»); None si se puede.
     unavailable: str | None
+    # Se lee por API.SH, el servicio de pago (Uniqlo): su clave y sus créditos están en Ajustes.
+    apish: bool = False
 
 
 class ShopMoreOut(BaseModel):
@@ -367,6 +369,7 @@ def _state(db: Session) -> ShopState:
                 heavy=shops.heavy(key),
                 kinds=shops.kinds(key, list(active)),
                 unavailable=shops.unavailable(key),
+                apish=shops.uses_apish(key),
                 categories=[
                     ShopCategoryOut(slug=slug, label=label, enabled=slug in active)
                     for slug, label in connector.categories.items()

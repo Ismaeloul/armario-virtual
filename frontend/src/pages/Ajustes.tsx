@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { ApishKey } from "../components/ApishKey";
 import { CodexSession } from "../components/CodexSession";
 import { ForgetTaste } from "../components/ForgetTaste";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -315,6 +316,16 @@ export default function Ajustes() {
               )}
             </form>
           </Section>
+
+          {settings?.apish && (
+            <Section label={t.ajustes.apish.seccion}>
+              <Title icon="store" title={t.ajustes.apish.titulo} text={t.ajustes.apish.texto} />
+              <ApishKey
+                status={settings.apish}
+                onSaved={(saved) => setSettings((s) => (s ? { ...s, apish: saved.apish } : saved))}
+              />
+            </Section>
+          )}
 
           <Section label={t.ajustes.lavadora}>
             <Title

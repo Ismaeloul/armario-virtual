@@ -7,6 +7,7 @@ pillow>=10.3
 pillow-heif>=0.16
 anthropic>=0.40
 httpx>=0.27
+cryptography>=43  # cifra en reposo la clave de API.SH (Uniqlo): ver services/vault.py
 tzdata>=2024.1  # zonas horarias para outfits.local_today() aunque la imagen no traiga /usr/share/zoneinfo
 # Opcional: solo para Pull&Bear y Bershka (Chromium de verdad, ver services/shops/browser.py). La app
 # arranca y funciona sin él: esas dos tiendas salen «No disponible». La versión va fijada porque cada

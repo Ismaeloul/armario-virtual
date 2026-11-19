@@ -79,7 +79,14 @@ SHOP_COLOR_PREP = int(os.environ.get("ARMARIO_SHOP_COLOR_PREP", "4"))
 # Tiendas cuyo catálogo es demasiado grande para leerlo entero cada semana: por defecto solo las primeras
 # páginas de cada sección (ordenadas por novedad). H&M: unos 5.100 artículos de hombre en ~145 páginas de 36;
 # con ocho por sección se leen las novedades (~290 por sección). Se cambia con ARMARIO_SHOP_MAX_PAGES_HM.
-SHOP_STORE_PAGES = {"hm": 8}
+SHOP_STORE_PAGES = {"hm": 8, "uniqlo": 5}
+
+# Uniqlo se lee a través de API.SH, un servicio de pago (decisión del usuario, 19-11-2026; ver
+# services/shops/uniqlo.py). Cada llamada gasta créditos: tope mensual propio para no pasar de los 1.000
+# gratis de su cuenta. La clave va cifrada (services/vault.py); `ARMARIO_APISH_KEY` manda en desarrollo.
+APISH_BASE = os.environ.get("ARMARIO_APISH_BASE", "https://api.api.sh")
+APISH_MONTHLY_CREDITS = max(0, int(os.environ.get("ARMARIO_APISH_MONTHLY_CREDITS", "300")))
+APISH_TIMEOUT_SECONDS = float(os.environ.get("ARMARIO_APISH_TIMEOUT", "90"))
 
 
 def shop_limit(store: str, kind: str) -> int:
