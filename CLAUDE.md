@@ -94,7 +94,18 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.16** (20-11-2026): saldo real de API.SH en Ajustes (`apish.account()`,
+- **Publicada en el Umbrel: 0.4.17** (20-11-2026): hoja que sube desde abajo (`components/BottomSheet.tsx`,
+  sin X: se cierra deslizando hacia abajo desde el asa o desde el contenido arriba del todo, tocando fuera o
+  con Escape, con animación de cierre) con la ficha completa de la prenda (`GarmentSheet` = `FichaPrenda`
+  con `embedded`) al tocar una prenda en Tus outfits, Gustos (toda la fila, salvo al señalar la que no
+  pega), Armario y Hoy. «Monta tu outfit» y el selector de pareja usan la misma hoja. Compras: un solo
+  botón «Filtros» (hoja con tienda y tipo) y tocar la parte blanca de la tarjeta de Descubrir abre
+  `ShopSheet` (datos, «Ver en <tienda>» grande y «Combina con»; `ShopFacts` compartido con el visor).
+  Uniqlo: antes de proponer, la ficha de API.SH (`/product`, 1 crédito por producto, todos sus colores,
+  guardada 12 h) dice qué tallas quedan y lo agotado no sale; se deja de mirar a 40 créditos del tope
+  (`STOCK_RESERVE`); fuera lo `store_stock_only`. Uniqlo deja pasar MEN y UNISEX (un jogging que parecía
+  de mujer era de esos; pendiente de que el usuario decida si quitar los unisex).
+- **Antes: 0.4.16** (20-11-2026): saldo real de API.SH en Ajustes (`apish.account()`,
   `GET /v1/account`, gratis; `GET /api/settings/apish-account`; en memoria 5 min). En el Armario, el título
   y «Tus outfits» van en la misma fila, justo encima del selector de temporada.
 - **Antes: 0.4.15** (20-11-2026). Uniqlo por API.SH (servicio de scraping de pago,

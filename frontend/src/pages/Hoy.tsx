@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { GarmentSheet } from "../components/GarmentSheet";
 import { Icon, type IconName } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { FadeImg, OutfitSkeleton, Skeleton, stagger } from "../components/Skeleton";
@@ -29,6 +30,7 @@ export default function Hoy() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState(false);
   const loadedAt = useRef(0);
+  const [viewing, setViewing] = useState<number | null>(null);
 
   const show = (data: Today) => {
     setToday(data);
@@ -169,11 +171,12 @@ export default function Hoy() {
 
                 <div className="flex flex-col gap-3">
                   {outfit.garments.map((g, i) => (
-                    <Link
+                    <button
                       key={g.id}
-                      to={`/prenda/${g.id}`}
+                      type="button"
+                      onClick={() => setViewing(g.id)}
                       style={stagger(i + 1, 70)}
-                      className="flex animate-enter items-center gap-3.5 rounded-2xl border border-line bg-card-2 p-2.5 transition-transform active:scale-[0.98]"
+                      className="flex animate-enter items-center gap-3.5 rounded-2xl border border-line bg-card-2 p-2.5 text-left transition-transform active:scale-[0.98]"
                     >
                       <FadeImg
                         src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
@@ -196,7 +199,7 @@ export default function Hoy() {
                           </span>
                         </div>
                       </div>
-                    </Link>
+                    </button>
                   ))}
                 </div>
 
@@ -270,6 +273,19 @@ export default function Hoy() {
           )}
         </div>
       </Screen>
+      {viewing !== null && (
+        <GarmentSheet
+          garmentId={viewing}
+          onClose={() => {
+            setViewing(null);
+            api.today().then(show).catch(() => undefined);
+          }}
+          onDeleted={() => {
+            setViewing(null);
+            load();
+          }}
+        />
+      )}
       <BottomNav />
     </>
   );

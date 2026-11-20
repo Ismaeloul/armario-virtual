@@ -40,9 +40,35 @@ const Dot = ({ hex }: { hex: string }) => (
 const formatDate = (iso: string) =>
   new Date(iso + "T00:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
 
-export default function FichaPrenda() {
-  const { id } = useParams();
+/** Página: cabecera y marco de pantalla. En un panel: solo el contenido. (Fuera del componente: si se
+ *  definiera dentro, cada render sería un componente nuevo y se perdería el estado de lo de dentro.) */
+function Frame({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  if (embedded) return <>{children}</>;
+  return (
+    <>
+      <BackHeader title={t.ficha.cabecera} />
+      <Screen withNav={false}>{children}</Screen>
+    </>
+  );
+}
+
+/**
+ * La ficha de una prenda. Como página (`/prenda/:id`), con su cabecera; o `embedded`, dentro de un
+ * panel (la prenda de un outfit o de Gustos), sin cabecera y sin salir de donde se estaba.
+ */
+export default function FichaPrenda({
+  garmentId,
+  embedded = false,
+  onDeleted,
+}: {
+  garmentId?: number;
+  embedded?: boolean;
+  onDeleted?: () => void;
+} = {}) {
+  const params = useParams();
+  const id = garmentId ?? params.id;
   const navigate = useNavigate();
+
   const [garment, setGarment] = useState<Garment | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   // "missing": la prenda no existe (404); "red": no se pudo cargar (servidor caído, etc.).
@@ -106,9 +132,7 @@ export default function FichaPrenda() {
 
   if (loadError) {
     return (
-      <>
-        <BackHeader title={t.ficha.cabecera} />
-        <Screen withNav={false}>
+      <Frame embedded={embedded}>
           <div className="mt-10 flex flex-col items-center gap-2 text-center">
             <p className="text-sm text-text-2">{loadError === "missing" ? t.ficha.noExiste : t.comun.errorRed}</p>
             {loadError === "missing" ? (
@@ -125,18 +149,14 @@ export default function FichaPrenda() {
               </button>
             )}
           </div>
-        </Screen>
-      </>
+      </Frame>
     );
   }
   if (!garment || !catalog) {
     return (
-      <>
-        <BackHeader title={t.ficha.cabecera} />
-        <Screen withNav={false}>
-          <DetailSkeleton />
-        </Screen>
-      </>
+      <Frame embedded={embedded}>
+        <DetailSkeleton />
+      </Frame>
     );
   }
 
@@ -161,7 +181,8 @@ export default function FichaPrenda() {
     setDeleteError(null);
     try {
       await api.deleteGarment(garment.id);
-      navigate("/armario", { replace: true });
+      if (embedded) onDeleted?.();
+      else navigate("/armario", { replace: true });
     } catch {
       setDeleteError(t.ficha.errorEliminar);
       setDeleting(false);
@@ -198,9 +219,8 @@ export default function FichaPrenda() {
 
   return (
     <>
-      <BackHeader title={t.ficha.cabecera} />
-      <Screen withNav={false}>
-        <div className="flex animate-slide flex-col gap-4">
+      <Frame embedded={embedded}>
+        <div className={`flex flex-col gap-4 ${embedded ? "" : "animate-slide"}`}>
           {/* Foto: delante / detrás */}
           <div
             className="relative overflow-hidden rounded-xl border border-line bg-card-2 transition-[aspect-ratio] duration-300 ease-out"
@@ -466,7 +486,7 @@ export default function FichaPrenda() {
             </button>
           </div>
         </div>
-      </Screen>
+      </Frame>
       <ConfirmDialog
         open={confirming}
         title={t.ficha.confirmarTitulo}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
+import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { inputClass, PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
 import { externalHref, photoAfterTap } from "../lib/links";
@@ -282,6 +283,7 @@ function Discover({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fit = useFitHeight(Boolean(next.item));
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewing, setViewing] = useState<ShopItem | null>(null);
   // Los botones mueven la tarjeta igual que el dedo: sale volando hacia su lado antes de decidir.
   const [fly, setFly] = useState<-1 | 0 | 1>(0);
@@ -470,29 +472,76 @@ function Discover({
 
   // Dos filas de filtros con scroll horizontal: la tienda (solo si hay más de una) y el tipo de prenda.
   // Se ven siempre: también mientras se consulta y cuando el filtro se queda sin propuestas.
+  // Un solo botón «Filtros» que abre la hoja con la tienda (si hay más de una) y el tipo de prenda. Al
+  // lado, lo que está puesto. Se ve siempre: también mientras se consulta y cuando el filtro se queda vacío.
+  const active = [
+    filter.store ? enabled.find((s) => s.key === filter.store)?.name : null,
+    filter.category ? t.compras.filtros.categorias[filter.category] : null,
+  ].filter((label): label is string => !!label);
   const filters = (
-    <div className="flex flex-col gap-2">
-      {enabled.length > 1 && (
-        <Chips
-          label={t.compras.filtros.tienda}
-          options={[
-            { value: null, label: t.compras.filtros.todas },
-            ...enabled.map((s) => ({ value: s.key, label: s.name })),
-          ]}
-          value={filter.store}
-          onChange={(store) => onFilter({ ...filter, store })}
-        />
-      )}
-      <Chips
-        label={t.compras.filtros.tipo}
-        options={[
-          { value: null, label: t.compras.filtros.todo },
-          ...Object.entries(t.compras.filtros.categorias).map(([value, label]) => ({ value, label })),
-        ]}
-        value={filter.category}
-        onChange={(category) => onFilter({ ...filter, category })}
-      />
+    <div className="flex min-w-0 items-center gap-2">
+      <button
+        type="button"
+        onClick={() => setFiltersOpen(true)}
+        className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-line px-3.5 text-xs font-semibold active:scale-[0.97] ${
+          active.length ? "bg-primary text-on-primary" : "bg-card-2 text-text"
+        }`}
+      >
+        <Icon name="tune" size={16} />
+        {active.length ? t.compras.filtros.botonN(active.length) : t.compras.filtros.boton}
+      </button>
+      {active.length > 0 && <span className="min-w-0 truncate text-xs text-text-2">{active.join(" · ")}</span>}
     </div>
+  );
+  const filterSheet = filtersOpen && (
+    <BottomSheet
+      label={t.compras.filtros.titulo}
+      onClose={() => setFiltersOpen(false)}
+      header={
+        <h2 className="px-5 pb-2 font-display text-lg font-semibold tracking-tight">{t.compras.filtros.titulo}</h2>
+      }
+      footer={(close) => (
+        <div className="flex flex-col gap-2">
+          <PrimaryButton onClick={close}>{t.compras.filtros.listo}</PrimaryButton>
+          {active.length > 0 && (
+            <SecondaryButton onClick={() => onFilter({ ...filter, store: null, category: null })}>
+              {t.compras.filtros.quitar}
+            </SecondaryButton>
+          )}
+        </div>
+      )}
+    >
+      <div className="flex flex-col gap-4 px-5 pt-1">
+        {enabled.length > 1 && (
+          <div className="flex flex-col gap-2">
+            <span className="label-caps text-text-2">{t.compras.filtros.tienda}</span>
+            <Chips
+              wrap
+              label={t.compras.filtros.tienda}
+              options={[
+                { value: null, label: t.compras.filtros.todas },
+                ...enabled.map((s) => ({ value: s.key, label: s.name })),
+              ]}
+              value={filter.store}
+              onChange={(store) => onFilter({ ...filter, store })}
+            />
+          </div>
+        )}
+        <div className="flex flex-col gap-2">
+          <span className="label-caps text-text-2">{t.compras.filtros.tipo}</span>
+          <Chips
+            wrap
+            label={t.compras.filtros.tipo}
+            options={[
+              { value: null, label: t.compras.filtros.todo },
+              ...Object.entries(t.compras.filtros.categorias).map(([value, label]) => ({ value, label })),
+            ]}
+            value={filter.category}
+            onChange={(category) => onFilter({ ...filter, category })}
+          />
+        </div>
+      </div>
+    </BottomSheet>
   );
 
   const reasonBar = asking && (
@@ -530,7 +579,7 @@ function Discover({
     return (
       <>
         {viewing && (
-          <PhotoViewer
+          <ShopSheet
             item={viewing}
             onClose={() => {
               setViewing(null);
@@ -538,6 +587,7 @@ function Discover({
             }}
           />
         )}
+        {filterSheet}
         {/* Todo en una pantalla: la foto se queda con el alto que sobra, para no tener que bajar a los botones. */}
         <div ref={fit.ref} style={fit.style} className="relative -mt-2 flex min-h-[25rem] flex-col gap-2.5">
         {filters}
@@ -873,14 +923,20 @@ function Chips({
   options,
   value,
   onChange,
+  wrap = false,
 }: {
+  wrap?: boolean; // en varias líneas (en la hoja de filtros) en vez de una fila con scroll
   label: string;
   options: { value: string | null; label: string }[];
   value: string | null;
   onChange: (value: string | null) => void;
 }) {
   return (
-    <div role="group" aria-label={label} className="-mx-5 flex gap-1.5 overflow-x-auto px-5">
+    <div
+      role="group"
+      aria-label={label}
+      className={wrap ? "flex flex-wrap gap-1.5" : "-mx-5 flex gap-1.5 overflow-x-auto px-5"}
+    >
       {options.map((o) => (
         <button
           key={o.value ?? ""}
@@ -1591,33 +1647,75 @@ function SwipeCard({
         {t.compras.selloNo}
       </span>
 
-      {/* La ficha. El hueco de abajo es para los botones flotantes, que pisan el borde de la tarjeta. */}
-      <div className="flex shrink-0 flex-col gap-1 px-4 pt-3 pb-10">
+      {/* La ficha: tocarla (salvo el enlace) abre la hoja con los datos. El hueco de abajo es para los
+          botones flotantes, que pisan el borde de la tarjeta. */}
+      <div
+        role="button"
+        tabIndex={still ? -1 : 0}
+        aria-label={t.compras.verDatos(item.name)}
+        onClick={onOpen}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onOpen()}
+        className="flex shrink-0 cursor-pointer flex-col gap-1 px-4 pt-3 pb-10"
+      >
         <div className="flex items-baseline justify-between gap-3">
           <span className="label-caps min-w-0 truncate text-text-2">
             {[item.store_name, item.brand, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
           </span>
           <Price item={item} />
         </div>
-        <button
-          type="button"
-          onClick={onOpen}
-          aria-label={t.compras.verDatos(item.name)}
-          className="-my-1 flex min-w-0 items-center gap-1 py-1 text-left active:opacity-60"
-        >
+        <div className="-my-1 flex min-w-0 items-center gap-1 py-1">
           <h3 className="truncate font-display text-base leading-snug font-semibold tracking-tight">{item.name}</h3>
           <Icon name="chevron_right" size={16} className="shrink-0 text-text-3" />
-        </button>
+        </div>
         <div className="flex items-center justify-between gap-2">
           <div className="max-h-[1.75rem] min-w-0 overflow-hidden">
             <Reasons item={item} />
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
             <StoreLink item={item} />
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Lo que sale al tocar la ficha de la tarjeta de Descubrir: la hoja que sube desde abajo, como la de las
+ * prendas del armario, con los datos de la tienda, un botón bien visible para ir a la tienda y con qué
+ * combina. Se cierra deslizándola hacia abajo.
+ */
+function ShopSheet({ item, onClose }: { item: ShopItem; onClose: () => void }) {
+  const cover = item.photos[0];
+  return (
+    <BottomSheet label={item.name} onClose={onClose}>
+      <div className="flex flex-col gap-3.5 px-5 pt-1">
+        <div className="flex gap-3.5">
+          {cover && (
+            <img src={mediaUrl(cover.url)} alt="" className="h-32 w-24 shrink-0 rounded-xl bg-card-2 object-cover" />
+          )}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="label-caps text-text-2">
+              {[item.store_name, item.brand, cap(item.type), item.store_color].filter(Boolean).join(" · ")}
+            </span>
+            <h2 className="font-display text-lg leading-snug font-semibold tracking-tight">{item.name}</h2>
+            {item.name_original && <p className="-mt-0.5 text-[11px] text-text-3">{item.name_original}</p>}
+            <Price item={item} className="mt-0.5" />
+          </div>
+        </div>
+        <a
+          href={externalHref(item.url)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-on-primary transition-transform active:scale-[0.98]"
+        >
+          {t.compras.verEn(item.store_name)}
+          <Icon name="open_in_new" size={18} />
+        </a>
+        <Reasons item={item} />
+      </div>
+      <ShopFacts item={item} className="px-5 pt-4" />
+    </BottomSheet>
   );
 }
 
@@ -1697,14 +1795,12 @@ function PhotoViewer({
   /** Los colores que ya están cargados (los trae el buscador), para enseñarlos al momento. */
   known?: (productRef: string) => ShopLookupItem | undefined;
 }) {
-  const navigate = useNavigate();
   const [item, setItem] = useState<ShopItem>(opened);
   // La foto que se ve, apuntada con su item: al cambiar de color se empieza otra vez por la primera.
   const [at, setAt] = useState({ id: opened.id, index: 0 });
   const [backdrop, setBackdrop] = useState<string | null>(lastBackdrop);
   const [loaded, setLoaded] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false); // ya se ha deslizado hasta la ficha: la pista sobra
-  const [matches, setMatches] = useState<ShopMatches | "error" | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
@@ -1734,19 +1830,6 @@ function PhotoViewer({
     };
   }, [onClose]);
 
-  // Con qué combina: se mira en el armario (no en la tienda), así que se pide nada más abrir.
-  useEffect(() => {
-    let alive = true;
-    setMatches(null);
-    api
-      .shopMatches(item.id)
-      .then((found) => alive && setMatches(found))
-      .catch(() => alive && setMatches("error"));
-    return () => {
-      alive = false;
-    };
-  }, [item.id]);
-
   const toData = () => {
     const box = scroller.current;
     box?.scrollTo({ top: box.clientHeight, behavior: "smooth" });
@@ -1767,28 +1850,6 @@ function PhotoViewer({
       .finally(() => setSaving(false));
   };
 
-  // Los datos, en el orden en que se enseñan y se copian. Lo que la tienda no da, no sale.
-  const sizes = sizesText(item);
-  const facts: { key: string; label: string; value: string }[] = [
-    { key: "referencia", label: t.compras.visor.referencia, value: item.reference ?? "" },
-    { key: "tienda", label: t.compras.visor.tienda, value: item.store_name },
-    { key: "marca", label: t.compras.visor.marca, value: item.brand ?? "" },
-    { key: "nombre", label: t.compras.visor.nombre, value: item.name },
-    // El de la tienda, si el nombre está traducido: sirve para buscarlo en su web.
-    { key: "original", label: t.compras.visor.nombreOriginal, value: item.name_original ?? "" },
-    { key: "color", label: t.compras.visor.color, value: item.store_color },
-    { key: "precio", label: t.compras.visor.precio, value: priceText(item) },
-    // Si la tienda no dice qué tallas quedan (H&M, COS, Uniqlo, Mango, Nike), se dice dónde mirarlas.
-    { key: "tallas", label: t.compras.visor.tallas, value: sizes || t.compras.visor.tallasEnTienda },
-    { key: "composicion", label: t.compras.visor.composicion, value: item.composition ?? "" },
-    { key: "enlace", label: t.compras.visor.enlace, value: item.url },
-    // La misma zapatilla en otras tiendas: «Snipes 119,99 € · Foot Locker 120,00 €», cada una con su enlace.
-    {
-      key: "tambien",
-      label: t.compras.visor.tambienEn,
-      value: (item.also_in ?? []).map((other) => `${other.store_name} ${t.compras.precio(other.price_cents)}`).join(" · "),
-    },
-  ].filter((fact) => fact.value);
   const canSave = item.status === "buscado" || item.status === "variante";
 
   // En el body, como los demás paneles: dentro de la pantalla quedaría bajo la cabecera y la barra
@@ -1935,122 +1996,7 @@ function PhotoViewer({
             </div>
           </section>
 
-          <section className="flex flex-col gap-2 px-4 pt-4 pb-5">
-            {/* El hueco de la derecha es para la X, que flota sobre el cuadro. */}
-            <h4 className="flex min-h-11 items-center pr-12 font-display text-lg font-semibold tracking-tight">
-              {t.compras.visor.datos}
-            </h4>
-            {facts.map((fact) =>
-              fact.key === "tallas" && item.sizes.length === 0 ? (
-                // Como las demás filas, pero sin copiar: lo que hay es un enlace a la tienda.
-                <div key={fact.key} className="flex flex-col gap-0.5 rounded-lg border border-line bg-card-2 py-2 pr-1 pl-3">
-                  <span className="label-caps text-text-2">{fact.label}</span>
-                  <a
-                    href={externalHref(item.url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex min-h-9 w-fit items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-2 active:opacity-60"
-                  >
-                    {fact.value}
-                    <Icon name="open_in_new" size={15} />
-                  </a>
-                </div>
-              ) : fact.key === "tallas" ? (
-                <CopyRow key={fact.key} label={fact.label} value={fact.value}>
-                  <ul className="flex flex-wrap gap-1.5 pt-0.5">
-                    {item.sizes.map((s) => (
-                      <li
-                        key={s.name}
-                        aria-label={s.in_stock ? undefined : t.compras.visor.agotada(s.name)}
-                        className={`rounded-md border px-2 py-0.5 text-xs font-medium ${
-                          s.in_stock ? "border-line bg-control text-text" : "border-line text-text-3 line-through"
-                        }`}
-                      >
-                        {s.name}
-                      </li>
-                    ))}
-                  </ul>
-                </CopyRow>
-              ) : fact.key === "enlace" ? (
-                <CopyRow
-                  key={fact.key}
-                  label={fact.label}
-                  value={fact.value}
-                >
-                  <a
-                    href={externalHref(item.url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={t.compras.visor.abrir}
-                    className="block truncate py-1 text-sm font-medium text-primary underline underline-offset-2 active:opacity-60"
-                  >
-                    {item.url.replace(/^https?:\/\/(www\.)?/, "")}
-                  </a>
-                </CopyRow>
-              ) : fact.key === "tambien" ? (
-                <CopyRow key={fact.key} label={fact.label} value={fact.value}>
-                  <span className="flex flex-wrap gap-x-1 text-sm text-text">
-                    {(item.also_in ?? []).map((other, index) => (
-                      <span key={other.store}>
-                        {index > 0 ? "· " : ""}
-                        <a
-                          href={externalHref(other.url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={t.compras.visor.tambienEnTienda(other.store_name)}
-                          className="font-medium text-primary underline underline-offset-2 active:opacity-60"
-                        >
-                          {other.store_name} {t.compras.precio(other.price_cents)}
-                        </a>
-                      </span>
-                    ))}
-                  </span>
-                </CopyRow>
-              ) : (
-                <CopyRow key={fact.key} label={fact.label} value={fact.value} />
-              ),
-            )}
-
-            <h4 className="mt-3 font-display text-lg font-semibold tracking-tight">{t.compras.combina.titulo}</h4>
-            {matches === null ? (
-              <p className="text-sm text-text-3">{t.compras.combina.cargando}</p>
-            ) : matches === "error" ? (
-              <p role="alert" className="text-sm text-danger">
-                {t.compras.combina.error}
-              </p>
-            ) : matches.groups.length === 0 ? (
-              <p className="text-sm text-text-2">
-                {matches.wardrobe === 0 ? t.compras.combina.armarioVacio : t.compras.combina.nada}
-              </p>
-            ) : (
-              matches.groups.map((group) => (
-                <div key={group.category} className="flex flex-col gap-1.5 pb-1">
-                  <span className="label-caps text-text-2">
-                    {t.compras.filtros.categorias[group.category] ?? group.category}
-                  </span>
-                  <ul className="grid grid-cols-3 gap-2">
-                    {group.garments.map((garment) => (
-                      <li key={garment.id} className="min-w-0">
-                        <button
-                          type="button"
-                          aria-label={t.compras.combina.ver(garment.name)}
-                          onClick={() => navigate(`/prenda/${garment.id}`)}
-                          className="flex w-full flex-col gap-1 text-left active:opacity-70"
-                        >
-                          <img
-                            src={mediaUrl(garment.photo.thumb_url)}
-                            alt=""
-                            className="aspect-[3/4] w-full rounded-xl bg-card-2 object-cover"
-                          />
-                          <span className="line-clamp-2 text-xs leading-snug text-text">{garment.name}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))
-            )}
-          </section>
+          <ShopFacts item={item} className="px-4 pt-4 pb-5" />
         </div>
         <button
           type="button"
@@ -2063,6 +2009,169 @@ function PhotoViewer({
       </div>
     </div>,
     document.body,
+  );
+}
+
+/**
+ * Los datos de un producto de tienda (cada uno con su botón de copiar) y las prendas del armario con
+ * las que combina. Es lo que sale bajo la foto en el visor y en la hoja que sube desde Descubrir.
+ */
+function ShopFacts({ item, className = "" }: { item: ShopItem; className?: string }) {
+  const navigate = useNavigate();
+  const [matches, setMatches] = useState<ShopMatches | "error" | null>(null);
+  // Con qué combina: se mira en el armario (no en la tienda), así que se pide nada más abrir.
+  useEffect(() => {
+    let alive = true;
+    setMatches(null);
+    api
+      .shopMatches(item.id)
+      .then((found) => alive && setMatches(found))
+      .catch(() => alive && setMatches("error"));
+    return () => {
+      alive = false;
+    };
+  }, [item.id]);
+
+  // Los datos, en el orden en que se enseñan y se copian. Lo que la tienda no da, no sale.
+  const sizes = sizesText(item);
+  const facts: { key: string; label: string; value: string }[] = [
+    { key: "referencia", label: t.compras.visor.referencia, value: item.reference ?? "" },
+    { key: "tienda", label: t.compras.visor.tienda, value: item.store_name },
+    { key: "marca", label: t.compras.visor.marca, value: item.brand ?? "" },
+    { key: "nombre", label: t.compras.visor.nombre, value: item.name },
+    // El de la tienda, si el nombre está traducido: sirve para buscarlo en su web.
+    { key: "original", label: t.compras.visor.nombreOriginal, value: item.name_original ?? "" },
+    { key: "color", label: t.compras.visor.color, value: item.store_color },
+    { key: "precio", label: t.compras.visor.precio, value: priceText(item) },
+    // Si la tienda no dice qué tallas quedan (H&M, COS, Uniqlo, Mango, Nike), se dice dónde mirarlas.
+    { key: "tallas", label: t.compras.visor.tallas, value: sizes || t.compras.visor.tallasEnTienda },
+    { key: "composicion", label: t.compras.visor.composicion, value: item.composition ?? "" },
+    { key: "enlace", label: t.compras.visor.enlace, value: item.url },
+    // La misma zapatilla en otras tiendas: «Snipes 119,99 € · Foot Locker 120,00 €», cada una con su enlace.
+    {
+      key: "tambien",
+      label: t.compras.visor.tambienEn,
+      value: (item.also_in ?? []).map((other) => `${other.store_name} ${t.compras.precio(other.price_cents)}`).join(" · "),
+    },
+  ].filter((fact) => fact.value);
+
+  return (
+    <section className={`flex flex-col gap-2 ${className}`}>
+      {/* El hueco de la derecha es para la X, que flota sobre el cuadro. */}
+      <h4 className="flex min-h-11 items-center pr-12 font-display text-lg font-semibold tracking-tight">
+        {t.compras.visor.datos}
+      </h4>
+      {facts.map((fact) =>
+        fact.key === "tallas" && item.sizes.length === 0 ? (
+          // Como las demás filas, pero sin copiar: lo que hay es un enlace a la tienda.
+          <div key={fact.key} className="flex flex-col gap-0.5 rounded-lg border border-line bg-card-2 py-2 pr-1 pl-3">
+            <span className="label-caps text-text-2">{fact.label}</span>
+            <a
+              href={externalHref(item.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-9 w-fit items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-2 active:opacity-60"
+            >
+              {fact.value}
+              <Icon name="open_in_new" size={15} />
+            </a>
+          </div>
+        ) : fact.key === "tallas" ? (
+          <CopyRow key={fact.key} label={fact.label} value={fact.value}>
+            <ul className="flex flex-wrap gap-1.5 pt-0.5">
+              {item.sizes.map((s) => (
+                <li
+                  key={s.name}
+                  aria-label={s.in_stock ? undefined : t.compras.visor.agotada(s.name)}
+                  className={`rounded-md border px-2 py-0.5 text-xs font-medium ${
+                    s.in_stock ? "border-line bg-control text-text" : "border-line text-text-3 line-through"
+                  }`}
+                >
+                  {s.name}
+                </li>
+              ))}
+            </ul>
+          </CopyRow>
+        ) : fact.key === "enlace" ? (
+          <CopyRow
+            key={fact.key}
+            label={fact.label}
+            value={fact.value}
+          >
+            <a
+              href={externalHref(item.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t.compras.visor.abrir}
+              className="block truncate py-1 text-sm font-medium text-primary underline underline-offset-2 active:opacity-60"
+            >
+              {item.url.replace(/^https?:\/\/(www\.)?/, "")}
+            </a>
+          </CopyRow>
+        ) : fact.key === "tambien" ? (
+          <CopyRow key={fact.key} label={fact.label} value={fact.value}>
+            <span className="flex flex-wrap gap-x-1 text-sm text-text">
+              {(item.also_in ?? []).map((other, index) => (
+                <span key={other.store}>
+                  {index > 0 ? "· " : ""}
+                  <a
+                    href={externalHref(other.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t.compras.visor.tambienEnTienda(other.store_name)}
+                    className="font-medium text-primary underline underline-offset-2 active:opacity-60"
+                  >
+                    {other.store_name} {t.compras.precio(other.price_cents)}
+                  </a>
+                </span>
+              ))}
+            </span>
+          </CopyRow>
+        ) : (
+          <CopyRow key={fact.key} label={fact.label} value={fact.value} />
+        ),
+      )}
+
+      <h4 className="mt-3 font-display text-lg font-semibold tracking-tight">{t.compras.combina.titulo}</h4>
+      {matches === null ? (
+        <p className="text-sm text-text-3">{t.compras.combina.cargando}</p>
+      ) : matches === "error" ? (
+        <p role="alert" className="text-sm text-danger">
+          {t.compras.combina.error}
+        </p>
+      ) : matches.groups.length === 0 ? (
+        <p className="text-sm text-text-2">
+          {matches.wardrobe === 0 ? t.compras.combina.armarioVacio : t.compras.combina.nada}
+        </p>
+      ) : (
+        matches.groups.map((group) => (
+          <div key={group.category} className="flex flex-col gap-1.5 pb-1">
+            <span className="label-caps text-text-2">
+              {t.compras.filtros.categorias[group.category] ?? group.category}
+            </span>
+            <ul className="grid grid-cols-3 gap-2">
+              {group.garments.map((garment) => (
+                <li key={garment.id} className="min-w-0">
+                  <button
+                    type="button"
+                    aria-label={t.compras.combina.ver(garment.name)}
+                    onClick={() => navigate(`/prenda/${garment.id}`)}
+                    className="flex w-full flex-col gap-1 text-left active:opacity-70"
+                  >
+                    <img
+                      src={mediaUrl(garment.photo.thumb_url)}
+                      alt=""
+                      className="aspect-[3/4] w-full rounded-xl bg-card-2 object-cover"
+                    />
+                    <span className="line-clamp-2 text-xs leading-snug text-text">{garment.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      )}
+    </section>
   );
 }
 

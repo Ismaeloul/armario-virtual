@@ -38,6 +38,18 @@ class FakeApi:
         return httpx.Response(self.status, json=body)
 
 
+_REAL_PRODUCT = uniqlo.UniqloConnector._product
+
+
+@pytest.fixture(autouse=True)
+def _sin_stock(monkeypatch):
+    """Por defecto, sin mirar el stock en la ficha (cada test que lo prueba lo vuelve a poner)."""
+    uniqlo._stock.clear()
+    monkeypatch.setattr(uniqlo.UniqloConnector, "_product", lambda self, product_id: ...)
+    yield
+    uniqlo._stock.clear()
+
+
 @pytest.fixture
 def api(monkeypatch, client):
     def install(answers=None, status=200, key=KEY):
@@ -320,3 +332,63 @@ def test_el_saldo_real_se_lee_gratis_y_nunca_ensena_la_clave(client, monkeypatch
     assert len(vistas) == 1 and apish.credits()[0] == used  # en memoria unos minutos y sin contar créditos
     client.delete("/api/settings/apish-key")
     apish.forget_account()
+
+
+# ---------- Stock (20-11-2026): la ficha dice qué tallas quedan
+
+
+def _naruto():
+    products, *_ = uniqlo.parse_search(_json("apish_uniqlo_search.json"), "t-shirts")
+    return products[0]
+
+
+def _ficha_de(product, stock_status):
+    """Una ficha de API.SH para el producto de Naruto: sus datos de la búsqueda más tallas con stock."""
+    item = next(p for p in _json("apish_uniqlo_search.json")["products"] if p["id"] == "E488252-000")
+    item = copy.deepcopy(item)
+    item["skus"] = [
+        {"color_code": "30", "size": size, "stock_status": stock_status} for size in ("S", "M", "L")
+    ]
+    item["sizes"] = [{"name": size} for size in ("S", "M", "L")]
+    item["credits_used"] = 1
+    return item
+
+
+def test_lo_agotado_no_cuenta_como_disponible(api, monkeypatch):
+    monkeypatch.setattr(uniqlo.UniqloConnector, "_product", _REAL_PRODUCT)
+    product = _naruto()
+    fake = api({"/uniqlo/v1/product": _ficha_de(product, "STOCK_OUT")})
+    detail = shops.cached_detail("uniqlo", product.store_data)
+    assert detail is not None and detail.stock_known and not detail.in_stock
+    # Otra vez el mismo producto: no se vuelve a pagar la ficha.
+    shops.cached_detail("uniqlo", product.store_data)
+    assert [c[0] for c in fake.calls] == ["/uniqlo/v1/product"]
+
+
+def test_con_tallas_queda_disponible_y_sin_ficha_se_retira(api, monkeypatch):
+    monkeypatch.setattr(uniqlo.UniqloConnector, "_product", _REAL_PRODUCT)
+    product = _naruto()
+    api({"/uniqlo/v1/product": _ficha_de(product, "IN_STOCK")})
+    detail = shops.cached_detail("uniqlo", product.store_data)
+    assert detail.in_stock and [s["name"] for s in detail.sizes] == ["S", "M", "L"]
+    uniqlo._stock.clear()
+    api({"/uniqlo/v1/product": {"error": "not found"}}, status=404)
+    assert shops.cached_detail("uniqlo", product.store_data) is None
+
+
+def test_con_pocos_creditos_no_se_mira_el_stock(api, monkeypatch):
+    monkeypatch.setattr(uniqlo.UniqloConnector, "_product", _REAL_PRODUCT)
+    product = _naruto()
+    fake = api({"/uniqlo/v1/product": _ficha_de(product, "STOCK_OUT")})
+    monkeypatch.setattr(apish, "credits", lambda: (config.APISH_MONTHLY_CREDITS - 10, config.APISH_MONTHLY_CREDITS))
+    detail = shops.cached_detail("uniqlo", product.store_data)
+    assert detail is not None and detail.in_stock  # lo del listado
+    assert fake.calls == []
+
+
+def test_solo_en_tienda_fisica_no_se_propone():
+    data = copy.deepcopy(_json("apish_uniqlo_search.json"))
+    for item in data["products"]:
+        item["store_stock_only"] = True
+    products, *_ = uniqlo.parse_search(data, "t-shirts")
+    assert products == []

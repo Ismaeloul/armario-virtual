@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { t } from "../i18n/es";
 import { ApiError, api, mediaUrl, type Catalog, type Garment, type Taste } from "../lib/api";
 import { PrimaryButton, SecondaryButton } from "./Controls";
+import { BottomSheet } from "./BottomSheet";
 import { Icon } from "./Icon";
 import { FadeImg } from "./Skeleton";
 
@@ -27,11 +27,6 @@ export function OutfitPicker({
 
   useEffect(() => {
     api.garments().then(setAll).catch(() => setFailed(true));
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = overflow;
-    };
   }, []);
 
   const byId = new Map((all ?? []).map((g) => [g.id, g]));
@@ -60,80 +55,19 @@ export function OutfitPicker({
       });
   };
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex animate-fade items-end justify-center bg-scrim backdrop-blur-[2px]"
-      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 2.5rem)" }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !busy) onClose();
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t.armario.outfits.elegir}
-        className="flex max-h-full w-full max-w-md animate-sheet flex-col rounded-t-3xl border border-line bg-bg"
-      >
-        <div className="flex items-center justify-between gap-2 py-3 pr-2 pl-5">
+  return (
+    <BottomSheet
+      label={t.armario.outfits.elegir}
+      onClose={onClose}
+      locked={busy}
+      header={
+        <div className="px-5 pb-2">
           <h2 className="font-display text-lg font-semibold tracking-tight">{t.armario.outfits.elegir}</h2>
-          <button
-            type="button"
-            aria-label={t.comun.cancelar}
-            disabled={busy}
-            onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center active:opacity-60"
-          >
-            <Icon name="close" size={22} />
-          </button>
+          <p className="mt-0.5 text-xs text-text-2">{t.armario.outfits.elegirTexto}</p>
         </div>
-        <p className="px-5 pb-2 text-xs text-text-2">{t.armario.outfits.elegirTexto}</p>
-
-        <div className="min-h-0 overflow-y-auto px-5 pb-3">
-          {failed && <p className="py-6 text-center text-sm text-text-2">{t.comun.errorRed}</p>}
-          {ORDER.map((category) => {
-            const items = (all ?? []).filter((g) => g.category === category);
-            if (!items.length) return null;
-            return (
-              <div key={category} className="mb-4">
-                <span className="label-caps text-text-2">{catalog?.categories[category] ?? category}</span>
-                <div className="mt-1.5 grid grid-cols-4 gap-2">
-                  {items.map((g) => {
-                    const on = chosen.includes(g.id);
-                    return (
-                      <button
-                        key={g.id}
-                        type="button"
-                        aria-pressed={on}
-                        aria-label={g.name}
-                        onClick={() => toggle(g)}
-                        className={`relative overflow-hidden rounded-xl border-2 transition-colors duration-200 active:scale-[0.97] ${
-                          on ? "border-primary" : "border-transparent"
-                        }`}
-                      >
-                        <FadeImg
-                          src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
-                          alt=""
-                          loading="lazy"
-                          className="aspect-[3/4] w-full bg-card-2 object-cover"
-                        />
-                        {on && (
-                          <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-on-primary">
-                            <Icon name="check" size={13} />
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div
-          className="flex flex-col gap-2 border-t border-line px-5 pt-3"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
-        >
+      }
+      footer={(close) => (
+        <div className="flex flex-col gap-2">
           {picked.length > 0 && (
             <div className="flex gap-1.5 overflow-x-auto">
               {ORDER.flatMap((c) => picked.filter((g) => g.category === c)).map((g) => (
@@ -155,12 +89,53 @@ export function OutfitPicker({
           <PrimaryButton disabled={busy || picked.length < 2 || !complete} onClick={save}>
             {busy ? t.armario.outfits.guardando : t.armario.outfits.guardar(picked.length)}
           </PrimaryButton>
-          <SecondaryButton disabled={busy} onClick={onClose}>
+          <SecondaryButton disabled={busy} onClick={close}>
             {t.comun.cancelar}
           </SecondaryButton>
         </div>
+      )}
+    >
+      <div className="px-5">
+        {failed && <p className="py-6 text-center text-sm text-text-2">{t.comun.errorRed}</p>}
+        {ORDER.map((category) => {
+          const items = (all ?? []).filter((g) => g.category === category);
+          if (!items.length) return null;
+          return (
+            <div key={category} className="mb-4">
+              <span className="label-caps text-text-2">{catalog?.categories[category] ?? category}</span>
+              <div className="mt-1.5 grid grid-cols-4 gap-2">
+                {items.map((g) => {
+                  const on = chosen.includes(g.id);
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      aria-pressed={on}
+                      aria-label={g.name}
+                      onClick={() => toggle(g)}
+                      className={`relative overflow-hidden rounded-xl border-2 transition-colors duration-200 active:scale-[0.97] ${
+                        on ? "border-primary" : "border-transparent"
+                      }`}
+                    >
+                      <FadeImg
+                        src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
+                        alt=""
+                        loading="lazy"
+                        className="aspect-[3/4] w-full bg-card-2 object-cover"
+                      />
+                      {on && (
+                        <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-on-primary">
+                          <Icon name="check" size={13} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </div>,
-    document.body,
+    </BottomSheet>
   );
 }

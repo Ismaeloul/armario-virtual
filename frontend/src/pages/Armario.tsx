@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Segmented } from "../components/Controls";
+import { GarmentSheet } from "../components/GarmentSheet";
 import { Icon } from "../components/Icon";
 import { BackHeader, BottomNav, MainHeader, Screen } from "../components/Layout";
 import { cap, t } from "../i18n/es";
@@ -14,6 +15,8 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
   const [failed, setFailed] = useState(false);
   const [season, setSeason] = useState("todas");
   const [category, setCategory] = useState("todo");
+  // La prenda cuya ficha está abierta en la hoja que sube desde abajo.
+  const [viewing, setViewing] = useState<number | null>(null);
 
   const [ownCount, setOwnCount] = useState(0);
   useEffect(() => {
@@ -162,11 +165,12 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
             ) : (
               <section key={`${season}-${category}`} className="mt-4 grid grid-cols-2 gap-3.5">
                 {visible.map((g, i) => (
-                  <Link
+                  <button
                     key={g.id}
-                    to={`/prenda/${g.id}`}
+                    type="button"
+                    onClick={() => setViewing(g.id)}
                     style={stagger(i)}
-                    className="card flex animate-enter flex-col p-2.5 transition-transform active:scale-[0.97]"
+                    className="card flex animate-enter flex-col p-2.5 text-left transition-transform active:scale-[0.97]"
                   >
                     <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-card-2">
                       <FadeImg
@@ -199,7 +203,7 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
                           catalog.seasons[g.season]}
                       </p>
                     </div>
-                  </Link>
+                  </button>
                 ))}
               </section>
             )}
@@ -218,6 +222,20 @@ export default function Armario({ laundryOnly = false }: { laundryOnly?: boolean
           <Icon name="add" size={28} />
         </Link>
       </div>
+      {viewing !== null && (
+        <GarmentSheet
+          garmentId={viewing}
+          onClose={() => {
+            setViewing(null);
+            // Lo cambiado dentro (lavadora, favorita, datos…) se ve al cerrar.
+            api.garments().then(setGarments).catch(() => undefined);
+          }}
+          onDeleted={() => {
+            setViewing(null);
+            load();
+          }}
+        />
+      )}
       <BottomNav />
     </>
   );

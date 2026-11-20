@@ -37,8 +37,11 @@ libre -> `/search` con `q` y el filtro de hombre (1 crédito), y solo si Uniqlo 
 buscador pregunta a todas las tiendas, y no se gasta un crédito por cada búsqueda de una tienda que el usuario
 no usa). Los dos cuentan para el mismo tope.
 """
+import dataclasses
 import math
 import re
+import threading
+import time
 from datetime import date, timedelta
 from urllib.parse import parse_qs, urlsplit
 
@@ -55,6 +58,14 @@ _GENDERS = {"MEN", "UNISEX"}
 K_SEEN = "apish_uniqlo_seen"  # id de producto -> último día en que salió (para parar de paginar)
 K_FULL = "apish_uniqlo_full"  # sección -> mes del último recorrido completo («2026-11»)
 SEEN_DAYS = 120  # lo visto hace más se olvida (el ajuste no crece sin fin)
+# Stock: la búsqueda no dice qué tallas quedan; la ficha (`/product`, 1 crédito) sí, y sirve para todos los
+# colores del producto. Se pide antes de enseñar una prenda (las finalistas de cada tanda, los «me gusta» de la
+# semana, el cambio de color) y se guarda unas horas. Si quedan pocos créditos del tope, se deja de mirar y se
+# fía del listado, para que no falte para las consultas semanales.
+STOCK_TTL = 12 * 3600
+STOCK_RESERVE = 40
+_stock: dict[str, tuple[float, dict | None]] = {}
+_stock_lock = threading.Lock()
 _PRODUCT_ID = re.compile(r"\b(E?\d{6}-\d{3})\b", re.IGNORECASE)
 
 # slug -> (nombre para el usuario, palabra de búsqueda, tipo de la sección). Los slugs son los de antes, para
@@ -110,6 +121,8 @@ def entries(item: dict, sizes: dict[str, list[list]] | None = None) -> list[Entr
     product_id, group = str(item.get("id") or ""), str(item.get("price_group") or "00")
     if not product_id or str(item.get("gender_category") or "").upper() not in _GENDERS:
         return []
+    if item.get("store_stock_only") is True:
+        return []  # solo se vende en tienda física: no se puede pedir por internet
     promo = item.get("promo_price")
     price = euros(promo) or euros(item.get("price")) or euros(item.get("regular_price"))
     images = item.get("images_by_color") or {}
@@ -325,11 +338,54 @@ class UniqloConnector(ListingConnector):
         products.sort(key=lambda p: not p.product_ref.endswith(f"-{wanted}"))  # el color del enlace, primero
         return products[:limit]
 
-    def detail(self, store_data: dict):
-        """Siempre la del listado (sin gastar créditos)."""
+    def _product(self, product_id: str):
+        """La ficha de API.SH de un producto (guardada unas horas). None si ya no existe; `...` si no se
+        sabe (sin clave, pocos créditos o el servicio falla): entonces vale lo del listado."""
+        now = time.time()
+        with _stock_lock:
+            cached = _stock.get(product_id)
+            if cached is not None and now - cached[0] < STOCK_TTL:
+                return cached[1]
+        used, limit = apish.credits()
+        if apish.missing() or used >= limit - STOCK_RESERVE:
+            return ...
+        try:
+            data = apish.get("/uniqlo/v1/product", {"id": product_id, "country": "fr"})
+        except ShopError:
+            return ...
+        with _stock_lock:
+            _stock[product_id] = (now, data)
+        return data
+
+    def cached_detail(self, store_data: dict):
+        """La del listado, con las tallas que quedan según la ficha de Uniqlo. None si ese color ya no se
+        vende (o el producto ya no está)."""
         from .listing import detail_from
 
-        found = detail_from(self.key, store_data)
+        base = detail_from(self.key, store_data)
+        own = str(store_data.get("id") or "")
+        if base is None or own.count("-") < 3:
+            return base
+        data = self._product(own.rsplit("-", 2)[0])
+        if data is ...:
+            return base
+        if not data:
+            return None
+        found = next((e for e in entries(data, _sizes(data)) if e.id == own), None)
         if found is None:
+            return None  # ese color ya no está (o solo en tienda física)
+        if not found.sizes:
+            return base
+        return dataclasses.replace(
+            base,
+            sizes=[{"name": str(n), "in_stock": bool(left)} for n, left in found.sizes],
+            stock_known=True,
+            sold_out=found.sold_out,
+            composition=base.composition or " ".join(str(found.composition).split()),
+        )
+
+    def detail(self, store_data: dict):
+        """La del listado con el stock de la ficha (ver `cached_detail`)."""
+        if not isinstance((store_data or {}).get("snap"), dict):
             raise ShopError("sin datos guardados de ese color (sale en la próxima consulta semanal)")
-        return found
+        return self.cached_detail(store_data)

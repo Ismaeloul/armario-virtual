@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { cap, t } from "../i18n/es";
 import { ApiError, api, mediaUrl, type Garment } from "../lib/api";
 import { inputClass, PrimaryButton, SecondaryButton } from "./Controls";
+import { BottomSheet } from "./BottomSheet";
 import { Icon } from "./Icon";
 import { FadeImg } from "./Skeleton";
 import { StudioReview, type StudioView } from "./StudioReview";
@@ -169,11 +169,6 @@ function PairPicker({
 
   useEffect(() => {
     api.garments().then(setAll).catch(() => setFailed(true));
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = overflow;
-    };
   }, []);
 
   // La pareja es de otra parte del cuerpo: la de arriba con la de abajo.
@@ -186,32 +181,14 @@ function PairPicker({
       (!words || `${g.name} ${g.type} ${g.brand ?? ""}`.toLowerCase().includes(words)),
   );
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex animate-fade items-end justify-center bg-scrim backdrop-blur-[2px]"
-      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 2.5rem)" }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t.ficha.pareja.elegir}
-        className="flex max-h-full w-full max-w-md animate-sheet flex-col rounded-t-3xl border border-line bg-bg"
-      >
-        <div className="flex items-center justify-between gap-2 py-3 pr-2 pl-5">
+  return (
+    <BottomSheet
+      label={t.ficha.pareja.elegir}
+      onClose={onClose}
+      locked={busy}
+      header={
+        <div className="flex flex-col gap-3 px-5 pb-3">
           <h2 className="font-display text-lg font-semibold tracking-tight">{t.ficha.pareja.elegir}</h2>
-          <button
-            type="button"
-            aria-label={t.comun.cancelar}
-            onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center active:opacity-60"
-          >
-            <Icon name="close" size={22} />
-          </button>
-        </div>
-        <div className="px-5 pb-3">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -219,34 +196,31 @@ function PairPicker({
             className={inputClass}
           />
         </div>
-        <div
-          className="grid min-h-0 grid-cols-3 gap-2.5 overflow-y-auto px-5"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)" }}
-        >
-          {failed && <p className="col-span-3 py-6 text-center text-sm text-text-2">{t.comun.errorRed}</p>}
-          {all && options.length === 0 && (
-            <p className="col-span-3 py-6 text-center text-sm text-text-3">{t.ficha.pareja.ninguna}</p>
-          )}
-          {options.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              disabled={busy}
-              onClick={() => onPick(g.id)}
-              className="card flex flex-col p-1.5 text-left active:scale-[0.97] disabled:opacity-40"
-            >
-              <FadeImg
-                src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
-                alt=""
-                loading="lazy"
-                className="aspect-[3/4] w-full rounded-lg bg-card-2 object-cover"
-              />
-              <span className="mt-1.5 line-clamp-2 px-0.5 text-[11px] font-medium leading-tight">{g.name}</span>
-            </button>
-          ))}
-        </div>
+      }
+    >
+      <div className="grid grid-cols-3 gap-2.5 px-5">
+        {failed && <p className="col-span-3 py-6 text-center text-sm text-text-2">{t.comun.errorRed}</p>}
+        {all && options.length === 0 && (
+          <p className="col-span-3 py-6 text-center text-sm text-text-3">{t.ficha.pareja.ninguna}</p>
+        )}
+        {options.map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            disabled={busy}
+            onClick={() => onPick(g.id)}
+            className="card flex flex-col p-1.5 text-left active:scale-[0.97] disabled:opacity-40"
+          >
+            <FadeImg
+              src={mediaUrl((g.photo_cover ?? g.photo_front).thumb_url)}
+              alt=""
+              loading="lazy"
+              className="aspect-[3/4] w-full rounded-lg bg-card-2 object-cover"
+            />
+            <span className="mt-1.5 line-clamp-2 px-0.5 text-[11px] font-medium leading-tight">{g.name}</span>
+          </button>
+        ))}
       </div>
-    </div>,
-    document.body,
+    </BottomSheet>
   );
 }

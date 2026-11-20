@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { BottomNav, MainHeader, Screen } from "../components/Layout";
 import { FadeImg, OutfitSkeleton, Skeleton, stagger } from "../components/Skeleton";
-import { ZoomViewer } from "../components/ZoomViewer";
+import { GarmentSheet } from "../components/GarmentSheet";
 import { cap, t } from "../i18n/es";
 import { api, mediaUrl, type Catalog, type Garment, type Taste } from "../lib/api";
 
@@ -138,7 +138,8 @@ export default function Gustos() {
                           marked ? "border-danger bg-danger/10" : "border-line bg-card-2"
                         }`}
                       >
-                        {/* La foto se abre en grande; el resto de la fila señala la prenda que no pega. */}
+                        {/* La foto abre la ficha. El resto de la fila también, salvo mientras se señala la
+                            prenda que no pega: entonces la marca. */}
                         <button
                           type="button"
                           aria-label={t.gustos.verFoto(g.name)}
@@ -153,10 +154,11 @@ export default function Gustos() {
                         </button>
                         <button
                           type="button"
-                          disabled={!asking}
-                          aria-pressed={marked}
+                          aria-pressed={asking ? marked : undefined}
                           onClick={() =>
-                            setCulprits((list) => (marked ? list.filter((id) => id !== g.id) : [...list, g.id]))
+                            asking
+                              ? setCulprits((list) => (marked ? list.filter((id) => id !== g.id) : [...list, g.id]))
+                              : setViewing(g)
                           }
                           className="min-w-0 flex-1 self-stretch text-left"
                         >
@@ -297,17 +299,13 @@ export default function Gustos() {
       </Screen>
       <BottomNav />
       {viewing && (
-        <ZoomViewer
-          photos={(
-            [
-              [viewing.photo_pair, t.ficha.juntas],
-              [viewing.photo_front, viewing.category === "calzado" ? t.ficha.lateral : t.ficha.delante],
-              [viewing.photo_back, viewing.category === "calzado" ? t.ficha.frente : t.ficha.detras],
-              [viewing.photo_extra, t.ficha.otroLado],
-            ] as const
-          ).flatMap(([photo, label]) => (photo ? [{ label, url: mediaUrl(photo.url) }] : []))}
-          closeLabel={t.nueva.estudio.cerrar}
+        <GarmentSheet
+          garmentId={viewing.id}
           onClose={() => setViewing(null)}
+          onDeleted={() => {
+            setViewing(null);
+            load();
+          }}
         />
       )}
     </>
