@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { BottomSheet } from "../components/BottomSheet";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { inputClass, PrimaryButton, SecondaryButton, Segmented, Switch } from "../components/Controls";
+import { DEFAULT_HEX } from "../lib/colors";
 import { externalHref, photoAfterTap } from "../lib/links";
 import { CopyRow } from "../components/CopyButton";
 import { Icon } from "../components/Icon";
@@ -18,6 +19,7 @@ import {
   type ShopCrawl,
   type ShopDiscardReason,
   type ShopFilter,
+  type ShopFilterOut,
   type ShopItem,
   type ShopLookupItem,
   type ShopMatches,
@@ -33,13 +35,75 @@ const PHOTO_POLL_MS = 20_000; // cada cuánto se mira si ha llegado la foto que 
 const REASON_DONE_MS = 1500;
 // «Es caro» no se ofrece: el usuario no quiere que el precio sea un motivo.
 const REASONS: ShopDiscardReason[] = ["estilo", "color", "ya_tengo"];
-const NO_FILTER: ShopFilter = { store: null, category: null };
+const NO_FILTER: ShopFilter = {
+  stores: [],
+  categories: [],
+  types: [],
+  colors: [],
+  max_price: null,
+  sale: false,
+};
+const PRICES = [20, 30, 50, 80, 120]; // los precios máximos que se ofrecen, en euros
+
+/** Cuántas cosas hay puestas en el filtro. */
+function filterCount(f: ShopFilter): number {
+  return (
+    f.stores.length + f.categories.length + f.types.length + f.colors.length + (f.max_price ? 1 : 0) + (f.sale ? 1 : 0)
+  );
+}
+
+/** La tienda o la parte del cuerpo, si el filtro es solo de una (para los textos «Ver más de Zara»…). */
+function soleOf(f: ShopFilter): {
+  store: string | null;
+  category: string | null;
+  onlyStore: string | null;
+} {
+  const store = f.stores.length === 1 ? f.stores[0] : null;
+  const category = f.categories.length === 1 && f.types.length === 0 ? f.categories[0] : null;
+  return {
+    store,
+    category,
+    onlyStore: store && filterCount(f) === 1 ? store : null,
+  };
+}
+
+/** ¿La reposición en marcha es la de este filtro? (El servidor da el precio en céntimos.) */
+function sameFilter(out: ShopFilterOut | null, f: ShopFilter): boolean {
+  if (!out) return false;
+  const same = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
+  return (
+    same(out.stores, f.stores) &&
+    same(out.categories, f.categories) &&
+    same(out.types, f.types) &&
+    same(out.colors, f.colors) &&
+    (out.max_price ?? null) === (f.max_price ? f.max_price * 100 : null) &&
+    out.sale === f.sale
+  );
+}
+
+/** Lo que está puesto, en palabras: «Zara · Negro · Hasta 30 €». */
+function filterLabels(f: ShopFilter, stores: ShopStore[]): string[] {
+  return [
+    ...f.stores.map((key) => stores.find((s) => s.key === key)?.name ?? key),
+    ...f.categories.map((c) => t.compras.filtros.categorias[c] ?? c),
+    ...f.types.map(cap),
+    ...f.colors.map(cap),
+    ...(f.max_price ? [t.compras.filtros.hasta(f.max_price)] : []),
+    ...(f.sale ? [t.compras.filtros.rebajas] : []),
+  ];
+}
 const topButton =
   "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-line bg-control text-text active:scale-[0.98] disabled:opacity-40";
 
 /** «viernes, 20 de noviembre, 9:41» a partir de una fecha con hora. */
 const dateTime = (iso: string) =>
-  new Date(iso).toLocaleString("es-ES", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
+  new Date(iso).toLocaleString("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
 /** «hoy», «mañana» o «el viernes 20 de noviembre» a partir de un día (AAAA-MM-DD). */
 function dayLabel(iso: string): string {
@@ -61,7 +125,10 @@ const dayMonth = (iso: string) => new Date(iso).toLocaleDateString("es-ES", { da
  * pestaña del navegador escondida no pregunta.
  */
 function usePendingPhotos(items: ShopItem[] | null, onArrived: (fresh: ShopLookupItem[]) => void) {
-  const ids = (items ?? []).filter((item) => item.photo_pending).map((item) => item.id).join(",");
+  const ids = (items ?? [])
+    .filter((item) => item.photo_pending)
+    .map((item) => item.id)
+    .join(",");
   const arrived = useRef(onArrived);
   arrived.current = onArrived;
   useEffect(() => {
@@ -88,6 +155,7 @@ export default function Compras() {
   const [next, setNext] = useState<ShopNext | null>(null);
   const [failed, setFailed] = useState(false);
   const [storesOpen, setStoresOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // El filtro de Descubrir. La referencia es para el sondeo, que no debe reiniciarse al cambiarlo.
   const [filter, setFilter] = useState<ShopFilter>(NO_FILTER);
   const filterRef = useRef(filter);
@@ -125,11 +193,16 @@ export default function Compras() {
       .catch(() => setFailed(true));
   }, []);
 
-  // Si se desactiva la tienda por la que se estaba filtrando, el filtro de tienda se quita.
-  const filteredStore = state?.stores.find((s) => s.key === filter.store);
+  // Si se desactiva una tienda por la que se estaba filtrando, se quita del filtro.
+  const switchedOff = filter.stores.filter((key) => state?.stores.some((s) => s.key === key && !s.enabled)).join(",");
   useEffect(() => {
-    if (filter.store && filteredStore && !filteredStore.enabled) changeFilter({ ...filter, store: null });
-  }, [filter, filteredStore, changeFilter]);
+    if (!switchedOff) return;
+    const off = switchedOff.split(",");
+    changeFilter({
+      ...filter,
+      stores: filter.stores.filter((key) => !off.includes(key)),
+    });
+  }, [filter, switchedOff, changeFilter]);
 
   // Mientras hay una consulta, un «Ver más» o una reposición en marcha se sondea el estado (y el
   // avance); al terminar, o en cuanto hay propuestas, se piden.
@@ -146,9 +219,7 @@ export default function Compras() {
           if (!s.running || s.pending > 0)
             api
               .shopNext(filterRef.current)
-              .then((n) =>
-                setNext((now) => keepShown(now, n)),
-              )
+              .then((n) => setNext((now) => keepShown(now, n)))
               .catch(() => undefined);
         })
         .catch(() => undefined);
@@ -165,8 +236,14 @@ export default function Compras() {
             <div className="min-w-0 flex-1">
               <Segmented<View>
                 options={[
-                  { value: "descubrir", label: t.compras.descubrirN(state?.pending ?? 0) },
-                  { value: "gustados", label: t.compras.meGustanN(state?.liked ?? 0) },
+                  {
+                    value: "descubrir",
+                    label: t.compras.descubrirN(state?.pending ?? 0),
+                  },
+                  {
+                    value: "gustados",
+                    label: t.compras.meGustanN(state?.liked ?? 0),
+                  },
                 ]}
                 value={view}
                 onChange={setView}
@@ -208,6 +285,17 @@ export default function Compras() {
           )}
           {!failed && (!state || !next) && (view === "gustados" ? <ListSkeleton /> : <DiscoverSkeleton />)}
 
+          {/* La hoja de filtros vive aquí y no dentro de Descubrir: al cambiar un filtro, Descubrir puede pasar
+              de la tarjeta al aviso de «no quedan» y la hoja se volvía a montar (bajaba y subía otra vez). */}
+          {filtersOpen && state && (
+            <FilterSheet
+              filter={filter}
+              stores={state.stores.filter((s) => s.enabled)}
+              remaining={next?.remaining ?? 0}
+              onFilter={changeFilter}
+              onClose={() => setFiltersOpen(false)}
+            />
+          )}
           {!failed && state && next && view === "descubrir" && (
             <Discover
               state={state}
@@ -218,15 +306,27 @@ export default function Compras() {
               onNext={(n) => {
                 setNext(n);
                 // Los contadores (pendientes, me gustan) cambian con cada decisión.
-                api.shopState().then(setState).catch(() => undefined);
+                api
+                  .shopState()
+                  .then(setState)
+                  .catch(() => undefined);
               }}
               // Otro color de la misma prenda (o sus colores recién sabidos): cambia la tarjeta, no la cola.
               onItem={(from, item) => setNext((n) => (n && n.item?.id === from ? { ...n, item } : n))}
               onOpenStores={() => setStoresOpen(true)}
+              onOpenFilters={() => setFiltersOpen(true)}
             />
           )}
           {!failed && state && next && view === "gustados" && (
-            <Liked key={likedVersion} onChanged={() => api.shopState().then(setState).catch(() => undefined)} />
+            <Liked
+              key={likedVersion}
+              onChanged={() =>
+                api
+                  .shopState()
+                  .then(setState)
+                  .catch(() => undefined)
+              }
+            />
           )}
         </div>
       </Screen>
@@ -270,6 +370,7 @@ function Discover({
   onNext,
   onItem,
   onOpenStores,
+  onOpenFilters,
 }: {
   state: ShopState;
   next: ShopNext;
@@ -279,11 +380,11 @@ function Discover({
   onNext: (n: ShopNext) => void;
   onItem: (from: number, item: ShopItem) => void;
   onOpenStores: () => void;
+  onOpenFilters: () => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fit = useFitHeight(Boolean(next.item));
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewing, setViewing] = useState<ShopItem | null>(null);
   // Los botones mueven la tarjeta igual que el dedo: sale volando hacia su lado antes de decidir.
   const [fly, setFly] = useState<-1 | 0 | 1>(0);
@@ -378,7 +479,10 @@ function Discover({
         deciding.current.delete(id);
         setError(t.compras.errorAccion);
         setAttempt((n) => n + 1);
-        return api.shopNext(filter).then((answer) => onNext(keepShown(null, answer, deciding.current))).catch(() => undefined);
+        return api
+          .shopNext(filter)
+          .then((answer) => onNext(keepShown(null, answer, deciding.current)))
+          .catch(() => undefined);
       });
   };
 
@@ -399,7 +503,10 @@ function Discover({
       .then(() => api.shopUndo(filter))
       .then((n) => {
         if (n.item) setBack({ id: n.item.id, side: sides.current.get(n.item.id) ?? -1 });
-        onNext({ ...n, queue: n.queue.filter((other) => !deciding.current.has(other.id)) });
+        onNext({
+          ...n,
+          queue: n.queue.filter((other) => !deciding.current.has(other.id)),
+        });
       })
       .catch(() => setError(t.compras.errorVolver))
       .finally(() => setBusy(false));
@@ -474,79 +581,27 @@ function Discover({
   // Se ven siempre: también mientras se consulta y cuando el filtro se queda sin propuestas.
   // Un solo botón «Filtros» que abre la hoja con la tienda (si hay más de una) y el tipo de prenda. Al
   // lado, lo que está puesto. Se ve siempre: también mientras se consulta y cuando el filtro se queda vacío.
-  const active = [
-    filter.store ? enabled.find((s) => s.key === filter.store)?.name : null,
-    filter.category ? t.compras.filtros.categorias[filter.category] : null,
-  ].filter((label): label is string => !!label);
+  const active = filterLabels(filter, enabled);
+  const one = soleOf(filter);
   const filters = (
-    <div className="flex min-w-0 items-center gap-2">
-      <button
-        type="button"
-        onClick={() => setFiltersOpen(true)}
-        className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-line px-3.5 text-xs font-semibold active:scale-[0.97] ${
-          active.length ? "bg-primary text-on-primary" : "bg-card-2 text-text"
-        }`}
-      >
-        <Icon name="tune" size={16} />
-        {active.length ? t.compras.filtros.botonN(active.length) : t.compras.filtros.boton}
-      </button>
-      {active.length > 0 && <span className="min-w-0 truncate text-xs text-text-2">{active.join(" · ")}</span>}
-    </div>
-  );
-  const filterSheet = filtersOpen && (
-    <BottomSheet
-      label={t.compras.filtros.titulo}
-      onClose={() => setFiltersOpen(false)}
-      header={
-        <h2 className="px-5 pb-2 font-display text-lg font-semibold tracking-tight">{t.compras.filtros.titulo}</h2>
-      }
-      footer={(close) => (
-        <div className="flex flex-col gap-2">
-          <PrimaryButton onClick={close}>{t.compras.filtros.listo}</PrimaryButton>
-          {active.length > 0 && (
-            <SecondaryButton onClick={() => onFilter({ ...filter, store: null, category: null })}>
-              {t.compras.filtros.quitar}
-            </SecondaryButton>
-          )}
-        </div>
-      )}
-    >
-      <div className="flex flex-col gap-4 px-5 pt-1">
-        {enabled.length > 1 && (
-          <div className="flex flex-col gap-2">
-            <span className="label-caps text-text-2">{t.compras.filtros.tienda}</span>
-            <Chips
-              wrap
-              label={t.compras.filtros.tienda}
-              options={[
-                { value: null, label: t.compras.filtros.todas },
-                ...enabled.map((s) => ({ value: s.key, label: s.name })),
-              ]}
-              value={filter.store}
-              onChange={(store) => onFilter({ ...filter, store })}
-            />
-          </div>
-        )}
-        <div className="flex flex-col gap-2">
-          <span className="label-caps text-text-2">{t.compras.filtros.tipo}</span>
-          <Chips
-            wrap
-            label={t.compras.filtros.tipo}
-            options={[
-              { value: null, label: t.compras.filtros.todo },
-              ...Object.entries(t.compras.filtros.categorias).map(([value, label]) => ({ value, label })),
-            ]}
-            value={filter.category}
-            onChange={(category) => onFilter({ ...filter, category })}
-          />
-        </div>
+    <>
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={onOpenFilters}
+          className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-line px-3.5 text-xs font-semibold active:scale-[0.97] ${
+            active.length ? "bg-primary text-on-primary" : "bg-card-2 text-text"
+          }`}
+        >
+          <Icon name="tune" size={16} />
+          {active.length ? t.compras.filtros.botonN(active.length) : t.compras.filtros.boton}
+        </button>
+        {active.length > 0 && <span className="min-w-0 truncate text-xs text-text-2">{active.join(" · ")}</span>}
       </div>
-    </BottomSheet>
+    </>
   );
 
-  const reasonBar = asking && (
-    <ReasonBar done={asking.done} onReason={giveReason} onClose={() => ask(null)} />
-  );
+  const reasonBar = asking && <ReasonBar done={asking.done} onReason={giveReason} onClose={() => ask(null)} />;
 
   const round =
     "flex items-center justify-center rounded-full transition-transform active:scale-95 disabled:[&>*]:opacity-40";
@@ -566,13 +621,16 @@ function Discover({
   );
 
   // Qué está pasando de verdad (para la línea de arriba y los avisos): qué se trae y de dónde.
-  const store = enabled.find((s) => s.key === filter.store) ?? enabled[0];
-  const filtered = filter.category !== null || filter.store !== null;
-  const what = filter.category
-    ? (t.compras.filtros.categorias[filter.category] ?? "").toLowerCase()
-    : filter.store
-      ? t.compras.ocupado.deTienda(store.name)
-      : t.compras.ocupado.cosas;
+  const store = enabled.find((s) => s.key === one.store) ?? enabled[0];
+  const filtered = filterCount(filter) > 0;
+  const what =
+    one.category && filterCount(filter) === 1
+      ? (t.compras.filtros.categorias[one.category] ?? "").toLowerCase()
+      : one.onlyStore
+        ? t.compras.ocupado.deTienda(store.name)
+        : filtered
+          ? `«${active.join(" · ")}»`
+          : t.compras.ocupado.cosas;
   const status = activity(state, next, filter, what);
 
   if (item) {
@@ -583,80 +641,82 @@ function Discover({
             item={viewing}
             onClose={() => {
               setViewing(null);
-              api.shopNext(filter).then((n) => onNext(merge(n))).catch(() => undefined);
+              api
+                .shopNext(filter)
+                .then((n) => onNext(merge(n)))
+                .catch(() => undefined);
             }}
           />
         )}
-        {filterSheet}
         {/* Todo en una pantalla: la foto se queda con el alto que sobra, para no tener que bajar a los botones. */}
         <div ref={fit.ref} style={fit.style} className="relative -mt-2 flex min-h-[25rem] flex-col gap-2.5">
-        {filters}
-        {(status || state.last_more?.low) && (
-          <button
-            type="button"
-            onClick={status?.crawl ? onOpenStores : undefined}
-            className="-my-1 truncate py-1 text-left text-xs text-text-3"
-          >
-            {status ? status.text : t.compras.mas.encajaMenos}
-          </button>
-        )}
-        {/* La pila: la de debajo ya pintada (con su foto) y sin sumar alto; la tercera solo se precarga. */}
-        <div className="relative flex min-h-0 flex-1 flex-col">
-          {behind && (
-            <div
-              ref={backCard}
-              className="pointer-events-none absolute inset-0 flex flex-col transition-transform duration-150 ease-out"
-              style={{ transform: "translateY(8px) scale(0.955)" }}
+          {filters}
+          {(status || state.last_more?.low) && (
+            <button
+              type="button"
+              onClick={status?.crawl ? onOpenStores : undefined}
+              className="-my-1 truncate py-1 text-left text-xs text-text-3"
             >
-              <SwipeCard
-                key={behind.id}
-                still
-                item={behind}
-                busy
-                pending={null}
-                onColor={() => undefined}
-                fly={0}
-                enterFrom={0}
-                onDecide={() => undefined}
-                onOpen={() => undefined}
-              />
-            </div>
+              {status ? status.text : t.compras.mas.encajaMenos}
+            </button>
           )}
-          <SwipeCard
-            key={`${cards.current.get(item.id) ?? item.id}-${attempt}`}
-            item={item}
-            busy={busy || colors.pending !== null}
-            pending={colors.pending}
-            onColor={colors.pick}
-            fly={fly}
-            enterFrom={back?.id === item.id ? back.side : 0}
-            onDecide={decide}
-            onOpen={() => setViewing(item)}
-            onShift={growBehind}
-          />
-        </div>
-        {alert}
-        <section className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex h-16 items-center justify-center gap-6">
-          <span className="pointer-events-auto absolute left-3">{undoButton}</span>
-          <button
-            type="button"
-            aria-label={t.compras.no}
-            disabled={busy || colors.pending !== null}
-            onClick={() => press(false)}
-            className={`${round} ${soft} pointer-events-auto h-16 w-16 border border-line bg-card text-danger`}
-          >
-            <Icon name="close" size={30} />
-          </button>
-          <button
-            type="button"
-            aria-label={t.compras.si}
-            disabled={busy || colors.pending !== null}
-            onClick={() => press(true)}
-            className={`${round} ${soft} pointer-events-auto h-16 w-16 border border-line bg-card text-primary`}
-          >
-            <Icon name="favorite_fill" size={30} />
-          </button>
-        </section>
+          {/* La pila: la de debajo ya pintada (con su foto) y sin sumar alto; la tercera solo se precarga. */}
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            {behind && (
+              <div
+                ref={backCard}
+                className="pointer-events-none absolute inset-0 flex flex-col transition-transform duration-150 ease-out"
+                style={{ transform: "translateY(8px) scale(0.955)" }}
+              >
+                <SwipeCard
+                  key={behind.id}
+                  still
+                  item={behind}
+                  busy
+                  pending={null}
+                  onColor={() => undefined}
+                  fly={0}
+                  enterFrom={0}
+                  onDecide={() => undefined}
+                  onOpen={() => undefined}
+                />
+              </div>
+            )}
+            <SwipeCard
+              key={`${cards.current.get(item.id) ?? item.id}-${attempt}`}
+              item={item}
+              busy={busy || colors.pending !== null}
+              pending={colors.pending}
+              onColor={colors.pick}
+              fly={fly}
+              enterFrom={back?.id === item.id ? back.side : 0}
+              onDecide={decide}
+              onOpen={() => setViewing(item)}
+              onShift={growBehind}
+            />
+          </div>
+          {alert}
+          <section className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex h-16 items-center justify-center gap-6">
+            <span className="pointer-events-auto absolute left-3">{undoButton}</span>
+            <button
+              type="button"
+              aria-label={t.compras.no}
+              disabled={busy || colors.pending !== null}
+              onClick={() => press(false)}
+              className={`${round} ${soft} pointer-events-auto h-16 w-16 border border-line bg-card text-danger`}
+            >
+              <Icon name="close" size={30} />
+            </button>
+            <button
+              type="button"
+              aria-label={t.compras.si}
+              disabled={busy || colors.pending !== null}
+              onClick={() => press(true)}
+              className={`${round} ${soft} pointer-events-auto h-16 w-16 border border-line bg-card text-primary`}
+            >
+              <Icon name="favorite_fill" size={30} />
+            </button>
+          </section>
         </div>
         {reasonBar}
       </>
@@ -695,9 +755,7 @@ function Discover({
           {status.crawl && state.crawl && <CrawlProgress crawl={state.crawl} />}
           <div className={`grid gap-2 ${filtered && state.pending > 0 && next.can_undo ? "grid-cols-2" : ""}`}>
             {filtered && state.pending > 0 && (
-              <SecondaryButton onClick={() => onFilter({ store: null, category: null })}>
-                {t.compras.ocupado.verTodo}
-              </SecondaryButton>
+              <SecondaryButton onClick={() => onFilter(NO_FILTER)}>{t.compras.ocupado.verTodo}</SecondaryButton>
             )}
             {next.can_undo && (
               <SecondaryButton onClick={undo}>
@@ -707,7 +765,11 @@ function Discover({
             )}
           </div>
           {status.crawl && (
-            <button type="button" onClick={onOpenStores} className="-my-2 min-h-11 self-start text-xs font-medium text-text-2 underline">
+            <button
+              type="button"
+              onClick={onOpenStores}
+              className="-my-2 min-h-11 self-start text-xs font-medium text-text-2 underline"
+            >
               {t.compras.ocupado.tiendas}
             </button>
           )}
@@ -744,14 +806,14 @@ function Discover({
 
   // Se han visto todas las de la tanda (o las del filtro): «Ver más» trae la siguiente del catálogo
   // guardado; si ya no queda, se dice tal cual y cuándo llegará más.
-  const last = enabled.map((s) => s.status.at).filter((at): at is string => !!at).sort().pop();
+  const last = enabled
+    .map((s) => s.status.at)
+    .filter((at): at is string => !!at)
+    .sort()
+    .pop();
   // Con el filtro de una tienda, lo que importa es cuándo le toca a esa.
-  const upcoming = nextConsult(filter.store ? [store] : enabled);
-  const filterLabel = filter.category
-    ? t.compras.filtros.categorias[filter.category]
-    : filter.store
-      ? store.name
-      : null;
+  const upcoming = nextConsult(one.store ? [store] : enabled);
+  const filterLabel = filtered ? active.join(" · ") : null;
   const when = [
     last ? t.compras.vacio.ultima(dateTime(last)) : t.compras.vacio.nunca,
     upcoming ? t.compras.vacio.proxima(upcoming) : "",
@@ -761,13 +823,13 @@ function Discover({
       ? filterLabel
         ? t.compras.mas.quedanFiltro(filterLabel)
         : t.compras.mas.quedan
-      : filter.store && !filter.category
+      : one.onlyStore
         ? t.compras.mas.sinMasTienda(store.name)
         : filterLabel
-        ? upcoming
-          ? t.compras.ocupado.sinMas(what, upcoming)
-          : t.compras.ocupado.sinMasNunca(what)
-        : [last ? t.compras.mas.agotado : "", ...when].filter(Boolean).join(" ");
+          ? upcoming
+            ? t.compras.ocupado.sinMas(what, upcoming)
+            : t.compras.ocupado.sinMasNunca(what)
+          : [last ? t.compras.mas.agotado : "", ...when].filter(Boolean).join(" ");
   return (
     <>
       {filters}
@@ -784,9 +846,9 @@ function Discover({
         {next.more > 0 ? (
           <PrimaryButton disabled={busy} onClick={more}>
             <Icon name="add" size={20} />
-            {busy ? t.compras.mas.trayendo : filter.store ? t.compras.mas.verDe(store.name) : t.compras.mas.ver}
+            {busy ? t.compras.mas.trayendo : one.onlyStore ? t.compras.mas.verDe(store.name) : t.compras.mas.ver}
           </PrimaryButton>
-        ) : filter.store ? (
+        ) : one.onlyStore ? (
           // De esa tienda no queda nada guardado: lo único que trae más es volver a consultarla.
           <>
             <PrimaryButton disabled={busy} onClick={() => search(store)}>
@@ -794,13 +856,11 @@ function Discover({
               {t.compras.mas.consultar(store.name)}
             </PrimaryButton>
             {state.pending > 0 && (
-              <SecondaryButton onClick={() => onFilter({ store: null, category: null })}>
-                {t.compras.ocupado.verTodo}
-              </SecondaryButton>
+              <SecondaryButton onClick={() => onFilter(NO_FILTER)}>{t.compras.ocupado.verTodo}</SecondaryButton>
             )}
           </>
         ) : filtered && state.pending > 0 ? (
-          <PrimaryButton onClick={() => onFilter({ store: null, category: null })}>{t.compras.ocupado.verTodo}</PrimaryButton>
+          <PrimaryButton onClick={() => onFilter(NO_FILTER)}>{t.compras.ocupado.verTodo}</PrimaryButton>
         ) : (
           <PrimaryButton disabled={busy} onClick={() => search(store)}>
             <Icon name="search" size={20} />
@@ -831,20 +891,19 @@ function activity(
   filter: ShopFilter,
   what: string,
 ): { text: string; crawl: boolean } | null {
-  const mine =
-    state.refilling && state.refilling.store === filter.store && state.refilling.category === filter.category;
+  const mine = sameFilter(state.refilling, filter);
   if (next.refilling || mine || state.job === "mas") return { text: t.compras.ocupado.trayendo(what), crawl: false };
   const crawl = state.crawl;
   if (!crawl || !crawl.store_name) return null;
   const section = Math.min(crawl.sections_total, crawl.sections_done + 1) || 1;
   const total = Math.max(crawl.sections_total, 1);
-  const filtered = filter.category !== null || filter.store !== null;
+  const filtered = filterCount(filter) > 0;
   // Solo se promete «traeré más …» si la tienda que se consulta trae eso: ni chaquetas de una tienda de
   // zapatillas, ni cosas de Zara mientras se consulta Courir.
   const crawling = state.stores.find((s) => s.key === crawl.store);
   const brings =
-    (filter.store === null || filter.store === crawl.store) &&
-    (filter.category === null || (crawling?.kinds ?? []).includes(filter.category));
+    (filter.stores.length === 0 || filter.stores.includes(crawl.store ?? "")) &&
+    (filter.categories.length === 0 || filter.categories.some((c) => (crawling?.kinds ?? []).includes(c)));
   return {
     text:
       filtered && brings
@@ -917,40 +976,208 @@ function CrawlProgress({ crawl }: { crawl: ShopCrawl }) {
   );
 }
 
-/** Una fila de chips con scroll horizontal para elegir un filtro (null = sin filtro). */
-function Chips({
-  label,
-  options,
-  value,
-  onChange,
-  wrap = false,
+/**
+ * La hoja de «Filtros» de Descubrir: tiendas (una o varias), tipo de prenda (la parte del cuerpo entera o
+ * tipos concretos), color, precio máximo y solo rebajas. Cada cambio se aplica al momento; el botón de
+ * abajo dice cuántas propuestas hay con lo puesto.
+ */
+function FilterSheet({
+  filter,
+  stores,
+  remaining,
+  onFilter,
+  onClose,
 }: {
-  wrap?: boolean; // en varias líneas (en la hoja de filtros) en vez de una fila con scroll
-  label: string;
-  options: { value: string | null; label: string }[];
-  value: string | null;
-  onChange: (value: string | null) => void;
+  filter: ShopFilter;
+  stores: ShopStore[];
+  remaining: number;
+  onFilter: (f: ShopFilter) => void;
+  onClose: () => void;
 }) {
+  const [types, setTypes] = useState<Record<string, string> | null>(null);
+  useEffect(() => {
+    api
+      .catalog()
+      .then((c) => setTypes(c.types))
+      .catch(() => setTypes({}));
+  }, []);
+  const toggle = (list: string[], value: string) =>
+    list.includes(value) ? list.filter((x) => x !== value) : [...list, value];
+  const chip = (on: boolean) =>
+    `flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-xs font-medium whitespace-nowrap transition-colors active:scale-[0.97] ${
+      on ? "border-primary bg-primary text-on-primary" : "border-line bg-card-2 text-text-2"
+    }`;
+  const label = (text: string) => <span className="label-caps text-text-2">{text}</span>;
+  const colors = Object.keys(DEFAULT_HEX);
+
   return (
-    <div
-      role="group"
-      aria-label={label}
-      className={wrap ? "flex flex-wrap gap-1.5" : "-mx-5 flex gap-1.5 overflow-x-auto px-5"}
+    <BottomSheet
+      label={t.compras.filtros.titulo}
+      onClose={onClose}
+      header={
+        <h2 className="px-5 pb-2 font-display text-lg font-semibold tracking-tight">{t.compras.filtros.titulo}</h2>
+      }
+      footer={(close) => (
+        <div className="flex flex-col gap-2">
+          <PrimaryButton onClick={close}>
+            {remaining > 0 ? t.compras.filtros.verN(remaining) : t.compras.filtros.ninguna}
+          </PrimaryButton>
+          {filterCount(filter) > 0 && (
+            <SecondaryButton onClick={() => onFilter(NO_FILTER)}>{t.compras.filtros.quitar}</SecondaryButton>
+          )}
+        </div>
+      )}
     >
-      {options.map((o) => (
-        <button
-          key={o.value ?? ""}
-          type="button"
-          aria-pressed={value === o.value}
-          onClick={() => onChange(o.value)}
-          className={`flex h-9 shrink-0 items-center rounded-full border border-line px-3.5 text-xs font-medium whitespace-nowrap ${
-            value === o.value ? "bg-primary text-on-primary" : "bg-card-2 text-text-2"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
+      <div className="flex flex-col gap-5 px-5 pt-1">
+        {stores.length > 1 && (
+          <section className="flex flex-col gap-2">
+            {label(t.compras.filtros.tienda)}
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                aria-pressed={filter.stores.length === 0}
+                onClick={() => onFilter({ ...filter, stores: [] })}
+                className={chip(filter.stores.length === 0)}
+              >
+                {t.compras.filtros.todas}
+              </button>
+              {stores.map((s) => (
+                <button
+                  key={s.key}
+                  type="button"
+                  aria-pressed={filter.stores.includes(s.key)}
+                  onClick={() =>
+                    onFilter({
+                      ...filter,
+                      stores: toggle(filter.stores, s.key),
+                    })
+                  }
+                  className={chip(filter.stores.includes(s.key))}
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="flex flex-col gap-3">
+          {label(t.compras.filtros.tipo)}
+          {Object.entries(t.compras.filtros.categorias).map(([category, name]) => {
+            const kinds = Object.entries(types ?? {})
+              .filter(([, c]) => c === category)
+              .map(([type]) => type);
+            const whole = filter.categories.includes(category);
+            return (
+              <div key={category} className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-text">{name}</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {/* La parte entera, o tipos sueltos: elegir uno quita el otro. */}
+                  <button
+                    type="button"
+                    aria-pressed={whole}
+                    onClick={() =>
+                      onFilter({
+                        ...filter,
+                        categories: toggle(filter.categories, category),
+                        types: filter.types.filter((type) => !kinds.includes(type)),
+                      })
+                    }
+                    className={chip(whole)}
+                  >
+                    {t.compras.filtros.todoGrupo}
+                  </button>
+                  {kinds.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      aria-pressed={filter.types.includes(type)}
+                      onClick={() =>
+                        onFilter({
+                          ...filter,
+                          categories: filter.categories.filter((c) => c !== category),
+                          types: toggle(filter.types, type),
+                        })
+                      }
+                      className={chip(filter.types.includes(type))}
+                    >
+                      {cap(type)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </section>
+
+        <section className="flex flex-col gap-2">
+          {label(t.compras.filtros.color)}
+          <div className="flex flex-wrap gap-1.5">
+            {colors.map((color) => (
+              <button
+                key={color}
+                type="button"
+                aria-pressed={filter.colors.includes(color)}
+                onClick={() => onFilter({ ...filter, colors: toggle(filter.colors, color) })}
+                className={chip(filter.colors.includes(color))}
+              >
+                <span
+                  className="h-3 w-3 shrink-0 rounded-full border border-text/15"
+                  style={{
+                    background:
+                      color === "multicolor"
+                        ? "conic-gradient(#b3261e, #e6c229, #3f7d4f, #2f5fa8, #6b4fa0, #b3261e)"
+                        : DEFAULT_HEX[color],
+                  }}
+                />
+                {cap(color)}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-2">
+          {label(t.compras.filtros.precio)}
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              aria-pressed={filter.max_price === null}
+              onClick={() => onFilter({ ...filter, max_price: null })}
+              className={chip(filter.max_price === null)}
+            >
+              {t.compras.filtros.sinLimite}
+            </button>
+            {PRICES.map((euros) => (
+              <button
+                key={euros}
+                type="button"
+                aria-pressed={filter.max_price === euros}
+                onClick={() =>
+                  onFilter({
+                    ...filter,
+                    max_price: filter.max_price === euros ? null : euros,
+                  })
+                }
+                className={chip(filter.max_price === euros)}
+              >
+                {t.compras.filtros.hasta(euros)}
+              </button>
+            ))}
+          </div>
+          <div className="mt-1 flex min-h-11 items-center justify-between gap-3 rounded-xl bg-card-2 px-3.5 py-2">
+            <span className="flex flex-col">
+              <span className="text-sm font-medium">{t.compras.filtros.rebajas}</span>
+              <span className="text-[11px] text-text-3">{t.compras.filtros.rebajasAyuda}</span>
+            </span>
+            <Switch
+              checked={filter.sale}
+              label={t.compras.filtros.rebajas}
+              onChange={() => onFilter({ ...filter, sale: !filter.sale })}
+            />
+          </div>
+        </section>
+      </div>
+    </BottomSheet>
   );
 }
 
@@ -1157,7 +1384,9 @@ function useColors(
         if (current.current?.id === from.id) deliver.current(found, from);
       })
       .catch((e) => {
-        setError(e instanceof ApiError && [404, 503].includes(e.status) && e.message ? e.message : t.compras.colores.error);
+        setError(
+          e instanceof ApiError && [404, 503].includes(e.status) && e.message ? e.message : t.compras.colores.error,
+        );
         // Ese color ya no existe: el servidor lo ha quitado de la familia, y su circulito se va con él.
         if (e instanceof ApiError && e.status === 404)
           api
@@ -1190,7 +1419,12 @@ function ColorDots({
   className?: string;
 }) {
   const row = useRef<HTMLDivElement>(null);
-  const mouse = useRef<{ id: number; x: number; left: number; moved: boolean } | null>(null);
+  const mouse = useRef<{
+    id: number;
+    x: number;
+    left: number;
+    moved: boolean;
+  } | null>(null);
   const [more, setMore] = useState(false); // quedan colores a la derecha: se insinúan con un degradado
   // Tocar un color apagado (aún sin descargar): un aviso pequeño, con su enlace, que se va solo.
   const [hint, setHint] = useState<string | null>(null);
@@ -1251,92 +1485,102 @@ function ColorDots({
           className="pointer-events-auto absolute bottom-full left-1/2 z-10 mb-1.5 w-max max-w-[16rem] -translate-x-1/2 rounded-xl border border-line bg-card px-3 py-1.5 text-center text-[11px] leading-snug text-text-2 shadow-[0_2px_8px_rgb(0_0_0/0.12)]"
         >
           {t.compras.colores.aunNo}{" "}
-          <a href={externalHref(hint)} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline">
+          <a
+            href={externalHref(hint)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-primary underline"
+          >
             {t.compras.colores.verlo}
           </a>
         </p>
       )}
       <div className="relative flex max-w-full min-w-0 overflow-hidden rounded-[inherit]">
-      <div
-        ref={row}
-        role="group"
-        aria-label={t.compras.colores.titulo}
-        // Un gesto que empieza en la fila es de la fila: ni arrastra la tarjeta ni cuenta como toque en la
-        // foto. Con el dedo desliza el navegador (`pan-x`); con el ratón, arrastrando o con la rueda.
-        onPointerDown={(e) => {
-          e.stopPropagation();
-          if (e.pointerType === "mouse" && e.button === 0)
-            mouse.current = { id: e.pointerId, x: e.clientX, left: e.currentTarget.scrollLeft, moved: false };
-        }}
-        onPointerMove={(e) => {
-          e.stopPropagation();
-          const m = mouse.current;
-          if (!m || m.id !== e.pointerId) return;
-          const dx = e.clientX - m.x;
-          if (!m.moved && Math.abs(dx) < 4) return;
-          if (!m.moved) e.currentTarget.setPointerCapture(e.pointerId);
-          m.moved = true;
-          e.currentTarget.scrollLeft = m.left - dx;
-        }}
-        onPointerUp={(e) => {
-          e.stopPropagation();
-          if (mouse.current?.id === e.pointerId && !mouse.current.moved) mouse.current = null;
-        }}
-        onPointerCancel={() => (mouse.current = null)}
-        onClickCapture={(e) => {
-          // Soltar un arrastre con el ratón no elige el color que quedó debajo.
-          if (mouse.current?.moved) {
-            e.preventDefault();
+        <div
+          ref={row}
+          role="group"
+          aria-label={t.compras.colores.titulo}
+          // Un gesto que empieza en la fila es de la fila: ni arrastra la tarjeta ni cuenta como toque en la
+          // foto. Con el dedo desliza el navegador (`pan-x`); con el ratón, arrastrando o con la rueda.
+          onPointerDown={(e) => {
             e.stopPropagation();
-          }
-          mouse.current = null;
-        }}
-        onClick={(e) => e.stopPropagation()}
-        onScroll={measure}
-        className="flex min-w-0 items-center overflow-x-auto overscroll-x-contain"
-        style={{ touchAction: "pan-x", scrollbarWidth: "none" }}
-      >
-        {colors.map((c) => {
-          const chosen = pending ? pending === c.product_ref : c.current;
-          // Apagado: aún sin descargar (JD Sports). Se ve gris y con el aro a trazos; tocarlo solo avisa.
-          const off = c.available === false;
-          return (
-            <button
-              key={c.product_ref}
-              data-ref={c.product_ref}
-              type="button"
-              aria-label={off ? t.compras.colores.noDisponible(c.name) : t.compras.colores.color(c.name)}
-              title={off ? t.compras.colores.noDisponible(c.name) : c.name}
-              aria-pressed={chosen}
-              aria-disabled={off || undefined}
-              aria-busy={pending === c.product_ref || undefined}
-              disabled={!off && (disabled || pending !== null)}
-              onClick={() => (off ? showHint(c.url) : !c.current && onPick(c.product_ref))}
-              className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full"
-            >
-              <span
-                className={`h-6 w-6 rounded-full border transition-shadow duration-200 ${
-                  off
-                    ? "border-dashed border-text/50 opacity-35 grayscale"
-                    : // Los muy claros (blanco, crudo) se pierden en la pastilla: borde más marcado.
-                      isLightHex(c.hex)
-                      ? "border-text/45"
-                      : "border-text/20"
-                } ${chosen ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : ""} ${
-                  pending === c.product_ref ? "animate-pulse" : ""
-                }`}
-                style={{ backgroundColor: c.hex }}
-              />
-            </button>
-          );
-        })}
-      </div>
-      {more && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-7 rounded-r-full bg-linear-to-l from-card to-transparent"
-        />
-      )}
+            if (e.pointerType === "mouse" && e.button === 0)
+              mouse.current = {
+                id: e.pointerId,
+                x: e.clientX,
+                left: e.currentTarget.scrollLeft,
+                moved: false,
+              };
+          }}
+          onPointerMove={(e) => {
+            e.stopPropagation();
+            const m = mouse.current;
+            if (!m || m.id !== e.pointerId) return;
+            const dx = e.clientX - m.x;
+            if (!m.moved && Math.abs(dx) < 4) return;
+            if (!m.moved) e.currentTarget.setPointerCapture(e.pointerId);
+            m.moved = true;
+            e.currentTarget.scrollLeft = m.left - dx;
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            if (mouse.current?.id === e.pointerId && !mouse.current.moved) mouse.current = null;
+          }}
+          onPointerCancel={() => (mouse.current = null)}
+          onClickCapture={(e) => {
+            // Soltar un arrastre con el ratón no elige el color que quedó debajo.
+            if (mouse.current?.moved) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            mouse.current = null;
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onScroll={measure}
+          className="flex min-w-0 items-center overflow-x-auto overscroll-x-contain"
+          style={{ touchAction: "pan-x", scrollbarWidth: "none" }}
+        >
+          {colors.map((c) => {
+            const chosen = pending ? pending === c.product_ref : c.current;
+            // Apagado: aún sin descargar (JD Sports). Se ve gris y con el aro a trazos; tocarlo solo avisa.
+            const off = c.available === false;
+            return (
+              <button
+                key={c.product_ref}
+                data-ref={c.product_ref}
+                type="button"
+                aria-label={off ? t.compras.colores.noDisponible(c.name) : t.compras.colores.color(c.name)}
+                title={off ? t.compras.colores.noDisponible(c.name) : c.name}
+                aria-pressed={chosen}
+                aria-disabled={off || undefined}
+                aria-busy={pending === c.product_ref || undefined}
+                disabled={!off && (disabled || pending !== null)}
+                onClick={() => (off ? showHint(c.url) : !c.current && onPick(c.product_ref))}
+                className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full"
+              >
+                <span
+                  className={`h-6 w-6 rounded-full border transition-shadow duration-200 ${
+                    off
+                      ? "border-dashed border-text/50 opacity-35 grayscale"
+                      : // Los muy claros (blanco, crudo) se pierden en la pastilla: borde más marcado.
+                        isLightHex(c.hex)
+                        ? "border-text/45"
+                        : "border-text/20"
+                  } ${chosen ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : ""} ${
+                    pending === c.product_ref ? "animate-pulse" : ""
+                  }`}
+                  style={{ backgroundColor: c.hex }}
+                />
+              </button>
+            );
+          })}
+        </div>
+        {more && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 w-7 rounded-r-full bg-linear-to-l from-card to-transparent"
+          />
+        )}
       </div>
     </div>
   );
@@ -1353,7 +1597,10 @@ function isLightHex(hex: string): boolean {
 /** Alto que queda desde donde empieza el elemento hasta la barra inferior, para encajar la vista en una pantalla. */
 function useFitHeight(shown: boolean) {
   const ref = useRef<HTMLDivElement>(null);
-  const [style, setStyle] = useState<{ height: number; marginBottom: number }>();
+  const [style, setStyle] = useState<{
+    height: number;
+    marginBottom: number;
+  }>();
   useLayoutEffect(() => {
     const measure = () => {
       const el = ref.current;
@@ -1463,7 +1710,12 @@ function SwipeCard({
   /** Cuánto se ha movido (px): la de debajo crece según se aparta la de arriba. */
   onShift?: (shift: number) => void;
 }) {
-  const drag = useRef<{ id: number; x: number; y: number; active: boolean } | null>(null);
+  const drag = useRef<{
+    id: number;
+    x: number;
+    y: number;
+    active: boolean;
+  } | null>(null);
   const moved = useRef(false); // para que soltar un arrastre no cuente como toque en la foto o el enlace
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -1497,7 +1749,12 @@ function SwipeCard({
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (busy || leaving || (e.pointerType === "mouse" && e.button !== 0)) return;
-    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, active: false };
+    drag.current = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      active: false,
+    };
     moved.current = false;
   };
 
@@ -1612,9 +1869,12 @@ function SwipeCard({
           {photos.length > 1 && (
             <span className="absolute inset-x-0 top-3 flex justify-center gap-1.5">
               {photos.map((p, i) => (
-                <span key={p.id} className={`h-1.5 rounded-full transition-all duration-300 ease-out ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
+                <span
+                  key={p.id}
+                  className={`h-1.5 rounded-full transition-all duration-300 ease-out ${isDark(backdrop) ? "bg-white" : "bg-black"} ${
                     i === photo ? "w-4 opacity-70" : "w-1.5 opacity-30"
-                  }`} />
+                  }`}
+                />
               ))}
             </span>
           )}
@@ -1841,7 +2101,12 @@ function PhotoViewer({
     api
       .shopLike(item.id)
       .then(() => {
-        const saved: ShopLookupItem = { ...item, status: "gustado", saved: "gustado", garment_id: null };
+        const saved: ShopLookupItem = {
+          ...item,
+          status: "gustado",
+          saved: "gustado",
+          garment_id: null,
+        };
         setItem(saved);
         notify.current?.(saved);
         onSaved?.();
@@ -2035,23 +2300,41 @@ function ShopFacts({ item, className = "" }: { item: ShopItem; className?: strin
   // Los datos, en el orden en que se enseñan y se copian. Lo que la tienda no da, no sale.
   const sizes = sizesText(item);
   const facts: { key: string; label: string; value: string }[] = [
-    { key: "referencia", label: t.compras.visor.referencia, value: item.reference ?? "" },
+    {
+      key: "referencia",
+      label: t.compras.visor.referencia,
+      value: item.reference ?? "",
+    },
     { key: "tienda", label: t.compras.visor.tienda, value: item.store_name },
     { key: "marca", label: t.compras.visor.marca, value: item.brand ?? "" },
     { key: "nombre", label: t.compras.visor.nombre, value: item.name },
     // El de la tienda, si el nombre está traducido: sirve para buscarlo en su web.
-    { key: "original", label: t.compras.visor.nombreOriginal, value: item.name_original ?? "" },
+    {
+      key: "original",
+      label: t.compras.visor.nombreOriginal,
+      value: item.name_original ?? "",
+    },
     { key: "color", label: t.compras.visor.color, value: item.store_color },
     { key: "precio", label: t.compras.visor.precio, value: priceText(item) },
     // Si la tienda no dice qué tallas quedan (H&M, COS, Uniqlo, Mango, Nike), se dice dónde mirarlas.
-    { key: "tallas", label: t.compras.visor.tallas, value: sizes || t.compras.visor.tallasEnTienda },
-    { key: "composicion", label: t.compras.visor.composicion, value: item.composition ?? "" },
+    {
+      key: "tallas",
+      label: t.compras.visor.tallas,
+      value: sizes || t.compras.visor.tallasEnTienda,
+    },
+    {
+      key: "composicion",
+      label: t.compras.visor.composicion,
+      value: item.composition ?? "",
+    },
     { key: "enlace", label: t.compras.visor.enlace, value: item.url },
     // La misma zapatilla en otras tiendas: «Snipes 119,99 € · Foot Locker 120,00 €», cada una con su enlace.
     {
       key: "tambien",
       label: t.compras.visor.tambienEn,
-      value: (item.also_in ?? []).map((other) => `${other.store_name} ${t.compras.precio(other.price_cents)}`).join(" · "),
+      value: (item.also_in ?? [])
+        .map((other) => `${other.store_name} ${t.compras.precio(other.price_cents)}`)
+        .join(" · "),
     },
   ].filter((fact) => fact.value);
 
@@ -2093,11 +2376,7 @@ function ShopFacts({ item, className = "" }: { item: ShopItem; className?: strin
             </ul>
           </CopyRow>
         ) : fact.key === "enlace" ? (
-          <CopyRow
-            key={fact.key}
-            label={fact.label}
-            value={fact.value}
-          >
+          <CopyRow key={fact.key} label={fact.label} value={fact.value}>
             <a
               href={externalHref(item.url)}
               target="_blank"
@@ -2193,7 +2472,10 @@ function Liked({ onChanged }: { onChanged: () => void }) {
 
   const load = useCallback(() => {
     setFailed(false);
-    api.shopLiked().then(setItems).catch(() => setFailed(true));
+    api
+      .shopLiked()
+      .then(setItems)
+      .catch(() => setFailed(true));
   }, []);
   useEffect(load, [load]);
   // Lo guardado desde el buscador sin foto: en cuanto llega, se cambia esa tarjeta (sin recargar la lista).
@@ -2361,10 +2643,7 @@ function Liked({ onChanged }: { onChanged: () => void }) {
                     </p>
                   )}
                   {!buyBusy && <p className="text-xs text-text-2">{t.compras.gustados.pedidaTexto}</p>}
-                  <PrimaryButton
-                    disabled={buyBusy || (available.length > 0 && !size)}
-                    onClick={() => buy(item, true)}
-                  >
+                  <PrimaryButton disabled={buyBusy || (available.length > 0 && !size)} onClick={() => buy(item, true)}>
                     {!buyBusy && <Icon name="package_box" size={18} />}
                     {buyBusy ? (
                       <span className="shimmer-text">{t.compras.gustados.analizando}</span>
@@ -2669,7 +2948,12 @@ function SearchResult({
       .shopBought(item.id, size?.trim() || null)
       .then((result) => {
         setChoosing(false);
-        onUpdate({ ...item, status: "comprado", saved: "comprado", garment_id: result.garment_id });
+        onUpdate({
+          ...item,
+          status: "comprado",
+          saved: "comprado",
+          garment_id: result.garment_id,
+        });
       })
       .catch((e) => setError(e instanceof ApiError && e.status < 500 ? e.message : t.compras.gustados.errorComprar))
       .finally(() => setBusy(null));
@@ -2750,22 +3034,27 @@ function SearchResult({
               {sizes.length === 0 ? (
                 <FreeSize value={size ?? ""} onChange={setSize} />
               ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {sizes.map((name) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {sizes.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      aria-pressed={size === name}
+                      onClick={() => setSize(name)}
+                      className={chip(size === name)}
+                    >
+                      {name}
+                    </button>
+                  ))}
                   <button
-                    key={name}
                     type="button"
-                    aria-pressed={size === name}
-                    onClick={() => setSize(name)}
-                    className={chip(size === name)}
+                    aria-pressed={size === ""}
+                    onClick={() => setSize("")}
+                    className={chip(size === "")}
                   >
-                    {name}
+                    {t.compras.buscador.sinTalla}
                   </button>
-                ))}
-                <button type="button" aria-pressed={size === ""} onClick={() => setSize("")} className={chip(size === "")}>
-                  {t.compras.buscador.sinTalla}
-                </button>
-              </div>
+                </div>
               )}
             </>
           )}
@@ -2777,7 +3066,11 @@ function SearchResult({
             )}
           </PrimaryButton>
           {busy === null && (
-            <button type="button" onClick={() => setChoosing(false)} className="h-11 text-xs font-medium text-text-2 underline">
+            <button
+              type="button"
+              onClick={() => setChoosing(false)}
+              className="h-11 text-xs font-medium text-text-2 underline"
+            >
               {t.comun.cancelar}
             </button>
           )}
@@ -2803,20 +3096,20 @@ function SearchResult({
               </button>
             )}
             {!item.photo_pending && (
-            <button
-              type="button"
-              disabled={busy !== null}
-              onClick={() => {
-                setError(null);
-                // Sin tallas que elegir, va marcada «sin talla»; con una sola, esa.
-                setSize(sizes.length === 0 ? "" : sizes.length === 1 ? sizes[0] : null);
-                setChoosing(true);
-              }}
-              className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-semibold text-on-primary active:scale-[0.98] disabled:opacity-40"
-            >
-              <Icon name="check_circle" size={18} />
-              {t.compras.buscador.yaLaTengo}
-            </button>
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={() => {
+                  setError(null);
+                  // Sin tallas que elegir, va marcada «sin talla»; con una sola, esa.
+                  setSize(sizes.length === 0 ? "" : sizes.length === 1 ? sizes[0] : null);
+                  setChoosing(true);
+                }}
+                className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-semibold text-on-primary active:scale-[0.98] disabled:opacity-40"
+              >
+                <Icon name="check_circle" size={18} />
+                {t.compras.buscador.yaLaTengo}
+              </button>
             )}
           </div>
         </div>
@@ -2877,8 +3170,16 @@ function WeekPlan({ state }: { state: ShopState }) {
   );
 }
 
-const STATUS_DOT: Record<string, string> = { ok: "bg-ok", failed: "bg-danger", never: "bg-text-3" };
-const STATUS_TEXT: Record<string, string> = { ok: "text-ok", failed: "text-danger", never: "text-text-2" };
+const STATUS_DOT: Record<string, string> = {
+  ok: "bg-ok",
+  failed: "bg-danger",
+  never: "bg-text-3",
+};
+const STATUS_TEXT: Record<string, string> = {
+  ok: "text-ok",
+  failed: "text-danger",
+  never: "text-text-2",
+};
 
 /** Panel «Tiendas»: qué tiendas se consultan, qué categorías interesan y cómo fue la última consulta. */
 function StoresPanel({
@@ -2907,7 +3208,9 @@ function StoresPanel({
     [...state.stores].sort((a, b) => Number(b.enabled) - Number(a.enabled)).map((store) => store.key),
   );
   const ordered = [
-    ...order.map((key) => state.stores.find((store) => store.key === key)).filter((store): store is ShopStore => !!store),
+    ...order
+      .map((key) => state.stores.find((store) => store.key === key))
+      .filter((store): store is ShopStore => !!store),
     ...state.stores.filter((store) => !order.includes(store.key)),
   ];
 
@@ -3039,7 +3342,13 @@ function StoresPanel({
                       label={t.compras.panel.activada(store.name)}
                       onChange={() =>
                         !busy &&
-                        act(api.shopSettings({ store: store.key, enabled: !store.enabled }), t.compras.panel.errorGuardar)
+                        act(
+                          api.shopSettings({
+                            store: store.key,
+                            enabled: !store.enabled,
+                          }),
+                          t.compras.panel.errorGuardar,
+                        )
                       }
                     />
                   </div>
@@ -3074,7 +3383,9 @@ function StoresPanel({
                           </p>
                           {status.cancelled && <p>{t.compras.panel.cancelada}</p>}
                           {status.resume && !crawl && (
-                            <p className="text-text">{t.compras.panel.incompleta(status.sections, status.sections_total)}</p>
+                            <p className="text-text">
+                              {t.compras.panel.incompleta(status.sections, status.sections_total)}
+                            </p>
                           )}
                           <p className={status.failed > 0 ? "text-danger" : ""}>
                             {status.failed > 0 ? t.compras.panel.fallaron(status.failed) : t.compras.panel.sinFallos}
@@ -3108,7 +3419,9 @@ function StoresPanel({
                       <p>
                         {store.enabled && store.next_check
                           ? t.compras.panel.proxima(
-                              [dayLabel(store.next_check), hour ? t.compras.panel.a(hour) : ""].filter(Boolean).join(" "),
+                              [dayLabel(store.next_check), hour ? t.compras.panel.a(hour) : ""]
+                                .filter(Boolean)
+                                .join(" "),
                             )
                           : t.compras.panel.desactivadaTexto}
                       </p>
@@ -3125,7 +3438,9 @@ function StoresPanel({
                             disabled={busy}
                             onClick={() => toggleCategory(store, c.slug)}
                             className={`min-h-11 rounded-full border px-3 py-2 text-xs font-medium ${
-                              c.enabled ? "border-primary bg-primary text-on-primary" : "border-line bg-card-2 text-text-2"
+                              c.enabled
+                                ? "border-primary bg-primary text-on-primary"
+                                : "border-line bg-card-2 text-text-2"
                             }`}
                           >
                             {c.label}

@@ -32,6 +32,13 @@ export function BottomSheet({
   children: ReactNode | ((close: () => void) => ReactNode);
 }) {
   const [closing, setClosing] = useState(false);
+  // El fondo entra con una transición propia (ver abajo): se pinta primero sin velo y, un instante después,
+  // con él.
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const wait = window.setTimeout(() => setShown(true), 16);
+    return () => window.clearTimeout(wait);
+  }, []);
   const [drag, setDrag] = useState(0); // px que se ha bajado con el dedo
   const [dragging, setDragging] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
@@ -142,20 +149,34 @@ export function BottomSheet({
   const ease = "cubic-bezier(0.22, 1, 0.36, 1)";
   const height = panel.current?.offsetHeight ?? 600;
   // Al arrastrar, el fondo se aclara a la vez que baja la hoja.
-  const fade = closing ? 0 : Math.max(0.15, 1 - drag / Math.max(1, height));
+  const fade = closing || !shown ? 0 : Math.max(0.15, 1 - drag / Math.max(1, height));
+  const still = dragging ? "none" : undefined;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[55] flex animate-fade items-end justify-center"
+      className="fixed inset-0 z-[55] flex items-end justify-center"
       style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.5rem)" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) close();
       }}
     >
+      {/* El difuminado y el velo van en dos capas hermanas y sin opacidad en nada de lo que las contiene:
+          en el iPhone, un `backdrop-filter` dentro de algo que se está desvaneciendo no se pinta hasta que
+          acaba el fundido (el difuminado salía de golpe, tarde). Así el difuminado crece con su propia
+          transición y el velo se desvanece aparte. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-scrim backdrop-blur-md"
-        style={{ opacity: fade, transition: dragging ? "none" : `opacity ${CLOSE_MS}ms ease-out` }}
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backdropFilter: `blur(${(12 * fade).toFixed(1)}px)`,
+          WebkitBackdropFilter: `blur(${(12 * fade).toFixed(1)}px)`,
+          transition: still ?? `backdrop-filter ${CLOSE_MS}ms ease-out, -webkit-backdrop-filter ${CLOSE_MS}ms ease-out`,
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-scrim"
+        style={{ opacity: fade, transition: still ?? `opacity ${CLOSE_MS}ms ease-out` }}
       />
       <div
         ref={panel}

@@ -2015,3 +2015,40 @@ def test_los_colores_de_lo_guardado_antes_se_rellenan_la_primera_vez_que_se_pide
         db.commit()
     _refresh(INVIERNO + timedelta(days=7))
     assert [c["name"] for c in client.get("/api/shop/liked").json()[0]["colors"]] == ["Blanco", "Negro"]
+
+
+def test_filtros_de_tipo_color_precio_rebajas_y_varias_tiendas(client, tienda):
+    """Los filtros de Descubrir (20-11-2026): se combinan; parte del cuerpo y tipo concreto se suman."""
+    tienda(
+        camisas=[product("c1", "camisa", "blanco", 2995), product("c2", "camisa", "negro", 1995)],
+        pantalones=[product("p1", "vaquero", "azul", 3995, section="pantalones"),
+                    product("p2", "chino", "beige", 2495, section="pantalones")],
+        sudaderas=[product("s1", "sudadera", "negro", 3495, section="sudaderas")],
+    )
+    _refresh(limit=10)
+    with SessionLocal() as db:
+        rebajada = db.scalars(select(ShopItem).where(ShopItem.product_ref == "zara:p2")).one()
+        rebajada.old_price_cents = 3495
+        db.commit()
+
+    def refs(**params):
+        found = client.get("/api/shop/next", params=params).json()
+        items = ([found["item"]] if found["item"] else []) + found["queue"]
+        assert found["remaining"] >= len(items)
+        return found["remaining"], sorted(i["url"].rsplit("/", 1)[1] for i in items)
+
+    assert refs(color="negro") == (2, ["c2", "s1"])
+    assert refs(color=["negro", "beige"])[0] == 3
+    assert refs(type="sudadera") == (1, ["s1"])
+    assert refs(type="sudadera", category="parte_inferior")[0] == 3  # se suman
+    assert refs(max_price=25) == (2, ["c2", "p2"])
+    assert refs(sale=True) == (1, ["p2"])
+    assert refs(color="negro", max_price=30) == (1, ["c2"])
+    assert refs(store=["zara", "uniqlo"])[0] == 5
+    assert client.get("/api/shop/next", params={"color": "fucsia"}).status_code == 422
+    assert client.get("/api/shop/next", params={"type": "sombrero"}).status_code == 422
+    assert client.get("/api/shop/next", params={"max_price": 0}).status_code == 422
+    # «Ver más» acepta el mismo filtro (y una sola tienda o tipo, como antes).
+    assert client.post("/api/shop/more", json={"color": ["negro"], "sale": True}).status_code == 202
+    assert client.post("/api/shop/more", json={"category": "calzado"}).status_code == 202
+    shopping.wait_idle()

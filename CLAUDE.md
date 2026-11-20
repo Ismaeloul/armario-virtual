@@ -94,7 +94,13 @@ Un solo usuario y un solo armario, desplegada en casa sobre Umbrel.
   promedian por pareja, las reglas generales pierden peso según el usuario valora eso mismo, la afinidad
   es la misma en Hoy y Gustos y ya no es solo orientativa, «Pasar» cuenta como media valoración, y hay
   una simulación en `tests/test_simulacion.py`. Sin probar en el Umbrel con datos reales.
-- **Publicada en el Umbrel: 0.4.17** (20-11-2026): hoja que sube desde abajo (`components/BottomSheet.tsx`,
+- **Publicada en el Umbrel: 0.4.18** (20-11-2026): filtros de Descubrir más potentes (`shopping.ShopFilter`:
+  varias tiendas, partes del cuerpo y tipos concretos que se suman, colores, precio máximo en euros y solo
+  rebajas; en `/shop/next`, `/like`, `/dislike`, `/undo` como parámetros repetibles y en `/shop/more` como
+  listas; también en la reposición y en «Ver más»). La hoja de filtros (`FilterSheet`) vive en `Compras`,
+  no en `Discover` (si no, se volvía a montar al cambiar de tarjeta a aviso). El difuminado de las hojas va
+  en su propia capa, sin opacidad en los padres (en iOS salía tarde).
+- **Antes: 0.4.17** (20-11-2026): hoja que sube desde abajo (`components/BottomSheet.tsx`,
   sin X: se cierra deslizando hacia abajo desde el asa o desde el contenido arriba del todo, tocando fuera o
   con Escape, con animación de cierre) con la ficha completa de la prenda (`GarmentSheet` = `FichaPrenda`
   con `embedded`) al tocar una prenda en Tus outfits, Gustos (toda la fila, salvo al señalar la que no

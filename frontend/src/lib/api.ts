@@ -330,7 +330,7 @@ export type ShopState = {
   /** La consulta del catálogo en marcha, con su avance. */
   crawl: ShopCrawl | null;
   /** Se están reponiendo propuestas de un filtro que se quedó vacío. */
-  refilling: ShopFilter | null;
+  refilling: ShopFilterOut | null;
   /** A qué hora (HH:MM, local) se hace la consulta automática. */
   night_time: string;
   /** El reparto de la semana: por día (lunes = 0), las claves de las tiendas que tocan. */
@@ -356,14 +356,30 @@ export type ShopNext = {
   /** Las que vienen detrás de `item` (la pila de tarjetas). */
   queue: ShopItem[];
 };
-/** El filtro de Descubrir: una tienda y un tipo de prenda (nuestras categorías). null = todo. */
-export type ShopFilter = { store: string | null; category: string | null };
+/**
+ * El filtro de Descubrir. Listas vacías = todo. Partes del cuerpo y tipos concretos se suman. El precio
+ * máximo, en euros (null = sin límite); `sale`: solo lo rebajado.
+ */
+export type ShopFilter = {
+  stores: string[];
+  categories: string[];
+  types: string[];
+  colors: string[];
+  max_price: number | null;
+  sale: boolean;
+};
+/** El filtro como lo devuelve el servidor (el precio, en céntimos). */
+export type ShopFilterOut = Omit<ShopFilter, "max_price"> & { max_price: number | null };
 export type ShopDiscardReason = "estilo" | "color" | "caro" | "ya_tengo";
 
 const shopQuery = (filter?: ShopFilter) => {
   const query = new URLSearchParams();
-  if (filter?.store) query.set("store", filter.store);
-  if (filter?.category) query.set("category", filter.category);
+  for (const store of filter?.stores ?? []) query.append("store", store);
+  for (const category of filter?.categories ?? []) query.append("category", category);
+  for (const type of filter?.types ?? []) query.append("type", type);
+  for (const color of filter?.colors ?? []) query.append("color", color);
+  if (filter?.max_price) query.set("max_price", String(filter.max_price));
+  if (filter?.sale) query.set("sale", "true");
   const text = query.toString();
   return text ? `?${text}` : "";
 };
@@ -457,7 +473,18 @@ export const api = {
   /** Lanza la consulta en segundo plano y vuelve ya; el avance se sigue con shopState. */
   shopRefresh: (store?: string) => request<ShopState>("/api/shop/refresh", json("POST", { store: store ?? null })),
   /** «Ver más»: trae en segundo plano la siguiente tanda del catálogo guardado; se sigue con shopState. */
-  shopMore: (filter: ShopFilter) => request<ShopState>("/api/shop/more", json("POST", filter)),
+  shopMore: (filter: ShopFilter) =>
+    request<ShopState>(
+      "/api/shop/more",
+      json("POST", {
+        store: filter.stores,
+        category: filter.categories,
+        type: filter.types,
+        color: filter.colors,
+        max_price: filter.max_price,
+        sale: filter.sale,
+      }),
+    ),
   shopNext: (filter?: ShopFilter) => request<ShopNext>(`/api/shop/next${shopQuery(filter)}`),
   shopLike: (id: number, filter?: ShopFilter) =>
     request<ShopNext>(`/api/shop/items/${id}/like${shopQuery(filter)}`, { method: "POST" }),

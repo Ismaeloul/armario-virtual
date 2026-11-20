@@ -1416,17 +1416,84 @@ def _store_candidate(db: Session, row: ShopItem | None, product, today: date) ->
     return row
 
 
+# ---------- El filtro de Descubrir
+
+
+@dataclass(frozen=True)
+class ShopFilter:
+    """Lo que el usuario ha elegido en «Filtros» (20-11-2026). Vacío = todo.
+
+    - `stores`: una o varias tiendas.
+    - `categories` y `types`: partes del cuerpo y tipos concretos. Se suman: «Pantalones» + «sudadera»
+      enseña los pantalones y las sudaderas.
+    - `colors`: el color principal (nuestra paleta).
+    - `max_price`: hasta ese precio, en céntimos. `sale`: solo lo que la tienda dice que está rebajado.
+    """
+
+    stores: tuple[str, ...] = ()
+    categories: tuple[str, ...] = ()
+    types: tuple[str, ...] = ()
+    colors: tuple[str, ...] = ()
+    max_price: int | None = None
+    sale: bool = False
+
+    @classmethod
+    def of(cls, store: str | None = None, category: str | None = None) -> "ShopFilter":
+        return cls(stores=(store,) if store else (), categories=(category,) if category else ())
+
+    @property
+    def empty(self) -> bool:
+        return not (self.stores or self.categories or self.types or self.colors or self.max_price or self.sale)
+
+    def as_dict(self) -> dict:
+        return {"stores": list(self.stores), "categories": list(self.categories), "types": list(self.types),
+                "colors": list(self.colors), "max_price": self.max_price, "sale": self.sale}
+
+    def apply(self, stmt):
+        """Las condiciones que no son de tienda, en SQL (la tienda se mira con las activadas)."""
+        if self.categories or self.types:
+            kinds = []
+            if self.categories:
+                kinds.append(ShopItem.category.in_(self.categories))
+            if self.types:
+                kinds.append(ShopItem.type.in_(self.types))
+            stmt = stmt.where(or_(*kinds))
+        if self.colors:
+            stmt = stmt.where(ShopItem.color.in_(self.colors))
+        if self.max_price is not None:
+            stmt = stmt.where(ShopItem.price_cents <= self.max_price)
+        if self.sale:
+            stmt = stmt.where(ShopItem.old_price_cents.is_not(None), ShopItem.old_price_cents > ShopItem.price_cents)
+        return stmt
+
+    def store_ok(self, store: str) -> bool:
+        return not self.stores or store in self.stores
+
+    def matches(self, row) -> bool:
+        if not self.store_ok(row.store):
+            return False
+        if (self.categories or self.types) and row.category not in self.categories and row.type not in self.types:
+            return False
+        if self.colors and row.color not in self.colors:
+            return False
+        if self.max_price is not None and (row.price_cents or 0) > self.max_price:
+            return False
+        if self.sale and not (row.old_price_cents and row.old_price_cents > (row.price_cents or 0)):
+            return False
+        return True
+
+
 def candidates_left(db: Session, today: date | None = None, store: str | None = None,
-                    category: str | None = None) -> list[ShopItem]:
-    """Los candidatos que «Ver más» aún puede traer: de las tiendas activadas (o de una), de una categoría
-    si se filtra, de temporada y sin haber fallado ya esta semana al pedir su ficha."""
+                    category: str | None = None, only: ShopFilter | None = None) -> list[ShopItem]:
+    """Los candidatos que «Ver más» aún puede traer: de las tiendas activadas (o de las del filtro), con
+    el filtro de Descubrir, de temporada y sin haber fallado ya esta semana al pedir su ficha."""
     today = today or outfits.local_today()
-    stores = [s for s in enabled_stores(db) if store in (None, s) and reachable(db, s, today)]
+    only = only or ShopFilter.of(store, category)
+    stores = [s for s in enabled_stores(db) if only.store_ok(s) and reachable(db, s, today)]
     stmt = select(ShopItem).where(
         ShopItem.status == CANDIDATE, ShopItem.store.in_(stores), ShopItem.last_checked_at.is_(None)
     )
-    if category:
-        stmt = stmt.where(ShopItem.category == category)
+    stmt = only.apply(stmt)
     return [row for row in db.scalars(stmt) if not out_of_season(row, today)]
 
 
@@ -2011,7 +2078,7 @@ def refresh(db: Session, today: date | None = None, limit: int | None = None, st
 
 
 def more(db: Session, store: str | None = None, category: str | None = None, limit: int | None = None,
-         today: date | None = None) -> dict:
+         today: date | None = None, only: ShopFilter | None = None) -> dict:
     """«Ver más»: la siguiente tanda sin esperar al día de consulta.
 
     Vuelve a puntuar los candidatos guardados con los gustos de ahora (respetando el filtro de tienda
@@ -2026,7 +2093,7 @@ def more(db: Session, store: str | None = None, category: str | None = None, lim
     result = {"at": now_utc().isoformat(), "added": 0, "mean": None, "low": False, "failed": 0, "error": None,
               "errors": []}
     context = Context.load(db)
-    rows = [row for row in candidates_left(db, today, store, category) if row.store not in _crawling_stores()]
+    rows = [row for row in candidates_left(db, today, store, category, only) if row.store not in _crawling_stores()]
     ranked = _ranked(context, rows, limit * 2, _pending(db))
     scores = _promote(db, context, ranked, limit, today, _failure_log(result))
     _note_blocks(db, today)
@@ -2278,7 +2345,7 @@ FILTER_RESERVE = 10  # propuestas que se reponen de un tipo cuando se agota con 
 
 
 def top_up(db: Session, today: date | None = None, target: int | None = None, store: str | None = None,
-           category: str | None = None) -> dict:
+           category: str | None = None, only: ShopFilter | None = None) -> dict:
     """Repone la reserva: baja ficha y fotos de los mejores candidatos (puntuados con lo de ahora y sin
     repetir lo que ya está en la cola) hasta tener `target` propuestas por ver; prepara los colores de
     las tiendas que lo necesitan y baja las fotos que esperaban. Las tiendas de navegador solo con lo
@@ -2288,15 +2355,16 @@ def top_up(db: Session, today: date | None = None, target: int | None = None, st
     hasta FILTER_RESERVE.
     """
     today = today or outfits.local_today()
-    filtered = store is not None or category is not None
+    only = only or ShopFilter.of(store, category)
+    filtered = not only.empty
     target = (FILTER_RESERVE if filtered else config.SHOP_RESERVE) if target is None else target
     result = {"added": 0, "colors": 0, "photos": 0, "failed": 0, "errors": []}
     pending = _pending(db)
-    mine = [p for p in pending if store in (None, p.store) and category in (None, p.category)]
+    mine = [p for p in pending if only.matches(p)]
     want = target - len(mine)
     if want > 0:
         context = Context.load(db)
-        rows = [row for row in candidates_left(db, today, store, category) if row.store not in _crawling_stores()]
+        rows = [row for row in candidates_left(db, today, only=only) if row.store not in _crawling_stores()]
         if rows:
             ranked = _ranked(context, rows, want * 2, pending)
             result["added"] = len(_promote(db, context, ranked, want, today, _failure_log(result), offline=True))
@@ -3020,9 +3088,9 @@ def cancel_refresh() -> bool:
     return True
 
 
-def start_more(store: str | None = None, category: str | None = None) -> bool:
+def start_more(store: str | None = None, category: str | None = None, only: ShopFilter | None = None) -> bool:
     """Lanza un «Ver más» en un hilo aparte y vuelve ya. False si ya había un trabajo corto en marcha."""
-    return _start(lambda db: more(db, store, category), "mas")
+    return _start(lambda db: more(db, store, category, only=only), "mas")
 
 
 def photos_soon() -> bool:
@@ -3054,18 +3122,20 @@ def photos_running() -> bool:
     return _lock.locked() and _job == "fotos"
 
 
-def top_up_soon(force: bool = False, store: str | None = None, category: str | None = None) -> bool:
+def top_up_soon(force: bool = False, store: str | None = None, category: str | None = None,
+                only: ShopFilter | None = None) -> bool:
     """Repone la reserva en segundo plano si hace falta (o siempre, con `force`; o de un filtro que se
     ha quedado vacío, con `store`/`category`). Solo con el bucle automático encendido (en los tests y
     en desarrollo, `ARMARIO_SHOP_AUTO=0`, no hace nada). False si no se lanza (otro trabajo en marcha:
     el bucle lo vuelve a intentar en unos minutos)."""
     if not config.SHOP_AUTO:
         return False
-    if store is not None or category is not None:
+    only = only or ShopFilter.of(store, category)
+    if not only.empty:
         def job(db):
             global _reserve_filter
-            _reserve_filter = {"store": store, "category": category}
-            top_up(db, store=store, category=category)
+            _reserve_filter = only.as_dict()
+            top_up(db, only=only)
 
         return _start(job, "reserva")
     if not force:

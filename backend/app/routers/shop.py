@@ -6,7 +6,7 @@ from datetime import date, datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -201,8 +201,12 @@ class ShopCrawlOut(BaseModel):
 
 
 class ShopFilterOut(BaseModel):
-    store: str | None
-    category: str | None
+    stores: list[str] = []
+    categories: list[str] = []
+    types: list[str] = []
+    colors: list[str] = []
+    max_price: int | None = None  # céntimos
+    sale: bool = False
 
 
 class ShopState(BaseModel):
@@ -235,8 +239,22 @@ class RefreshIn(BaseModel):
 
 
 class MoreIn(BaseModel):
-    store: str | None = None  # None = todas las activadas
-    category: str | None = None  # None = todo tipo de prenda
+    """El filtro de Descubrir, como en la URL de /next (vacío = todo)."""
+
+    store: list[str] = []
+    category: list[str] = []
+    type: list[str] = []
+    color: list[str] = []
+    max_price: int | None = Field(default=None, ge=1, le=100000)  # euros
+    sale: bool = False
+
+    @field_validator("store", "category", "type", "color", mode="before")
+    @classmethod
+    def _as_list(cls, value):
+        """Una sola tienda o tipo, como antes (`"zara"`), vale igual que una lista; `null`, como vacía."""
+        if value is None:
+            return []
+        return [value] if isinstance(value, str) else value
 
 
 class ReasonIn(BaseModel):
@@ -254,19 +272,34 @@ class ShopNext(BaseModel):
     queue: list[ShopItemOut] = []
 
 
-def _check_filter(store: str | None, category: str | None) -> None:
-    if store is not None and store not in shops.CONNECTORS:
+def _make_filter(stores, categories, types, colors, max_price, sale) -> shopping.ShopFilter:
+    """El filtro de Descubrir, comprobado. Cada lista puede venir repetida en la URL (`?store=zara&store=uniqlo`)."""
+    stores, categories, types, colors = (tuple(dict.fromkeys(v or [])) for v in (stores, categories, types, colors))
+    if any(s not in shops.CONNECTORS for s in stores):
         raise HTTPException(404, "Tienda desconocida")
-    if category is not None and category not in catalog.CATEGORIES:
+    if any(c not in catalog.CATEGORIES for c in categories) or any(t not in catalog.TYPES for t in types):
         raise HTTPException(422, "Tipo de prenda desconocido")
+    if any(c not in catalog.COLORS for c in colors):
+        raise HTTPException(422, "Color desconocido")
+    if max_price is not None and not 1 <= max_price <= 100000:
+        raise HTTPException(422, "Precio máximo fuera de rango")
+    return shopping.ShopFilter(stores=stores, categories=categories, types=types, colors=colors,
+                               max_price=max_price * 100 if max_price else None, sale=bool(sale))
 
 
 class Filter:
-    """El filtro de Descubrir: una tienda y un tipo de prenda (nuestras categorías). Va en la URL."""
+    """El filtro de Descubrir (ver shopping.ShopFilter). Va en la URL; el precio máximo, en euros."""
 
-    def __init__(self, store: str | None = Query(default=None), category: str | None = Query(default=None)):
-        _check_filter(store, category)
-        self.store, self.category = store, category
+    def __init__(
+        self,
+        store: list[str] = Query(default=[]),
+        category: list[str] = Query(default=[]),
+        type: list[str] = Query(default=[]),  # noqa: A002 (el nombre del parámetro en la URL)
+        color: list[str] = Query(default=[]),
+        max_price: int | None = Query(default=None),
+        sale: bool = Query(default=False),
+    ):
+        self.only = _make_filter(store, category, type, color, max_price, sale)
 
 
 class BoughtIn(BaseModel):
@@ -419,22 +452,21 @@ QUEUE = 2  # propuestas que se mandan detrás de la actual
 def _next(db: Session, only: Filter, first: ShopItem | None = None) -> ShopNext:
     """La propuesta con mejor nota entre las que quedan por ver: una sola lista, venga de la tienda que
     venga, con el filtro de tienda y de tipo de prenda. `first` adelanta una concreta (la recién deshecha)."""
-    stores = [s for s in shopping.enabled_stores(db) if only.store in (None, s)]
-    stmt = select(ShopItem).where(ShopItem.status == shopping.NEW, ShopItem.store.in_(stores))
-    if only.category is not None:
-        stmt = stmt.where(ShopItem.category == only.category)
+    wanted = only.only
+    stores = [s for s in shopping.enabled_stores(db) if wanted.store_ok(s)]
+    stmt = wanted.apply(select(ShopItem).where(ShopItem.status == shopping.NEW, ShopItem.store.in_(stores)))
     ordered = stmt.order_by(ShopItem.score.desc(), ShopItem.id)
     top = list(db.scalars(ordered.limit(QUEUE + 2)))
     item = first or (top[0] if top else None)
     queue = [other for other in top if item is None or other.id != item.id][:QUEUE]
-    remaining = _count(db, shopping.NEW, stores, only.category)
-    more = len(shopping.candidates_left(db, store=only.store, category=only.category))
+    remaining = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+    more = len(shopping.candidates_left(db, only=wanted))
     refilling = False
-    if remaining < 3 and more and (only.store or only.category):
+    if remaining < 3 and more and not wanted.empty:
         # El filtro se queda sin propuestas: se traen más de eso de lo guardado, sin esperar a la consulta.
-        shopping.top_up_soon(store=only.store, category=only.category)
+        shopping.top_up_soon(only=wanted)
         current = shopping.refilling()
-        refilling = bool(current) and current == {"store": only.store, "category": only.category}
+        refilling = bool(current) and current == wanted.as_dict()
     return ShopNext(
         item=_to_out(item) if item else None,
         remaining=remaining,
@@ -500,11 +532,11 @@ def more(body: MoreIn | None = None, db: Session = Depends(get_db)):
     """«Ver más»: trae en segundo plano la siguiente tanda de los candidatos guardados (con el filtro
     que se le pase) y responde ya. No consulta el catálogo. Si hay una tanda en marcha, no lanza otra."""
     body = body or MoreIn()
-    _check_filter(body.store, body.category)
+    wanted = _make_filter(body.store, body.category, body.type, body.color, body.max_price, body.sale)
     enabled = shopping.enabled_stores(db)
-    if not enabled or (body.store is not None and body.store not in enabled):
+    if not enabled or (wanted.stores and not any(s in enabled for s in wanted.stores)):
         raise HTTPException(409, "Activa primero la tienda")
-    shopping.start_more(body.store, body.category)
+    shopping.start_more(only=wanted)
     return _state(db)
 
 
